@@ -5,10 +5,10 @@
   <PropertyGroup>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
-    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)CHANGE_ME.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)Costellobot.snk</AssemblyOriginatorKeyFile>
     <Authors>martin_costello</Authors>
-    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CHANGE_ME.ruleset</CodeAnalysisRuleSet>
-    <Company>https://github.com/martincostello/CHANGE_ME</Company>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)Costellobot.ruleset</CodeAnalysisRuleSet>
+    <Company>https://github.com/martincostello/costellobot</Company>
     <ContinuousIntegrationBuild Condition=" '$(CI)' != '' ">true</ContinuousIntegrationBuild>
     <Copyright>Martin Costello (c) $([System.DateTime]::Now.ToString(yyyy))</Copyright>
     <DebugType>portable</DebugType>
@@ -26,15 +26,12 @@
     <Nullable>enable</Nullable>
     <PackageIcon></PackageIcon>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/martincostello/CHANGE_ME</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/martincostello/costellobot</PackageProjectUrl>
     <PackageReleaseNotes>See $(PackageProjectUrl)/releases for details.</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageTags>CHANGE_ME</PackageTags>
-    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
-    <SignAssembly>true</SignAssembly>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <VersionPrefix>1.0.0</VersionPrefix>

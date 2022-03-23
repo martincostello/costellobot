@@ -1,0 +1,102 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32228.430
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{91E2D550-B785-4F2D-B625-0A26ADA3B25B}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		.vsconfig = .vsconfig
+		build.ps1 = build.ps1
+		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
+		Costellobot.ruleset = Costellobot.ruleset
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		Directory.Packages.props = Directory.Packages.props
+		global.json = global.json
+		LICENSE = LICENSE
+		NuGet.config = NuGet.config
+		omnisharp.json = omnisharp.json
+		README.md = README.md
+		startvs.cmd = startvs.cmd
+		startvscode.cmd = startvscode.cmd
+		stylecop.json = stylecop.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{26D87401-BDF9-4D61-BE3C-A0A21FDC5877}"
+	ProjectSection(SolutionItems) = preProject
+		.github\CONTRIBUTING.md = .github\CONTRIBUTING.md
+		.github\dependabot.yml = .github\dependabot.yml
+		.github\FUNDING.yml = .github\FUNDING.yml
+		.github\ISSUE_TEMPLATE.md = .github\ISSUE_TEMPLATE.md
+		.github\PULL_REQUEST_TEMPLATE.md = .github\PULL_REQUEST_TEMPLATE.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{DEECF28F-D75D-4DBB-B304-214339FC75AB}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build.yml = .github\workflows\build.yml
+		.github\workflows\update-dotnet-sdk.yml = .github\workflows\update-dotnet-sdk.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".vscode", ".vscode", "{4B19CBC0-7588-447F-8D51-2011E60DD660}"
+	ProjectSection(SolutionItems) = preProject
+		.vscode\extensions.json = .vscode\extensions.json
+		.vscode\launch.json = .vscode\launch.json
+		.vscode\settings.json = .vscode\settings.json
+		.vscode\tasks.json = .vscode\tasks.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ISSUE_TEMPLATE", "ISSUE_TEMPLATE", "{D2709D5C-756E-4346-A509-743C67C3DBDD}"
+	ProjectSection(SolutionItems) = preProject
+		.github\ISSUE_TEMPLATE\bug_report.md = .github\ISSUE_TEMPLATE\bug_report.md
+		.github\ISSUE_TEMPLATE\config.yml = .github\ISSUE_TEMPLATE\config.yml
+		.github\ISSUE_TEMPLATE\feature_request.md = .github\ISSUE_TEMPLATE\feature_request.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{03DB7DB6-48FD-48EC-A5F4-6BC668B804F4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Costellobot", "src\Costellobot\Costellobot.csproj", "{A6846A80-457A-40A0-AA48-2DAD55F194AD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{712BC61D-F6BE-4D1A-80A4-E88B69262999}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Costellobot.Tests", "tests\Costellobot.Tests\Costellobot.Tests.csproj", "{DABA5554-941C-479B-A3BC-E6EA60AF94A3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Costellobot.EndToEndTests", "tests\Costellobot.EndToEndTests\Costellobot.EndToEndTests.csproj", "{4195D1F1-C9CC-45E2-8401-DE2E6B6747E3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A6846A80-457A-40A0-AA48-2DAD55F194AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6846A80-457A-40A0-AA48-2DAD55F194AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6846A80-457A-40A0-AA48-2DAD55F194AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6846A80-457A-40A0-AA48-2DAD55F194AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DABA5554-941C-479B-A3BC-E6EA60AF94A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DABA5554-941C-479B-A3BC-E6EA60AF94A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DABA5554-941C-479B-A3BC-E6EA60AF94A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DABA5554-941C-479B-A3BC-E6EA60AF94A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4195D1F1-C9CC-45E2-8401-DE2E6B6747E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4195D1F1-C9CC-45E2-8401-DE2E6B6747E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4195D1F1-C9CC-45E2-8401-DE2E6B6747E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4195D1F1-C9CC-45E2-8401-DE2E6B6747E3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{26D87401-BDF9-4D61-BE3C-A0A21FDC5877} = {91E2D550-B785-4F2D-B625-0A26ADA3B25B}
+		{DEECF28F-D75D-4DBB-B304-214339FC75AB} = {26D87401-BDF9-4D61-BE3C-A0A21FDC5877}
+		{4B19CBC0-7588-447F-8D51-2011E60DD660} = {91E2D550-B785-4F2D-B625-0A26ADA3B25B}
+		{D2709D5C-756E-4346-A509-743C67C3DBDD} = {26D87401-BDF9-4D61-BE3C-A0A21FDC5877}
+		{A6846A80-457A-40A0-AA48-2DAD55F194AD} = {03DB7DB6-48FD-48EC-A5F4-6BC668B804F4}
+		{DABA5554-941C-479B-A3BC-E6EA60AF94A3} = {712BC61D-F6BE-4D1A-80A4-E88B69262999}
+		{4195D1F1-C9CC-45E2-8401-DE2E6B6747E3} = {712BC61D-F6BE-4D1A-80A4-E88B69262999}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5F668B0C-5D69-41B4-A2D2-38B58A8FF46C}
+	EndGlobalSection
+EndGlobal

@@ -1,10 +1,10 @@
-# CHANGE_ME
+# Costellobot
 
-[![Build status](https://github.com/martincostello/CHANGE_ME/workflows/build/badge.svg?branch=main&event=push)](https://github.com/martincostello/CHANGE_ME/actions?query=workflow%3Abuild+branch%3Amain+event%3Apush)
+[![Build status](https://github.com/martincostello/costellobot/workflows/build/badge.svg?branch=main&event=push)](https://github.com/martincostello/costellobot/actions?query=workflow%3Abuild+branch%3Amain+event%3Apush)
 
 ## Introduction
 
-CHANGE_ME
+_Costellobot_ is a web application that handles automation for my GitHub repositories.
 
 ## Building and Testing
 
@@ -16,21 +16,21 @@ To build and test the application locally from a terminal/command-line, run the
 following set of commands:
 
 ```powershell
-git clone https://github.com/martincostello/CHANGE_ME.git
-cd CHANGE_ME
+git clone https://github.com/martincostello/costellobot.git
+cd costellobot
 ./build.ps1
 ```
 
 ## Feedback
 
 Any feedback or issues can be added to the issues for this project in
-[GitHub](https://github.com/martincostello/CHANGE_ME/issues "Issues for this project on GitHub.com").
+[GitHub](https://github.com/martincostello/costellobot/issues "Issues for this project on GitHub.com").
 
 ## Repository
 
 The repository is hosted in
-[GitHub](https://github.com/martincostello/CHANGE_ME "This project on GitHub.com"):
-https://github.com/martincostello/CHANGE_ME.git
+[GitHub](https://github.com/martincostello/costellobot "This project on GitHub.com"):
+https://github.com/martincostello/costellobot.git
 
 ## License
 

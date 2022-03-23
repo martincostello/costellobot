@@ -6,6 +6,8 @@
 param(
     [Parameter(Mandatory = $false)][string] $Configuration = "Release",
     [Parameter(Mandatory = $false)][string] $OutputPath = "",
+    [Parameter(Mandatory = $false)][string] $Runtime = "",
+    [Parameter(Mandatory = $false)][string] $TestFilter = "",
     [Parameter(Mandatory = $false)][switch] $SkipTests
 )
 
@@ -74,22 +76,15 @@ if ($installDotNetSdk -eq $true) {
     $env:PATH = "$env:DOTNET_INSTALL_DIR;$env:PATH"
 }
 
-function DotNetPack {
-    param([string]$Project)
-
-    $PackageOutputPath = (Join-Path $OutputPath "packages")
-
-    & $dotnet pack $Project --output $PackageOutputPath --configuration $Configuration --include-symbols --include-source
-
-    if ($LASTEXITCODE -ne 0) {
-        throw "dotnet pack failed with exit code $LASTEXITCODE"
-    }
-}
-
 function DotNetTest {
     param([string]$Project)
 
     $additionalArgs = @()
+
+    if (![string]::IsNullOrEmpty($TestFilter)) {
+        $additionalArgs += "--filter"
+        $additionalArgs += $TestFilter
+    }
 
     if (![string]::IsNullOrEmpty($env:GITHUB_SHA)) {
         $additionalArgs += "--logger"
@@ -121,24 +116,29 @@ function DotNetTest {
 function DotNetPublish {
     param([string]$Project)
 
+    $additionalArgs = @()
+
+    if (![string]::IsNullOrEmpty($Runtime)) {
+        $additionalArgs += "--self-contained"
+        $additionalArgs += "--runtime"
+        $additionalArgs += $Runtime
+    }
+
     $publishPath = Join-Path $OutputPath "publish"
-    & $dotnet publish $Project --output $publishPath --configuration $Configuration
+    & $dotnet publish $Project --output $publishPath --configuration $Configuration $additionalArgs
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet publish failed with exit code $LASTEXITCODE"
     }
 }
 
-$packageProjects = @(
-    (Join-Path $solutionPath "src" "CHANGE_ME" "CHANGE_ME.csproj")
-)
-
 $publishProjects = @(
-    (Join-Path $solutionPath "src" "CHANGE_ME" "CHANGE_ME.csproj")
+    (Join-Path $solutionPath "src" "Costellobot" "Costellobot.csproj")
 )
 
 $testProjects = @(
-    (Join-Path $solutionPath "tests" "CHANGE_ME.Tests" "CHANGE_ME.Tests.csproj")
+    (Join-Path $solutionPath "tests" "Costellobot.Tests" "Costellobot.Tests.csproj"),
+    (Join-Path $solutionPath "tests" "Costellobot.EndToEndTests" "Costellobot.EndToEndTests.csproj")
 )
 
 Write-Host "Publishing solution..." -ForegroundColor Green

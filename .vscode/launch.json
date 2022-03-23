@@ -2,13 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch CHANGE_ME",
+      "name": "Launch Costellobot",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/src/CHANGE_ME/bin/Debug/net6.0/CHANGE_ME.dll",
+      "program": "${workspaceFolder}/src/Costellobot/bin/Debug/net6.0/Costellobot.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/src/CHANGE_ME",
+      "cwd": "${workspaceFolder}/src/Costellobot",
       "stopAtEntry": false,
       "serverReadyAction": {
         "action": "openExternally",
@@ -28,7 +28,7 @@
       "args": [
         "test"
       ],
-      "cwd": "${workspaceFolder}/tests/CHANGE_ME.Tests",
+      "cwd": "${workspaceFolder}/tests/Costellobot.Tests",
       "console": "internalConsole",
       "stopAtEntry": false,
       "internalConsoleOptions": "openOnSessionStart"

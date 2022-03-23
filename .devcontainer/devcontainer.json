@@ -16,7 +16,7 @@
       "onAutoForward": "silent"
     },
     "5001": {
-      "label": "CHANGE_ME",
+      "label": "Costellobot",
       "onAutoForward": "openBrowserOnce"
     }
   },

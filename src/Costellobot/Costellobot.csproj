@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>MartinCostello.Costellobot</RootNamespace>
+    <TargetFramework>net6.0</TargetFramework>
+    <UserSecretsId>Costellobot</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
+    <PackageReference Include="Octokit" />
+    <PackageReference Include="Polly" />
+  </ItemGroup>
+</Project>
