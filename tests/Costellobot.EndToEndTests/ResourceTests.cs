@@ -14,7 +14,7 @@ public class ResourceTests : EndToEndTest
     }
 
     [SkippableTheory]
-    [InlineData("/", MediaTypeNames.Text.Html)]
+    [InlineData("/", MediaTypeNames.Text.Plain)]
     ////[InlineData("/bad-request.html", MediaTypeNames.Text.Html)]
     ////[InlineData("/error.html", MediaTypeNames.Text.Html)]
     ////[InlineData("/favicon.png", "image/png")]
