@@ -1,0 +1,36 @@
+<Project>
+  <ItemGroup Condition=" '$(IsTestProject)' == 'true' ">
+    <Using Include="Shouldly" />
+    <Using Include="Xunit" />
+    <Using Include="Xunit.Abstractions" />
+  </ItemGroup>
+  <PropertyGroup>
+    <CommitBranch Condition=" '$(CommitBranch)' == '' ">$(BUILD_SOURCEBRANCHNAME)</CommitBranch>
+    <CommitBranch Condition=" '$(CommitBranch)' == '' and '$(GITHUB_REF)' != '' ">$(GITHUB_REF.Substring(11))</CommitBranch>
+    <CommitHash Condition=" '$(CommitHash)' == '' ">$(GITHUB_SHA)</CommitHash>
+  </PropertyGroup>
+  <Target Name="AddGitMetadaAssemblyAttributes"
+          BeforeTargets="CoreGenerateAssemblyInfo"
+          Condition=" '$(GenerateGitMetadata)' == 'true' ">
+    <Exec Command="git rev-parse HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low" IgnoreExitCode="true" Condition=" '$(CommitHash)' == '' ">
+      <Output TaskParameter="ConsoleOutput" PropertyName="CommitHash" />
+    </Exec>
+    <Exec Command="git rev-parse --abbrev-ref HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low" IgnoreExitCode="true" Condition=" '$(CommitBranch)' == '' ">
+      <Output TaskParameter="ConsoleOutput" PropertyName="CommitBranch" />
+    </Exec>
+    <ItemGroup>
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+        <_Parameter1>BuildTimestamp</_Parameter1>
+        <_Parameter2>$([System.DateTime]::UtcNow.ToString(yyyy-MM-ddTHH:mm:ssK))</_Parameter2>
+      </AssemblyAttribute>
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition=" $(CommitHash) != '' ">
+        <_Parameter1>CommitHash</_Parameter1>
+        <_Parameter2>$(CommitHash)</_Parameter2>
+      </AssemblyAttribute>
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition=" $(CommitBranch) != '' ">
+        <_Parameter1>CommitBranch</_Parameter1>
+        <_Parameter2>$(CommitBranch)</_Parameter2>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
+</Project>
