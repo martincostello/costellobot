@@ -146,11 +146,6 @@ ForEach ($project in $publishProjects) {
     DotNetPublish $project $Configuration
 }
 
-Write-Host "Packaging libraries..." -ForegroundColor Green
-ForEach ($project in $packageProjects) {
-    DotNetPack $project $Configuration
-}
-
 if ($SkipTests -eq $false) {
     Write-Host "Testing $($testProjects.Count) project(s)..." -ForegroundColor Green
     ForEach ($project in $testProjects) {
