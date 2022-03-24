@@ -5,6 +5,7 @@
     <Using Include="Xunit.Abstractions" />
   </ItemGroup>
   <PropertyGroup>
+    <BuildId Condition=" '$(BuildId)' == '' ">$(GITHUB_RUN_ID)</BuildId>
     <CommitBranch Condition=" '$(CommitBranch)' == '' ">$(BUILD_SOURCEBRANCHNAME)</CommitBranch>
     <CommitBranch Condition=" '$(CommitBranch)' == '' and '$(GITHUB_REF)' != '' ">$(GITHUB_REF.Substring(11))</CommitBranch>
     <CommitHash Condition=" '$(CommitHash)' == '' ">$(GITHUB_SHA)</CommitHash>
@@ -19,6 +20,10 @@
       <Output TaskParameter="ConsoleOutput" PropertyName="CommitBranch" />
     </Exec>
     <ItemGroup>
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition=" $(BuildId) != '' ">
+        <_Parameter1>BuildId</_Parameter1>
+        <_Parameter2>$(BuildId)</_Parameter2>
+      </AssemblyAttribute>
       <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
         <_Parameter1>BuildTimestamp</_Parameter1>
         <_Parameter2>$([System.DateTime]::UtcNow.ToString(yyyy-MM-ddTHH:mm:ssK))</_Parameter2>
