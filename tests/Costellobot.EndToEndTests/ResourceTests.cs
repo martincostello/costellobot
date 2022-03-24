@@ -13,12 +13,12 @@ public class ResourceTests : EndToEndTest
     {
     }
 
-    [SkippableTheory(Skip = "Not implemented yet.")]
+    [SkippableTheory]
     [InlineData("/bad-request.html", MediaTypeNames.Text.Html)]
+    [InlineData("/css/site.css", "text/css")]
     [InlineData("/error.html", MediaTypeNames.Text.Html)]
     [InlineData("/favicon.png", "image/png")]
     [InlineData("/humans.txt", MediaTypeNames.Text.Plain)]
-    [InlineData("/manifest.webmanifest", "application/manifest+json")]
     [InlineData("/not-found.html", MediaTypeNames.Text.Html)]
     [InlineData("/robots.txt", MediaTypeNames.Text.Plain)]
     public async Task Can_Load_Resource_As_Get(string requestUri, string contentType)
@@ -52,7 +52,7 @@ public class ResourceTests : EndToEndTest
         response.Headers.Location.OriginalString.ShouldBe("https://martincostello.com/");
     }
 
-    [SkippableFact(Skip = "Not implemented yet.")]
+    [SkippableFact]
     public async Task Response_Headers_Contains_Expected_Headers()
     {
         // Arrange
@@ -82,7 +82,7 @@ public class ResourceTests : EndToEndTest
         }
     }
 
-    [SkippableFact(Skip = "Not implemented yet.")]
+    [SkippableFact]
     public async Task Response_Headers_Does_Not_Contain_Unexpected_Headers()
     {
         // Arrange
