@@ -14,7 +14,7 @@ builder.Host.ConfigureApplication();
 
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+app.MapGet("/", () => Results.Redirect("https://martincostello.com/"));
 
 app.MapGitHubWebHook(secret: app.Configuration["GitHub:WebhookSecret"]);
 

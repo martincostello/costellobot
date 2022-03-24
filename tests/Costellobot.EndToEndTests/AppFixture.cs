@@ -32,9 +32,15 @@ public class AppFixture
 
     private static string Version => Environment.GetEnvironmentVariable("GITHUB_RUN_ID") ?? "0";
 
-    public HttpClient CreateClient()
+    public HttpClient CreateClient(bool allowAutoRedirect = false)
     {
-        var client = new HttpClient()
+        var handler = new HttpClientHandler()
+        {
+            AllowAutoRedirect = allowAutoRedirect,
+            CheckCertificateRevocationList = true,
+        };
+
+        var client = new HttpClient(handler: handler, disposeHandler: true)
         {
             BaseAddress = ServerAddress,
         };
