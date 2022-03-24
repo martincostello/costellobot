@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Net;
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -95,6 +96,19 @@ public sealed class ApiTests : IntegrationTests<AppFixture>
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Can_Get_Version()
+    {
+        // Arrange
+        using var client = Fixture.CreateClient();
+
+        // Act
+        var actual = await client.GetFromJsonAsync<JsonElement>("/version");
+
+        // Assert
+        actual.TryGetProperty("version", out _).ShouldBeTrue();
     }
 
     private (string Payload, string Signature) CreateWebhook(

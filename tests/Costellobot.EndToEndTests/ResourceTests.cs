@@ -21,6 +21,7 @@ public class ResourceTests : EndToEndTest
     [InlineData("/humans.txt", MediaTypeNames.Text.Plain)]
     [InlineData("/not-found.html", MediaTypeNames.Text.Html)]
     [InlineData("/robots.txt", MediaTypeNames.Text.Plain)]
+    [InlineData("/version", MediaTypeNames.Application.Json)]
     public async Task Can_Load_Resource_As_Get(string requestUri, string contentType)
     {
         // Arrange

@@ -4,12 +4,19 @@
 #pragma warning disable SA1516
 
 using System.Net;
+using System.Reflection;
 using MartinCostello.Costellobot;
+using Microsoft.AspNetCore.Http.Json;
 using Terrajobst.GitHubEvents.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddGitHub(builder.Configuration);
+
+builder.Services.Configure<JsonOptions>((options) =>
+{
+    options.SerializerOptions.WriteIndented = true;
+});
 
 builder.Host.ConfigureApplication();
 
@@ -35,6 +42,14 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 app.MapGet("/", () => Results.Redirect("https://martincostello.com/"));
+
+app.MapGet("/version", () => new
+{
+    branch = GitMetadata.Branch,
+    build = GitMetadata.BuildId,
+    commit = GitMetadata.Commit,
+    version = typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion,
+});
 
 var allMethods = new[]
 {
