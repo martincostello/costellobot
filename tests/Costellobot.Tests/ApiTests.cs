@@ -35,7 +35,6 @@ public sealed class ApiTests : IntegrationTests<AppFixture>
         var commentPosted = new TaskCompletionSource();
 
         RegisterGetAccessToken();
-        RegisterEmojis();
 
         RegisterIssueComment(
             pullRequest,

@@ -60,20 +60,6 @@ public abstract class IntegrationTests<T> : IAsyncLifetime
         return ConfigureRateLimit(builder);
     }
 
-    protected void RegisterEmojis()
-    {
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPath("/emojis")
-            .Responds()
-            .WithJsonContent(new
-            {
-                wave = "https://github.githubassets.com/images/icons/emoji/unicode/1f44b.png?v8",
-                rocket = "https://github.githubassets.com/images/icons/emoji/unicode/1f680.png?v8",
-            })
-            .RegisterWith(Fixture.Interceptor);
-    }
-
     protected void RegisterGetAccessToken(AccessTokenBuilder? accessToken = null)
     {
         accessToken ??= new();

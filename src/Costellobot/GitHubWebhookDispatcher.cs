@@ -35,17 +35,11 @@ public sealed partial class GitHubWebhookDispatcher
             body.PullRequest is { } pr &&
             pr.User.Login == "martincostello")
         {
-            var allEmoji = await _client.Miscellaneous.GetAllEmojis();
-
-#pragma warning disable CA5394
-            var emoji = allEmoji[Random.Shared.Next(0, allEmoji.Count)];
-#pragma warning restore CA5394
-
             await _client.Issue.Comment.Create(
                 repo.Owner.Login,
                 repo.Name,
                 pr.Number,
-                $"Hey @{pr.User.Login} :wave: - this comment is a test. Enjoy this randomly chosen emoij: :{emoji.Name}:");
+                $"Hey @{pr.User.Login} :wave: - this comment is a test.");
         }
 
         Log.ProcessedWebhook(_logger, message.HookId);
