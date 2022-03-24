@@ -40,14 +40,6 @@
     <VersionSuffix Condition=" $(GITHUB_REF.StartsWith(`refs/tags/v`)) "></VersionSuffix>
     <FileVersion Condition=" '$(GITHUB_RUN_NUMBER)' != '' ">$(VersionPrefix).$(GITHUB_RUN_NUMBER)</FileVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(BuildingInsideVisualStudio)' != 'true' ">
-    <CollectCoverage>true</CollectCoverage>
-    <CoverletOutput Condition=" '$(OutputPath)' != '' ">$(OutputPath)/</CoverletOutput>
-    <CoverletOutputFormat>cobertura,json</CoverletOutputFormat>
-    <Exclude>[xunit.*]*</Exclude>
-    <ExcludeByAttribute>System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
-    <Threshold></Threshold>
-  </PropertyGroup>
   <ItemGroup Condition=" '$(PackageIcon)' != '' ">
     <None Include="$(MSBuildThisFileDirectory)$(PackageIcon)" Pack="True" PackagePath="" />
   </ItemGroup>

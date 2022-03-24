@@ -7,6 +7,8 @@ public sealed class GitHubOptions
 {
     public string AppId { get; set; } = string.Empty;
 
+    public string EnterpriseDomain { get; set; } = string.Empty;
+
     public long InstallationId { get; set; }
 
     public string PrivateKey { get; set; } = string.Empty;

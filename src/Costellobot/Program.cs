@@ -4,12 +4,11 @@
 #pragma warning disable SA1516
 
 using MartinCostello.Costellobot;
-using Terrajobst.GitHubEvents;
 using Terrajobst.GitHubEvents.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<IGitHubEventProcessor, GitHubEventProcessor>();
+builder.Services.AddGitHub(builder.Configuration);
 
 builder.Host.ConfigureApplication();
 
@@ -20,3 +19,11 @@ app.MapGet("/", () => "Hello World!");
 app.MapGitHubWebHook(secret: app.Configuration["GitHub:WebhookSecret"]);
 
 app.Run();
+
+namespace MartinCostello.Costellobot
+{
+    public partial class Program
+    {
+        // Expose the Program class for use with WebApplicationFactory<T>
+    }
+}
