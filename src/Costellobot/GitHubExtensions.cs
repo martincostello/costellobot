@@ -21,6 +21,7 @@ public static class GitHubExtensions
         services.AddOptions();
 
         services.Configure<GitHubOptions>(configuration.GetSection("GitHub"));
+        services.Configure<WebhookOptions>(configuration.GetSection("Webhook"));
 
         services.TryAddSingleton<IClock>(SystemClock.Instance);
 

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using Microsoft.Extensions.Options;
 using Octokit;
 using Terrajobst.GitHubEvents;
 
@@ -10,12 +11,15 @@ public sealed partial class GitHubWebhookDispatcher
 {
     private readonly IGitHubClient _client;
     private readonly ILogger _logger;
+    private readonly IOptionsSnapshot<WebhookOptions> _options;
 
     public GitHubWebhookDispatcher(
         IGitHubClientForInstallation client,
+        IOptionsSnapshot<WebhookOptions> options,
         ILogger<GitHubWebhookDispatcher> logger)
     {
         _client = client;
+        _options = options;
         _logger = logger;
     }
 
