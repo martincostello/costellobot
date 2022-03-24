@@ -49,6 +49,11 @@ app.MapGet("/version", () => new
     build = GitMetadata.BuildId,
     commit = GitMetadata.Commit,
     version = typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion,
+    _links = new
+    {
+        self = new { href = "https://costellobot.martincostello.com" },
+        repo = new { href = "https://github.com/martincostello/costellobot" },
+    },
 });
 
 var allMethods = new[]
