@@ -71,10 +71,17 @@ public sealed partial class GitHubWebhookService : IHostedService, IDisposable
                 break;
             }
 
-            await using var scope = _serviceProvider.CreateAsyncScope();
+            try
+            {
+                await using var scope = _serviceProvider.CreateAsyncScope();
 
-            var dispatcher = scope.ServiceProvider.GetRequiredService<GitHubWebhookDispatcher>();
-            await dispatcher.DispatchAsync(message);
+                var dispatcher = scope.ServiceProvider.GetRequiredService<GitHubWebhookDispatcher>();
+                await dispatcher.DispatchAsync(message);
+            }
+            catch (Exception ex)
+            {
+                Log.ProcessingFailed(_logger, ex, message.HookId);
+            }
         }
     }
 
@@ -86,5 +93,11 @@ public sealed partial class GitHubWebhookService : IHostedService, IDisposable
            Level = LogLevel.Warning,
            Message = "Failed to drain webhook queue.")]
         public static partial void FailedToDrainQueue(ILogger logger, Exception exception);
+
+        [LoggerMessage(
+           EventId = 2,
+           Level = LogLevel.Error,
+           Message = "Failed to process webhook with ID {HookId}.")]
+        public static partial void ProcessingFailed(ILogger logger, Exception exception, string hookId);
     }
 }

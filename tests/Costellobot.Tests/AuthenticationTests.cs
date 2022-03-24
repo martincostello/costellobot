@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Builders;
 using MartinCostello.Costellobot.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -84,15 +83,9 @@ public sealed class AuthenticationTests : IntegrationTests<AppFixture>
     public async Task Can_Create_Authenticated_GitHub_Client_For_Installation()
     {
         // Arrange
-        var accessToken = new AccessTokenBuilder();
+        var accessToken = GitHubFixtures.CreateAccessToken();
 
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPost()
-            .ForPath($"/app/installations/{GitHubFixtures.InstallationId}/access_tokens")
-            .Responds()
-            .WithJsonContent(accessToken)
-            .RegisterWith(Fixture.Interceptor);
+        RegisterGetAccessToken(accessToken);
 
         var target = Fixture.Services.GetRequiredService<IGitHubClientForInstallation>();
 

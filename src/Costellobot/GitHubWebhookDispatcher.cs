@@ -23,20 +23,32 @@ public sealed partial class GitHubWebhookDispatcher
         _logger = logger;
     }
 
-    public static Queue<GitHubEvent> Messages { get; } = new Queue<GitHubEvent>();
-
-    public Task DispatchAsync(GitHubEvent message)
+    public async Task DispatchAsync(GitHubEvent message)
     {
         Log.ProcessingWebhook(_logger, message.HookId);
 
-        // TODO Do some actual work with the message
-        Messages.Enqueue(message);
+        if (_options.Value.Comment &&
+            message.Body is { } body &&
+            message.Event == "pull_request" &&
+            body.Action == "opened" &&
+            body.Repository is { } repo &&
+            body.PullRequest is { } pr &&
+            pr.User.Login == "martincostello")
+        {
+            var allEmoji = await _client.Miscellaneous.GetAllEmojis();
 
-        _ = _client.GetLastApiInfo();
+#pragma warning disable CA5394
+            var emoji = allEmoji[Random.Shared.Next(0, allEmoji.Count)];
+#pragma warning restore CA5394
+
+            await _client.Issue.Comment.Create(
+                repo.Owner.Login,
+                repo.Name,
+                pr.Number,
+                $"Hey @{pr.User.Login} :wave: - this comment is a test. Enjoy this randomly chosen emoij: :{emoji.Name}:");
+        }
 
         Log.ProcessedWebhook(_logger, message.HookId);
-
-        return Task.CompletedTask;
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
