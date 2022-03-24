@@ -36,14 +36,14 @@ public static class GitHubExtensions
         services.AddSingleton<ICredentialStore>((provider) => provider.GetRequiredService<AppCredentialStore>());
         services.AddSingleton<IJsonSerializer, SimpleJsonSerializer>();
 
-        services.AddScoped<IHttpClient>((provider) =>
+        services.AddTransient<IHttpClient>((provider) =>
         {
             var httpClientFactory = provider.GetRequiredService<IHttpMessageHandlerFactory>();
             return new HttpClientAdapter(httpClientFactory.CreateHandler);
         });
 
-        services.AddScoped<IGitHubClientForApp>((provider) => provider.CreateClient<AppCredentialStore>());
-        services.AddScoped<IGitHubClientForInstallation>((provider) => provider.CreateClient<InstallationCredentialStore>());
+        services.AddTransient<IGitHubClientForApp>((provider) => provider.CreateClient<AppCredentialStore>());
+        services.AddTransient<IGitHubClientForInstallation>((provider) => provider.CreateClient<InstallationCredentialStore>());
 
         services.AddSingleton<IGitHubEventProcessor, GitHubEventProcessor>();
         services.AddSingleton<GitHubWebhookQueue>();
