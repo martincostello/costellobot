@@ -3,22 +3,45 @@
 
 namespace MartinCostello.Costellobot;
 
-public sealed partial class GitHubWebhookService : IHostedService
+public sealed partial class GitHubWebhookService : IHostedService, IDisposable
 {
     private readonly GitHubWebhookQueue _queue;
     private readonly ILogger _logger;
+    private readonly IServiceProvider _serviceProvider;
+
+    private CancellationTokenSource? _cts;
+    private Task? _executeTask;
 
     public GitHubWebhookService(
         GitHubWebhookQueue queue,
+        IServiceProvider serviceProvider,
         ILogger<GitHubWebhookService> logger)
     {
         _queue = queue;
         _logger = logger;
+        _serviceProvider = serviceProvider;
+    }
+
+    public void Dispose()
+    {
+        if (_cts is { } tokenSource)
+        {
+            _cts.Cancel();
+            _cts.Dispose();
+            _cts = null;
+        }
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        // TODO Start the processing loop
+        _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _executeTask = ExecuteAsync(_cts.Token);
+
+        if (_executeTask.IsCompleted)
+        {
+            return _executeTask;
+        }
+
         return Task.CompletedTask;
     }
 
@@ -28,11 +51,30 @@ public sealed partial class GitHubWebhookService : IHostedService
 
         try
         {
+            _cts?.Cancel();
             await _queue.WaitForQueueToDrainAsync().WaitAsync(cancellationToken);
         }
         catch (Exception ex)
         {
             Log.FailedToDrainQueue(_logger, ex);
+        }
+    }
+
+    private async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (true)
+        {
+            var message = await _queue.DequeueAsync(stoppingToken);
+
+            if (message is null)
+            {
+                break;
+            }
+
+            await using var scope = _serviceProvider.CreateAsyncScope();
+
+            var dispatcher = scope.ServiceProvider.GetRequiredService<GitHubWebhookDispatcher>();
+            await dispatcher.DispatchAsync(message);
         }
     }
 

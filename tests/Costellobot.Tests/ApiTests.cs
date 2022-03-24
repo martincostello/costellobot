@@ -8,6 +8,7 @@ using System.Text.Json;
 using MartinCostello.Costellobot.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Terrajobst.GitHubEvents;
 
 namespace MartinCostello.Costellobot;
 
@@ -73,11 +74,19 @@ public sealed class ApiTests : IntegrationTests<AppFixture>
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var queue = Fixture.Services.GetRequiredService<GitHubWebhookQueue>();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
 
-        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+        GitHubEvent? actual = null;
 
-        var actual = await queue.DequeueAsync(cts.Token);
+        while (!cts.IsCancellationRequested)
+        {
+            if (GitHubWebhookDispatcher.Messages.TryDequeue(out actual))
+            {
+                break;
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
+        }
 
         actual.ShouldNotBeNull();
         actual.HookId.ShouldBe("109948940");
