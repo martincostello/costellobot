@@ -24,8 +24,6 @@ public static class GitHubExtensions
 
         services.TryAddSingleton<IClock>(SystemClock.Instance);
 
-        services.AddSingleton<IGitHubEventProcessor, GitHubEventProcessor>();
-
         services.AddSingleton((provider) =>
         {
             // Use a custom CryptoProviderFactory so that keys are not cached and then disposed of.
@@ -46,6 +44,12 @@ public static class GitHubExtensions
 
         services.AddScoped<IGitHubClientForApp>((provider) => provider.CreateClient<AppCredentialStore>());
         services.AddScoped<IGitHubClientForInstallation>((provider) => provider.CreateClient<InstallationCredentialStore>());
+
+        services.AddSingleton<IGitHubEventProcessor, GitHubEventProcessor>();
+        services.AddSingleton<GitHubWebhookQueue>();
+        services.AddSingleton<GitHubWebhookService>();
+
+        services.AddHostedService<GitHubWebhookService>();
 
         return services;
     }

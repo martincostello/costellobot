@@ -72,6 +72,15 @@ public sealed class ApiTests : IntegrationTests<AppFixture>
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var queue = Fixture.Services.GetRequiredService<GitHubWebhookQueue>();
+
+        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+
+        var actual = await queue.DequeueAsync(cts.Token);
+
+        actual.ShouldNotBeNull();
+        actual.HookId.ShouldBe("109948940");
     }
 
     private static (string Payload, string Signature) CreateWebhook(object value, string webhookSecret)

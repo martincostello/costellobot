@@ -8,15 +8,20 @@ namespace MartinCostello.Costellobot;
 public sealed partial class GitHubEventProcessor : IGitHubEventProcessor
 {
     private readonly ILogger<GitHubEventProcessor> _logger;
+    private readonly GitHubWebhookQueue _queue;
 
-    public GitHubEventProcessor(ILogger<GitHubEventProcessor> logger)
+    public GitHubEventProcessor(
+        GitHubWebhookQueue queue,
+        ILogger<GitHubEventProcessor> logger)
     {
+        _queue = queue;
         _logger = logger;
     }
 
     public void Process(GitHubEvent message)
     {
-        Log.ReceivedWebHook(_logger, message.HookId);
+        Log.ReceivedWebhook(_logger, message.HookId);
+        _queue.Enqueue(message);
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -26,6 +31,6 @@ public sealed partial class GitHubEventProcessor : IGitHubEventProcessor
            EventId = 1,
            Level = LogLevel.Information,
            Message = "Received webhook with ID {HookId}.")]
-        public static partial void ReceivedWebHook(ILogger logger, string hookId);
+        public static partial void ReceivedWebhook(ILogger logger, string hookId);
     }
 }
