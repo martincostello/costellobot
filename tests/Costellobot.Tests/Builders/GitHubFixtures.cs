@@ -20,8 +20,10 @@ public static class GitHubFixtures
     public static GitHubEvent CreateEvent(
         string @event,
         object? payload = null,
-        string? installationId = null)
+        long? installationId = null)
     {
+        installationId ??= 42;
+
         var headers = new Dictionary<string, StringValues>()
         {
             ["Accept"] = "*/*",
@@ -29,11 +31,17 @@ public static class GitHubFixtures
             ["X-GitHub-Delivery"] = Guid.NewGuid().ToString(),
             ["X-GitHub-Event"] = @event,
             ["X-GitHub-Hook-ID"] = Guid.NewGuid().ToString(),
-            ["X-GitHub-Hook-Installation-Target-ID"] = installationId ?? InstallationId,
+            ["X-GitHub-Hook-Installation-Target-ID"] = installationId.Value.ToString(CultureInfo.InvariantCulture),
             ["X-GitHub-Hook-Installation-Target-Type"] = "integration",
         };
 
-        string body = JsonSerializer.Serialize(payload ?? new { });
+        string body = JsonSerializer.Serialize(payload ?? new
+        {
+            installation = new
+            {
+                di = installationId.Value,
+            },
+        });
 
         return GitHubEvent.Parse(headers, body);
     }

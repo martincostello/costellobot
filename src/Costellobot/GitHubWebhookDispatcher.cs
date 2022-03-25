@@ -29,7 +29,7 @@ public sealed partial class GitHubWebhookDispatcher
 
         if (!IsValidInstallation(message))
         {
-            Log.IncorrectInstallationWebhookIgnored(_logger, message.HookId, message.HookInstallationTargetId);
+            Log.IncorrectInstallationWebhookIgnored(_logger, message.HookId, message.Body.Installation.Id);
             return;
         }
 
@@ -40,10 +40,7 @@ public sealed partial class GitHubWebhookDispatcher
     }
 
     private bool IsValidInstallation(GitHubEvent message)
-        => string.Equals(
-               message.HookInstallationTargetId,
-               _options.Value.InstallationId.ToString(CultureInfo.InvariantCulture),
-               StringComparison.Ordinal);
+        => message.Body.Installation.Id == _options.Value.InstallationId;
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     private static partial class Log
@@ -64,6 +61,6 @@ public sealed partial class GitHubWebhookDispatcher
            EventId = 3,
            Level = LogLevel.Warning,
            Message = "Ignored webhook with ID {HookId} as the installation ID {InstallationId} is incorrect.")]
-        public static partial void IncorrectInstallationWebhookIgnored(ILogger logger, string hookId, string installationId);
+        public static partial void IncorrectInstallationWebhookIgnored(ILogger logger, string hookId, int installationId);
     }
 }

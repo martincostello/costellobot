@@ -205,6 +205,10 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
             number = pullRequest.Number,
             pull_request = pullRequest.Build(),
             repository = pullRequest.Repository.Build(),
+            installation = new
+            {
+                id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
+            },
         };
     }
 
