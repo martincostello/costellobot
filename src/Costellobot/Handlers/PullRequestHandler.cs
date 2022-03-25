@@ -103,7 +103,7 @@ public sealed partial class PullRequestHandler : IHandler
             await _connection.Run(query);
             Log.AutoMergeEnabled(_logger, owner, name, number);
         }
-        catch (Octokit.GraphQL.Core.GraphQLException ex)
+        catch (Exception ex)
         {
             Log.EnableAutoMergeFailed(_logger, ex, owner, name, number, nodeId);
         }
