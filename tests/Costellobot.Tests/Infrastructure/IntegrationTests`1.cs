@@ -1,9 +1,14 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Builders;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot.Infrastructure;
@@ -73,20 +78,79 @@ public abstract class IntegrationTests<T> : IAsyncLifetime
             .RegisterWith(Fixture.Interceptor);
     }
 
-    protected void RegisterIssueComment(
+    protected void RegisterGetCommit(GitHubCommitBuilder commit)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{commit.Repository.Owner.Login}/{commit.Repository.Name}/commits/{commit.Sha}")
+            .Responds()
+            .WithJsonContent(commit)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    protected void RegisterPostReview(
         PullRequestBuilder pullRequest,
-        IssueCommentBuilder issueComment,
         Action<HttpRequestInterceptionBuilder>? configure = null)
     {
         var builder = CreateDefaultBuilder()
             .Requests()
             .ForPost()
-            .ForPath($"/repos/{pullRequest.Repository.Owner.Login}/{pullRequest.Repository.Name}/issues/{pullRequest.Number}/comments")
+            .ForPath($"/repos/{pullRequest.Repository.Owner.Login}/{pullRequest.Repository.Name}/pulls/{pullRequest.Number}/reviews")
             .Responds()
-            .WithJsonContent(issueComment);
+            .WithStatus(StatusCodes.Status201Created)
+            .WithSystemTextJsonContent(new { });
 
         configure?.Invoke(builder);
 
         builder.RegisterWith(Fixture.Interceptor);
+    }
+
+    protected async Task<HttpResponseMessage> PostWebhookAsync(
+        string @event,
+        object value,
+        string? webhookSecret = null)
+    {
+        (string payload, string signature) = CreateWebhook(value, webhookSecret);
+
+        using var client = Fixture.CreateDefaultClient();
+
+        client.DefaultRequestHeaders.Add("Accept", "*/*");
+        client.DefaultRequestHeaders.Add("User-Agent", "GitHub-Hookshot/f05835d");
+        client.DefaultRequestHeaders.Add("X-GitHub-Delivery", Guid.NewGuid().ToString());
+        client.DefaultRequestHeaders.Add("X-GitHub-Event", @event);
+        client.DefaultRequestHeaders.Add("X-GitHub-Hook-ID", "109948940");
+        client.DefaultRequestHeaders.Add("X-GitHub-Hook-Installation-Target-ID", "42");
+        client.DefaultRequestHeaders.Add("X-GitHub-Hook-Installation-Target-Type", "integration");
+        client.DefaultRequestHeaders.Add("X-Hub-Signature", signature);
+        client.DefaultRequestHeaders.Add("X-Hub-Signature-256", signature);
+
+        using var content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+        // Act
+        return await client.PostAsync("/github-webhook", content);
+    }
+
+    private (string Payload, string Signature) CreateWebhook(
+        object value,
+        string? webhookSecret)
+    {
+        if (webhookSecret is null)
+        {
+            var options = Fixture.Services.GetRequiredService<IOptions<GitHubOptions>>().Value;
+            webhookSecret = options.WebhookSecret;
+        }
+
+        string payload = JsonSerializer.Serialize(value);
+
+        // See https://github.com/terrajobst/Terrajobst.GitHubEvents/blob/cb86100c783373e198cefb1ed7e92526a44833b0/src/Terrajobst.GitHubEvents.AspNetCore/GitHubEventsExtensions.cs#L112-L119
+        var encoding = Encoding.UTF8;
+
+        byte[] key = encoding.GetBytes(webhookSecret);
+        byte[] data = encoding.GetBytes(payload);
+
+        byte[] hash = HMACSHA256.HashData(key, data);
+        string hashString = Convert.ToHexString(hash).ToLowerInvariant();
+
+        return (payload, $"sha256={hashString}");
     }
 }

@@ -5,9 +5,10 @@ namespace MartinCostello.Costellobot.Builders;
 
 public sealed class PullRequestBuilder : ResponseBuilder
 {
-    public PullRequestBuilder(RepositoryBuilder repository)
+    public PullRequestBuilder(RepositoryBuilder repository, UserBuilder? user = null)
     {
         Repository = repository;
+        User = user;
     }
 
     public bool IsDraft { get; set; }
@@ -22,6 +23,11 @@ public sealed class PullRequestBuilder : ResponseBuilder
 
     public string Title { get; set; } = RandomString();
 
+    public UserBuilder? User { get; set; }
+
+    public GitHubCommitBuilder CreateCommit()
+        => new(Repository) { Sha = Sha };
+
     public override object Build()
     {
         return new
@@ -35,7 +41,7 @@ public sealed class PullRequestBuilder : ResponseBuilder
             mergeable = IsMergeable,
             number = Number,
             title = Title,
-            user = Repository.Owner.Build(),
+            user = (User ?? Repository.Owner).Build(),
         };
     }
 }

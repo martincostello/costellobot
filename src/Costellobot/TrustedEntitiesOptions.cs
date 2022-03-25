@@ -5,7 +5,7 @@ namespace MartinCostello.Costellobot;
 
 public sealed class TrustedEntitiesOptions
 {
-    public IList<string> Packages { get; set; } = new List<string>();
+    public IList<string> Dependencies { get; set; } = new List<string>();
 
     public IList<string> Users { get; set; } = new List<string>();
 }

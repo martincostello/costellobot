@@ -25,7 +25,11 @@ public sealed class RepositoryBuilder : ResponseBuilder
 
     public string? Visibility { get; set; }
 
-    public PullRequestBuilder CreatePullRequest() => new(this);
+    public GitHubCommitBuilder CreateCommit()
+        => new(this);
+
+    public PullRequestBuilder CreatePullRequest(UserBuilder? user = null)
+        => new(this, user);
 
     public override object Build()
     {

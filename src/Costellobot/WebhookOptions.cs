@@ -9,8 +9,6 @@ public sealed class WebhookOptions
 
     public bool Automerge { get; set; }
 
-    public bool Comment { get; set; }
-
     public int RerunFailedChecksAttempts { get; set; }
 
     public TrustedEntitiesOptions TrustedEntities { get; set; } = new();

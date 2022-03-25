@@ -50,19 +50,6 @@ public static class GitHubFixtures
         return builder;
     }
 
-    public static IssueCommentBuilder CreateIssueComment(string login, string body)
-    {
-        var user = new UserBuilder(login);
-        var builder = new IssueCommentBuilder(user);
-
-        if (body is not null)
-        {
-            builder.Body = body;
-        }
-
-        return builder;
-    }
-
     public static UserBuilder CreateUser(
         string? login = null,
         int? id = null,
