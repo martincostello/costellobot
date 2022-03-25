@@ -7,7 +7,7 @@ using Octokit;
 
 namespace MartinCostello.Costellobot;
 
-public sealed class InstallationCredentialStore : ICredentialStore
+public sealed class InstallationCredentialStore : ICredentialStore, Octokit.GraphQL.ICredentialStore
 {
     private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(1);
     private static readonly TimeSpan TokenSkew = TimeSpan.FromMinutes(5);
@@ -38,5 +38,11 @@ public sealed class InstallationCredentialStore : ICredentialStore
             var accessToken = await _client.GitHubApps.CreateInstallationToken(installationId);
             return new Credentials(accessToken.Token, AuthenticationType.Oauth);
         });
+    }
+
+    async Task<string> Octokit.GraphQL.ICredentialStore.GetCredentials(CancellationToken cancellationToken)
+    {
+        var credentials = await GetCredentials();
+        return credentials.GetToken();
     }
 }

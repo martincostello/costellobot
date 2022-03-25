@@ -13,7 +13,7 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot.Infrastructure;
 
-public abstract class IntegrationTests<T> : IAsyncLifetime
+public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
     where T : AppFixture
 {
     private readonly IDisposable _scope;
@@ -26,6 +26,11 @@ public abstract class IntegrationTests<T> : IAsyncLifetime
         _scope = Fixture.Interceptor.BeginScope();
     }
 
+    ~IntegrationTests()
+    {
+        Dispose(false);
+    }
+
     protected T Fixture { get; }
 
     protected ITestOutputHelper OutputHelper { get; }
@@ -34,9 +39,14 @@ public abstract class IntegrationTests<T> : IAsyncLifetime
 
     public virtual Task DisposeAsync()
     {
-        _scope?.Dispose();
-        Fixture.ClearConfigurationOverrides();
+        Dispose();
         return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     protected static HttpRequestInterceptionBuilder ConfigureRateLimit(HttpRequestInterceptionBuilder builder)
@@ -63,6 +73,37 @@ public abstract class IntegrationTests<T> : IAsyncLifetime
             .WithStatus(StatusCodes.Status200OK);
 
         return ConfigureRateLimit(builder);
+    }
+
+    protected void RegisterEnableAutomerge(
+        PullRequestBuilder pullRequest,
+        Action<HttpRequestInterceptionBuilder>? configure = null)
+    {
+        var response = new
+        {
+            data = new
+            {
+                enablePullRequestAutoMerge = new
+                {
+                    number = new
+                    {
+                        number = pullRequest.Number,
+                    },
+                },
+            },
+        };
+
+        var builder = CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath(string.Empty)
+            .Responds()
+            .WithStatus(StatusCodes.Status201Created)
+            .WithSystemTextJsonContent(response);
+
+        configure?.Invoke(builder);
+
+        builder.RegisterWith(Fixture.Interceptor);
     }
 
     protected void RegisterGetAccessToken(AccessTokenBuilder? accessToken = null)
@@ -128,6 +169,12 @@ public abstract class IntegrationTests<T> : IAsyncLifetime
 
         // Act
         return await client.PostAsync("/github-webhook", content);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        _scope?.Dispose();
+        Fixture.ClearConfigurationOverrides();
     }
 
     private (string Payload, string Signature) CreateWebhook(

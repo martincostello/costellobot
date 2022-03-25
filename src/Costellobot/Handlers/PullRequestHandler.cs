@@ -4,22 +4,28 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 using Octokit;
+using Octokit.GraphQL;
+using Octokit.GraphQL.Model;
 using Terrajobst.GitHubEvents;
+using IConnection = Octokit.GraphQL.IConnection;
 
 namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class PullRequestHandler : IHandler
 {
     private readonly IGitHubClient _client;
-    private readonly IOptionsSnapshot<WebhookOptions> _options;
+    private readonly IConnection _connection;
+    private readonly IOptionsMonitor<WebhookOptions> _options;
     private readonly ILogger _logger;
 
     public PullRequestHandler(
         IGitHubClientForInstallation client,
-        IOptionsSnapshot<WebhookOptions> options,
+        IConnection connection,
+        IOptionsMonitor<WebhookOptions> options,
         ILogger<PullRequestHandler> logger)
     {
         _client = client;
+        _connection = connection;
         _options = options;
         _logger = logger;
     }
@@ -38,24 +44,50 @@ public sealed partial class PullRequestHandler : IHandler
             return;
         }
 
+        string owner = message.Body.Repository.Owner.Login;
+        string name = message.Body.Repository.Name;
+        int number = message.Body.PullRequest.Number;
+
         if (await IsTrustedDependencyUpdateAsync(message))
         {
-            if (_options.Value.Approve)
+            var options = _options.CurrentValue;
+
+            if (options.Approve)
             {
                 await _client.PullRequest.Review.Create(
-                    message.Body.Repository.Owner.Login,
-                    message.Body.Repository.Name,
-                    message.Body.PullRequest.Number,
+                    owner,
+                    name,
+                    number,
                     new()
                     {
                         Body = "Auto-approving dependency update.",
-                        Event = PullRequestReviewEvent.Approve,
+                        Event = Octokit.PullRequestReviewEvent.Approve,
                     });
+
+                Log.PullRequestApproved(_logger, owner, name, number);
             }
 
-            if (_options.Value.Automerge)
+            if (options.Automerge)
             {
-                // TODO
+                var input = new EnablePullRequestAutoMergeInput()
+                {
+                    PullRequestId = new ID(message.Body.PullRequest.NodeId),
+                };
+
+                var query = new Mutation()
+                    .EnablePullRequestAutoMerge(input)
+                    .Select((p) => new { p.PullRequest.Number })
+                    .Compile();
+
+                try
+                {
+                    await _connection.Run(query);
+                    Log.AutoMergeEnabled(_logger, owner, name, number);
+                }
+                catch (Octokit.GraphQL.Core.GraphQLException ex)
+                {
+                    Log.EnableAutoMergeFailed(_logger, ex, owner, name, number);
+                }
             }
         }
     }
@@ -68,7 +100,7 @@ public sealed partial class PullRequestHandler : IHandler
             body.PullRequest is { } pr &&
             !pr.Draft)
         {
-            return _options.Value.TrustedEntities.Users.Contains(
+            return _options.CurrentValue.TrustedEntities.Users.Contains(
                 pr.User.Login,
                 StringComparer.Ordinal);
         }
@@ -104,7 +136,7 @@ public sealed partial class PullRequestHandler : IHandler
             }
         }
 
-        var trustedDependencies = _options.Value.TrustedEntities.Dependencies;
+        var trustedDependencies = _options.CurrentValue.TrustedEntities.Dependencies;
 
         if (dependencies.Count < 1 || trustedDependencies.Count < 1)
         {
@@ -189,5 +221,36 @@ public sealed partial class PullRequestHandler : IHandler
             string repository,
             int number,
             int count);
+
+        [LoggerMessage(
+           EventId = 5,
+           Level = LogLevel.Information,
+           Message = "Approved pull request {Owner}/{Repository}#{Number}.")]
+        public static partial void PullRequestApproved(
+            ILogger logger,
+            string owner,
+            string repository,
+            int number);
+
+        [LoggerMessage(
+           EventId = 6,
+           Level = LogLevel.Information,
+           Message = "Enabled auto-merge for pull request {Owner}/{Repository}#{Number}.")]
+        public static partial void AutoMergeEnabled(
+            ILogger logger,
+            string owner,
+            string repository,
+            int number);
+
+        [LoggerMessage(
+           EventId = 7,
+           Level = LogLevel.Warning,
+           Message = "Failed to enable auto-merge for pull request {Owner}/{Repository}#{Number}.")]
+        public static partial void EnableAutoMergeFailed(
+            ILogger logger,
+            Exception exception,
+            string owner,
+            string repository,
+            int number);
     }
 }

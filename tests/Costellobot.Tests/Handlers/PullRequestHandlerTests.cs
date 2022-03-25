@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Net;
+using System.Text.Json;
 using MartinCostello.Costellobot.Builders;
 using MartinCostello.Costellobot.Infrastructure;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
@@ -46,6 +47,58 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         await pullRequestApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public async Task Pull_Request_Automerge_Is_Enabled_For_Trusted_User_And_Dependency()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Automerge", bool.TrueString);
+
+        var user = CreateUser("dependabot[bot]");
+        var pullRequest = CreatePullRequest(user);
+
+        var commit = pullRequest.CreateCommit();
+        commit.Message = TrustedCommitMessage();
+
+        var automergeEnabled = new TaskCompletionSource();
+
+        RegisterGetAccessToken();
+        RegisterGetCommit(commit);
+        RegisterPostReview(pullRequest);
+
+        RegisterEnableAutomerge(
+            pullRequest,
+            (p) => p.WithInterceptionCallback(async (request) =>
+            {
+                request.Content.ShouldNotBeNull();
+
+                byte[] body = await request.Content.ReadAsByteArrayAsync();
+                using var document = JsonDocument.Parse(body);
+
+                var query = document.RootElement.GetProperty("query").GetString();
+
+                query.ShouldNotBeNull();
+
+                bool hasCorrectId = query.Contains(@$"pullRequestId:""{pullRequest.NodeId}""", StringComparison.Ordinal);
+
+                if (hasCorrectId)
+                {
+                    automergeEnabled.SetResult();
+                }
+
+                return hasCorrectId;
+            }));
+
+        var value = CreateWebhook(pullRequest);
+
+        // Act
+        using var response = await PostWebhookAsync("pull_request", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await automergeEnabled.Task.WaitAsync(TimeSpan.FromSeconds(10));
     }
 
     [Fact]

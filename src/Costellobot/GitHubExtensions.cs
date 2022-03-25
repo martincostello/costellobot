@@ -47,6 +47,18 @@ public static class GitHubExtensions
         services.AddTransient<IGitHubClientForApp>((provider) => provider.CreateClient<AppCredentialStore>());
         services.AddTransient<IGitHubClientForInstallation>((provider) => provider.CreateClient<InstallationCredentialStore>());
 
+        services.AddTransient<Octokit.GraphQL.IConnection>((provider) =>
+        {
+            var productInformation = new Octokit.GraphQL.ProductHeaderValue(UserAgent.Name, UserAgent.Version);
+
+            var baseAddress = GetGitHubUri(provider);
+            var credentialStore = provider.GetRequiredService<InstallationCredentialStore>();
+            var httpClient = provider.GetRequiredService<HttpClient>();
+            var serializer = provider.GetRequiredService<IJsonSerializer>();
+
+            return new Octokit.GraphQL.Connection(productInformation, baseAddress, credentialStore, httpClient);
+        });
+
         services.AddSingleton<IGitHubEventProcessor, GitHubEventProcessor>();
         services.AddSingleton<GitHubWebhookQueue>();
         services.AddSingleton<GitHubWebhookService>();

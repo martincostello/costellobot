@@ -15,6 +15,8 @@ public sealed class PullRequestBuilder : ResponseBuilder
 
     public bool? IsMergeable { get; set; }
 
+    public string NodeId { get; set; } = RandomString();
+
     public int Number { get; set; } = RandomNumber();
 
     public RepositoryBuilder Repository { get; set; }
@@ -39,6 +41,7 @@ public sealed class PullRequestBuilder : ResponseBuilder
             },
             html_url = $"https://github.com/{Repository.Owner.Login}/{Repository.Name}/pull/{Number}",
             mergeable = IsMergeable,
+            node_id = NodeId,
             number = Number,
             title = Title,
             user = (User ?? Repository.Owner).Build(),

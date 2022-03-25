@@ -14,6 +14,7 @@
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <PackageReference Include="NodaTime" />
     <PackageReference Include="Octokit" />
+    <PackageReference Include="Octokit.GraphQL" />
     <PackageReference Include="Polly" />
     <PackageReference Include="Terrajobst.GitHubEvents.AspNetCore" />
   </ItemGroup>
