@@ -54,41 +54,58 @@ public sealed partial class PullRequestHandler : IHandler
 
             if (options.Approve)
             {
-                await _client.PullRequest.Review.Create(
-                    owner,
-                    name,
-                    number,
-                    new()
-                    {
-                        Body = "Auto-approving dependency update.",
-                        Event = Octokit.PullRequestReviewEvent.Approve,
-                    });
-
-                Log.PullRequestApproved(_logger, owner, name, number);
+                await ApproveAsync(owner, name, number);
             }
 
             if (options.Automerge)
             {
-                var input = new EnablePullRequestAutoMergeInput()
-                {
-                    PullRequestId = new ID(message.Body.PullRequest.NodeId),
-                };
-
-                var query = new Mutation()
-                    .EnablePullRequestAutoMerge(input)
-                    .Select((p) => new { p.PullRequest.Number })
-                    .Compile();
-
-                try
-                {
-                    await _connection.Run(query);
-                    Log.AutoMergeEnabled(_logger, owner, name, number);
-                }
-                catch (Octokit.GraphQL.Core.GraphQLException ex)
-                {
-                    Log.EnableAutoMergeFailed(_logger, ex, owner, name, number);
-                }
+                await EnableAutoMergeAsync(owner, name, number, message.Body.PullRequest.NodeId);
             }
+        }
+    }
+
+    private async Task ApproveAsync(
+        string owner,
+        string name,
+        int number)
+    {
+        await _client.PullRequest.Review.Create(
+            owner,
+            name,
+            number,
+            new()
+            {
+                Body = "Auto-approving dependency update.",
+                Event = Octokit.PullRequestReviewEvent.Approve,
+            });
+
+        Log.PullRequestApproved(_logger, owner, name, number);
+    }
+
+    private async Task EnableAutoMergeAsync(
+        string owner,
+        string name,
+        int number,
+        string nodeId)
+    {
+        var input = new EnablePullRequestAutoMergeInput()
+        {
+            PullRequestId = new ID(nodeId),
+        };
+
+        var query = new Mutation()
+            .EnablePullRequestAutoMerge(input)
+            .Select((p) => new { p.PullRequest.Number })
+            .Compile();
+
+        try
+        {
+            await _connection.Run(query);
+            Log.AutoMergeEnabled(_logger, owner, name, number);
+        }
+        catch (Octokit.GraphQL.Core.GraphQLException ex)
+        {
+            Log.EnableAutoMergeFailed(_logger, ex, owner, name, number);
         }
     }
 
