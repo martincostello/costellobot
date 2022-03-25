@@ -6,6 +6,9 @@
 
 _Costellobot_ is a web application that handles automation for my GitHub repositories.
 
+For example, here's a pull request that the bot generated to update
+itself: [#5](https://github.com/martincostello/costellobot/pull/5)
+
 ## Building and Testing
 
 Compiling the application yourself requires Git and the
