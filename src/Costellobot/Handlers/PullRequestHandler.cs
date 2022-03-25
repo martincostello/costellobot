@@ -8,6 +8,7 @@ using Octokit.GraphQL;
 using Octokit.GraphQL.Model;
 using Terrajobst.GitHubEvents;
 using IConnection = Octokit.GraphQL.IConnection;
+using PullRequestMergeMethod = Octokit.GraphQL.Model.PullRequestMergeMethod;
 
 namespace MartinCostello.Costellobot.Handlers;
 
@@ -59,8 +60,29 @@ public sealed partial class PullRequestHandler : IHandler
 
             if (options.Automerge)
             {
-                await EnableAutoMergeAsync(owner, name, number, message.Body.PullRequest.NodeId);
+                await EnableAutoMergeAsync(
+                    owner,
+                    name,
+                    number,
+                    message.Body.PullRequest.NodeId,
+                    GetMergeMethod(message.Body.PullRequest.Base.Repo));
             }
+        }
+    }
+
+    private static PullRequestMergeMethod GetMergeMethod(GitHubEventRepository repo)
+    {
+        if (repo.AllowMergeCommit)
+        {
+            return PullRequestMergeMethod.Merge;
+        }
+        else if (repo.AllowRebaseMerge)
+        {
+            return PullRequestMergeMethod.Rebase;
+        }
+        else
+        {
+            return PullRequestMergeMethod.Squash;
         }
     }
 
@@ -86,10 +108,12 @@ public sealed partial class PullRequestHandler : IHandler
         string owner,
         string name,
         int number,
-        string nodeId)
+        string nodeId,
+        PullRequestMergeMethod mergeMethod)
     {
         var input = new EnablePullRequestAutoMergeInput()
         {
+            MergeMethod = mergeMethod,
             PullRequestId = new ID(nodeId),
         };
 

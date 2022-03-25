@@ -21,23 +21,31 @@ public sealed class PullRequestBuilder : ResponseBuilder
 
     public RepositoryBuilder Repository { get; set; }
 
-    public string Sha { get; set; } = RandomString();
+    public string ShaBase { get; set; } = RandomString();
+
+    public string ShaHead { get; set; } = RandomString();
 
     public string Title { get; set; } = RandomString();
 
     public UserBuilder? User { get; set; }
 
     public GitHubCommitBuilder CreateCommit()
-        => new(Repository) { Sha = Sha };
+        => new(Repository) { Sha = ShaHead };
 
     public override object Build()
     {
         return new
         {
+            @base = new
+            {
+                @ref = "main",
+                sha = ShaBase,
+                repo = Repository.Build(),
+            },
             draft = IsDraft,
             head = new
             {
-                sha = Sha,
+                sha = ShaHead,
             },
             html_url = $"https://github.com/{Repository.Owner.Login}/{Repository.Name}/pull/{Number}",
             mergeable = IsMergeable,

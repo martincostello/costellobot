@@ -49,14 +49,27 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         await pullRequestApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
     }
 
-    [Fact]
-    public async Task Pull_Request_Automerge_Is_Enabled_For_Trusted_User_And_Dependency()
+    [Theory]
+    [InlineData(false, false, "SQUASH")]
+    [InlineData(false, true, "REBASE")]
+    [InlineData(true, false, "MERGE")]
+    [InlineData(true, true, "MERGE")]
+    public async Task Pull_Request_Automerge_Is_Enabled_For_Trusted_User_And_Dependency(
+        bool allowMergeCommit,
+        bool allowRebaseMerge,
+        string mergeMethod)
     {
         // Arrange
         Fixture.OverrideConfiguration("Webhook:Automerge", bool.TrueString);
 
         var user = CreateUser("dependabot[bot]");
-        var pullRequest = CreatePullRequest(user);
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+
+        repo.AllowMergeCommit = allowMergeCommit;
+        repo.AllowRebaseMerge = allowRebaseMerge;
+
+        var pullRequest = repo.CreatePullRequest(user);
 
         var commit = pullRequest.CreateCommit();
         commit.Message = TrustedCommitMessage();
@@ -80,14 +93,16 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
 
                 query.ShouldNotBeNull();
 
-                bool hasCorrectId = query.Contains(@$"pullRequestId:""{pullRequest.NodeId}""", StringComparison.Ordinal);
+                bool hasCorrectPayload =
+                    query.Contains(@$"pullRequestId:""{pullRequest.NodeId}""", StringComparison.Ordinal) &&
+                    query.Contains($"mergeMethod:{mergeMethod}", StringComparison.Ordinal);
 
-                if (hasCorrectId)
+                if (hasCorrectPayload)
                 {
                     automergeEnabled.SetResult();
                 }
 
-                return hasCorrectId;
+                return hasCorrectPayload;
             }));
 
         var value = CreateWebhook(pullRequest);
@@ -98,7 +113,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await automergeEnabled.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        await automergeEnabled.Task.WaitAsync(TimeSpan.FromSeconds(1));
     }
 
     [Fact]
