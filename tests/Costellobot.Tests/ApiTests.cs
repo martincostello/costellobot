@@ -148,8 +148,8 @@ public sealed class ApiTests : IntegrationTests<AppFixture>
         client.DefaultRequestHeaders.Add("X-GitHub-Delivery", Guid.NewGuid().ToString());
         client.DefaultRequestHeaders.Add("X-GitHub-Event", @event);
         client.DefaultRequestHeaders.Add("X-GitHub-Hook-ID", "109948940");
-        client.DefaultRequestHeaders.Add("X-GitHub-Hook-Installation-Target-ID", "github-installation-target-id");
-        client.DefaultRequestHeaders.Add("X-GitHub-Hook-Installation-Target-Type", "github-installation-target-type");
+        client.DefaultRequestHeaders.Add("X-GitHub-Hook-Installation-Target-ID", "42");
+        client.DefaultRequestHeaders.Add("X-GitHub-Hook-Installation-Target-Type", "integration");
         client.DefaultRequestHeaders.Add("X-Hub-Signature", signature);
         client.DefaultRequestHeaders.Add("X-Hub-Signature-256", signature);
 

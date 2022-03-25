@@ -11,15 +11,18 @@ public sealed partial class GitHubWebhookDispatcher
 {
     private readonly IGitHubClient _client;
     private readonly ILogger _logger;
-    private readonly IOptionsSnapshot<WebhookOptions> _options;
+    private readonly IOptionsSnapshot<GitHubOptions> _gitHubOptions;
+    private readonly IOptionsSnapshot<WebhookOptions> _webhookOptions;
 
     public GitHubWebhookDispatcher(
         IGitHubClientForInstallation client,
-        IOptionsSnapshot<WebhookOptions> options,
+        IOptionsSnapshot<GitHubOptions> gitHubOptions,
+        IOptionsSnapshot<WebhookOptions> webhookOptions,
         ILogger<GitHubWebhookDispatcher> logger)
     {
         _client = client;
-        _options = options;
+        _gitHubOptions = gitHubOptions;
+        _webhookOptions = webhookOptions;
         _logger = logger;
     }
 
@@ -27,7 +30,13 @@ public sealed partial class GitHubWebhookDispatcher
     {
         Log.ProcessingWebhook(_logger, message.HookId);
 
-        if (_options.Value.Comment &&
+        if (!IsValidInstallation(message))
+        {
+            Log.IncorrectInstallationWebhookIgnored(_logger, message.HookId, message.HookInstallationTargetId);
+            return;
+        }
+
+        if (_webhookOptions.Value.Comment &&
             message.Body is { } body &&
             message.Event == "pull_request" &&
             body.Action == "opened" &&
@@ -45,6 +54,12 @@ public sealed partial class GitHubWebhookDispatcher
         Log.ProcessedWebhook(_logger, message.HookId);
     }
 
+    private bool IsValidInstallation(GitHubEvent message)
+        => string.Equals(
+               message.HookInstallationTargetId,
+               _gitHubOptions.Value.InstallationId.ToString(CultureInfo.InvariantCulture),
+               StringComparison.Ordinal);
+
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     private static partial class Log
     {
@@ -59,5 +74,11 @@ public sealed partial class GitHubWebhookDispatcher
            Level = LogLevel.Information,
            Message = "Processed webhook with ID {HookId}.")]
         public static partial void ProcessedWebhook(ILogger logger, string hookId);
+
+        [LoggerMessage(
+           EventId = 3,
+           Level = LogLevel.Warning,
+           Message = "Ignored webhook with ID {HookId} as the installation ID {InstallationId} is incorrect.")]
+        public static partial void IncorrectInstallationWebhookIgnored(ILogger logger, string hookId, string installationId);
     }
 }
