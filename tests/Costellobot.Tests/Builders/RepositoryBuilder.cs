@@ -25,8 +25,6 @@ public sealed class RepositoryBuilder : ResponseBuilder
 
     public UserBuilder Owner { get; set; }
 
-    public string? Visibility { get; set; }
-
     public GitHubCommitBuilder CreateCommit()
         => new(this);
 
@@ -47,7 +45,6 @@ public sealed class RepositoryBuilder : ResponseBuilder
             name = Name,
             owner = Owner.Build(),
             @private = IsPrivate,
-            visibility = Visibility,
         };
     }
 }

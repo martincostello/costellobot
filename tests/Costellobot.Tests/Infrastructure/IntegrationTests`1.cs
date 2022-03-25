@@ -187,7 +187,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             webhookSecret = options.WebhookSecret;
         }
 
-        string payload = JsonSerializer.Serialize(value);
+        string payload = JsonSerializer.Serialize(value, new JsonSerializerOptions() { WriteIndented = true });
 
         // See https://github.com/terrajobst/Terrajobst.GitHubEvents/blob/cb86100c783373e198cefb1ed7e92526a44833b0/src/Terrajobst.GitHubEvents.AspNetCore/GitHubEventsExtensions.cs#L112-L119
         var encoding = Encoding.UTF8;
