@@ -105,7 +105,7 @@ public sealed partial class PullRequestHandler : IHandler
         }
         catch (Octokit.GraphQL.Core.GraphQLException ex)
         {
-            Log.EnableAutoMergeFailed(_logger, ex, owner, name, number);
+            Log.EnableAutoMergeFailed(_logger, ex, owner, name, number, nodeId);
         }
     }
 
@@ -262,12 +262,13 @@ public sealed partial class PullRequestHandler : IHandler
         [LoggerMessage(
            EventId = 7,
            Level = LogLevel.Warning,
-           Message = "Failed to enable auto-merge for pull request {Owner}/{Repository}#{Number}.")]
+           Message = "Failed to enable auto-merge for pull request {Owner}/{Repository}#{Number} with node ID {NodeId}.")]
         public static partial void EnableAutoMergeFailed(
             ILogger logger,
             Exception exception,
             string owner,
             string repository,
-            int number);
+            int number,
+            string nodeId);
     }
 }
