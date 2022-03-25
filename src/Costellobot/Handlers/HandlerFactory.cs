@@ -12,7 +12,7 @@ public sealed class HandlerFactory : IHandlerFactory
         _serviceProvider = serviceProvider;
     }
 
-    public IHandler Create(string eventType)
+    public IHandler Create(string? eventType)
     {
         return eventType switch
         {

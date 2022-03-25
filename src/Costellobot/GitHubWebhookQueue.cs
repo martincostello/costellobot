@@ -2,7 +2,6 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Threading.Channels;
-using Terrajobst.GitHubEvents;
 
 namespace MartinCostello.Costellobot;
 
@@ -35,7 +34,7 @@ public sealed partial class GitHubWebhookQueue
         if (await _queue.Reader.WaitToReadAsync(cancellationToken))
         {
             message = await _queue.Reader.ReadAsync(cancellationToken);
-            Log.DequeuedWebhook(_logger, message.HookId);
+            Log.DequeuedWebhook(_logger, message.Headers.HookId);
         }
 
         return message;
@@ -45,11 +44,11 @@ public sealed partial class GitHubWebhookQueue
     {
         if (_queue.Writer.TryWrite(message))
         {
-            Log.QueuedWebhook(_logger, message.HookId);
+            Log.QueuedWebhook(_logger, message.Headers.HookId);
         }
         else
         {
-            Log.WebhookQueueFailed(_logger, message.HookId);
+            Log.WebhookQueueFailed(_logger, message.Headers.HookId);
         }
     }
 
@@ -83,19 +82,19 @@ public sealed partial class GitHubWebhookQueue
            EventId = 2,
            Level = LogLevel.Information,
            Message = "Queued webhook with ID {HookId} for processing.")]
-        public static partial void QueuedWebhook(ILogger logger, string hookId);
+        public static partial void QueuedWebhook(ILogger logger, string? hookId);
 
         [LoggerMessage(
            EventId = 3,
            Level = LogLevel.Warning,
            Message = "Failed to queue webhook with ID {HookId} for processing.")]
-        public static partial void WebhookQueueFailed(ILogger logger, string hookId);
+        public static partial void WebhookQueueFailed(ILogger logger, string? hookId);
 
         [LoggerMessage(
            EventId = 4,
            Level = LogLevel.Information,
            Message = "Dequeued webhook with ID {HookId} for processing.")]
-        public static partial void DequeuedWebhook(ILogger logger, string hookId);
+        public static partial void DequeuedWebhook(ILogger logger, string? hookId);
 
         [LoggerMessage(
            EventId = 5,

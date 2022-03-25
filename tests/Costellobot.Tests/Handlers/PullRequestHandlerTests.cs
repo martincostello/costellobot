@@ -50,13 +50,16 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Theory]
-    [InlineData(false, false, "SQUASH")]
-    [InlineData(false, true, "REBASE")]
-    [InlineData(true, false, "MERGE")]
-    [InlineData(true, true, "MERGE")]
+    [InlineData(null, null, null, "MERGE")]
+    [InlineData(false, false, false, "MERGE")]
+    [InlineData(false, false, true, "SQUASH")]
+    [InlineData(false, true, false, "REBASE")]
+    [InlineData(true, false, false, "MERGE")]
+    [InlineData(true, true, false, "MERGE")]
     public async Task Pull_Request_Automerge_Is_Enabled_For_Trusted_User_And_Dependency(
-        bool allowMergeCommit,
-        bool allowRebaseMerge,
+        bool? allowMergeCommit,
+        bool? allowRebaseMerge,
+        bool? allowSquashMerge,
         string mergeMethod)
     {
         // Arrange
@@ -68,6 +71,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
 
         repo.AllowMergeCommit = allowMergeCommit;
         repo.AllowRebaseMerge = allowRebaseMerge;
+        repo.AllowSquashMerge = allowSquashMerge;
 
         var pullRequest = repo.CreatePullRequest(user);
 

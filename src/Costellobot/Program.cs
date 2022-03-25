@@ -7,7 +7,7 @@ using System.Net;
 using System.Reflection;
 using MartinCostello.Costellobot;
 using Microsoft.AspNetCore.Http.Json;
-using Terrajobst.GitHubEvents.AspNetCore;
+using Octokit.Webhooks.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,7 +98,7 @@ app.MapMethods("/error", allMethods, (
     return Results.Stream(stream, "text/html");
 });
 
-app.MapGitHubWebHook(secret: app.Configuration["GitHub:WebhookSecret"]);
+app.MapGitHubWebhooks("/github-webhook", app.Configuration["GitHub:WebhookSecret"]);
 
 app.Run();
 

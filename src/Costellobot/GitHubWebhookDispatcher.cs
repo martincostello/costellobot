@@ -3,7 +3,6 @@
 
 using MartinCostello.Costellobot.Handlers;
 using Microsoft.Extensions.Options;
-using Terrajobst.GitHubEvents;
 
 namespace MartinCostello.Costellobot;
 
@@ -25,22 +24,22 @@ public sealed partial class GitHubWebhookDispatcher
 
     public async Task DispatchAsync(GitHubEvent message)
     {
-        Log.ProcessingWebhook(_logger, message.HookId);
+        Log.ProcessingWebhook(_logger, message.Headers.HookId);
 
         if (!IsValidInstallation(message))
         {
-            Log.IncorrectInstallationWebhookIgnored(_logger, message.HookId, message.Body.Installation.Id);
+            Log.IncorrectInstallationWebhookIgnored(_logger, message.Headers.HookId, message.Event.Installation?.Id);
             return;
         }
 
-        var handler = _handlerFactory.Create(message.Event);
-        await handler.HandleAsync(message);
+        var handler = _handlerFactory.Create(message.Headers.Event);
+        await handler.HandleAsync(message.Event);
 
-        Log.ProcessedWebhook(_logger, message.HookId);
+        Log.ProcessedWebhook(_logger, message.Headers.HookId);
     }
 
     private bool IsValidInstallation(GitHubEvent message)
-        => message.Body.Installation.Id == _options.Value.InstallationId;
+        => message.Event.Installation?.Id == _options.Value.InstallationId;
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     private static partial class Log
@@ -49,18 +48,18 @@ public sealed partial class GitHubWebhookDispatcher
            EventId = 1,
            Level = LogLevel.Information,
            Message = "Processing webhook with ID {HookId}.")]
-        public static partial void ProcessingWebhook(ILogger logger, string hookId);
+        public static partial void ProcessingWebhook(ILogger logger, string? hookId);
 
         [LoggerMessage(
            EventId = 2,
            Level = LogLevel.Information,
            Message = "Processed webhook with ID {HookId}.")]
-        public static partial void ProcessedWebhook(ILogger logger, string hookId);
+        public static partial void ProcessedWebhook(ILogger logger, string? hookId);
 
         [LoggerMessage(
            EventId = 3,
            Level = LogLevel.Warning,
            Message = "Ignored webhook with ID {HookId} as the installation ID {InstallationId} is incorrect.")]
-        public static partial void IncorrectInstallationWebhookIgnored(ILogger logger, string hookId, int installationId);
+        public static partial void IncorrectInstallationWebhookIgnored(ILogger logger, string? hookId, long? installationId);
     }
 }

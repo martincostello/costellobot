@@ -3,7 +3,8 @@
 
 using System.Text.Json;
 using Microsoft.Extensions.Primitives;
-using Terrajobst.GitHubEvents;
+using Octokit.Webhooks;
+using Octokit.Webhooks.Events.PullRequest;
 
 namespace MartinCostello.Costellobot.Builders;
 
@@ -39,11 +40,14 @@ public static class GitHubFixtures
         {
             installation = new
             {
-                di = installationId.Value,
+                id = installationId.Value,
             },
         });
 
-        return GitHubEvent.Parse(headers, body);
+        var webhookHeaders = WebhookHeaders.Parse(headers);
+        var webhookEvent = JsonSerializer.Deserialize<PullRequestOpenedEvent>(body);
+
+        return new(webhookHeaders, webhookEvent!);
     }
 
     public static AccessTokenBuilder CreateAccessToken(string? token = null)

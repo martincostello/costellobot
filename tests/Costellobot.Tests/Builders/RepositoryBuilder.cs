@@ -11,9 +11,11 @@ public sealed class RepositoryBuilder : ResponseBuilder
         Owner = owner;
     }
 
-    public bool AllowMergeCommit { get; set; } = true;
+    public bool? AllowMergeCommit { get; set; } = true;
 
-    public bool AllowRebaseMerge { get; set; } = true;
+    public bool? AllowRebaseMerge { get; set; } = true;
+
+    public bool? AllowSquashMerge { get; set; } = true;
 
     public bool IsFork { get; set; }
 
@@ -37,6 +39,7 @@ public sealed class RepositoryBuilder : ResponseBuilder
         {
             allow_merge_commit = AllowMergeCommit,
             allow_rebase_merge = AllowRebaseMerge,
+            allow_squash_merge = AllowSquashMerge,
             fork = IsFork,
             full_name = $"{Owner.Login}/{Name}",
             html_url = $"https://github.com/{Owner.Login}/{Name}",

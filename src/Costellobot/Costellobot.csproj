@@ -15,7 +15,7 @@
     <PackageReference Include="NodaTime" />
     <PackageReference Include="Octokit" />
     <PackageReference Include="Octokit.GraphQL" />
+    <PackageReference Include="Octokit.Webhooks.AspNetCore" />
     <PackageReference Include="Polly" />
-    <PackageReference Include="Terrajobst.GitHubEvents.AspNetCore" />
   </ItemGroup>
 </Project>

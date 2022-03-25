@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using Terrajobst.GitHubEvents;
+using Octokit.Webhooks;
 
 namespace MartinCostello.Costellobot;
 
-public sealed partial class GitHubEventProcessor : IGitHubEventProcessor
+public sealed partial class GitHubEventProcessor : WebhookEventProcessor
 {
     private readonly ILogger<GitHubEventProcessor> _logger;
     private readonly GitHubWebhookQueue _queue;
@@ -18,10 +18,15 @@ public sealed partial class GitHubEventProcessor : IGitHubEventProcessor
         _logger = logger;
     }
 
-    public void Process(GitHubEvent message)
+    public override Task ProcessWebhookAsync(WebhookHeaders headers, WebhookEvent webhookEvent)
     {
-        Log.ReceivedWebhook(_logger, message.HookId);
-        _queue.Enqueue(message);
+        ArgumentNullException.ThrowIfNull(headers);
+        ArgumentNullException.ThrowIfNull(webhookEvent);
+
+        Log.ReceivedWebhook(_logger, headers.HookId);
+        _queue.Enqueue(new(headers, webhookEvent));
+
+        return Task.CompletedTask;
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -31,6 +36,6 @@ public sealed partial class GitHubEventProcessor : IGitHubEventProcessor
            EventId = 1,
            Level = LogLevel.Information,
            Message = "Received webhook with ID {HookId}.")]
-        public static partial void ReceivedWebhook(ILogger logger, string hookId);
+        public static partial void ReceivedWebhook(ILogger logger, string? hookId);
     }
 }

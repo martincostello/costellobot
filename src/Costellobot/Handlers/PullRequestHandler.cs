@@ -6,7 +6,8 @@ using Microsoft.Extensions.Options;
 using Octokit;
 using Octokit.GraphQL;
 using Octokit.GraphQL.Model;
-using Terrajobst.GitHubEvents;
+using Octokit.Webhooks;
+using Octokit.Webhooks.Events;
 using IConnection = Octokit.GraphQL.IConnection;
 using PullRequestMergeMethod = Octokit.GraphQL.Model.PullRequestMergeMethod;
 
@@ -31,25 +32,30 @@ public sealed partial class PullRequestHandler : IHandler
         _logger = logger;
     }
 
-    public async Task HandleAsync(GitHubEvent message)
+    public async Task HandleAsync(WebhookEvent message)
     {
-        if (!IsNewPullRequestFromTrustedUser(message))
+        if (message is not PullRequestEvent body)
+        {
+            return;
+        }
+
+        if (!IsNewPullRequestFromTrustedUser(body))
         {
             Log.IgnoringPullRequestFromUntrustedUser(
                 _logger,
-                message.Body.Repository.Owner.Login,
-                message.Body.Repository.Name,
-                message.Body.PullRequest.Number,
-                message.Body.PullRequest.User.Login);
+                body.Repository?.Owner.Login,
+                body.Repository?.Name,
+                body.PullRequest?.Number,
+                body.PullRequest?.User.Login);
 
             return;
         }
 
-        string owner = message.Body.Repository.Owner.Login;
-        string name = message.Body.Repository.Name;
-        int number = message.Body.PullRequest.Number;
+        string owner = body.Repository!.Owner.Login;
+        string name = body.Repository.Name;
+        long number = body.PullRequest!.Number;
 
-        if (await IsTrustedDependencyUpdateAsync(message))
+        if (await IsTrustedDependencyUpdateAsync(body))
         {
             var options = _options.CurrentValue;
 
@@ -64,37 +70,41 @@ public sealed partial class PullRequestHandler : IHandler
                     owner,
                     name,
                     number,
-                    message.Body.PullRequest.NodeId,
-                    GetMergeMethod(message.Body.PullRequest.Base.Repo));
+                    body.PullRequest.NodeId,
+                    GetMergeMethod(body.PullRequest.Base.Repo));
             }
         }
     }
 
-    private static PullRequestMergeMethod GetMergeMethod(GitHubEventRepository repo)
+    private static PullRequestMergeMethod GetMergeMethod(Octokit.Webhooks.Models.Repository repo)
     {
-        if (repo.AllowMergeCommit)
+        if (repo.AllowMergeCommit == true)
         {
             return PullRequestMergeMethod.Merge;
         }
-        else if (repo.AllowRebaseMerge)
+        else if (repo.AllowRebaseMerge == true)
         {
             return PullRequestMergeMethod.Rebase;
         }
-        else
+        else if (repo.AllowSquashMerge == true)
         {
             return PullRequestMergeMethod.Squash;
+        }
+        else
+        {
+            return PullRequestMergeMethod.Merge;
         }
     }
 
     private async Task ApproveAsync(
         string owner,
         string name,
-        int number)
+        long number)
     {
         await _client.PullRequest.Review.Create(
             owner,
             name,
-            number,
+            (int)number,
             new()
             {
                 Body = "Auto-approving dependency update.",
@@ -107,7 +117,7 @@ public sealed partial class PullRequestHandler : IHandler
     private async Task EnableAutoMergeAsync(
         string owner,
         string name,
-        int number,
+        long number,
         string nodeId,
         PullRequestMergeMethod mergeMethod)
     {
@@ -133,9 +143,9 @@ public sealed partial class PullRequestHandler : IHandler
         }
     }
 
-    private bool IsNewPullRequestFromTrustedUser(GitHubEvent message)
+    private bool IsNewPullRequestFromTrustedUser(PullRequestEvent message)
     {
-        if (message.Body is { } body &&
+        if (message is PullRequestEvent body &&
             body.Action == "opened" &&
             body.Repository is { } repo &&
             body.PullRequest is { } pr &&
@@ -149,12 +159,12 @@ public sealed partial class PullRequestHandler : IHandler
         return false;
     }
 
-    private async Task<bool> IsTrustedDependencyUpdateAsync(GitHubEvent message)
+    private async Task<bool> IsTrustedDependencyUpdateAsync(PullRequestEvent message)
     {
         var commit = await _client.Repository.Commit.Get(
-            message.Body.Repository.Owner.Login,
-            message.Body.Repository.Name,
-            message.Body.PullRequest.Head.Sha);
+            message.Repository!.Owner.Login,
+            message.Repository.Name,
+            message.PullRequest.Head.Sha);
 
         string[] commitLines = commit.Commit.Message
             .ReplaceLineEndings("\n")
@@ -186,9 +196,9 @@ public sealed partial class PullRequestHandler : IHandler
 
         Log.PullRequestUpdatesDependencies(
             _logger,
-            message.Body.Repository.Owner.Login,
-            message.Body.Repository.Name,
-            message.Body.PullRequest.Number,
+            message.Repository.Owner.Login,
+            message.Repository.Name,
+            message.PullRequest.Number,
             dependencies.ToArray());
 
         foreach (string dependency in dependencies)
@@ -197,9 +207,9 @@ public sealed partial class PullRequestHandler : IHandler
             {
                 Log.UntrustedDependencyUpdated(
                     _logger,
-                    message.Body.Repository.Owner.Login,
-                    message.Body.Repository.Name,
-                    message.Body.PullRequest.Number,
+                    message.Repository.Owner.Login,
+                    message.Repository.Name,
+                    message.PullRequest.Number,
                     dependency);
 
                 return false;
@@ -208,9 +218,9 @@ public sealed partial class PullRequestHandler : IHandler
 
         Log.TrustedDependenciesUpdated(
             _logger,
-            message.Body.Repository.Owner.Login,
-            message.Body.Repository.Name,
-            message.Body.PullRequest.Number,
+            message.Repository.Owner.Login,
+            message.Repository.Name,
+            message.PullRequest.Number,
             dependencies.Count);
 
         return true;
@@ -225,10 +235,10 @@ public sealed partial class PullRequestHandler : IHandler
            Message = "Ignoring pull request {Owner}/{Repository}#{Number} from {Login} as it is not from a trusted user.")]
         public static partial void IgnoringPullRequestFromUntrustedUser(
             ILogger logger,
-            string owner,
-            string repository,
-            int number,
-            string login);
+            string? owner,
+            string? repository,
+            long? number,
+            string? login);
 
         [LoggerMessage(
            EventId = 2,
@@ -238,7 +248,7 @@ public sealed partial class PullRequestHandler : IHandler
             ILogger logger,
             string owner,
             string repository,
-            int number,
+            long number,
             string[] dependencies);
 
         [LoggerMessage(
@@ -249,7 +259,7 @@ public sealed partial class PullRequestHandler : IHandler
             ILogger logger,
             string owner,
             string repository,
-            int number,
+            long number,
             string dependency);
 
         [LoggerMessage(
@@ -260,7 +270,7 @@ public sealed partial class PullRequestHandler : IHandler
             ILogger logger,
             string owner,
             string repository,
-            int number,
+            long number,
             int count);
 
         [LoggerMessage(
@@ -271,7 +281,7 @@ public sealed partial class PullRequestHandler : IHandler
             ILogger logger,
             string owner,
             string repository,
-            int number);
+            long number);
 
         [LoggerMessage(
            EventId = 6,
@@ -281,7 +291,7 @@ public sealed partial class PullRequestHandler : IHandler
             ILogger logger,
             string owner,
             string repository,
-            int number);
+            long number);
 
         [LoggerMessage(
            EventId = 7,
@@ -292,7 +302,7 @@ public sealed partial class PullRequestHandler : IHandler
             Exception exception,
             string owner,
             string repository,
-            int number,
+            long number,
             string nodeId);
     }
 }

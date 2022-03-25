@@ -3,9 +3,6 @@
 
 using Octokit.Webhooks;
 
-namespace MartinCostello.Costellobot.Handlers;
+namespace MartinCostello.Costellobot;
 
-public interface IHandler
-{
-    Task HandleAsync(WebhookEvent message);
-}
+public record GitHubEvent(WebhookHeaders Headers, WebhookEvent Event);

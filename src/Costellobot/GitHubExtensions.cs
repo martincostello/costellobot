@@ -7,7 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using NodaTime;
 using Octokit;
 using Octokit.Internal;
-using Terrajobst.GitHubEvents;
+using Octokit.Webhooks;
 
 namespace MartinCostello.Costellobot;
 
@@ -59,7 +59,7 @@ public static class GitHubExtensions
             return new Octokit.GraphQL.Connection(productInformation, baseAddress, credentialStore, httpClient);
         });
 
-        services.AddSingleton<IGitHubEventProcessor, GitHubEventProcessor>();
+        services.AddSingleton<WebhookEventProcessor, GitHubEventProcessor>();
         services.AddSingleton<GitHubWebhookQueue>();
         services.AddSingleton<GitHubWebhookService>();
         services.AddScoped<GitHubWebhookDispatcher>();

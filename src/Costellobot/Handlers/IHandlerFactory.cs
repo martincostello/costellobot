@@ -5,5 +5,5 @@ namespace MartinCostello.Costellobot.Handlers;
 
 public interface IHandlerFactory
 {
-    IHandler Create(string eventType);
+    IHandler Create(string? eventType);
 }

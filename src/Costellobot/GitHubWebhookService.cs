@@ -80,7 +80,7 @@ public sealed partial class GitHubWebhookService : IHostedService, IDisposable
             }
             catch (Exception ex)
             {
-                Log.ProcessingFailed(_logger, ex, message.HookId);
+                Log.ProcessingFailed(_logger, ex, message.Headers.HookId);
             }
         }
     }
@@ -98,6 +98,6 @@ public sealed partial class GitHubWebhookService : IHostedService, IDisposable
            EventId = 2,
            Level = LogLevel.Error,
            Message = "Failed to process webhook with ID {HookId}.")]
-        public static partial void ProcessingFailed(ILogger logger, Exception exception, string hookId);
+        public static partial void ProcessingFailed(ILogger logger, Exception exception, string? hookId);
     }
 }
