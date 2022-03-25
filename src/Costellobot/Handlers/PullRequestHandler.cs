@@ -107,7 +107,7 @@ public sealed partial class PullRequestHandler : IHandler
             (int)number,
             new()
             {
-                Body = "Auto-approving dependency update.",
+                Body = _options.CurrentValue.ApproveComment,
                 Event = Octokit.PullRequestReviewEvent.Approve,
             });
 

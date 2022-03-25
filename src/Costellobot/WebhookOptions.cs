@@ -7,6 +7,8 @@ public sealed class WebhookOptions
 {
     public bool Approve { get; set; }
 
+    public string ApproveComment { get; set; } = string.Empty;
+
     public bool Automerge { get; set; }
 
     public int RerunFailedChecksAttempts { get; set; }
