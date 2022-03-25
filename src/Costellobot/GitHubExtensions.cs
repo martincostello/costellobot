@@ -51,7 +51,7 @@ public static class GitHubExtensions
         {
             var productInformation = new Octokit.GraphQL.ProductHeaderValue(UserAgent.Name, UserAgent.Version);
 
-            var baseAddress = GetGitHubUri(provider);
+            var baseAddress = GetGitHubGraphQLUri(provider);
             var credentialStore = provider.GetRequiredService<InstallationCredentialStore>();
             var httpClient = provider.GetRequiredService<HttpClient>();
             var serializer = provider.GetRequiredService<IJsonSerializer>();
@@ -114,10 +114,26 @@ public static class GitHubExtensions
 
         var configuration = provider.GetRequiredService<IConfiguration>();
 
-        if (configuration["GitHub:EnterpriseDomain"] is string enterpriseUri &&
-            !string.IsNullOrWhiteSpace(enterpriseUri))
+        if (configuration["GitHub:EnterpriseDomain"] is string enterpriseDomain &&
+            !string.IsNullOrWhiteSpace(enterpriseDomain))
         {
-            baseAddress = new(enterpriseUri, UriKind.Absolute);
+            baseAddress = new(enterpriseDomain, UriKind.Absolute);
+        }
+
+        return baseAddress;
+    }
+
+    private static Uri GetGitHubGraphQLUri(IServiceProvider provider)
+    {
+        var baseAddress = Octokit.GraphQL.Connection.GithubApiUri;
+
+        var configuration = provider.GetRequiredService<IConfiguration>();
+
+        if (configuration["GitHub:EnterpriseDomain"] is string enterpriseDomain &&
+            !string.IsNullOrWhiteSpace(enterpriseDomain))
+        {
+            var enterpriseUri = new Uri(enterpriseDomain, UriKind.Absolute);
+            baseAddress = new(enterpriseUri, "api" + baseAddress.AbsolutePath);
         }
 
         return baseAddress;

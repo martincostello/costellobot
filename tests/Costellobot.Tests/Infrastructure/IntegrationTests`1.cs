@@ -96,7 +96,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         var builder = CreateDefaultBuilder()
             .Requests()
             .ForPost()
-            .ForPath(string.Empty)
+            .ForPath("graphql")
             .Responds()
             .WithStatus(StatusCodes.Status201Created)
             .WithSystemTextJsonContent(response);

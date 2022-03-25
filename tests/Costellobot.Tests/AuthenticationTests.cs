@@ -37,7 +37,7 @@ public sealed class AuthenticationTests : IntegrationTests<AppFixture>
 
         token1.ShouldNotBeNull();
         token1.Alg.ShouldBe("RS256");
-        token1.Issuer.ShouldBe("github-app-id");
+        token1.Issuer.ShouldBe("123");
 
         var tolerance = TimeSpan.FromSeconds(10);
         var utcNow = DateTime.UtcNow;
@@ -68,7 +68,7 @@ public sealed class AuthenticationTests : IntegrationTests<AppFixture>
 
         token2.ShouldNotBeNull();
         token2.Alg.ShouldBe("RS256");
-        token2.Issuer.ShouldBe("github-app-id");
+        token2.Issuer.ShouldBe("123");
 
         token2.IssuedAt.ShouldBe(utcNow.AddMinutes(-1), tolerance);
         token2.ValidFrom.ShouldBe(utcNow, tolerance);
