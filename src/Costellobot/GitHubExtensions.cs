@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using MartinCostello.Costellobot.Handlers;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 using NodaTime;
@@ -50,6 +51,9 @@ public static class GitHubExtensions
         services.AddSingleton<GitHubWebhookQueue>();
         services.AddSingleton<GitHubWebhookService>();
         services.AddScoped<GitHubWebhookDispatcher>();
+
+        services.AddSingleton<IHandlerFactory, HandlerFactory>();
+        services.AddScoped<PullRequestHandler>();
 
         services.AddHostedService<GitHubWebhookService>();
 

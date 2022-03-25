@@ -1,28 +1,25 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using MartinCostello.Costellobot.Handlers;
 using Microsoft.Extensions.Options;
-using Octokit;
 using Terrajobst.GitHubEvents;
 
 namespace MartinCostello.Costellobot;
 
 public sealed partial class GitHubWebhookDispatcher
 {
-    private readonly IGitHubClient _client;
+    private readonly IHandlerFactory _handlerFactory;
     private readonly ILogger _logger;
-    private readonly IOptionsSnapshot<GitHubOptions> _gitHubOptions;
-    private readonly IOptionsSnapshot<WebhookOptions> _webhookOptions;
+    private readonly IOptionsSnapshot<GitHubOptions> _options;
 
     public GitHubWebhookDispatcher(
-        IGitHubClientForInstallation client,
-        IOptionsSnapshot<GitHubOptions> gitHubOptions,
-        IOptionsSnapshot<WebhookOptions> webhookOptions,
+        IHandlerFactory handlerFactory,
+        IOptionsSnapshot<GitHubOptions> options,
         ILogger<GitHubWebhookDispatcher> logger)
     {
-        _client = client;
-        _gitHubOptions = gitHubOptions;
-        _webhookOptions = webhookOptions;
+        _handlerFactory = handlerFactory;
+        _options = options;
         _logger = logger;
     }
 
@@ -36,20 +33,8 @@ public sealed partial class GitHubWebhookDispatcher
             return;
         }
 
-        if (_webhookOptions.Value.Comment &&
-            message.Body is { } body &&
-            message.Event == "pull_request" &&
-            body.Action == "opened" &&
-            body.Repository is { } repo &&
-            body.PullRequest is { } pr &&
-            pr.User.Login == "martincostello")
-        {
-            await _client.Issue.Comment.Create(
-                repo.Owner.Login,
-                repo.Name,
-                pr.Number,
-                $"Hey @{pr.User.Login} :wave: - this comment is a test.");
-        }
+        var handler = _handlerFactory.Create(message.Event);
+        await handler.HandleAsync(message);
 
         Log.ProcessedWebhook(_logger, message.HookId);
     }
@@ -57,7 +42,7 @@ public sealed partial class GitHubWebhookDispatcher
     private bool IsValidInstallation(GitHubEvent message)
         => string.Equals(
                message.HookInstallationTargetId,
-               _gitHubOptions.Value.InstallationId.ToString(CultureInfo.InvariantCulture),
+               _options.Value.InstallationId.ToString(CultureInfo.InvariantCulture),
                StringComparison.Ordinal);
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
