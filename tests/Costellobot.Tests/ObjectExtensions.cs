@@ -8,6 +8,17 @@ namespace MartinCostello.Costellobot;
 
 public static class ObjectExtensions
 {
+    public static IOptionsMonitor<T> ToMonitor<T>(this T options)
+        where T : class
+    {
+        var mock = new Mock<IOptionsMonitor<T>>();
+
+        mock.Setup((p) => p.CurrentValue)
+            .Returns(options);
+
+        return mock.Object;
+    }
+
     public static IOptionsSnapshot<T> ToSnapshot<T>(this T options)
         where T : class
     {

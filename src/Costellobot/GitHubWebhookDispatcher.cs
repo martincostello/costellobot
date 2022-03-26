@@ -10,11 +10,11 @@ public sealed partial class GitHubWebhookDispatcher
 {
     private readonly IHandlerFactory _handlerFactory;
     private readonly ILogger _logger;
-    private readonly IOptionsSnapshot<GitHubOptions> _options;
+    private readonly IOptionsMonitor<GitHubOptions> _options;
 
     public GitHubWebhookDispatcher(
         IHandlerFactory handlerFactory,
-        IOptionsSnapshot<GitHubOptions> options,
+        IOptionsMonitor<GitHubOptions> options,
         ILogger<GitHubWebhookDispatcher> logger)
     {
         _handlerFactory = handlerFactory;
@@ -39,7 +39,7 @@ public sealed partial class GitHubWebhookDispatcher
     }
 
     private bool IsValidInstallation(GitHubEvent message)
-        => message.Event.Installation?.Id == _options.Value.InstallationId;
+        => message.Event.Installation?.Id == _options.CurrentValue.InstallationId;
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     private static partial class Log
