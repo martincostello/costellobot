@@ -34,20 +34,14 @@ public sealed partial class PullRequestHandler : IHandler
 
     public async Task HandleAsync(WebhookEvent message)
     {
-        if (message is not PullRequestEvent body)
+        if (message is not PullRequestEvent body ||
+            body.Repository is null)
         {
             return;
         }
 
         if (!IsNewPullRequestFromTrustedUser(body))
         {
-            Log.IgnoringPullRequestFromUntrustedUser(
-                _logger,
-                body.Repository?.Owner.Login,
-                body.Repository?.Name,
-                body.PullRequest?.Number,
-                body.PullRequest?.User.Login);
-
             return;
         }
 
@@ -145,18 +139,44 @@ public sealed partial class PullRequestHandler : IHandler
 
     private bool IsNewPullRequestFromTrustedUser(PullRequestEvent message)
     {
-        if (message is PullRequestEvent body &&
-            body.Action == "opened" &&
-            body.Repository is { } repo &&
-            body.PullRequest is { } pr &&
-            !pr.Draft)
+        if (!string.Equals(message.Action, "opened", StringComparison.Ordinal))
         {
-            return _options.CurrentValue.TrustedEntities.Users.Contains(
-                pr.User.Login,
-                StringComparer.Ordinal);
+            Log.IgnoringPullRequestAction(
+                _logger,
+                message.Repository!.Owner.Login,
+                message.Repository.Name,
+                message.PullRequest.Number,
+                message.Action);
+
+            return false;
         }
 
-        return false;
+        if (message.PullRequest is not { } pr || pr.Draft)
+        {
+            Log.IgnoringPullRequestDraft(
+                _logger,
+                message.Repository!.Owner.Login,
+                message.Repository.Name,
+                message.PullRequest.Number);
+
+            return false;
+        }
+
+        bool isTrusted = _options.CurrentValue.TrustedEntities.Users.Contains(
+            pr.User.Login,
+            StringComparer.Ordinal);
+
+        if (!isTrusted)
+        {
+            Log.IgnoringPullRequestFromUntrustedUser(
+                _logger,
+                message.Repository!.Owner.Login,
+                message.Repository.Name,
+                message.PullRequest.Number,
+                message.PullRequest.User.Login);
+        }
+
+        return isTrusted;
     }
 
     private async Task<bool> IsTrustedDependencyUpdateAsync(PullRequestEvent message)
@@ -232,6 +252,27 @@ public sealed partial class PullRequestHandler : IHandler
         [LoggerMessage(
            EventId = 1,
            Level = LogLevel.Information,
+           Message = "Ignoring pull request {Owner}/{Repository}#{Number} for action {Action}.")]
+        public static partial void IgnoringPullRequestAction(
+            ILogger logger,
+            string? owner,
+            string? repository,
+            long? number,
+            string? action);
+
+        [LoggerMessage(
+           EventId = 2,
+           Level = LogLevel.Information,
+           Message = "Ignoring pull request {Owner}/{Repository}#{Number} as it is a draft.")]
+        public static partial void IgnoringPullRequestDraft(
+            ILogger logger,
+            string? owner,
+            string? repository,
+            long? number);
+
+        [LoggerMessage(
+           EventId = 3,
+           Level = LogLevel.Information,
            Message = "Ignoring pull request {Owner}/{Repository}#{Number} from {Login} as it is not from a trusted user.")]
         public static partial void IgnoringPullRequestFromUntrustedUser(
             ILogger logger,
@@ -241,7 +282,7 @@ public sealed partial class PullRequestHandler : IHandler
             string? login);
 
         [LoggerMessage(
-           EventId = 2,
+           EventId = 4,
            Level = LogLevel.Information,
            Message = "Pull request {Owner}/{Repository}#{Number} updates the following dependencies: {Dependencies}.")]
         public static partial void PullRequestUpdatesDependencies(
@@ -252,7 +293,7 @@ public sealed partial class PullRequestHandler : IHandler
             string[] dependencies);
 
         [LoggerMessage(
-           EventId = 3,
+           EventId = 5,
            Level = LogLevel.Information,
            Message = "Pull request {Owner}/{Repository}#{Number} updates dependency {Dependency} which is not trusted.")]
         public static partial void UntrustedDependencyUpdated(
@@ -263,7 +304,7 @@ public sealed partial class PullRequestHandler : IHandler
             string dependency);
 
         [LoggerMessage(
-           EventId = 4,
+           EventId = 6,
            Level = LogLevel.Information,
            Message = "Pull request {Owner}/{Repository}#{Number} updates {Count} trusted dependencies.")]
         public static partial void TrustedDependenciesUpdated(
@@ -274,7 +315,7 @@ public sealed partial class PullRequestHandler : IHandler
             int count);
 
         [LoggerMessage(
-           EventId = 5,
+           EventId = 7,
            Level = LogLevel.Information,
            Message = "Approved pull request {Owner}/{Repository}#{Number}.")]
         public static partial void PullRequestApproved(
@@ -284,7 +325,7 @@ public sealed partial class PullRequestHandler : IHandler
             long number);
 
         [LoggerMessage(
-           EventId = 6,
+           EventId = 8,
            Level = LogLevel.Information,
            Message = "Enabled auto-merge for pull request {Owner}/{Repository}#{Number}.")]
         public static partial void AutoMergeEnabled(
@@ -294,7 +335,7 @@ public sealed partial class PullRequestHandler : IHandler
             long number);
 
         [LoggerMessage(
-           EventId = 7,
+           EventId = 9,
            Level = LogLevel.Warning,
            Message = "Failed to enable auto-merge for pull request {Owner}/{Repository}#{Number} with node ID {NodeId}.")]
         public static partial void EnableAutoMergeFailed(
