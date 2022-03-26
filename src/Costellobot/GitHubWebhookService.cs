@@ -24,7 +24,7 @@ public sealed partial class GitHubWebhookService : IHostedService, IDisposable
 
     public void Dispose()
     {
-        if (_cts is { } tokenSource)
+        if (_cts is not null)
         {
             _cts.Cancel();
             _cts.Dispose();
