@@ -76,13 +76,13 @@ public sealed partial class PullRequestHandler : IHandler
         {
             return PullRequestMergeMethod.Merge;
         }
-        else if (repo.AllowRebaseMerge == true)
-        {
-            return PullRequestMergeMethod.Rebase;
-        }
         else if (repo.AllowSquashMerge == true)
         {
             return PullRequestMergeMethod.Squash;
+        }
+        else if (repo.AllowRebaseMerge == true)
+        {
+            return PullRequestMergeMethod.Rebase;
         }
         else
         {

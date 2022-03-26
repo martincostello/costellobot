@@ -56,6 +56,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
     [InlineData(false, false, false, "MERGE")]
     [InlineData(false, false, true, "SQUASH")]
     [InlineData(false, true, false, "REBASE")]
+    [InlineData(false, true, true, "SQUASH")]
     [InlineData(true, false, false, "MERGE")]
     [InlineData(true, true, false, "MERGE")]
     public async Task Pull_Request_Automerge_Is_Enabled_For_Trusted_User_And_Dependency(
