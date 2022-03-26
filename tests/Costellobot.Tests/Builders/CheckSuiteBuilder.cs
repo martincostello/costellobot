@@ -18,6 +18,8 @@ public sealed class CheckSuiteBuilder : ResponseBuilder
 
     public string? Conclusion { get; set; }
 
+    public IList<PullRequestBuilder> PullRequests { get; set; } = new List<PullRequestBuilder>();
+
     public RepositoryBuilder Repository { get; set; }
 
     public bool Rerequestable { get; set; }
@@ -30,6 +32,7 @@ public sealed class CheckSuiteBuilder : ResponseBuilder
         {
             id = Id,
             conclusion = Conclusion,
+            pull_requests = PullRequests.Build(),
             rerequestable = Rerequestable,
             status = Status,
             app = new

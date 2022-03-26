@@ -143,6 +143,16 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .RegisterWith(Fixture.Interceptor);
     }
 
+    protected void RegisterGetPullRequest(PullRequestBuilder pullRequest)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{pullRequest.Repository.Owner.Login}/{pullRequest.Repository.Name}/pulls/{pullRequest.Number}")
+            .Responds()
+            .WithJsonContent(pullRequest)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
     protected void RegisterGetWorkflows(
         CheckSuiteBuilder checkSuite,
         params WorkflowRunBuilder[] workflows)
