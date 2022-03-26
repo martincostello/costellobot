@@ -19,7 +19,33 @@ public sealed class ApiTests : IntegrationTests<AppFixture>
     }
 
     [Fact]
-    public async Task Can_Accept_GitHub_Webhook()
+    public async Task Can_Accept_GitHub_Check_Suite_Webhook()
+    {
+        // Arrange
+        // See https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#check_suite
+        var value = new
+        {
+            action = "completed",
+            check_suite = new
+            {
+                status = "completed",
+                conclusion = "success",
+            },
+            installation = new
+            {
+                id = 42,
+            },
+        };
+
+        // Act
+        using var response = await PostWebhookAsync("check_suite", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Can_Accept_GitHub_Ping_Webhook()
     {
         // Arrange
         var options = Fixture.Services.GetRequiredService<IOptions<GitHubOptions>>().Value;
@@ -52,6 +78,27 @@ public sealed class ApiTests : IntegrationTests<AppFixture>
 
         // Act
         using var response = await PostWebhookAsync("ping", value, options.WebhookSecret);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Can_Accept_GitHub_Installation_Webhook()
+    {
+        // Arrange
+        // See https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#installation
+        var value = new
+        {
+            action = "created",
+            installation = new
+            {
+                id = 42,
+            },
+        };
+
+        // Act
+        using var response = await PostWebhookAsync("installation", value);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
