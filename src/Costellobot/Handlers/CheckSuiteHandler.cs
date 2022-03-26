@@ -36,20 +36,56 @@ public sealed partial class CheckSuiteHandler : IHandler
             return;
         }
 
+        if (!IsCheckSuiteEligibleForRerun(body))
+        {
+            return;
+        }
+
         string owner = body.Repository.Owner.Login;
         string name = body.Repository.Name;
+        long checkSuiteId = checkSuite.Id;
+
+        if (!await CanRerunCheckSuiteAsync(owner, name, checkSuiteId))
+        {
+            return;
+        }
+
+        // Is the check suite associated with a GitHub Actions workflow?
+        var workflowsClient = _client.Workflows();
+        var workflows = await workflowsClient.GetWorkflowRunsAsync(body.Repository.Url, checkSuiteId);
+
+        if (workflows.TotalCount < 1)
+        {
+            await RerunCheckSuiteAsync(owner, name, checkSuiteId);
+        }
+        else
+        {
+            await RerunFailedJobsAsync(
+                workflowsClient,
+                owner,
+                name,
+                body.Repository.Url,
+                workflows.WorkflowRuns[0]);
+        }
+    }
+
+    private bool IsCheckSuiteEligibleForRerun(CheckSuiteEvent body)
+    {
+        string owner = body.Repository!.Owner.Login;
+        string name = body.Repository.Name;
+        var checkSuite = body.CheckSuite;
         long checkSuiteId = checkSuite.Id;
 
         if (!string.Equals(body.Action, CheckSuiteAction.Completed, StringComparison.Ordinal))
         {
             Log.IgnoringCheckRunAction(_logger, checkSuiteId, owner, name, body.Action);
-            return;
+            return false;
         }
 
         if (checkSuite.Conclusion != CheckSuiteConclusion.Failure)
         {
             Log.IgnoringCheckRunThatDidNotFail(_logger, checkSuiteId, owner, name);
-            return;
+            return false;
         }
 
         var options = _options.CurrentValue;
@@ -57,21 +93,26 @@ public sealed partial class CheckSuiteHandler : IHandler
         if (options.RerunFailedChecksAttempts < 1)
         {
             Log.RetriesAreNotEnabled(_logger, checkSuiteId, owner, name);
-            return;
+            return false;
         }
 
         if (!checkSuite.Rerequestable)
         {
             Log.CannotRetryCheckSuite(_logger, checkSuiteId, owner, name);
-            return;
+            return false;
         }
 
         if (options.RerunFailedChecks.Count < 1)
         {
             Log.NoChecksConfiguredForRetry(_logger, checkSuiteId, owner, name);
-            return;
+            return false;
         }
 
+        return true;
+    }
+
+    private async Task<bool> CanRerunCheckSuiteAsync(string owner, string name, long checkSuiteId)
+    {
         var checkRuns = await _client.Check.Run.GetAllForCheckSuite(
             owner,
             name,
@@ -90,7 +131,7 @@ public sealed partial class CheckSuiteHandler : IHandler
         if (failedRuns.Count < 1)
         {
             Log.NoFailedCheckRunsFound(_logger, checkSuiteId, owner, name);
-            return;
+            return false;
         }
 
         Log.FailedCheckRunsFound(
@@ -101,6 +142,8 @@ public sealed partial class CheckSuiteHandler : IHandler
             name,
             failedRuns.Select((p) => p.Name).Distinct().ToArray());
 
+        var options = _options.CurrentValue;
+
         var retryEligibleRuns = failedRuns
             .Where((p) => options.RerunFailedChecks.Any((pattern) => Regex.IsMatch(p.Name, pattern)))
             .GroupBy((p) => p.Name)
@@ -109,7 +152,7 @@ public sealed partial class CheckSuiteHandler : IHandler
         if (retryEligibleRuns.Count < 1)
         {
             Log.NoEligibleFailedCheckRunsFound(_logger, checkSuiteId, owner, name);
-            return;
+            return false;
         }
 
         Log.EligibileFailedCheckRunsFound(
@@ -123,40 +166,41 @@ public sealed partial class CheckSuiteHandler : IHandler
         if (retryEligibleRuns.Any((p) => p.Count() > options.RerunFailedChecksAttempts))
         {
             Log.TooManyRetries(_logger, checkSuiteId, owner, name, options.RerunFailedChecksAttempts);
-            return;
+            return false;
         }
 
-        var client = _client.Workflows();
+        return true;
+    }
 
-        // Is the check suite associated with a GitHub Actions workflow?
-        var workflows = await client.GetWorkflowRunsAsync(body.Repository.Url, checkSuiteId);
-
-        if (workflows.TotalCount < 1)
+    private async Task RerunCheckSuiteAsync(string owner, string name, long checkSuiteId)
+    {
+        try
         {
-            try
-            {
-                await _client.Check.Suite.Rerequest(owner, name, checkSuiteId);
-                Log.RerequestedCheckSuite(_logger, checkSuiteId, owner, name);
-            }
-            catch (Exception ex)
-            {
-                Log.FailedToRerequestCheckSuite(_logger, ex, checkSuiteId, owner, name);
-            }
+            await _client.Check.Suite.Rerequest(owner, name, checkSuiteId);
+            Log.RerequestedCheckSuite(_logger, checkSuiteId, owner, name);
         }
-        else
+        catch (Exception ex)
         {
-            var run = workflows.WorkflowRuns[0];
+            Log.FailedToRerequestCheckSuite(_logger, ex, checkSuiteId, owner, name);
+        }
+    }
 
-            try
-            {
-                await client.RerunFailedJobsAsync(body.Repository.Url, run.Id);
+    private async Task RerunFailedJobsAsync(
+        IWorkflowClient client,
+        string owner,
+        string name,
+        string repositoryUrl,
+        WorkflowRun run)
+    {
+        try
+        {
+            await client.RerunFailedJobsAsync(repositoryUrl, run.Id);
 
-                Log.RerunningFailedJobs(_logger, run.Name, run.Id, owner, name);
-            }
-            catch (Exception ex)
-            {
-                Log.FailedToRerunFailedJobs(_logger, ex, run.Name, run.Id, owner, name);
-            }
+            Log.RerunningFailedJobs(_logger, run.Name, run.Id, owner, name);
+        }
+        catch (Exception ex)
+        {
+            Log.FailedToRerunFailedJobs(_logger, ex, run.Name, run.Id, owner, name);
         }
     }
 
