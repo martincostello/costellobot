@@ -20,7 +20,7 @@ public class GitHubWebhookDispatcherTests
     {
         // Arrange
         var handlerFactory = Mock.Of<IHandlerFactory>();
-        var options = new GitHubOptions() { InstallationId = 37 }.ToSnapshot();
+        var options = new GitHubOptions() { InstallationId = 37 }.ToMonitor();
         var logger = OutputHelper.ToLogger<GitHubWebhookDispatcher>();
 
         var message = Builders.GitHubFixtures.CreateEvent("pull_request", installationId: 99);
