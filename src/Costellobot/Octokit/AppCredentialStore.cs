@@ -2,14 +2,14 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Security.Cryptography;
+using MartinCostello.Costellobot;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using NodaTime;
-using Octokit;
 
-namespace MartinCostello.Costellobot;
+namespace Octokit;
 
 public sealed class AppCredentialStore : ICredentialStore
 {

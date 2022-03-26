@@ -65,6 +65,7 @@ public static class GitHubExtensions
         services.AddScoped<GitHubWebhookDispatcher>();
 
         services.AddSingleton<IHandlerFactory, HandlerFactory>();
+        services.AddScoped<CheckSuiteHandler>();
         services.AddScoped<PullRequestHandler>();
 
         services.AddHostedService<GitHubWebhookService>();

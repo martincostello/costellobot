@@ -31,6 +31,9 @@ public sealed class RepositoryBuilder : ResponseBuilder
     public PullRequestBuilder CreatePullRequest(UserBuilder? user = null)
         => new(this, user);
 
+    public WorkflowRunBuilder CreateWorkflowRun()
+        => new(this);
+
     public override object Build()
     {
         return new
@@ -45,6 +48,7 @@ public sealed class RepositoryBuilder : ResponseBuilder
             name = Name,
             owner = Owner.Build(),
             @private = IsPrivate,
+            url = $"https://api.github.com/repos/{Owner.Login}/{Name}",
         };
     }
 }

@@ -119,6 +119,20 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .RegisterWith(Fixture.Interceptor);
     }
 
+    protected void RegisterGetCheckRuns(
+        RepositoryBuilder repository,
+        int id,
+        params CheckRunBuilder[] checkRuns)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{repository.Owner.Login}/{repository.Name}/check-suites/{id}/check-runs")
+            .ForQuery("status=completed&filter=all")
+            .Responds()
+            .WithJsonContent(CreateCheckRuns(checkRuns))
+            .RegisterWith(Fixture.Interceptor);
+    }
+
     protected void RegisterGetCommit(GitHubCommitBuilder commit)
     {
         CreateDefaultBuilder()
@@ -126,6 +140,19 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .ForPath($"/repos/{commit.Repository.Owner.Login}/{commit.Repository.Name}/commits/{commit.Sha}")
             .Responds()
             .WithJsonContent(commit)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    protected void RegisterGetWorkflows(
+        CheckSuiteBuilder checkSuite,
+        params WorkflowRunBuilder[] workflows)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{checkSuite.Repository.Owner.Login}/{checkSuite.Repository.Name}/actions/runs")
+            .ForQuery($"check_suite_id={checkSuite.Id}")
+            .Responds()
+            .WithJsonContent(CreateWorkflowRuns(workflows))
             .RegisterWith(Fixture.Interceptor);
     }
 
@@ -137,6 +164,23 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .Requests()
             .ForPost()
             .ForPath($"/repos/{pullRequest.Repository.Owner.Login}/{pullRequest.Repository.Name}/pulls/{pullRequest.Number}/reviews")
+            .Responds()
+            .WithStatus(StatusCodes.Status201Created)
+            .WithSystemTextJsonContent(new { });
+
+        configure?.Invoke(builder);
+
+        builder.RegisterWith(Fixture.Interceptor);
+    }
+
+    protected void RegisterRerunFailedJobs(
+        WorkflowRunBuilder workflowRun,
+        Action<HttpRequestInterceptionBuilder>? configure = null)
+    {
+        var builder = CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath($"/repos/{workflowRun.Repository.Owner.Login}/{workflowRun.Repository.Name}/actions/runs/{workflowRun.Id}/rerun-failed-jobs")
             .Responds()
             .WithStatus(StatusCodes.Status201Created)
             .WithSystemTextJsonContent(new { });

@@ -1,13 +1,13 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using MartinCostello.Costellobot;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using Octokit;
 
-namespace MartinCostello.Costellobot;
+namespace Octokit;
 
-public sealed class InstallationCredentialStore : ICredentialStore, Octokit.GraphQL.ICredentialStore
+public sealed class InstallationCredentialStore : ICredentialStore, GraphQL.ICredentialStore
 {
     private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(1);
     private static readonly TimeSpan TokenSkew = TimeSpan.FromMinutes(5);
@@ -40,7 +40,7 @@ public sealed class InstallationCredentialStore : ICredentialStore, Octokit.Grap
         });
     }
 
-    async Task<string> Octokit.GraphQL.ICredentialStore.GetCredentials(CancellationToken cancellationToken)
+    async Task<string> GraphQL.ICredentialStore.GetCredentials(CancellationToken cancellationToken)
     {
         var credentials = await GetCredentials();
         return credentials.GetToken();

@@ -4,6 +4,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Octokit;
 
 namespace MartinCostello.Costellobot.Handlers;
 
@@ -13,7 +14,7 @@ public static class HandlerFactoryTests
     [InlineData(null, typeof(NullHandler))]
     [InlineData("", typeof(NullHandler))]
     [InlineData("check_run", typeof(NullHandler))]
-    [InlineData("check_suite", typeof(NullHandler))]
+    [InlineData("check_suite", typeof(CheckSuiteHandler))]
     [InlineData("issues", typeof(NullHandler))]
     [InlineData("ping", typeof(NullHandler))]
     [InlineData("pull_request", typeof(PullRequestHandler))]
@@ -30,6 +31,15 @@ public static class HandlerFactoryTests
                     Mock.Of<Octokit.GraphQL.IConnection>(),
                     new WebhookOptions().ToMonitor(),
                     NullLoggerFactory.Instance.CreateLogger<PullRequestHandler>());
+            });
+
+        mock.Setup((p) => p.GetService(typeof(CheckSuiteHandler)))
+            .Returns(() =>
+            {
+                return new CheckSuiteHandler(
+                    Mock.Of<IGitHubClientForInstallation>(),
+                    new WebhookOptions().ToMonitor(),
+                    NullLoggerFactory.Instance.CreateLogger<CheckSuiteHandler>());
             });
 
         var target = new HandlerFactory(mock.Object);

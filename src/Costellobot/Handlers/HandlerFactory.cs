@@ -16,6 +16,7 @@ public sealed class HandlerFactory : IHandlerFactory
     {
         return eventType switch
         {
+            "check_suite" => _serviceProvider.GetRequiredService<CheckSuiteHandler>(),
             "pull_request" => _serviceProvider.GetRequiredService<PullRequestHandler>(),
             _ => NullHandler.Instance,
         };
