@@ -3,6 +3,7 @@
 
 using MartinCostello.Costellobot.Handlers;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using NodaTime;
 using Octokit;
@@ -18,8 +19,12 @@ public static class GitHubExtensions
     public static IServiceCollection AddGitHub(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHttpClient();
+        services.AddHttpClient(Options.DefaultName)
+                .ApplyDefaultConfiguration();
+
         services.AddMemoryCache();
         services.AddOptions();
+        services.AddPolly();
 
         services.Configure<GitHubOptions>(configuration.GetSection("GitHub"));
         services.Configure<WebhookOptions>(configuration.GetSection("Webhook"));
