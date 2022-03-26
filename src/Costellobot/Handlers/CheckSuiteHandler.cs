@@ -133,13 +133,14 @@ public sealed partial class CheckSuiteHandler : IHandler
 
         if (workflows.TotalCount < 1)
         {
-            if (await _client.Check.Suite.Rerequest(owner, name, checkSuiteId))
+            try
             {
+                await _client.Check.Suite.Rerequest(owner, name, checkSuiteId);
                 Log.RerequestedCheckSuite(_logger, checkSuiteId, owner, name);
             }
-            else
+            catch (Exception ex)
             {
-                Log.FailedToRerequestCheckSuite(_logger, checkSuiteId, owner, name);
+                Log.FailedToRerequestCheckSuite(_logger, ex, checkSuiteId, owner, name);
             }
         }
         else
@@ -284,6 +285,7 @@ public sealed partial class CheckSuiteHandler : IHandler
            Message = "Failed to re-request check suite ID {CheckSuiteId} in {Owner}/{Repository}.")]
         public static partial void FailedToRerequestCheckSuite(
             ILogger logger,
+            Exception exception,
             long checkSuiteId,
             string owner,
             string repository);
