@@ -60,6 +60,21 @@ public sealed partial class GitHubWebhookService : IHostedService, IDisposable
         }
     }
 
+    public async Task ProcessAsync(GitHubEvent message)
+    {
+        try
+        {
+            await using var scope = _serviceProvider.CreateAsyncScope();
+
+            var dispatcher = scope.ServiceProvider.GetRequiredService<GitHubWebhookDispatcher>();
+            await dispatcher.DispatchAsync(message);
+        }
+        catch (Exception ex)
+        {
+            Log.ProcessingFailed(_logger, ex, message.Headers.HookId);
+        }
+    }
+
     private async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (true)
@@ -71,17 +86,7 @@ public sealed partial class GitHubWebhookService : IHostedService, IDisposable
                 break;
             }
 
-            try
-            {
-                await using var scope = _serviceProvider.CreateAsyncScope();
-
-                var dispatcher = scope.ServiceProvider.GetRequiredService<GitHubWebhookDispatcher>();
-                await dispatcher.DispatchAsync(message);
-            }
-            catch (Exception ex)
-            {
-                Log.ProcessingFailed(_logger, ex, message.Headers.HookId);
-            }
+            await ProcessAsync(message);
         }
     }
 

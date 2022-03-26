@@ -3,8 +3,10 @@
 
 using System.Net;
 using System.Text.Json;
+using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Builders;
 using MartinCostello.Costellobot.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot.Handlers;
@@ -108,6 +110,44 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
 
                 return hasCorrectPayload;
             }));
+
+        var value = CreateWebhook(pullRequest);
+
+        // Act
+        using var response = await PostWebhookAsync("pull_request", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await automergeEnabled.Task.WaitAsync(TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public async Task Exception_Is_Not_Thrown_If_Enabling_Automerge_Fails()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Automerge", bool.TrueString);
+
+        var user = CreateUser("dependabot[bot]");
+        var pullRequest = CreatePullRequest(user);
+
+        var commit = pullRequest.CreateCommit();
+        commit.Message = TrustedCommitMessage();
+
+        var automergeEnabled = new TaskCompletionSource();
+
+        RegisterGetAccessToken();
+        RegisterGetCommit(commit);
+        RegisterPostReview(pullRequest);
+
+        RegisterEnableAutomerge(
+            pullRequest,
+            (p) =>
+            {
+                p.Responds()
+                 .WithStatus(HttpStatusCode.BadRequest)
+                 .WithInterceptionCallback((_) => automergeEnabled.SetResult());
+            });
 
         var value = CreateWebhook(pullRequest);
 
@@ -260,6 +300,51 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         await AssertTaskNotRun(pullRequestApproved);
+    }
+
+    [Fact]
+    public async Task Pull_Request_Is_Not_Approved_For_Draft()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Approve", bool.TrueString);
+
+        var user = CreateUser("dependabot[bot]");
+        var pullRequest = CreatePullRequest(user);
+
+        pullRequest.IsDraft = true;
+
+        var commit = pullRequest.CreateCommit();
+        commit.Message = TrustedCommitMessage();
+
+        var pullRequestApproved = new TaskCompletionSource();
+
+        RegisterGetAccessToken();
+        RegisterGetCommit(commit);
+
+        RegisterPostReview(
+            pullRequest,
+            (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
+
+        var value = CreateWebhook(pullRequest);
+
+        // Act
+        using var response = await PostWebhookAsync("pull_request", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(pullRequestApproved);
+    }
+
+    [Fact]
+    public async Task Handler_Ignores_Events_That_Are_Not_Pull_Requests()
+    {
+        // Arrange
+        var target = Fixture.Services.GetRequiredService<PullRequestHandler>();
+        var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
+
+        // Act (no Assert)
+        await target.HandleAsync(message);
     }
 
     private static PullRequestBuilder CreatePullRequest(UserBuilder user)
