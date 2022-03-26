@@ -8,6 +8,7 @@ using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.CheckSuite;
 using Octokit.Webhooks.Models.CheckSuiteEvent;
+using CheckRunPullRequest = Octokit.Webhooks.Models.CheckRunEvent.CheckRunPullRequest;
 
 namespace MartinCostello.Costellobot.Handlers;
 
@@ -44,6 +45,14 @@ public sealed partial class CheckSuiteHandler : IHandler
         string owner = body.Repository.Owner.Login;
         string name = body.Repository.Name;
         long checkSuiteId = checkSuite.Id;
+
+        var pullRequest = checkSuite.PullRequests.FirstOrDefault();
+
+        if (pullRequest is not null &&
+            !await IsPullRequestFromTrustedUserAsync(owner, name, checkSuiteId, pullRequest))
+        {
+            return;
+        }
 
         if (!await CanRerunCheckSuiteAsync(owner, name, checkSuiteId))
         {
@@ -170,6 +179,38 @@ public sealed partial class CheckSuiteHandler : IHandler
         }
 
         return true;
+    }
+
+    private async Task<bool> IsPullRequestFromTrustedUserAsync(
+        string owner,
+        string name,
+        long checkSuiteId,
+        CheckRunPullRequest pull)
+    {
+        var connection = new ApiConnection(_client.Connection);
+
+        var author = await connection.Get<PullRequestAuthorAssociation>(new Uri(pull.Url));
+
+        var options = _options.CurrentValue;
+
+        if (options.TrustedEntities.Users.Contains(author.User.Login, StringComparer.Ordinal))
+        {
+            return true;
+        }
+
+        bool isTrusted = author.AuthorAssociation.Value switch
+        {
+            AuthorAssociation.Member => true,
+            AuthorAssociation.Owner => true,
+            _ => false,
+        };
+
+        if (!isTrusted)
+        {
+            Log.IgnoringUntrustedUser(_logger, checkSuiteId, owner, name, author.User.Login);
+        }
+
+        return isTrusted;
     }
 
     private async Task RerunCheckSuiteAsync(string owner, string name, long checkSuiteId)
@@ -356,5 +397,23 @@ public sealed partial class CheckSuiteHandler : IHandler
             long runId,
             string owner,
             string repository);
+
+        [LoggerMessage(
+           EventId = 15,
+           Level = LogLevel.Information,
+           Message = "Ignoring check suite ID {CheckSuiteId} for {Owner}/{Repository} as it is associated with a pull request from untrusted user {Login}.")]
+        public static partial void IgnoringUntrustedUser(
+            ILogger logger,
+            long checkSuiteId,
+            string owner,
+            string repository,
+            string login);
+    }
+
+    private sealed class PullRequestAuthorAssociation
+    {
+        public StringEnum<AuthorAssociation> AuthorAssociation { get; set; }
+
+        public User User { get; set; } = default!;
     }
 }

@@ -11,6 +11,8 @@ public sealed class PullRequestBuilder : ResponseBuilder
         User = user;
     }
 
+    public string AuthorAssociation { get; set; } = "owner";
+
     public bool IsDraft { get; set; }
 
     public bool? IsMergeable { get; set; }
@@ -36,6 +38,7 @@ public sealed class PullRequestBuilder : ResponseBuilder
     {
         return new
         {
+            author_association = AuthorAssociation,
             @base = new
             {
                 @ref = "main",
@@ -52,6 +55,7 @@ public sealed class PullRequestBuilder : ResponseBuilder
             node_id = NodeId,
             number = Number,
             title = Title,
+            url = $"https://api.github.com/repos/{Repository.Owner.Login}/{Repository.Name}/pulls/{Number}",
             user = (User ?? Repository.Owner).Build(),
         };
     }

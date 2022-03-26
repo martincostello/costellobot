@@ -36,6 +36,7 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
 
         RegisterGetAccessToken();
         RegisterGetCheckRuns(repository, checkSuite.Id, checkRun);
+        RegisterGetPullRequest(pullRequest);
         RegisterGetWorkflows(checkSuite);
 
         RegisterRerequestCheckSuite(
@@ -53,16 +54,25 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
         await rerequestCheckSuite.Task.WaitAsync(TimeSpan.FromSeconds(1));
     }
 
-    [Fact]
-    public async Task Check_Suite_Is_Rerequested_For_Pull_Request_Run_Failure_But_Does_Not_Throw_If_Failed()
+    [Theory]
+    [InlineData("rando-calrissian", "MEMBER")]
+    [InlineData("martincostello", "OWNER")]
+    public async Task Check_Suite_Is_Rerequested_For_Pull_Request_Run_Failure_But_Does_Not_Throw_If_Failed(
+        string login,
+        string authorAssociation)
     {
         // Arrange
         Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "1");
 
-        var owner = CreateUser();
+        var owner = CreateUser(login);
         var repository = owner.CreateRepository();
-        var pullRequest = repository.CreatePullRequest();
+
+        var pullRequest = repository.CreatePullRequest(owner);
+        pullRequest.AuthorAssociation = authorAssociation;
+
         var checkSuite = CreateCheckSuite(repository);
+        checkSuite.PullRequests.Add(pullRequest);
+
         var workflowRun = repository.CreateWorkflowRun();
 
         var checkRun = CreateCheckRun("ubuntu-latest", "completed", "failure");
@@ -72,6 +82,7 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
 
         RegisterGetAccessToken();
         RegisterGetCheckRuns(repository, checkSuite.Id, checkRun);
+        RegisterGetPullRequest(pullRequest);
         RegisterGetWorkflows(checkSuite);
 
         RegisterRerequestCheckSuite(
@@ -123,6 +134,7 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
 
         RegisterGetAccessToken();
         RegisterGetCheckRuns(repository, checkSuite.Id, checkRuns.ToArray());
+        RegisterGetPullRequest(pullRequest);
         RegisterGetWorkflows(checkSuite, workflowRun);
 
         RegisterRerunFailedJobs(
@@ -146,10 +158,14 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "2");
 
+        var user = CreateUser("dependabot[bot]");
         var owner = CreateUser();
         var repository = owner.CreateRepository();
-        var pullRequest = repository.CreatePullRequest();
+        var pullRequest = repository.CreatePullRequest(user);
+
         var checkSuite = CreateCheckSuite(repository);
+        checkSuite.PullRequests.Add(pullRequest);
+
         var workflowRun = repository.CreateWorkflowRun();
 
         var checkRuns = new List<CheckRunBuilder>();
@@ -170,6 +186,7 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
 
         RegisterGetAccessToken();
         RegisterGetCheckRuns(repository, checkSuite.Id, checkRuns.ToArray());
+        RegisterGetPullRequest(pullRequest);
         RegisterGetWorkflows(checkSuite, workflowRun);
 
         RegisterRerunFailedJobs(
@@ -216,6 +233,7 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
 
         RegisterGetAccessToken();
         RegisterGetCheckRuns(repository, checkSuite.Id, checkRuns.ToArray());
+        RegisterGetPullRequest(pullRequest);
         RegisterGetWorkflows(checkSuite, workflowRun);
 
         RegisterRerunFailedJobs(
@@ -312,11 +330,12 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
 
         var owner = CreateUser();
         var repository = owner.CreateRepository();
+        var pullRequest = repository.CreatePullRequest();
         var checkSuite = CreateCheckSuite(repository);
-
         var value = CreateWebhook(checkSuite);
 
         RegisterGetAccessToken();
+        RegisterGetPullRequest(pullRequest);
         RegisterGetCheckRuns(repository, checkSuite.Id);
 
         // Act
@@ -345,6 +364,7 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
         var value = CreateWebhook(checkSuite);
 
         RegisterGetAccessToken();
+        RegisterGetPullRequest(pullRequest);
         RegisterGetCheckRuns(repository, checkSuite.Id, checkRun);
 
         // Act
@@ -371,6 +391,7 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
         checkRun.PullRequests.Add(pullRequest);
 
         RegisterGetAccessToken();
+        RegisterGetPullRequest(pullRequest);
         RegisterGetCheckRuns(repository, checkSuite.Id, checkRun);
 
         var value = CreateWebhook(checkSuite);
@@ -403,6 +424,7 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
 
         RegisterGetAccessToken();
         RegisterGetCheckRuns(repository, checkSuite.Id, checkRun);
+        RegisterGetPullRequest(pullRequest);
         RegisterGetWorkflows(checkSuite, workflowRun);
 
         RegisterRerunFailedJobs(
@@ -422,6 +444,43 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         await failedJobsRetried.Task.WaitAsync(TimeSpan.FromSeconds(1));
+    }
+
+    [Theory]
+    [InlineData("rando-calrissian", "COLLABORATOR")]
+    [InlineData("rando-calrissian", "CONTRIBUTOR")]
+    [InlineData("rando-calrissian", "FIRST_TIMER")]
+    [InlineData("rando-calrissian", "FIRST_TIME_CONTRIBUTOR")]
+    [InlineData("rando-calrissian", "OWNER")]
+    public async Task Failed_Jobs_Are_Not_Rerun_If_Pull_Request_Is_Not_From_A_Trusted_User(
+        string login,
+        string authorAssociation)
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "1");
+
+        var user = CreateUser(login);
+        var owner = CreateUser();
+        var repository = owner.CreateRepository();
+
+        var pullRequest = repository.CreatePullRequest(user);
+        pullRequest.AuthorAssociation = authorAssociation;
+
+        var checkSuite = CreateCheckSuite(repository);
+        checkSuite.PullRequests.Add(pullRequest);
+
+        var value = CreateWebhook(checkSuite);
+
+        RegisterGetAccessToken();
+        RegisterGetPullRequest(pullRequest);
+
+        // Act
+        using var response = await PostWebhookAsync("check_suite", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
     }
 
     [Theory]
