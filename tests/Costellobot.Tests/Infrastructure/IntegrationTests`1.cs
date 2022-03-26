@@ -173,6 +173,23 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         builder.RegisterWith(Fixture.Interceptor);
     }
 
+    protected void RegisterRerequestCheckSuite(
+        CheckSuiteBuilder checkSuite,
+        Action<HttpRequestInterceptionBuilder>? configure = null)
+    {
+        var builder = CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath($"/repos/{checkSuite.Repository.Owner.Login}/{checkSuite.Repository.Name}/check-suites/{checkSuite.Id}/rerequest")
+            .Responds()
+            .WithStatus(StatusCodes.Status201Created)
+            .WithSystemTextJsonContent(new { });
+
+        configure?.Invoke(builder);
+
+        builder.RegisterWith(Fixture.Interceptor);
+    }
+
     protected void RegisterRerunFailedJobs(
         WorkflowRunBuilder workflowRun,
         Action<HttpRequestInterceptionBuilder>? configure = null)
