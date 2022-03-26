@@ -18,6 +18,37 @@ public static class GitHubFixtures
 
     public const string InstallationId = "42";
 
+    public static CheckRunBuilder CreateCheckRun(
+        string name,
+        string status,
+        string? conclusion = null,
+        string? applicationName = null)
+    {
+        var builder = new CheckRunBuilder(status, conclusion)
+        {
+            Name = name,
+        };
+
+        if (applicationName is not null)
+        {
+            builder.ApplicationName = applicationName;
+        }
+
+        return builder;
+    }
+
+    public static CheckRunsResponseBuilder CreateCheckRuns(params CheckRunBuilder[] checkRuns)
+    {
+        var builder = new CheckRunsResponseBuilder();
+
+        foreach (var item in checkRuns)
+        {
+            builder.CheckRuns.Add(item);
+        }
+
+        return builder;
+    }
+
     public static GitHubEvent CreateEvent(
         string @event,
         object? payload = null,
@@ -77,6 +108,18 @@ public static class GitHubFixtures
         if (userType is not null)
         {
             builder.UserType = userType;
+        }
+
+        return builder;
+    }
+
+    public static WorkflowRunsResponseBuilder CreateWorkflowRuns(params WorkflowRunBuilder[] runs)
+    {
+        var builder = new WorkflowRunsResponseBuilder();
+
+        foreach (var item in runs)
+        {
+            builder.WorkflowRuns.Add(item);
         }
 
         return builder;

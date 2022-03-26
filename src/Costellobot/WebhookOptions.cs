@@ -11,6 +11,8 @@ public sealed class WebhookOptions
 
     public bool Automerge { get; set; }
 
+    public IList<string> RerunFailedChecks { get; set; } = new List<string>();
+
     public int RerunFailedChecksAttempts { get; set; }
 
     public TrustedEntitiesOptions TrustedEntities { get; set; } = new();
