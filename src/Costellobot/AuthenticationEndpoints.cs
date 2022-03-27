@@ -105,7 +105,7 @@ public static class AuthenticationEndpoints
         if (!string.IsNullOrWhiteSpace(connectionString))
         {
 #pragma warning disable CA1308
-            string relativePath = $"/costellobot/{environment.EnvironmentName.ToLowerInvariant()}/keys.xml";
+            string relativePath = $"costellobot/{environment.EnvironmentName.ToLowerInvariant()}/keys.xml";
 #pragma warning restore CA1308
 
             dataProtection.PersistKeysToAzureBlobStorage(
