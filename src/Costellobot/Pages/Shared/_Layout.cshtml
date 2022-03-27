@@ -1,0 +1,162 @@
+@using Humanizer;
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    string author = "Martin Costello";
+    string description = $"GitHub automation for {author}'s repositories.";
+    string domain = Context.Request.Host.ToString();
+    string name = "costellobot";
+    string title = $"{ViewData["Title"]} - {name}";
+    string twitter = "@martin_costello";
+
+    string imageUrl = string.Empty;
+    string siteUrl = string.Empty;
+
+    if (!string.IsNullOrEmpty(domain))
+    {
+        siteUrl = $"https://{domain}/";
+        imageUrl = $"https://{domain}/favicon.png";
+    }
+
+    string repository = "https://github.com/martincostello/costellobot";
+    string branch = repository + "/tree/" + GitMetadata.Branch;
+    string build = repository + "/actions/runs/" + GitMetadata.BuildId;
+    string commit = repository + "/commit/" + GitMetadata.Commit;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@title</title>
+    <meta http-equiv="cache-control" content="no-cache, no-store" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="application-name" content="@name" />
+    <meta name="author" content="@author" />
+    <meta name="copyright" content="&copy; @author @DateTimeOffset.UtcNow.Date.Year" />
+    <meta name="description" content="@description" />
+    <meta name="language" content="en" />
+    <meta name="keywords" content="github" />
+    <meta name="referrer" content="no-referrer-when-downgrade" />
+    <meta name="robots" content="NOINDEX" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta property="og:description" content="@description" />
+    <meta property="og:image" content="@imageUrl" />
+    <meta property="og:locale" content="en_GB" />
+    <meta property="og:site_name" content="@name" />
+    <meta property="og:title" content="@title" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@siteUrl" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:creator" content="@twitter" />
+    <meta name="twitter:description" content="@description" />
+    <meta name="twitter:domain" content="@domain" />
+    <meta name="twitter:image" content="@imageUrl" />
+    <meta name="twitter:image:alt" content="@name" />
+    <meta name="twitter:site" content="@twitter" />
+    <meta name="twitter:title" content="@title" />
+    <meta name="twitter:url" content="@siteUrl" />
+    <meta name="twitter:label1" content="Created by" />
+    <meta name="twitter:data1" content="@author" />
+    <link rel="manifest" href="@Url.Content("~/manifest.webmanifest")" asp-append-version="true" />
+    <link rel="shortcut icon" type="image/x-icon" href="~/favicon.png" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @{
+        var tokens = Antiforgery.GetTokens(Context);
+    }
+    <meta name="x-antiforgery-header" content="@tokens.HeaderName" />
+    <meta name="x-antiforgery-token" content="@tokens.RequestToken" />
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/" id="admin-link">
+                <img src="~/favicon.png" width="30" height="30" class="d-inline-block align-top" aria-hidden="true">
+                costellobot
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#site-navbar" aria-controls="site-navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="site-navbar">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="@(repository)" target="_blank" title="GitHub">
+                            GitHub
+                            <span class="fa-brands fa-github" aria-hidden="true"></span>
+                        </a>
+                    </li>
+                </ul>
+                @if (User.Identity!.IsAuthenticated)
+                {
+                    <div class="dropdown-divider"></div>
+                    <form action="~/sign-out" method="post" class="navbar-right">
+                        <ul class="nav navbar-nav navbar-right">
+                            <li>
+                                @{
+                                    string displayName = User.GetUserName();
+                                    string profileUrl = User.GetProfileUrl();
+                                    string? avatarUrl = User.GetAvatarUrl();
+                                }
+                                <a class="nav-link" href="@profileUrl" title="View your GitHub profile" target="_blank">
+                                    <span id="user-name">@displayName</span>
+                                    @if (!string.IsNullOrWhiteSpace(avatarUrl))
+                                    {
+                                        <img src="@avatarUrl" class="user-profile" alt="@displayName" title="@displayName" aria-hidden="true" />
+                                    }
+                                </a>
+                            </li>
+                            <li>
+                                <button type="submit" class="btn btn-link navbar-btn nav-link" title="Sign out" id="sign-out">
+                                    Sign out
+                                    <span class="fa fa-sign-out" aria-hidden="true"></span>
+                                </button>
+                            </li>
+                        </ul>
+                    </form>
+                }
+            </div>
+        </div>
+    </nav>
+    <main class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>
+                &copy; @(DateTimeOffset.UtcNow.Year) - Martin Costello |
+                Built from
+                <a href="@commit" title="View commit @GitMetadata.Commit on GitHub" target="_blank">
+                    <code>@string.Join(string.Empty, GitMetadata.Commit.Take(7))</code>
+                </a>
+                on
+                <a href="@branch" title="View branch @GitMetadata.Branch on GitHub" target="_blank">
+                    <code>@GitMetadata.Branch</code>
+                </a>
+                @if (!string.IsNullOrWhiteSpace(GitMetadata.BuildId))
+                {
+                    <text>
+                    by
+                    <a href="@build" title="View deployment on GitHub" target="_blank">
+                        GitHub
+                    </a>
+                    </text>
+                }
+                <span id="build-date" title="@GitMetadata.Timestamp.ToString("u", CultureInfo.InvariantCulture)">@GitMetadata.Timestamp.Humanize()</span>.
+            </p>
+        </footer>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.slim.min.js" integrity="sha512-6ORWJX/LrnSjBzwefdNUyLCMTIsGoNP6NftMy2UAm1JBm6PRZCO1d7OHBStWpVFZLO+RerTvqX/Z9mBFfCJZ4A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
+    <script src="~/static/js/main.js" asp-append-version="true"></script>
+</body>
+<!--
+    Deployment:    @(build)
+    Commit SHA:    @(GitMetadata.Commit)
+    Commit branch: @(GitMetadata.Branch)
+    Timestamp:     @(GitMetadata.Timestamp)
+    Version:       @(System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription)
+-->
+</html>

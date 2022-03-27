@@ -7,11 +7,17 @@ public sealed class GitHubOptions
 {
     public string AppId { get; set; } = string.Empty;
 
+    public string ClientId { get; set; } = string.Empty;
+
+    public string ClientSecret { get; set; } = string.Empty;
+
     public string EnterpriseDomain { get; set; } = string.Empty;
 
     public long InstallationId { get; set; }
 
     public string PrivateKey { get; set; } = string.Empty;
+
+    public IList<string> Scopes { get; set; } = new List<string>();
 
     public string WebhookSecret { get; set; } = string.Empty;
 }

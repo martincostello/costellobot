@@ -6,10 +6,12 @@
     <UserSecretsId>Costellobot</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="AspNet.Security.OAuth.GitHub" />
     <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" />
     <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" />
     <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" />
     <PackageReference Include="Azure.Identity" />
+    <PackageReference Include="Humanizer" />
     <PackageReference Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />

@@ -1,0 +1,14 @@
+@page "/error"
+@model ErrorModel
+@{
+    ViewBag.Title = Model.Title;
+    string modifier = Model.IsClientError ? "secondary" : "danger";
+}
+<h1 class="text-@modifier">@Model.Subtitle</h1>
+<h2 class="text-@modifier">@Model.Message</h2>
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+    </p>
+}

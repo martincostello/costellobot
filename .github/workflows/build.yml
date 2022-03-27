@@ -57,6 +57,30 @@ jobs:
         name: webapp
         path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
 
+    - name: Publish screenshots
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: screenshots
+        path: ./artifacts/screenshots/*
+        if-no-files-found: ignore
+
+    - name: Publish traces
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: traces
+        path: ./artifacts/traces/*
+        if-no-files-found: ignore
+
+    - name: Publish videos
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: videos
+        path: ./artifacts/videos/*
+        if-no-files-found: ignore
+
   deploy:
     if: ${{ github.ref == 'refs/heads/main' }}
     name: deploy-production
@@ -99,3 +123,27 @@ jobs:
       run: dotnet test ./tests/Costellobot.EndToEndTests --configuration Release --output ./artifacts
       env:
         APPLICATION_URL: ${{ env.APPLICATION_URL_PROD }}
+
+    - name: Publish screenshots
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: screenshots
+        path: ./artifacts/screenshots/*
+        if-no-files-found: ignore
+
+    - name: Publish traces
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: traces
+        path: ./artifacts/traces/*
+        if-no-files-found: ignore
+
+    - name: Publish videos
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: videos
+        path: ./artifacts/videos/*
+        if-no-files-found: ignore

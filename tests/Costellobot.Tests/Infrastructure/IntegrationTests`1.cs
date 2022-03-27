@@ -1,12 +1,14 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Builders;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Testing.Handlers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
@@ -24,6 +26,9 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         OutputHelper = outputHelper;
         Fixture.SetOutputHelper(OutputHelper);
         _scope = Fixture.Interceptor.BeginScope();
+
+        // TODO Fix scope disposal removing the existing bundle
+        Fixture.Interceptor.RegisterBundle(Path.Combine("Bundles", "oauth-http-bundle.json"));
     }
 
     ~IntegrationTests()
@@ -73,6 +78,40 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .WithStatus(StatusCodes.Status200OK);
 
         return ConfigureRateLimit(builder);
+    }
+
+    protected async Task<HttpClient> CreateAuthenticatedClientAsync(bool setAntiforgeryTokenHeader = true)
+    {
+        AntiforgeryTokens anonymousTokens = await Fixture.GetAntiforgeryTokensAsync();
+
+        var redirectHandler = new RedirectHandler(Fixture.ClientOptions.MaxAutomaticRedirections);
+
+        var anonymousCookieHandler = new CookieContainerHandler();
+        anonymousCookieHandler.Container.Add(
+            Fixture.Server.BaseAddress,
+            new Cookie(anonymousTokens.CookieName, anonymousTokens.CookieValue));
+
+        using var anonymousClient = Fixture.CreateDefaultClient(redirectHandler, anonymousCookieHandler);
+        anonymousClient.DefaultRequestHeaders.Add(anonymousTokens.HeaderName, anonymousTokens.RequestToken);
+
+        var parameters = Array.Empty<KeyValuePair<string?, string?>>();
+        using var content = new FormUrlEncodedContent(parameters);
+
+        using var response = await anonymousClient.PostAsync("/sign-in", content);
+        response.IsSuccessStatusCode.ShouldBeTrue();
+
+        var authenticatedTokens = await Fixture.GetAntiforgeryTokensAsync(() => anonymousClient);
+
+        var authenticatedCookieHandler = new CookieContainerHandler(anonymousCookieHandler.Container);
+
+        var authenticatedClient = Fixture.CreateDefaultClient(authenticatedCookieHandler);
+
+        if (setAntiforgeryTokenHeader)
+        {
+            authenticatedClient.DefaultRequestHeaders.Add(authenticatedTokens.HeaderName, authenticatedTokens.RequestToken);
+        }
+
+        return authenticatedClient;
     }
 
     protected void RegisterEnableAutomerge(
