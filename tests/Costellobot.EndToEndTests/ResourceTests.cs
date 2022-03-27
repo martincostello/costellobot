@@ -14,13 +14,18 @@ public class ResourceTests : EndToEndTest
     }
 
     [SkippableTheory]
+    [InlineData("/", MediaTypeNames.Text.Html)]
     [InlineData("/bad-request.html", MediaTypeNames.Text.Html)]
     [InlineData("/css/site.css", "text/css")]
     [InlineData("/error.html", MediaTypeNames.Text.Html)]
     [InlineData("/favicon.png", "image/png")]
+    [InlineData("/forbidden.html", MediaTypeNames.Text.Html)]
     [InlineData("/humans.txt", MediaTypeNames.Text.Plain)]
+    [InlineData("/manifest.webmanifest", "application/manifest+json")]
     [InlineData("/not-found.html", MediaTypeNames.Text.Html)]
     [InlineData("/robots.txt", MediaTypeNames.Text.Plain)]
+    [InlineData("/sign-in", MediaTypeNames.Text.Html)]
+    [InlineData("/unauthorized.html", MediaTypeNames.Text.Html)]
     [InlineData("/version", MediaTypeNames.Application.Json)]
     public async Task Can_Load_Resource_As_Get(string requestUri, string contentType)
     {
@@ -36,21 +41,6 @@ public class ResourceTests : EndToEndTest
         response.Content.Headers.ContentType.ShouldNotBeNull();
         response.Content.Headers.ContentType.MediaType.ShouldNotBeNull();
         response.Content.Headers.ContentType.MediaType.ShouldBe(contentType);
-    }
-
-    [SkippableFact]
-    public async Task Root_Redirects_To_Website()
-    {
-        // Arrange
-        using var client = Fixture.CreateClient();
-
-        // Act
-        using var response = await client.GetAsync("/");
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
-        response.Headers.Location.ShouldNotBeNull();
-        response.Headers.Location.OriginalString.ShouldBe("https://martincostello.com/");
     }
 
     [SkippableFact]

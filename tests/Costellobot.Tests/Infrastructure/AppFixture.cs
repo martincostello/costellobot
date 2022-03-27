@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Net.Http.Json;
+using AspNet.Security.OAuth.GitHub;
 using JustEat.HttpClientInterception;
 using MartinCostello.Logging.XUnit;
 using Microsoft.AspNetCore.Hosting;
@@ -12,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot.Infrastructure;
@@ -67,6 +70,19 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
         }
     }
 
+    public async Task<AntiforgeryTokens> GetAntiforgeryTokensAsync(
+        Func<HttpClient>? httpClientFactory = null,
+        CancellationToken cancellationToken = default)
+    {
+        using var httpClient = httpClientFactory?.Invoke() ?? CreateClient();
+
+        var tokens = await httpClient.GetFromJsonAsync<AntiforgeryTokens>(
+            AntiforgeryTokenController.GetTokensUri,
+            cancellationToken);
+
+        return tokens!;
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureAppConfiguration((configBuilder) =>
@@ -79,16 +95,22 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 KeyValuePair.Create("AzureKeyVault:ClientSecret", string.Empty),
                 KeyValuePair.Create("AzureKeyVault:TenantId", string.Empty),
                 KeyValuePair.Create("AzureKeyVault:Uri", string.Empty),
+                KeyValuePair.Create("ConnectionStrings:AzureStorage", string.Empty),
                 KeyValuePair.Create("GitHub:AppId", "123"),
+                KeyValuePair.Create("GitHub:ClientId", "github-id"),
+                KeyValuePair.Create("GitHub:ClientSecret", "github-secret"),
                 KeyValuePair.Create("GitHub:EnterpriseDomain", string.Empty),
                 KeyValuePair.Create("GitHub:InstallationId", InstallationId),
                 KeyValuePair.Create("GitHub:PrivateKey", testKey),
                 KeyValuePair.Create("GitHub:WebhookSecret", "github-webhook-secret"),
+                KeyValuePair.Create("Site:AdminUsers:0", "john-smith"),
             };
 
             configBuilder.AddInMemoryCollection(config);
             configBuilder.Add(new AppFixtureConfigurationSource(this));
         });
+
+        builder.ConfigureAntiforgeryTokenResource();
 
         builder.ConfigureLogging(
             (loggingBuilder) => loggingBuilder.ClearProviders().AddXUnit(this));
@@ -103,7 +125,12 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
 
             services.AddSingleton<IHttpMessageHandlerBuilderFilter, HttpRequestInterceptionFilter>(
                 (_) => new HttpRequestInterceptionFilter(Interceptor));
+
+            services.AddSingleton<IPostConfigureOptions<GitHubAuthenticationOptions>, RemoteAuthorizationEventsFilter>();
+            services.AddScoped<LoopbackOAuthEvents>();
         });
+
+        Interceptor.RegisterBundle(Path.Combine("Bundles", "oauth-http-bundle.json"));
     }
 
     private void ReloadConfiguration()

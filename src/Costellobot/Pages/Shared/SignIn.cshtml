@@ -1,0 +1,25 @@
+@page "/sign-in"
+@model SignInModel
+@{
+    ViewData["Title"] = "Sign In";
+}
+@if (string.Equals(Request.Query["denied"], bool.TrueString, StringComparison.OrdinalIgnoreCase))
+{
+    <div class="alert alert-warning" role="alert">
+        <p>
+            <strong>
+                Access Denied
+            </strong>
+            <span class="fa-solid fa-user-lock " aria-hidden="true"></span>
+        </p>
+        <p>
+            To access costellobot, you must grant access to your GitHub account.
+        </p>
+    </div>
+}
+<p class="lead">
+    Sign in with your GitHub account to access costellobot.
+</p>
+<form action="~/sign-in" method="post">
+    <button class="btn btn-lg btn-primary m-1" id="sign-in" type="submit">Sign in</button>
+</form>

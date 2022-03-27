@@ -16,8 +16,13 @@ public static class GitHubExtensions
 {
     private static readonly ProductHeaderValue UserAgent = CreateUserAgent();
 
-    public static IServiceCollection AddGitHub(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddGitHub(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
+        services.AddGitHubAuthentication(configuration, environment);
+
         services.AddHttpClient();
         services.AddHttpClient(Options.DefaultName)
                 .ApplyDefaultConfiguration();
@@ -27,6 +32,7 @@ public static class GitHubExtensions
         services.AddPolly();
 
         services.Configure<GitHubOptions>(configuration.GetSection("GitHub"));
+        services.Configure<SiteOptions>(configuration.GetSection("Site"));
         services.Configure<WebhookOptions>(configuration.GetSection("Webhook"));
 
         services.TryAddSingleton<IClock>(SystemClock.Instance);

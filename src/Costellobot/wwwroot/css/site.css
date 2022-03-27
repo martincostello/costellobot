@@ -11,8 +11,13 @@ a {
     color: #0060C7;
 }
 
-img {
-    position: relative;
+img.user-profile {
+    max-height: 30px;
+    max-width: 30px;
+}
+
+.body-content {
+    padding-top: 10px;
 }
 
 .navbar-dark .navbar-nav .nav-link {

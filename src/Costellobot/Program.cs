@@ -1,20 +1,29 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using System.Net;
+#pragma warning disable SA1516
+
 using System.Reflection;
 using MartinCostello.Costellobot;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.AspNetCore.HttpOverrides;
 using Octokit.Webhooks.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddGitHub(builder.Configuration);
+builder.Services.AddGitHub(builder.Configuration, builder.Environment);
+builder.Services.AddRazorPages();
 
 builder.Services.Configure<JsonOptions>((options) =>
 {
     options.SerializerOptions.WriteIndented = true;
 });
+
+if (string.Equals(builder.Configuration["CODESPACES"], bool.TrueString, StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(
+        options => options.ForwardedHeaders |= ForwardedHeaders.XForwardedHost);
+}
 
 builder.Host.ConfigureApplication();
 
@@ -39,7 +48,11 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 
-app.MapGet("/", () => Results.Redirect("https://martincostello.com/"));
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapAuthenticationRoutes();
+app.MapGitHubWebhooks("/github-webhook", app.Configuration["GitHub:WebhookSecret"]);
 
 app.MapGet("/version", () => new
 {
@@ -52,51 +65,9 @@ app.MapGet("/version", () => new
         self = new { href = "https://costellobot.martincostello.com" },
         repo = new { href = "https://github.com/martincostello/costellobot" },
     },
-});
+}).AllowAnonymous();
 
-var allMethods = new[]
-{
-    HttpMethods.Connect,
-    HttpMethods.Delete,
-    HttpMethods.Get,
-    HttpMethods.Head,
-    HttpMethods.Options,
-    HttpMethods.Patch,
-    HttpMethods.Post,
-    HttpMethods.Put,
-    HttpMethods.Trace,
-};
-
-app.MapMethods("/error", allMethods, (
-    int? id,
-    HttpContext httpContext,
-    IWebHostEnvironment environment) =>
-{
-    int httpCode = id ?? StatusCodes.Status500InternalServerError;
-
-    if (!Enum.IsDefined(typeof(HttpStatusCode), (HttpStatusCode)httpCode) ||
-        id < StatusCodes.Status400BadRequest ||
-        id > 599)
-    {
-        httpCode = StatusCodes.Status500InternalServerError;
-    }
-
-    string fileName = httpCode switch
-    {
-        StatusCodes.Status400BadRequest => "bad-request.html",
-        StatusCodes.Status404NotFound => "not-found.html",
-        _ => "error.html",
-    };
-
-    var fileInfo = environment.WebRootFileProvider.GetFileInfo(fileName);
-    var stream = fileInfo.CreateReadStream();
-
-    httpContext.Response.StatusCode = httpCode;
-
-    return Results.Stream(stream, "text/html");
-});
-
-app.MapGitHubWebhooks("/github-webhook", app.Configuration["GitHub:WebhookSecret"]);
+app.MapRazorPages();
 
 app.Run();
 

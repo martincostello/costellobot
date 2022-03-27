@@ -1,0 +1,20 @@
+{
+    "name": "costellobot",
+    "short_name": "costellobot",
+    "description": "costellobot is an application that provides GitHub automation for Martin Costello's repositories.",
+    "id": "/",
+    "start_url": "/",
+    "background_color": "#ffffff",
+    "theme_color": "#183153",
+    "display": "minimal-ui",
+    "lang": "en",
+    "dir": "ltr",
+    "icons": [
+        {
+            "src": "./favicon.png",
+            "sizes": "64x64",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ]
+}

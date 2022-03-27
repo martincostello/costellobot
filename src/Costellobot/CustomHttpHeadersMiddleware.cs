@@ -1,27 +1,30 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using AspNet.Security.OAuth.GitHub;
+using Microsoft.Extensions.Options;
+
 namespace MartinCostello.Costellobot;
 
 public sealed class CustomHttpHeadersMiddleware
 {
-    private static readonly string ContentSecurityPolicy = string.Join(
+    private static readonly string ContentSecurityPolicyTemplate = string.Join(
         ';',
         new[]
         {
             "default-src 'self'",
             "script-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com",
             "script-src-elem 'self' cdn.jsdelivr.net cdnjs.cloudflare.com",
-            "style-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com",
-            "style-src-elem 'self' cdn.jsdelivr.net cdnjs.cloudflare.com",
-            "img-src 'self'",
-            "font-src 'self' cdnjs.cloudflare.com",
+            "style-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com use.fontawesome.com",
+            "style-src-elem 'self' cdn.jsdelivr.net cdnjs.cloudflare.com use.fontawesome.com",
+            "img-src 'self' avatars.githubusercontent.com",
+            "font-src 'self' cdnjs.cloudflare.com  use.fontawesome.com",
             "connect-src 'none'",
             "media-src 'none'",
             "object-src 'none'",
             "child-src 'none'",
             "frame-ancestors 'none'",
-            "form-action 'none'",
+            "form-action 'self' {0}",
             "block-all-mixed-content",
             "base-uri 'self'",
             "manifest-src 'self'",
@@ -35,7 +38,10 @@ public sealed class CustomHttpHeadersMiddleware
         _next = next;
     }
 
-    public Task Invoke(HttpContext context, IWebHostEnvironment environment)
+    public Task Invoke(
+        HttpContext context,
+        IHostEnvironment environment,
+        IOptions<GitHubAuthenticationOptions> gitHubOptions)
     {
         context.Response.OnStarting(() =>
         {
@@ -44,31 +50,50 @@ public sealed class CustomHttpHeadersMiddleware
 
             if (environment.IsProduction())
             {
-                context.Response.Headers.Add("Content-Security-Policy", ContentSecurityPolicy);
+                context.Response.Headers["Content-Security-Policy"] = ContentSecurityPolicy(gitHubOptions.Value.AuthorizationEndpoint);
             }
 
             if (context.Request.IsHttps)
             {
-                context.Response.Headers.Add("Expect-CT", "max-age=1800");
+                context.Response.Headers["Expect-CT"] = "max-age=1800";
             }
 
-            context.Response.Headers.Add("Feature-Policy", "accelerometer 'none'; camera 'none'; geolocation 'none'; gyroscope 'none'; magnetometer 'none'; microphone 'none'; payment 'none'; usb 'none'");
-            context.Response.Headers.Add("Permissions-Policy", "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()");
-            context.Response.Headers.Add("Referrer-Policy", "no-referrer-when-downgrade");
-            context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
-            context.Response.Headers.Add("X-Download-Options", "noopen");
+            context.Response.Headers["Feature-Policy"] = "accelerometer 'none'; camera 'none'; geolocation 'none'; gyroscope 'none'; magnetometer 'none'; microphone 'none'; payment 'none'; usb 'none'";
+            context.Response.Headers["Permissions-Policy"] = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
+            context.Response.Headers["Referrer-Policy"] = "no-referrer-when-downgrade";
+            context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+            context.Response.Headers["X-Download-Options"] = "noopen";
 
             if (!context.Response.Headers.ContainsKey("X-Frame-Options"))
             {
                 context.Response.Headers.Add("X-Frame-Options", "DENY");
             }
 
-            context.Response.Headers.Add("X-Request-Id", context.TraceIdentifier);
-            context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+            context.Response.Headers["X-Request-Id"] = context.TraceIdentifier;
+            context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
 
             return Task.CompletedTask;
         });
 
         return _next(context);
+    }
+
+    private static string ContentSecurityPolicy(
+        string gitHubAuthorizationEndpoint)
+    {
+        return string.Format(
+            CultureInfo.InvariantCulture,
+            ContentSecurityPolicyTemplate,
+            ParseGitHubHost(gitHubAuthorizationEndpoint));
+    }
+
+    private static string ParseGitHubHost(string gitHubAuthorizationEndpoint)
+    {
+        if (Uri.TryCreate(gitHubAuthorizationEndpoint, UriKind.Absolute, out Uri? gitHubHost))
+        {
+            return gitHubHost.Host;
+        }
+
+        return "github.com";
     }
 }
