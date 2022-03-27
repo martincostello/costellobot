@@ -11,6 +11,8 @@ using Octokit.Webhooks.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.ConfigureApplication();
+
 builder.Services.AddGitHub(builder.Configuration, builder.Environment);
 builder.Services.AddRazorPages();
 
@@ -24,8 +26,6 @@ if (string.Equals(builder.Configuration["CODESPACES"], bool.TrueString, StringCo
     builder.Services.Configure<ForwardedHeadersOptions>(
         options => options.ForwardedHeaders |= ForwardedHeaders.XForwardedHost);
 }
-
-builder.Host.ConfigureApplication();
 
 builder.WebHost.ConfigureKestrel((p) => p.AddServerHeader = false);
 
