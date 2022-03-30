@@ -1,0 +1,39 @@
+{
+  "name": "costellobot",
+  "private": true,
+  "version": "1.0.0",
+  "description": "GitHub automation for martincostello's repositories.",
+  "scripts": {
+    "build": "gulp default",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/martincostello/costellobot.git"
+  },
+  "author": "martincostello",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/eslint-plugin-tslint": "^5.17.0",
+    "@typescript-eslint/parser": "^4.33.0",
+    "babel-core": "^6.26.3",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-runtime": "^6.26.0",
+    "babelify": "^8.0.0",
+    "browserify": "^17.0.0",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.5.0",
+    "gulp": "^4.0.2",
+    "gulp-eslint": "^6.0.0",
+    "gulp-sourcemaps": "^3.0.0",
+    "gulp-typescript": "^5.0.1",
+    "gulp-uglify": "^3.0.2",
+    "tsify": "^5.0.4",
+    "typescript": "^4.6.3",
+    "vinyl-buffer": "^1.0.1",
+    "vinyl-source-stream": "^2.0.0"
+  },
+  "dependencies": {}
+}
