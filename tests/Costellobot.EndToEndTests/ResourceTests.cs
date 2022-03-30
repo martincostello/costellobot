@@ -24,6 +24,8 @@ public class ResourceTests : EndToEndTest
     [InlineData("/not-found.html", MediaTypeNames.Text.Html)]
     [InlineData("/robots.txt", MediaTypeNames.Text.Plain)]
     [InlineData("/sign-in", MediaTypeNames.Text.Html)]
+    [InlineData("/static/js/main.js", "application/javascript")]
+    [InlineData("/static/js/main.js.map", MediaTypeNames.Text.Plain)]
     [InlineData("/unauthorized.html", MediaTypeNames.Text.Html)]
     [InlineData("/version", MediaTypeNames.Application.Json)]
     public async Task Can_Load_Resource_As_Get(string requestUri, string contentType)

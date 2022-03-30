@@ -18,6 +18,7 @@ node_modules
 obj
 packages
 project.lock.json
+src/Costellobot/wwwroot/static/
 TestResults
 typings
 UpgradeLog*.htm
