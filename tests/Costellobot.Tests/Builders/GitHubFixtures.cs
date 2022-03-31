@@ -78,7 +78,7 @@ public static class GitHubFixtures
         return builder;
     }
 
-    public static DeploymentStatusBuilder CreateDeploymentStatus(string state)
+    public static DeploymentStatusBuilder CreateDeploymentStatus(string state = "waiting")
     {
         return new(state);
     }
