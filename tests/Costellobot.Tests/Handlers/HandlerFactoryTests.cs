@@ -15,6 +15,7 @@ public static class HandlerFactoryTests
     [InlineData("", typeof(NullHandler))]
     [InlineData("check_run", typeof(NullHandler))]
     [InlineData("check_suite", typeof(CheckSuiteHandler))]
+    [InlineData("deployment_status", typeof(DeploymentStatusHandler))]
     [InlineData("issues", typeof(NullHandler))]
     [InlineData("ping", typeof(NullHandler))]
     [InlineData("pull_request", typeof(PullRequestHandler))]
@@ -22,6 +23,25 @@ public static class HandlerFactoryTests
     {
         // Arrange
         var mock = new Mock<IServiceProvider>();
+
+        mock.Setup((p) => p.GetService(typeof(CheckSuiteHandler)))
+            .Returns(() =>
+            {
+                return new CheckSuiteHandler(
+                    Mock.Of<IGitHubClientForInstallation>(),
+                    new WebhookOptions().ToMonitor(),
+                    NullLoggerFactory.Instance.CreateLogger<CheckSuiteHandler>());
+            });
+
+        mock.Setup((p) => p.GetService(typeof(DeploymentStatusHandler)))
+            .Returns(() =>
+            {
+                return new DeploymentStatusHandler(
+                    Mock.Of<IGitHubClientForInstallation>(),
+                    new GitHubOptions().ToMonitor(),
+                    new WebhookOptions().ToMonitor(),
+                    NullLoggerFactory.Instance.CreateLogger<DeploymentStatusHandler>());
+            });
 
         mock.Setup((p) => p.GetService(typeof(PullRequestHandler)))
             .Returns(() =>
@@ -31,15 +51,6 @@ public static class HandlerFactoryTests
                     Mock.Of<Octokit.GraphQL.IConnection>(),
                     new WebhookOptions().ToMonitor(),
                     NullLoggerFactory.Instance.CreateLogger<PullRequestHandler>());
-            });
-
-        mock.Setup((p) => p.GetService(typeof(CheckSuiteHandler)))
-            .Returns(() =>
-            {
-                return new CheckSuiteHandler(
-                    Mock.Of<IGitHubClientForInstallation>(),
-                    new WebhookOptions().ToMonitor(),
-                    NullLoggerFactory.Instance.CreateLogger<CheckSuiteHandler>());
             });
 
         var target = new HandlerFactory(mock.Object);

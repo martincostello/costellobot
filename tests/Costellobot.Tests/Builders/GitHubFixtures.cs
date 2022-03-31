@@ -49,6 +49,11 @@ public static class GitHubFixtures
         return builder;
     }
 
+    public static DeploymentStatusBuilder CreateDeploymentStatus(string state)
+    {
+        return new(state);
+    }
+
     public static GitHubEvent CreateEvent(
         string @event,
         object? payload = null,
@@ -124,4 +129,46 @@ public static class GitHubFixtures
 
         return builder;
     }
+
+    public static string TrustedCommitMessage() => @"
+Bump NodaTimeVersion from 3.0.9 to 3.0.10
+Bumps `NodaTimeVersion` from 3.0.9 to 3.0.10.
+
+Updates `NodaTime` from 3.0.9 to 3.0.10
+- [Release notes](https://github.com/nodatime/nodatime/releases)
+- [Changelog](https://github.com/nodatime/nodatime/blob/master/NodaTime%20Release.snk)
+- [Commits](nodatime/nodatime@3.0.9...3.0.10)
+
+Updates `NodaTime.Testing` from 3.0.9 to 3.0.10
+- [Release notes](https://github.com/nodatime/nodatime/releases)
+- [Changelog](https://github.com/nodatime/nodatime/blob/master/NodaTime%20Release.snk)
+- [Commits](nodatime/nodatime@3.0.9...3.0.10)
+
+---
+updated-dependencies:
+- dependency-name: NodaTime
+  dependency-type: direct:production
+  update-type: version-update:semver-patch
+- dependency-name: NodaTime.Testing
+  dependency-type: direct:production
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>";
+
+    public static string UntrustedCommitMessage() => @"
+Bump puppeteer from 13.5.0 to 13.5.1 in /src/LondonTravel.Site
+Bumps [puppeteer](https://github.com/puppeteer/puppeteer) from 13.5.0 to 13.5.1.
+- [Release notes](https://github.com/puppeteer/puppeteer/releases)
+- [Changelog](https://github.com/puppeteer/puppeteer/blob/main/CHANGELOG.md)
+- [Commits](puppeteer/puppeteer@v13.5.0...v13.5.1)
+
+---
+updated-dependencies:
+- dependency-name: puppeteer
+  dependency-type: direct:development
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>";
 }

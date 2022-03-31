@@ -54,6 +54,12 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         GC.SuppressFinalize(this);
     }
 
+    protected static async Task AssertTaskNotRun(TaskCompletionSource source)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(0.1));
+        source.Task.Status.ShouldBe(TaskStatus.WaitingForActivation);
+    }
+
     protected static HttpRequestInterceptionBuilder ConfigureRateLimit(HttpRequestInterceptionBuilder builder)
     {
         string oneHourFromNowEpoch = DateTimeOffset.UtcNow

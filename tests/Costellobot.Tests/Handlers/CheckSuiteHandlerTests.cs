@@ -541,10 +541,4 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
             },
         };
     }
-
-    private static async Task AssertTaskNotRun(TaskCompletionSource source)
-    {
-        await Task.Delay(TimeSpan.FromSeconds(0.5));
-        source.Task.Status.ShouldBe(TaskStatus.WaitingForActivation);
-    }
 }
