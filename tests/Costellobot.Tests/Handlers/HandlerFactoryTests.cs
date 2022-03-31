@@ -22,14 +22,23 @@ public static class HandlerFactoryTests
     public static void Create_Creates_Correct_Handler_Type(string? eventType, Type expected)
     {
         // Arrange
+        var gitHubOptions = new GitHubOptions().ToMonitor();
+        var webhookOptions = new WebhookOptions().ToMonitor();
+
+        var gitHubClient = Mock.Of<IGitHubClientForInstallation>();
+
+        var commitAnalyzer = new GitCommitAnalyzer(
+            webhookOptions,
+            NullLoggerFactory.Instance.CreateLogger<GitCommitAnalyzer>());
+
         var mock = new Mock<IServiceProvider>();
 
         mock.Setup((p) => p.GetService(typeof(CheckSuiteHandler)))
             .Returns(() =>
             {
                 return new CheckSuiteHandler(
-                    Mock.Of<IGitHubClientForInstallation>(),
-                    new WebhookOptions().ToMonitor(),
+                    gitHubClient,
+                    webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<CheckSuiteHandler>());
             });
 
@@ -37,9 +46,10 @@ public static class HandlerFactoryTests
             .Returns(() =>
             {
                 return new DeploymentStatusHandler(
-                    Mock.Of<IGitHubClientForInstallation>(),
-                    new GitHubOptions().ToMonitor(),
-                    new WebhookOptions().ToMonitor(),
+                    gitHubClient,
+                    commitAnalyzer,
+                    gitHubOptions,
+                    webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<DeploymentStatusHandler>());
             });
 
@@ -47,9 +57,10 @@ public static class HandlerFactoryTests
             .Returns(() =>
             {
                 return new PullRequestHandler(
-                    Mock.Of<IGitHubClientForInstallation>(),
+                    gitHubClient,
                     Mock.Of<Octokit.GraphQL.IConnection>(),
-                    new WebhookOptions().ToMonitor(),
+                    commitAnalyzer,
+                    webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<PullRequestHandler>());
             });
 

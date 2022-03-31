@@ -105,6 +105,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 KeyValuePair.Create("GitHub:PrivateKey", testKey),
                 KeyValuePair.Create("GitHub:WebhookSecret", "github-webhook-secret"),
                 KeyValuePair.Create("Site:AdminUsers:0", "john-smith"),
+                KeyValuePair.Create("Webhook:DeployEnvironments:0", "production"),
             };
 
             configBuilder.AddInMemoryCollection(config);

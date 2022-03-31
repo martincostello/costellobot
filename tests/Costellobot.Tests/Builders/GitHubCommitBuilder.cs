@@ -10,7 +10,11 @@ public sealed class GitHubCommitBuilder : ResponseBuilder
         Repository = repository;
     }
 
+    public UserBuilder? Author { get; set; }
+
     public string Message { get; set; } = RandomString();
+
+    public IList<string> Parents { get; set; } = new List<string>();
 
     public RepositoryBuilder Repository { get; set; }
 
@@ -20,11 +24,13 @@ public sealed class GitHubCommitBuilder : ResponseBuilder
     {
         return new
         {
-            sha = Sha,
+            author = (Author ?? Repository.Owner).Build(),
             commit = new
             {
                 message = Message,
             },
+            parents = Parents.Select((p) => new { sha = p }).ToArray(),
+            sha = Sha,
         };
     }
 }

@@ -49,6 +49,35 @@ public static class GitHubFixtures
         return builder;
     }
 
+    public static CompareResultBuilder CreateComparison(params GitHubCommitBuilder[] commits)
+    {
+        var builder = new CompareResultBuilder();
+
+        foreach (var commit in commits)
+        {
+            builder.Commits.Add(commit);
+        }
+
+        return builder;
+    }
+
+    public static DeploymentBuilder CreateDeployment(
+        string? environment = null,
+        string? sha = null)
+    {
+        var builder = new DeploymentBuilder()
+        {
+            Environment = environment ?? "production",
+        };
+
+        if (sha is not null)
+        {
+            builder.Sha = sha;
+        }
+
+        return builder;
+    }
+
     public static DeploymentStatusBuilder CreateDeploymentStatus(string state)
     {
         return new(state);
