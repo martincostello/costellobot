@@ -29,8 +29,8 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         var newCommit = CreateTrustedCommit(repo);
 
-        var pendingDeployment = CreateDeployment("production", newCommit.Sha);
-        var deploymentStatus = CreateDeploymentStatus("waiting");
+        var pendingDeployment = CreateDeployment(sha: newCommit.Sha);
+        var deploymentStatus = CreateDeploymentStatus();
 
         var otherUser = CreateUser();
         var existingCommit = repo.CreateCommit(otherUser);
@@ -62,6 +62,190 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             workflowRun.Id,
             pendingDeployment,
             (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
+
+        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await deploymentApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public async Task Deployment_Is_Approved_For_Trusted_User_And_Multiple_Dependencies()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var workflowRun = repo.CreateWorkflowRun();
+
+        var headCommit = CreateTrustedCommit(repo);
+
+        var pendingDeployment = CreateDeployment(sha: headCommit.Sha);
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var otherUser = CreateUser();
+        var baseCommit = repo.CreateCommit(otherUser);
+
+        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
+        activeDeployment.Sha = baseCommit.Sha;
+
+        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        RegisterGetAccessToken();
+
+        var comparison = CreateComparison(
+            headCommit,
+            CreateTrustedCommit(repo),
+            CreateTrustedCommit(repo),
+            CreateTrustedCommit(repo),
+            CreateTrustedCommit(repo),
+            CreateTrustedCommit(repo));
+
+        RegisterGetCompare(baseCommit, headCommit, comparison);
+
+        RegisterGetDeployments(
+            repo,
+            pendingDeployment.Environment,
+            pendingDeployment,
+            activeDeployment,
+            previousDeployment);
+
+        RegisterGetPendingDeployments(repo, workflowRun.Id, pendingDeployment.CreatePendingDeployment());
+
+        RegisterApprovePendingDeployments(
+            repo,
+            workflowRun.Id,
+            pendingDeployment,
+            (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
+
+        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await deploymentApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public async Task Deployment_Is_Approved_For_Trusted_User_And_Dependency_When_Penultimate_Build_Skipped()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var workflowRun = repo.CreateWorkflowRun();
+
+        var newCommit = CreateTrustedCommit(repo);
+
+        var pendingDeployment = CreateDeployment(sha: newCommit.Sha);
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var otherUser = CreateUser();
+        var existingCommit = repo.CreateCommit(otherUser);
+
+        var skippedDeployment = RegisterSkippedDeployment(repo, pendingDeployment.Environment);
+
+        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
+        activeDeployment.Sha = existingCommit.Sha;
+
+        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        RegisterGetAccessToken();
+
+        var comparison = CreateComparison(newCommit);
+
+        RegisterGetCompare(existingCommit, newCommit, comparison);
+
+        RegisterGetDeployments(
+            repo,
+            pendingDeployment.Environment,
+            pendingDeployment,
+            skippedDeployment,
+            activeDeployment,
+            previousDeployment);
+
+        RegisterGetPendingDeployments(repo, workflowRun.Id, pendingDeployment.CreatePendingDeployment());
+
+        RegisterApprovePendingDeployments(
+            repo,
+            workflowRun.Id,
+            pendingDeployment,
+            (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
+
+        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await deploymentApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public async Task Deployment_Approval_Failure_For_Trusted_User_And_Dependency_Is_Handled()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var workflowRun = repo.CreateWorkflowRun();
+
+        var newCommit = CreateTrustedCommit(repo);
+
+        var pendingDeployment = CreateDeployment(sha: newCommit.Sha);
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var otherUser = CreateUser();
+        var existingCommit = repo.CreateCommit(otherUser);
+
+        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
+        activeDeployment.Sha = existingCommit.Sha;
+
+        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        RegisterGetAccessToken();
+
+        var comparison = CreateComparison(newCommit);
+
+        RegisterGetCompare(existingCommit, newCommit, comparison);
+
+        RegisterGetDeployments(
+            repo,
+            pendingDeployment.Environment,
+            pendingDeployment,
+            activeDeployment,
+            previousDeployment);
+
+        RegisterGetPendingDeployments(repo, workflowRun.Id, pendingDeployment.CreatePendingDeployment());
+
+        RegisterApprovePendingDeployments(
+            repo,
+            workflowRun.Id,
+            pendingDeployment,
+            (p) =>
+            {
+                p.WithStatus(HttpStatusCode.Forbidden)
+                 .WithInterceptionCallback((_) => deploymentApproved.SetResult());
+            });
 
         var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
 
@@ -113,11 +297,397 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         var repo = owner.CreateRepository();
 
         var deployment = CreateDeployment();
-        var deploymentStatus = CreateDeploymentStatus("waiting");
+        var deploymentStatus = CreateDeploymentStatus();
 
         var deploymentApproved = new TaskCompletionSource();
 
         var value = CreateWebhook(repo, deployment, deploymentStatus);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Theory]
+    [InlineData("development")]
+    [InlineData("staging")]
+    public async Task Deployment_Is_Not_Approved_If_Deployment_Environment_Is_Not_Enabled(
+        string environment)
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+
+        var deployment = CreateDeployment(environment);
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        var value = CreateWebhook(repo, deployment, deploymentStatus);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Fact]
+    public async Task Deployment_Is_Not_Approved_If_No_Deployments_Found()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+
+        var deployment = CreateDeployment();
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        var value = CreateWebhook(repo, deployment, deploymentStatus);
+
+        RegisterGetAccessToken();
+        RegisterGetDeployments(repo, deployment.Environment);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Fact]
+    public async Task Deployment_Is_Not_Approved_If_No_Other_Deployments_Found()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+
+        var deployment = CreateDeployment();
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        var value = CreateWebhook(repo, deployment, deploymentStatus);
+
+        RegisterGetAccessToken();
+        RegisterGetDeployments(repo, deployment.Environment, deployment);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Fact]
+    public async Task Deployment_Is_Not_Approved_If_No_Deployment_Statuses_Found()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+
+        var pendingDeployment = CreateDeployment();
+        var previousDeployment = CreateDeployment();
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus);
+
+        RegisterGetAccessToken();
+        RegisterGetDeployments(repo, pendingDeployment.Environment, pendingDeployment, previousDeployment);
+        RegisterGetDeploymentStatuses(repo, previousDeployment);
+        RegisterGetDeploymentStatuses(repo, pendingDeployment);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Fact]
+    public async Task Deployment_Is_Not_Approved_If_No_Active_Deployment_Statuses_Found()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+
+        var pendingDeployment = CreateDeployment();
+        var previousDeployment = CreateDeployment();
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus);
+
+        RegisterGetAccessToken();
+        RegisterGetDeployments(repo, pendingDeployment.Environment, pendingDeployment, previousDeployment);
+        RegisterGetDeploymentStatuses(repo, previousDeployment, CreateDeploymentStatus("failure"));
+        RegisterGetDeploymentStatuses(repo, pendingDeployment, deploymentStatus);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Fact]
+    public async Task Deployment_Is_Not_Approved_If_No_Active_Deployment_Found()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+
+        var pendingDeployment = CreateDeployment();
+        var previousDeployment1 = CreateDeployment();
+        var previousDeployment2 = CreateDeployment();
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus);
+
+        RegisterGetAccessToken();
+        RegisterGetDeployments(repo, pendingDeployment.Environment, pendingDeployment, previousDeployment1, previousDeployment2);
+        RegisterGetDeploymentStatuses(repo, previousDeployment1, CreateDeploymentStatus("error"));
+        RegisterGetDeploymentStatuses(repo, previousDeployment2);
+        RegisterGetDeploymentStatuses(repo, pendingDeployment, deploymentStatus);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Fact]
+    public async Task Deployment_Is_Not_Approved_For_No_Diff()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var workflowRun = repo.CreateWorkflowRun();
+
+        var commit = CreateTrustedCommit(repo);
+
+        var pendingDeployment = CreateDeployment(sha: commit.Sha);
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
+        activeDeployment.Sha = commit.Sha;
+
+        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        RegisterGetAccessToken();
+
+        var comparison = CreateComparison();
+
+        RegisterGetCompare(commit, commit, comparison);
+
+        RegisterGetDeployments(
+            repo,
+            pendingDeployment.Environment,
+            pendingDeployment,
+            activeDeployment,
+            previousDeployment);
+
+        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Fact]
+    public async Task Deployment_Is_Not_Approved_For_Untrusted_User()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var workflowRun = repo.CreateWorkflowRun();
+
+        var newCommit = CreateTrustedCommit(repo);
+        newCommit.Author = CreateUser();
+
+        var pendingDeployment = CreateDeployment(sha: newCommit.Sha);
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var otherUser = CreateUser();
+        var existingCommit = repo.CreateCommit(otherUser);
+
+        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
+        activeDeployment.Sha = existingCommit.Sha;
+
+        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        RegisterGetAccessToken();
+
+        var comparison = CreateComparison(newCommit);
+
+        RegisterGetCompare(existingCommit, newCommit, comparison);
+
+        RegisterGetDeployments(
+            repo,
+            pendingDeployment.Environment,
+            pendingDeployment,
+            activeDeployment,
+            previousDeployment);
+
+        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Fact]
+    public async Task Deployment_Is_Not_Approved_For_Trusted_User_And_Untrusted_Dependency()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var workflowRun = repo.CreateWorkflowRun();
+
+        var headCommit = CreateTrustedCommit(repo);
+
+        var pendingDeployment = CreateDeployment(sha: headCommit.Sha);
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var otherUser = CreateUser();
+        var baseCommit = repo.CreateCommit(otherUser);
+
+        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
+        activeDeployment.Sha = baseCommit.Sha;
+
+        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        RegisterGetAccessToken();
+
+        var comparison = CreateComparison(
+            headCommit,
+            CreateUntrustedCommit(repo));
+
+        RegisterGetCompare(baseCommit, headCommit, comparison);
+
+        RegisterGetDeployments(
+            repo,
+            pendingDeployment.Environment,
+            pendingDeployment,
+            activeDeployment,
+            previousDeployment);
+
+        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(2)]
+    public async Task Deployment_Is_Not_Approved_If_Not_Exactly_One_Pending_Deployment(int count)
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var workflowRun = repo.CreateWorkflowRun();
+
+        var newCommit = CreateTrustedCommit(repo);
+
+        var pendingDeployment = CreateDeployment(sha: newCommit.Sha);
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var otherUser = CreateUser();
+        var existingCommit = repo.CreateCommit(otherUser);
+
+        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
+        activeDeployment.Sha = existingCommit.Sha;
+
+        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        RegisterGetAccessToken();
+
+        var comparison = CreateComparison(newCommit);
+
+        RegisterGetCompare(existingCommit, newCommit, comparison);
+
+        RegisterGetDeployments(
+            repo,
+            pendingDeployment.Environment,
+            pendingDeployment,
+            activeDeployment,
+            previousDeployment);
+
+        var pendingDeployments = new List<PendingDeploymentBuilder>(count);
+
+        for (int i = 0; i < count; i++)
+        {
+            pendingDeployments.Add(pendingDeployment.CreatePendingDeployment());
+        }
+
+        RegisterGetPendingDeployments(repo, workflowRun.Id, pendingDeployments.ToArray());
+
+        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
 
         // Act
         using var response = await PostWebhookAsync("deployment_status", value);
@@ -149,6 +719,16 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         return commit;
     }
 
+    private static GitHubCommitBuilder CreateUntrustedCommit(RepositoryBuilder repo)
+    {
+        var dependabot = CreateUser("dependabot[bot]");
+
+        var commit = repo.CreateCommit(dependabot);
+        commit.Message = UntrustedCommitMessage();
+
+        return commit;
+    }
+
     private static object CreateWebhook(
         RepositoryBuilder repository,
         DeploymentBuilder deployment,
@@ -170,6 +750,18 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
                 id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
             },
         };
+    }
+
+    private DeploymentBuilder RegisterSkippedDeployment(RepositoryBuilder repo, string environmentName)
+    {
+        var deployment = CreateDeployment(environmentName);
+
+        var inactive = CreateDeploymentStatus("inactive");
+        var waiting = CreateDeploymentStatus("waiting");
+
+        RegisterGetDeploymentStatuses(repo, deployment, inactive, waiting);
+
+        return deployment;
     }
 
     private DeploymentBuilder RegisterActiveDeployment(RepositoryBuilder repo, string environmentName)
