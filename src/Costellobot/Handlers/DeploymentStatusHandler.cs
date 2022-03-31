@@ -50,14 +50,15 @@ public sealed partial class DeploymentStatusHandler : IHandler
 
         string owner = repo.Owner.Login;
         string name = repo.Name;
+        var options = _webhookOptions.CurrentValue;
 
-        if (!_webhookOptions.CurrentValue.DeployEnvironments.Contains(deploy.Environment))
+        if (!options.DeployEnvironments.Contains(deploy.Environment))
         {
             Log.IgnoringDeploymentStatusAsEnvironmentNotEnabled(_logger, body.DeploymentStatus.Id, owner, name, deploy.Environment);
             return;
         }
 
-        if (!_webhookOptions.CurrentValue.Deploy)
+        if (!options.Deploy)
         {
             Log.AutomatedDeploymentApprovalIsDisabled(_logger, body.DeploymentStatus.Id, owner, name);
             return;
@@ -96,7 +97,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
                 continue;
             }
 
-            if (!_webhookOptions.CurrentValue.TrustedEntities.Users.Contains(commit.Author.Login))
+            if (!options.TrustedEntities.Users.Contains(commit.Author.Login))
             {
                 Log.UntrustedCommitAuthorFound(_logger, deploy.Id, owner, name, commit.Sha, commit.Author.Login);
                 return;
@@ -152,7 +153,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
                 new()
                 {
                     EnvironmentIds = new[] { deployment.Environment.Id },
-                    Comment = "Auto-approving deployment.",
+                    Comment = _webhookOptions.CurrentValue.DeployComment,
                     State = "approved",
                 });
         }
