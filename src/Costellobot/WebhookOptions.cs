@@ -13,6 +13,8 @@ public sealed class WebhookOptions
 
     public bool Deploy { get; set; }
 
+    public string DeployComment { get; set; } = string.Empty;
+
     public IList<string> DeployEnvironments { get; set; } = new List<string>();
 
     public IList<string> RerunFailedChecks { get; set; } = new List<string>();
