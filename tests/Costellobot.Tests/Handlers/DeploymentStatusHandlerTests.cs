@@ -17,6 +17,63 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     {
     }
 
+    [Fact]
+    public async Task Deployment_Is_Approved_For_Trusted_User_And_Dependency()
+    {
+        // Arrange
+        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var workflowRun = repo.CreateWorkflowRun();
+
+        var newCommit = CreateTrustedCommit(repo);
+
+        var pendingDeployment = CreateDeployment("production", newCommit.Sha);
+        var deploymentStatus = CreateDeploymentStatus("waiting");
+
+        var otherUser = CreateUser();
+        var existingCommit = repo.CreateCommit(otherUser);
+
+        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
+        activeDeployment.Sha = existingCommit.Sha;
+
+        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        RegisterGetAccessToken();
+
+        var comparison = CreateComparison(newCommit);
+
+        RegisterGetCompare(existingCommit, newCommit, comparison);
+
+        RegisterGetDeployments(
+            repo,
+            pendingDeployment.Environment,
+            pendingDeployment,
+            activeDeployment,
+            previousDeployment);
+
+        RegisterGetPendingDeployments(repo, workflowRun.Id, pendingDeployment.CreatePendingDeployment());
+
+        RegisterApprovePendingDeployments(
+            repo,
+            workflowRun.Id,
+            pendingDeployment,
+            (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
+
+        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await deploymentApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+    }
+
     [Theory]
     [InlineData("pending")]
     [InlineData("in_progress")]
@@ -30,11 +87,12 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
-        var status = CreateDeploymentStatus(state);
+        var deployment = CreateDeployment();
+        var deploymentStatus = CreateDeploymentStatus(state);
 
         var deploymentApproved = new TaskCompletionSource();
 
-        var value = CreateWebhook(repo, status);
+        var value = CreateWebhook(repo, deployment, deploymentStatus);
 
         // Act
         using var response = await PostWebhookAsync("deployment_status", value);
@@ -53,11 +111,13 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
-        var status = CreateDeploymentStatus("waiting");
+
+        var deployment = CreateDeployment();
+        var deploymentStatus = CreateDeploymentStatus("waiting");
 
         var deploymentApproved = new TaskCompletionSource();
 
-        var value = CreateWebhook(repo, status);
+        var value = CreateWebhook(repo, deployment, deploymentStatus);
 
         // Act
         using var response = await PostWebhookAsync("deployment_status", value);
@@ -79,32 +139,63 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         await target.HandleAsync(message);
     }
 
+    private static GitHubCommitBuilder CreateTrustedCommit(RepositoryBuilder repo)
+    {
+        var dependabot = CreateUser("dependabot[bot]");
+
+        var commit = repo.CreateCommit(dependabot);
+        commit.Message = TrustedCommitMessage();
+
+        return commit;
+    }
+
     private static object CreateWebhook(
         RepositoryBuilder repository,
+        DeploymentBuilder deployment,
         DeploymentStatusBuilder deploymentStatus,
+        WorkflowRunBuilder? workflowRun = null,
         string action = "created")
     {
         return new
         {
             action,
             deployment_status = deploymentStatus.Build(),
-            deployment = new
-            {
-            },
-            check_run = new
-            {
-            },
-            workflow = new
-            {
-            },
-            workflow_run = new
-            {
-            },
+            deployment = deployment.Build(),
+            check_run = new { },
+            workflow = new { },
+            workflow_run = workflowRun?.Build() ?? new { },
             repository = repository.Build(),
             installation = new
             {
                 id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
             },
         };
+    }
+
+    private DeploymentBuilder RegisterActiveDeployment(RepositoryBuilder repo, string environmentName)
+    {
+        var deployment = CreateDeployment(environmentName);
+
+        var success = CreateDeploymentStatus("success");
+        var inProgress = CreateDeploymentStatus("in_progress");
+        var waiting = CreateDeploymentStatus("waiting");
+
+        RegisterGetDeploymentStatuses(repo, deployment, success, inProgress, waiting);
+
+        return deployment;
+    }
+
+    private DeploymentBuilder RegisterInactiveDeployment(RepositoryBuilder repo, string environmentName)
+    {
+        var deployment = CreateDeployment(environmentName);
+
+        var inactive = CreateDeploymentStatus("inactive");
+        var success = CreateDeploymentStatus("success");
+        var inProgress = CreateDeploymentStatus("in_progress");
+        var waiting = CreateDeploymentStatus("waiting");
+
+        RegisterGetDeploymentStatuses(repo, deployment, inactive, success, inProgress, waiting);
+
+        return deployment;
     }
 }

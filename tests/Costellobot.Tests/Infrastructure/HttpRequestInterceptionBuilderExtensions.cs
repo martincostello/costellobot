@@ -18,6 +18,6 @@ public static class HttpRequestInterceptionBuilderExtensions
     public static HttpRequestInterceptionBuilder WithJsonContent<T>(this HttpRequestInterceptionBuilder builder, IEnumerable<T> response)
         where T : ResponseBuilder
     {
-        return builder.WithSystemTextJsonContent(response.Build());
+        return builder.WithContent(() => JsonSerializer.SerializeToUtf8Bytes(response.Build()));
     }
 }

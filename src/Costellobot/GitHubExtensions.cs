@@ -73,6 +73,7 @@ public static class GitHubExtensions
         services.AddSingleton<WebhookEventProcessor, GitHubEventProcessor>();
         services.AddSingleton<GitHubWebhookQueue>();
         services.AddSingleton<GitHubWebhookService>();
+        services.AddScoped<GitCommitAnalyzer>();
         services.AddScoped<GitHubWebhookDispatcher>();
 
         services.AddSingleton<IHandlerFactory, HandlerFactory>();

@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 using Octokit;
 using Octokit.GraphQL;
@@ -16,6 +15,7 @@ namespace MartinCostello.Costellobot.Handlers;
 public sealed partial class PullRequestHandler : IHandler
 {
     private readonly IGitHubClient _client;
+    private readonly GitCommitAnalyzer _commitAnalyzer;
     private readonly IConnection _connection;
     private readonly IOptionsMonitor<WebhookOptions> _options;
     private readonly ILogger _logger;
@@ -23,11 +23,13 @@ public sealed partial class PullRequestHandler : IHandler
     public PullRequestHandler(
         IGitHubClientForInstallation client,
         IConnection connection,
+        GitCommitAnalyzer commitAnalyzer,
         IOptionsMonitor<WebhookOptions> options,
         ILogger<PullRequestHandler> logger)
     {
         _client = client;
         _connection = connection;
+        _commitAnalyzer = commitAnalyzer;
         _options = options;
         _logger = logger;
     }
@@ -181,69 +183,18 @@ public sealed partial class PullRequestHandler : IHandler
 
     private async Task<bool> IsTrustedDependencyUpdateAsync(PullRequestEvent message)
     {
+        string owner = message.Repository!.Owner.Login;
+        string name = message.Repository.Name;
+
         var commit = await _client.Repository.Commit.Get(
-            message.Repository!.Owner.Login,
-            message.Repository.Name,
+            owner,
+            name,
             message.PullRequest.Head.Sha);
 
-        string[] commitLines = commit.Commit.Message
-            .ReplaceLineEndings("\n")
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        var dependencies = new HashSet<string>();
-
-        foreach (string line in commitLines)
-        {
-            const string Prefix = "- dependency-name: ";
-
-            if (line.StartsWith(Prefix, StringComparison.Ordinal))
-            {
-                string dependencyName = line[Prefix.Length..];
-
-                if (!string.IsNullOrEmpty(dependencyName))
-                {
-                    dependencies.Add(dependencyName.Trim());
-                }
-            }
-        }
-
-        var trustedDependencies = _options.CurrentValue.TrustedEntities.Dependencies;
-
-        if (dependencies.Count < 1 || trustedDependencies.Count < 1)
-        {
-            return false;
-        }
-
-        Log.PullRequestUpdatesDependencies(
-            _logger,
-            message.Repository.Owner.Login,
-            message.Repository.Name,
-            message.PullRequest.Number,
-            dependencies.ToArray());
-
-        foreach (string dependency in dependencies)
-        {
-            if (!trustedDependencies.Any((p) => Regex.IsMatch(dependency, p)))
-            {
-                Log.UntrustedDependencyUpdated(
-                    _logger,
-                    message.Repository.Owner.Login,
-                    message.Repository.Name,
-                    message.PullRequest.Number,
-                    dependency);
-
-                return false;
-            }
-        }
-
-        Log.TrustedDependenciesUpdated(
-            _logger,
-            message.Repository.Owner.Login,
-            message.Repository.Name,
-            message.PullRequest.Number,
-            dependencies.Count);
-
-        return true;
+        return _commitAnalyzer.IsTrustedDependencyUpdate(
+            owner,
+            name,
+            commit);
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -284,39 +235,6 @@ public sealed partial class PullRequestHandler : IHandler
         [LoggerMessage(
            EventId = 4,
            Level = LogLevel.Information,
-           Message = "Pull request {Owner}/{Repository}#{Number} updates the following dependencies: {Dependencies}.")]
-        public static partial void PullRequestUpdatesDependencies(
-            ILogger logger,
-            string owner,
-            string repository,
-            long number,
-            string[] dependencies);
-
-        [LoggerMessage(
-           EventId = 5,
-           Level = LogLevel.Information,
-           Message = "Pull request {Owner}/{Repository}#{Number} updates dependency {Dependency} which is not trusted.")]
-        public static partial void UntrustedDependencyUpdated(
-            ILogger logger,
-            string owner,
-            string repository,
-            long number,
-            string dependency);
-
-        [LoggerMessage(
-           EventId = 6,
-           Level = LogLevel.Information,
-           Message = "Pull request {Owner}/{Repository}#{Number} updates {Count} trusted dependencies.")]
-        public static partial void TrustedDependenciesUpdated(
-            ILogger logger,
-            string owner,
-            string repository,
-            long number,
-            int count);
-
-        [LoggerMessage(
-           EventId = 7,
-           Level = LogLevel.Information,
            Message = "Approved pull request {Owner}/{Repository}#{Number}.")]
         public static partial void PullRequestApproved(
             ILogger logger,
@@ -325,7 +243,7 @@ public sealed partial class PullRequestHandler : IHandler
             long number);
 
         [LoggerMessage(
-           EventId = 8,
+           EventId = 5,
            Level = LogLevel.Information,
            Message = "Enabled auto-merge for pull request {Owner}/{Repository}#{Number}.")]
         public static partial void AutoMergeEnabled(
@@ -335,7 +253,7 @@ public sealed partial class PullRequestHandler : IHandler
             long number);
 
         [LoggerMessage(
-           EventId = 9,
+           EventId = 6,
            Level = LogLevel.Warning,
            Message = "Failed to enable auto-merge for pull request {Owner}/{Repository}#{Number} with node ID {NodeId}.")]
         public static partial void EnableAutoMergeFailed(

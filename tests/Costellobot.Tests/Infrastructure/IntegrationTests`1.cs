@@ -188,6 +188,77 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .RegisterWith(Fixture.Interceptor);
     }
 
+    protected void RegisterGetCompare(
+        GitHubCommitBuilder @base,
+        GitHubCommitBuilder head,
+        CompareResultBuilder comparison)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{@base.Repository.Owner.Login}/{@base.Repository.Name}/compare/{@base.Sha}...{head.Sha}")
+            .Responds()
+            .WithJsonContent(comparison)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    protected void RegisterGetDeployments(
+        RepositoryBuilder repository,
+        string environmentName,
+        params DeploymentBuilder[] deployments)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{repository.Owner.Login}/{repository.Name}/deployments")
+            .ForQuery($"environment={environmentName}")
+            .Responds()
+            .WithJsonContent(deployments)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    protected void RegisterGetDeploymentStatuses(
+        RepositoryBuilder repository,
+        DeploymentBuilder deployment,
+        params DeploymentStatusBuilder[] deploymentStatuses)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{repository.Owner.Login}/{repository.Name}/deployments/{deployment.Id}/statuses")
+            .Responds()
+            .WithJsonContent(deploymentStatuses)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    protected void RegisterGetPendingDeployments(
+        RepositoryBuilder repository,
+        long runId,
+        params PendingDeploymentBuilder[] deployments)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{repository.Owner.Login}/{repository.Name}/actions/runs/{runId}/pending_deployments")
+            .Responds()
+            .WithJsonContent(deployments)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    protected void RegisterApprovePendingDeployments(
+        RepositoryBuilder repository,
+        long runId,
+        DeploymentBuilder deployment,
+        Action<HttpRequestInterceptionBuilder>? configure = null)
+    {
+        var builder = CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath($"/repos/{repository.Owner.Login}/{repository.Name}/actions/runs/{runId}/pending_deployments")
+            .Responds()
+            .WithJsonContent(deployment);
+
+        configure?.Invoke(builder);
+
+        builder.RegisterWith(Fixture.Interceptor);
+    }
+
     protected void RegisterGetPullRequest(PullRequestBuilder pullRequest)
     {
         CreateDefaultBuilder()
