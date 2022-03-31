@@ -96,6 +96,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 KeyValuePair.Create("AzureKeyVault:TenantId", string.Empty),
                 KeyValuePair.Create("AzureKeyVault:Uri", string.Empty),
                 KeyValuePair.Create("ConnectionStrings:AzureStorage", string.Empty),
+                KeyValuePair.Create("GitHub:AccessToken", "gho_github-access-token"),
                 KeyValuePair.Create("GitHub:AppId", "123"),
                 KeyValuePair.Create("GitHub:ClientId", "github-id"),
                 KeyValuePair.Create("GitHub:ClientSecret", "github-secret"),

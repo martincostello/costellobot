@@ -5,6 +5,6 @@ namespace Octokit;
 
 public static class IGitHubClientExtensions
 {
-    public static IWorkflowClient Workflows(this IGitHubClient client)
-        => new WorkflowClient(new ApiConnection(client.Connection));
+    public static IWorkflowRunsClient WorkflowRuns(this IGitHubClient client)
+        => new WorkflowRunsClient(new ApiConnection(client.Connection));
 }

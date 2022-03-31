@@ -5,6 +5,8 @@ namespace MartinCostello.Costellobot;
 
 public sealed class GitHubOptions
 {
+    public string AccessToken { get; set; } = string.Empty;
+
     public string AppId { get; set; } = string.Empty;
 
     public string ClientId { get; set; } = string.Empty;
