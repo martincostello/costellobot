@@ -61,7 +61,7 @@ export class App {
 
         const timestamp = moment();
 
-        indexItem.textContent = `${webhookHeaders.event} (${webhookHeaders.delivery})`;
+        indexItem.textContent = `${webhookHeaders['X-GitHub-Event']} (${webhookHeaders['X-GitHub-Delivery']})`;
 
         indexItem.classList.add('list-group-item');
         indexItem.classList.add('list-group-item-action');
