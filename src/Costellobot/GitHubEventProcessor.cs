@@ -10,6 +10,20 @@ namespace MartinCostello.Costellobot;
 
 public sealed partial class GitHubEventProcessor : WebhookEventProcessor
 {
+    private static readonly string[] HeadersToLog =
+    {
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-GitHub-Delivery",
+        "X-GitHub-Event",
+        "X-GitHub-Hook-ID",
+        "X-GitHub-Hook-Installation-Target-ID",
+        "X-GitHub-Hook-Installation-Target-Type",
+        "X-Hub-Signature",
+        "X-Hub-Signature-256",
+    };
+
     private readonly IHubContext<GitHubWebhookHub, IWebhookClient> _hub;
     private readonly ILogger<GitHubEventProcessor> _logger;
     private readonly GitHubWebhookQueue _queue;
@@ -49,7 +63,15 @@ public sealed partial class GitHubEventProcessor : WebhookEventProcessor
             // not support being serialized and throws an exception, which breaks the SignalR connection.
             // See https://github.com/octokit/webhooks.net/blob/1a6ce29f8312c555227703057ba45723e3c78574/src/Octokit.Webhooks/Converter/DateTimeOffsetConverter.cs#L14.
             using var document = JsonDocument.Parse(body);
-            await _hub.Clients.All.WebhookAsync(headers, document.RootElement);
+
+            var webhookHeaders = new Dictionary<string, string>(HeadersToLog.Length);
+
+            foreach (string header in HeadersToLog)
+            {
+                webhookHeaders[header] = headers[header];
+            }
+
+            await _hub.Clients.All.WebhookAsync(webhookHeaders, document.RootElement);
         }
         catch (Exception)
         {

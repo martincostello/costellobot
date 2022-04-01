@@ -3,7 +3,6 @@
 
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Primitives;
 
 namespace MartinCostello.Costellobot;
 
@@ -13,5 +12,5 @@ public interface IWebhookClient
     Task LogAsync(object logEntry);
 
     [HubMethodName("webhook-logs")]
-    Task WebhookAsync(IDictionary<string, StringValues> headers, JsonElement webhookEvent);
+    Task WebhookAsync(IDictionary<string, string> headers, JsonElement webhookEvent);
 }
