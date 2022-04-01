@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Primitives;
 using Octokit.Webhooks;
 
 namespace MartinCostello.Costellobot;
@@ -22,7 +24,13 @@ public sealed partial class GitHubEventProcessor : WebhookEventProcessor
         _logger = logger;
     }
 
-    public override async Task ProcessWebhookAsync(WebhookHeaders headers, WebhookEvent webhookEvent)
+    public override async Task ProcessWebhookAsync(IDictionary<string, StringValues> headers, string body)
+    {
+        await BroadcastLogAsync(headers, body);
+        await base.ProcessWebhookAsync(headers, body);
+    }
+
+    public override Task ProcessWebhookAsync(WebhookHeaders headers, WebhookEvent webhookEvent)
     {
         ArgumentNullException.ThrowIfNull(headers);
         ArgumentNullException.ThrowIfNull(webhookEvent);
@@ -30,7 +38,23 @@ public sealed partial class GitHubEventProcessor : WebhookEventProcessor
         Log.ReceivedWebhook(_logger, headers.HookId);
         _queue.Enqueue(new(headers, webhookEvent));
 
-        await _hub.Clients.All.WebhookAsync(headers, webhookEvent);
+        return Task.CompletedTask;
+    }
+
+    private async Task BroadcastLogAsync(IDictionary<string, StringValues> headers, string body)
+    {
+        try
+        {
+            // HACK Cannot serialize the parsed webhook objects as-is because DateTimeOffset does
+            // not support being serialized and throws an exception, which breaks the SignalR connection.
+            // See https://github.com/octokit/webhooks.net/blob/1a6ce29f8312c555227703057ba45723e3c78574/src/Octokit.Webhooks/Converter/DateTimeOffsetConverter.cs#L14.
+            using var document = JsonDocument.Parse(body);
+            await _hub.Clients.All.WebhookAsync(headers, document.RootElement);
+        }
+        catch (Exception)
+        {
+            // Swallow exception
+        }
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
