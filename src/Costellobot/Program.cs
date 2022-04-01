@@ -16,6 +16,12 @@ builder.Host.ConfigureApplication();
 builder.Services.AddGitHub(builder.Configuration, builder.Environment);
 builder.Services.AddRazorPages();
 
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<ClientLogQueue>();
+builder.Services.AddHostedService<ClientLogBroadcastService>();
+
+builder.Logging.AddSignalR();
+
 builder.Services.Configure<JsonOptions>((options) =>
 {
     options.SerializerOptions.WriteIndented = true;
@@ -68,6 +74,8 @@ app.MapGet("/version", () => new
 }).AllowAnonymous();
 
 app.MapRazorPages();
+
+app.MapHub<GitHubWebhookHub>("/admin/git-hub");
 
 app.Run();
 

@@ -14,6 +14,8 @@
   "author": "martincostello",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@microsoft/signalr": "^6.0.3",
+    "@types/moment": "^2.13.0",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/eslint-plugin-tslint": "^5.17.0",
     "@typescript-eslint/parser": "^4.33.0",
@@ -30,6 +32,7 @@
     "gulp-sourcemaps": "^3.0.0",
     "gulp-typescript": "^5.0.1",
     "gulp-uglify": "^3.0.2",
+    "moment": "^2.29.1",
     "tsify": "^5.0.4",
     "typescript": "^4.6.3",
     "vinyl-buffer": "^1.0.1",

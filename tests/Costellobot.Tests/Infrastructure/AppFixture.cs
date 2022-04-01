@@ -115,7 +115,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
         builder.ConfigureAntiforgeryTokenResource();
 
         builder.ConfigureLogging(
-            (loggingBuilder) => loggingBuilder.ClearProviders().AddXUnit(this));
+            (loggingBuilder) => loggingBuilder.ClearProviders().AddXUnit(this).AddSignalR());
 
         builder.UseEnvironment(Environments.Production);
 

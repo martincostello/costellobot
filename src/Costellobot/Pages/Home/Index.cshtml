@@ -4,5 +4,30 @@
     ViewData["Title"] = "Administration";
 }
 <div id="admin-content">
-    <code>// TODO</code>
+  <div class="container-fluid">
+    <h3>
+      Application Logs
+      <span class="fa-solid fa-book" />
+    </h3>
+    <div class="row">
+      <div class="col-12">
+        <textarea class="form-control log-console" id="logs" readonly>Awaiting logs...</textarea>
+      </div>
+    </div>
+  </div>
+  <hr/>
+  <div class="container-fluid">
+    <h3>
+      Webhooks Deliveries
+      <span class="fa-solid fa-box-open" />
+    </h3>
+    <div class="row">
+      <div class="col-3">
+        <div class="list-group" id="webhooks-index" role="tablist"></div>
+      </div>
+      <div class="col-9">
+        <div class="tab-content" id="webhooks-content"></div>
+      </div>
+    </div>
+  </div>
 </div>

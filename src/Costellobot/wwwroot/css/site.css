@@ -11,6 +11,10 @@ a {
     color: #0060C7;
 }
 
+code.webhook-content {
+    color: #e83e8c;
+}
+
 img.user-profile {
     max-height: 30px;
     max-width: 30px;
@@ -22,4 +26,34 @@ img.user-profile {
 
 .navbar-dark .navbar-nav .nav-link {
     color: #B0B0B0;
+}
+
+.log-console,
+.log-console[disabled],
+.log-console[readonly] {
+    background-color: #000;
+    color: #fff;
+    font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+    max-height: 20rem;
+    min-height: 20rem;
+    resize: none;
+}
+
+@media (min-width: 1200px) {
+
+    code.webhook-content {
+        font-size: initial;
+    }
+
+    main.container {
+        max-width: unset;
+        width: 75%;
+    }
+
+    .log-console,
+    .log-console[disabled],
+    .log-console[readonly] {
+        max-height: 23rem;
+        min-height: 23rem;
+    }
 }

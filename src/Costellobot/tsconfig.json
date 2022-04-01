@@ -2,6 +2,7 @@
   "compilerOptions": {
     "inlineSources": true,
     "inlineSourceMap": true,
+    "moduleResolution": "Node",
     "noEmitOnError": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
