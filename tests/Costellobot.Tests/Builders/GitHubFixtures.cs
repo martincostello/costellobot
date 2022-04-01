@@ -185,6 +185,22 @@ updated-dependencies:
 
 Signed-off-by: dependabot[bot] <support@github.com>";
 
+    public static string TrustedCommitMessage(string dependency) => $@"
+Bump {dependency} from 5.0.0 to 5.0.1
+Bumps [{dependency}](https://github.com/actions/toolkit/tree/HEAD/packages/github) from 5.0.0 to 5.0.1.
+- [Release notes](https://github.com/actions/toolkit/releases)
+- [Changelog](https://github.com/actions/toolkit/blob/main/packages/github/RELEASES.md)
+- [Commits](https://github.com/actions/toolkit/commits/HEAD/packages/github)
+
+---
+updated-dependencies:
+- dependency-name: ""{dependency}""
+  dependency-type: direct:production
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] <support @github.com>";
+
     public static string UntrustedCommitMessage() => @"
 Bump puppeteer from 13.5.0 to 13.5.1 in /src/LondonTravel.Site
 Bumps [puppeteer](https://github.com/puppeteer/puppeteer) from 13.5.0 to 13.5.1.

@@ -25,7 +25,16 @@ public sealed partial class GitCommitAnalyzer
         string name,
         GitHubCommit commit)
     {
-        string[] commitLines = commit.Commit.Message
+        return IsTrustedDependencyUpdate(owner, name, commit.Sha, commit.Commit.Message);
+    }
+
+    public bool IsTrustedDependencyUpdate(
+        string owner,
+        string name,
+        string sha,
+        string commitMessage)
+    {
+        string[] commitLines = commitMessage
             .ReplaceLineEndings("\n")
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
@@ -55,21 +64,25 @@ public sealed partial class GitCommitAnalyzer
 
         Log.CommitUpdatesDependencies(
             _logger,
-            commit.Sha,
+            sha,
             owner,
             name,
             dependencies.ToArray());
 
         foreach (string dependency in dependencies)
         {
-            if (!trustedDependencies.Any((p) => Regex.IsMatch(dependency, p)))
+            // Sometimes the dependencies are wrapped with quotes,
+            // for example "- dependency-name: "@actions/github"".
+            string trimmed = dependency.Trim('"');
+
+            if (!trustedDependencies.Any((p) => Regex.IsMatch(trimmed, p)))
             {
                 Log.UntrustedDependencyUpdated(
                     _logger,
-                    commit.Sha,
+                    sha,
                     owner,
                     name,
-                    dependency);
+                    trimmed);
 
                 return false;
             }
@@ -77,7 +90,7 @@ public sealed partial class GitCommitAnalyzer
 
         Log.TrustedDependenciesUpdated(
             _logger,
-            commit.Sha,
+            sha,
             owner,
             name,
             dependencies.Count);
