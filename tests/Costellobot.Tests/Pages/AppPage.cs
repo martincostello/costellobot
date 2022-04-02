@@ -36,6 +36,19 @@ public abstract class AppPage
         => await Assertions.Expect(Page.Locator(Selectors.SignIn))
                            .ToBeVisibleAsync();
 
+    public abstract class Item
+    {
+        protected Item(IElementHandle handle, IPage page)
+        {
+            Handle = handle;
+            Page = page;
+        }
+
+        protected IElementHandle Handle { get; }
+
+        protected IPage Page { get; }
+    }
+
     private sealed class Selectors
     {
         internal const string AdminLink = "id=admin-link";
