@@ -127,7 +127,7 @@ public class UITests : IntegrationTests<HttpServerFixture>
             await app.WaitForContentAsync();
 
             // Wait for the web socket to have connected
-            await connected.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            await connected.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
             // Act - Deliver a ping webhook
             var value = new
