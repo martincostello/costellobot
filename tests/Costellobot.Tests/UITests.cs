@@ -150,7 +150,7 @@ public class UITests : IntegrationTests<HttpServerFixture>
             using var response = await PostWebhookAsync("ping", value);
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-            await Task.Delay(TimeSpan.FromSeconds(0.5));
+            await Task.Delay(TimeSpan.FromSeconds(2));
 
             // Assert - Verify log entries were written
             string actual = await app.GetLogsAsync();
