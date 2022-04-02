@@ -20,6 +20,7 @@ export class App {
         this.webhooksContentContainer = document.getElementById('webhooks-content');
         this.connection = new signalR.HubConnectionBuilder()
             .withUrl('/admin/git-hub')
+            .withAutomaticReconnect()
             .build();
     }
 
