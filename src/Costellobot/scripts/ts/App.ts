@@ -9,6 +9,7 @@ export class App {
 
     private readonly connection: signalR.HubConnection;
 
+    private logsAutoscroll: HTMLInputElement;
     private logsContainer: HTMLInputElement;
     private webhooksIndexContainer: HTMLElement;
     private webhooksContentContainer: HTMLElement;
@@ -22,6 +23,7 @@ export class App {
 
     async initialize(): Promise<void> {
 
+        this.logsAutoscroll = <HTMLInputElement>document.getElementById('logs-auto-scroll');
         this.logsContainer = <HTMLInputElement>document.getElementById('logs');
         this.webhooksIndexContainer = document.getElementById('webhooks-index');
         this.webhooksContentContainer = document.getElementById('webhooks-content');
@@ -143,7 +145,10 @@ export class App {
         }
 
         this.logsContainer.textContent += `${timestamp.toISOString()} [${logEntry.level}] ${logEntry.category}[${event}]: ${logEntry.message}`;
-        this.logsContainer.scrollTop = this.logsContainer.scrollHeight;
+
+        if (this.logsAutoscroll.checked) {
+            this.logsContainer.scrollTop = this.logsContainer.scrollHeight;
+        }
     }
 }
 
