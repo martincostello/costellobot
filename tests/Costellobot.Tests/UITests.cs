@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Net;
+using System.Security.Cryptography;
 using MartinCostello.Costellobot.Infrastructure;
 using MartinCostello.Costellobot.Pages;
 using Microsoft.Extensions.Caching.Memory;
@@ -158,11 +159,30 @@ public class UITests : IntegrationTests<HttpServerFixture>
                 deliveries_url = "https://api.github.com/app/hook/deliveries",
             };
 
-            using var response = await PostWebhookAsync("ping", value);
+            string delivery = RandomNumberGenerator.GetInt32(int.MaxValue).ToString(CultureInfo.InvariantCulture);
+
+            using var response = await PostWebhookAsync("ping", value, delivery: delivery);
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
             // Assert - Verify log entries were written
             await app.WaitForLogsTextAsync("Received webhook with ID 109948940.");
+
+            // Act - Get the log entry for the webhook
+            var item = await app.WaitForWebhookAsync(delivery);
+
+            // Assert - Verify the properties of the webhook
+            await item.DeliveryAsync().ShouldBe(delivery);
+            await item.EventAsync().ShouldBe("ping");
+
+            // Act - View the payload
+            var content = await item.SelectAsync();
+
+            // Assert - Verify the payload
+            string payload = await content.ContentAsync();
+
+            payload.ShouldContain($@"""X-GitHub-Delivery"": ""{delivery}"",");
+            payload.ShouldContain(@"""X-GitHub-Event"": ""ping"",");
+            payload.ShouldContain(@"""hook_id"": 109948940,");
         });
     }
 

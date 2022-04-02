@@ -336,7 +336,8 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
     protected async Task<HttpResponseMessage> PostWebhookAsync(
         string @event,
         object value,
-        string? webhookSecret = null)
+        string? webhookSecret = null,
+        string? delivery = null)
     {
         (string payload, string signature) = CreateWebhook(value, webhookSecret);
 
@@ -344,7 +345,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
 
         client.DefaultRequestHeaders.Add("Accept", "*/*");
         client.DefaultRequestHeaders.Add("User-Agent", "GitHub-Hookshot/f05835d");
-        client.DefaultRequestHeaders.Add("X-GitHub-Delivery", Guid.NewGuid().ToString());
+        client.DefaultRequestHeaders.Add("X-GitHub-Delivery", delivery ?? Guid.NewGuid().ToString());
         client.DefaultRequestHeaders.Add("X-GitHub-Event", @event);
         client.DefaultRequestHeaders.Add("X-GitHub-Hook-ID", "109948940");
         client.DefaultRequestHeaders.Add("X-GitHub-Hook-Installation-Target-ID", "42");

@@ -94,6 +94,8 @@ export class App {
         indexItem.setAttribute('aria-controls', contentId);
         indexItem.setAttribute('aria-selected', 'false');
         indexItem.setAttribute('title', timestamp.toISOString());
+        indexItem.setAttribute('x-github-event', event);
+        indexItem.setAttribute('x-github-delivery', delivery);
 
         const contentItem = document.createElement('div');
 
