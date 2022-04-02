@@ -61,7 +61,10 @@ export class App {
 
         const timestamp = moment();
 
-        indexItem.textContent = `${webhookHeaders['X-GitHub-Event']} (${webhookHeaders['X-GitHub-Delivery']})`;
+        const delivery = webhookHeaders['X-GitHub-Delivery'];
+        const event = webhookHeaders['X-GitHub-Event'];
+
+        indexItem.textContent = `${event} (${delivery})`;
 
         indexItem.classList.add('list-group-item');
         indexItem.classList.add('list-group-item-action');
@@ -105,13 +108,14 @@ export class App {
 
     private addLog(logEntry: LogEntry) {
 
+        const event = logEntry.eventName ?? logEntry.eventId;
         const timestamp = moment(logEntry.timestamp);
 
         if (this.logsContainer.textContent) {
             this.logsContainer.textContent += '\n';
         }
 
-        this.logsContainer.textContent += `${timestamp.toISOString()} [${logEntry.level}] ${logEntry.category}[${logEntry.eventName ?? logEntry.eventId}]: ${logEntry.message}`;
+        this.logsContainer.textContent += `${timestamp.toISOString()} [${logEntry.level}] ${logEntry.category}[${event}]: ${logEntry.message}`;
         this.logsContainer.scrollTop = this.logsContainer.scrollHeight;
     }
 }
