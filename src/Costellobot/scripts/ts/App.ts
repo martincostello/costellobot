@@ -12,7 +12,6 @@ export class App {
     private logsContainer: HTMLInputElement;
     private webhooksIndexContainer: HTMLElement;
     private webhooksContentContainer: HTMLElement;
-    private webhookIndex: number = 1;
 
     constructor() {
         this.connection = new signalR.HubConnectionBuilder()
@@ -58,21 +57,35 @@ export class App {
 
     private addWebhook(webhookHeaders: any, webhookEvent: any) {
 
-        const id = this.webhookIndex++;
-        const indexId = `webhook-index-${id}`;
-        const contentId = `webhook-content-${id}`;
-
-        const indexItem = document.createElement('a');
-
-        const timestamp = moment();
-
         const delivery = webhookHeaders['X-GitHub-Delivery'];
         const event = webhookHeaders['X-GitHub-Event'];
 
-        indexItem.textContent = `${event} (${delivery})`;
+        const indexId = `webhook-index-${delivery}`;
+        const contentId = `webhook-content-${delivery}`;
+
+        const eventItem = document.createElement('span');
+        eventItem.classList.add('x-github-event');
+        eventItem.textContent = event;
+
+        const deliveryItem = document.createElement('span');
+        deliveryItem.classList.add('x-github-delivery');
+        deliveryItem.textContent = delivery;
+
+        const indexItem = document.createElement('a');
+
+        const indexPre = document.createElement('pre');
+        indexPre.appendChild(eventItem);
+        indexPre.append(' (');
+        indexPre.appendChild(deliveryItem);
+        indexPre.append(')');
+
+        indexItem.appendChild(indexPre);
+
+        const timestamp = moment();
 
         indexItem.classList.add('list-group-item');
         indexItem.classList.add('list-group-item-action');
+        indexItem.classList.add('webhook-item');
 
         indexItem.setAttribute('id', indexId);
         indexItem.setAttribute('data-toggle', 'list');
@@ -97,6 +110,8 @@ export class App {
         code.classList.add('webhook-content');
         code.classList.add('language-json');
         code.setAttribute('data-lang', 'json');
+        code.setAttribute('x-github-event', event);
+        code.setAttribute('x-github-delivery', delivery);
 
         let text = JSON.stringify(webhookHeaders, null, 2);
         text += '\n';
@@ -107,7 +122,12 @@ export class App {
         pre.appendChild(code);
         contentItem.appendChild(pre);
 
-        this.webhooksIndexContainer.appendChild(indexItem);
+        if (this.webhooksIndexContainer.firstChild) {
+            this.webhooksIndexContainer.firstChild.before(indexItem);
+        } else {
+            this.webhooksIndexContainer.appendChild(indexItem);
+        }
+
         this.webhooksContentContainer.appendChild(contentItem);
     }
 
