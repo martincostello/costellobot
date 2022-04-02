@@ -150,13 +150,8 @@ public class UITests : IntegrationTests<HttpServerFixture>
             using var response = await PostWebhookAsync("ping", value);
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-            await Task.Delay(TimeSpan.FromSeconds(2));
-
             // Assert - Verify log entries were written
-            string actual = await app.GetLogsAsync();
-
-            actual.ShouldNotBeNullOrWhiteSpace();
-            actual.ShouldContain("Received webhook with ID 109948940.");
+            await app.WaitForLogsTextAsync("Received webhook with ID 109948940.");
         });
     }
 
