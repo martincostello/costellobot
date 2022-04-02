@@ -106,6 +106,9 @@ public class UITests : IntegrationTests<HttpServerFixture>
         var browser = new BrowserFixture(options, OutputHelper);
         await browser.WithPageAsync(async page =>
         {
+            var connected = new TaskCompletionSource();
+            page.WebSocket += (_, _) => connected.SetResult();
+
             // Load the application
             await page.GotoAsync(Fixture.ServerAddress);
             await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
@@ -121,6 +124,9 @@ public class UITests : IntegrationTests<HttpServerFixture>
 
             // Arrange - Wait for the page to be ready
             await app.WaitForContentAsync();
+
+            // Wait for the web socket to have connected
+            await connected.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
             // Act - Deliver a ping webhook
             var value = new
