@@ -8,7 +8,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 
-namespace MartinCostello.DependabotHelper;
+namespace MartinCostello.Costellobot;
 
 [Collection(HttpServerCollection.Name)]
 public class UITests : IntegrationTests<HttpServerFixture>
