@@ -1,60 +1,51 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using System.Threading.Channels;
-
 namespace MartinCostello.Costellobot;
 
-public sealed partial class GitHubWebhookQueue
+public sealed partial class GitHubWebhookQueue : ChannelQueue<GitHubEvent>
 {
-    private const int QueueCapacity = 1000;
-
-    private readonly Channel<GitHubEvent> _queue;
     private readonly ILogger _logger;
 
     public GitHubWebhookQueue(ILogger<GitHubWebhookQueue> logger)
+        : base()
     {
-        var channelOptions = new BoundedChannelOptions(QueueCapacity)
-        {
-            FullMode = BoundedChannelFullMode.DropOldest,
-            SingleReader = true,
-            SingleWriter = false,
-        };
-
-        _queue = Channel.CreateBounded<GitHubEvent>(channelOptions);
         _logger = logger;
     }
 
-    public async Task<GitHubEvent?> DequeueAsync(CancellationToken cancellationToken)
+    public async override Task<GitHubEvent?> DequeueAsync(CancellationToken cancellationToken)
     {
         Log.WaitingForWebhook(_logger);
 
-        GitHubEvent? message = null;
+        GitHubEvent? message = await base.DequeueAsync(cancellationToken);
 
-        if (await _queue.Reader.WaitToReadAsync(cancellationToken))
+        if (message is not null)
         {
-            message = await _queue.Reader.ReadAsync(cancellationToken);
             Log.DequeuedWebhook(_logger, message.Headers.HookId);
         }
 
         return message;
     }
 
-    public void Enqueue(GitHubEvent message)
+    public override bool Enqueue(GitHubEvent item)
     {
-        if (_queue.Writer.TryWrite(message))
+        bool success = base.Enqueue(item);
+
+        if (success)
         {
-            Log.QueuedWebhook(_logger, message.Headers.HookId);
+            Log.QueuedWebhook(_logger, item.Headers.HookId);
         }
         else
         {
-            Log.WebhookQueueFailed(_logger, message.Headers.HookId);
+            Log.WebhookQueueFailed(_logger, item.Headers.HookId);
         }
+
+        return success;
     }
 
     public void SignalCompletion()
     {
-        if (_queue.Writer.TryComplete())
+        if (Queue.Writer.TryComplete())
         {
             Log.QueueCompleted(_logger);
         }
@@ -64,7 +55,7 @@ public sealed partial class GitHubWebhookQueue
     {
         Log.WaitingForQueueToDrain(_logger);
 
-        await _queue.Reader.Completion;
+        await Queue.Reader.Completion;
 
         Log.QueueDrained(_logger);
     }
