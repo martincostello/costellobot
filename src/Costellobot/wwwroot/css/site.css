@@ -39,6 +39,10 @@ img.user-profile {
     resize: none;
 }
 
+.webhook-item > pre {
+    overflow: hidden;
+}
+
 .webhook-item.active > pre {
     color: #fff;
 }
