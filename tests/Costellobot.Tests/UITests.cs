@@ -92,11 +92,15 @@ public class UITests : IntegrationTests<HttpServerFixture>
         });
     }
 
-    [Theory]
+    [SkippableTheory]
     [MemberData(nameof(Browsers))]
     public async Task Can_View_Logs(string browserType, string? browserChannel)
     {
         // Arrange
+        Skip.If(
+            string.Equals(browserType, BrowserType.Webkit, StringComparison.OrdinalIgnoreCase),
+            "Webkit does not trust for self-signed certificate with the web socket.");
+
         var options = new BrowserFixtureOptions()
         {
             BrowserType = browserType,
