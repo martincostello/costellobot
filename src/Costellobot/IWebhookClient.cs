@@ -9,7 +9,7 @@ namespace MartinCostello.Costellobot;
 public interface IWebhookClient
 {
     [HubMethodName("application-logs")]
-    Task LogAsync(object logEntry);
+    Task LogAsync(ClientLogMessage logEntry);
 
     [HubMethodName("webhook-logs")]
     Task WebhookAsync(IDictionary<string, string> headers, JsonElement webhookEvent);
