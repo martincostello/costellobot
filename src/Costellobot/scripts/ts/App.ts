@@ -8,16 +8,13 @@ import 'moment/locale/en-gb';
 export class App {
 
     private readonly connection: signalR.HubConnection;
-    private readonly logsContainer: HTMLInputElement;
-    private readonly webhooksIndexContainer: HTMLElement;
-    private readonly webhooksContentContainer: HTMLElement;
 
+    private logsContainer: HTMLInputElement;
+    private webhooksIndexContainer: HTMLElement;
+    private webhooksContentContainer: HTMLElement;
     private webhookIndex: number = 1;
 
     constructor() {
-        this.logsContainer = <HTMLInputElement>document.getElementById('logs');
-        this.webhooksIndexContainer = document.getElementById('webhooks-index');
-        this.webhooksContentContainer = document.getElementById('webhooks-content');
         this.connection = new signalR.HubConnectionBuilder()
             .withUrl('/admin/git-hub')
             .withAutomaticReconnect()
@@ -25,6 +22,14 @@ export class App {
     }
 
     async initialize(): Promise<void> {
+
+        this.logsContainer = <HTMLInputElement>document.getElementById('logs');
+        this.webhooksIndexContainer = document.getElementById('webhooks-index');
+        this.webhooksContentContainer = document.getElementById('webhooks-content');
+
+        if (!this.logsContainer) {
+            return;
+        }
 
         moment.locale('en-gb');
 
