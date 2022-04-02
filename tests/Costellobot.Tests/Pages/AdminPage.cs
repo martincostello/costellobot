@@ -12,11 +12,12 @@ public class AdminPage : AppPage
     {
     }
 
-    public async Task<string> GetLogsAsync()
-        => await Page.InputValueAsync(Selectors.Logs);
-
     public async Task WaitForContentAsync()
         => await Page.WaitForSelectorAsync(Selectors.AdminContent);
+
+    public async Task WaitForLogsTextAsync(string value)
+        => await Assertions.Expect(Page.Locator(Selectors.Logs))
+                           .ToContainTextAsync(value);
 
     private sealed class Selectors
     {
