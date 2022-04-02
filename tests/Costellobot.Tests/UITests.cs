@@ -107,7 +107,8 @@ public class UITests : IntegrationTests<HttpServerFixture>
         await browser.WithPageAsync(async page =>
         {
             var connected = new TaskCompletionSource();
-            page.WebSocket += (_, _) => connected.SetResult();
+            page.WebSocket += (_, p) =>
+                p.FrameReceived += (_, _) => connected.TrySetResult();
 
             // Load the application
             await page.GotoAsync(Fixture.ServerAddress);
