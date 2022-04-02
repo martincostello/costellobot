@@ -12,11 +12,15 @@ public class AdminPage : AppPage
     {
     }
 
+    public async Task<string> GetLogsAsync()
+        => await Page.InputValueAsync(Selectors.Logs);
+
     public async Task WaitForContentAsync()
         => await Page.WaitForSelectorAsync(Selectors.AdminContent);
 
     private sealed class Selectors
     {
         internal const string AdminContent = "id=admin-content";
+        internal const string Logs = "id=logs";
     }
 }
