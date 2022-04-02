@@ -13,7 +13,7 @@ public sealed partial class GitHubWebhookQueue : ChannelQueue<GitHubEvent>
         _logger = logger;
     }
 
-    public async override Task<GitHubEvent?> DequeueAsync(CancellationToken cancellationToken)
+    public override async Task<GitHubEvent?> DequeueAsync(CancellationToken cancellationToken)
     {
         Log.WaitingForWebhook(_logger);
 

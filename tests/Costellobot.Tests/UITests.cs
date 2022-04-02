@@ -92,7 +92,7 @@ public class UITests : IntegrationTests<HttpServerFixture>
         });
     }
 
-    [Theory(Skip = "The browser is not connecting to the web socket.")]
+    [Theory]
     [MemberData(nameof(Browsers))]
     public async Task Can_View_Logs(string browserType, string? browserChannel)
     {

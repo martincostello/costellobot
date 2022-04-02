@@ -33,6 +33,20 @@ public sealed class HttpServerFixture : AppFixture
         }
     }
 
+    public override HttpClient CreateHttpClientForApp()
+    {
+        var handler = new HttpClientHandler()
+        {
+            CheckCertificateRevocationList = true,
+            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
+        };
+
+        return new HttpClient(handler, disposeHandler: true)
+        {
+            BaseAddress = new(ServerAddress, UriKind.Absolute),
+        };
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);

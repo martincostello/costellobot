@@ -340,7 +340,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
     {
         (string payload, string signature) = CreateWebhook(value, webhookSecret);
 
-        using var client = Fixture.CreateDefaultClient();
+        using var client = Fixture.CreateHttpClientForApp();
 
         client.DefaultRequestHeaders.Add("Accept", "*/*");
         client.DefaultRequestHeaders.Add("User-Agent", "GitHub-Hookshot/f05835d");

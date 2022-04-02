@@ -25,7 +25,7 @@ public abstract class ChannelQueue<T>
 
     protected Channel<T> Queue => _queue;
 
-    public async virtual Task<T?> DequeueAsync(CancellationToken cancellationToken)
+    public virtual async Task<T?> DequeueAsync(CancellationToken cancellationToken)
     {
         T? item = default;
 
