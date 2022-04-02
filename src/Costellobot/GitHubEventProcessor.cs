@@ -68,7 +68,10 @@ public sealed partial class GitHubEventProcessor : WebhookEventProcessor
 
             foreach (string header in HeadersToLog)
             {
-                webhookHeaders[header] = headers[header];
+                if (headers.TryGetValue(header, out var value))
+                {
+                    webhookHeaders[header] = value;
+                }
             }
 
             await _hub.Clients.All.WebhookAsync(webhookHeaders, document.RootElement);
