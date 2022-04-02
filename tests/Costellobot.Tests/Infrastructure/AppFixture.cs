@@ -60,6 +60,8 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
         }
     }
 
+    public virtual HttpClient CreateHttpClientForApp() => CreateDefaultClient();
+
     public void OverrideConfiguration(string key, string value, bool reload = true)
     {
         _configOverrides[key] = value;
