@@ -12,7 +12,6 @@ export class App {
     private readonly webhooksIndexContainer: HTMLElement;
     private readonly webhooksContentContainer: HTMLElement;
 
-    private logIndex: number = 1;
     private webhookIndex: number = 1;
 
     constructor() {
