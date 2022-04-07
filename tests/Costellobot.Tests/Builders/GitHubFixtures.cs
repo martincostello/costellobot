@@ -111,8 +111,14 @@ public static class GitHubFixtures
 
         var webhookHeaders = WebhookHeaders.Parse(headers);
         var webhookEvent = JsonSerializer.Deserialize<PullRequestOpenedEvent>(body);
+        var rawHeaders = headers.ToDictionary((k) => k.Key, (v) => v.ToString());
+        using var rawBody = JsonDocument.Parse(body);
 
-        return new(webhookHeaders, webhookEvent!);
+        return new(
+            webhookHeaders,
+            webhookEvent!,
+            rawHeaders,
+            rawBody.RootElement.Clone());
     }
 
     public static AccessTokenBuilder CreateAccessToken(string? token = null)

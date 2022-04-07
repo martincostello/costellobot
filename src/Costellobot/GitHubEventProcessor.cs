@@ -40,22 +40,21 @@ public sealed partial class GitHubEventProcessor : WebhookEventProcessor
 
     public override async Task ProcessWebhookAsync(IDictionary<string, StringValues> headers, string body)
     {
-        await BroadcastLogAsync(headers, body);
-        await base.ProcessWebhookAsync(headers, body);
-    }
-
-    public override Task ProcessWebhookAsync(WebhookHeaders headers, WebhookEvent webhookEvent)
-    {
         ArgumentNullException.ThrowIfNull(headers);
-        ArgumentNullException.ThrowIfNull(webhookEvent);
+        ArgumentNullException.ThrowIfNull(body);
 
-        Log.ReceivedWebhook(_logger, headers.HookId);
-        _queue.Enqueue(new(headers, webhookEvent));
+        (var rawHeaders, var rawPayload) = await BroadcastLogAsync(headers, body);
 
-        return Task.CompletedTask;
+        var webhookHeaders = WebhookHeaders.Parse(headers);
+        var webhookEvent = this.DeserializeWebhookEvent(webhookHeaders, body);
+
+        Log.ReceivedWebhook(_logger, webhookHeaders.HookId);
+        _queue.Enqueue(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload));
     }
 
-    private async Task BroadcastLogAsync(IDictionary<string, StringValues> headers, string body)
+    private async Task<(IDictionary<string, string> Headers, JsonElement Payload)> BroadcastLogAsync(
+        IDictionary<string, StringValues> headers,
+        string body)
     {
         try
         {
@@ -75,10 +74,13 @@ public sealed partial class GitHubEventProcessor : WebhookEventProcessor
             }
 
             await _hub.Clients.All.WebhookAsync(webhookHeaders, document.RootElement);
+
+            return (webhookHeaders, document.RootElement.Clone());
         }
         catch (Exception)
         {
             // Swallow exception
+            return default;
         }
     }
 
