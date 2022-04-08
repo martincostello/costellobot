@@ -65,13 +65,13 @@ public sealed partial class GitHubWebhookQueue : ChannelQueue<GitHubEvent>
     {
         [LoggerMessage(
            EventId = 1,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Waiting for webhook to process from queue.")]
         public static partial void WaitingForWebhook(ILogger logger);
 
         [LoggerMessage(
            EventId = 2,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Queued webhook with ID {HookId} for processing.")]
         public static partial void QueuedWebhook(ILogger logger, string? hookId);
 
@@ -83,7 +83,7 @@ public sealed partial class GitHubWebhookQueue : ChannelQueue<GitHubEvent>
 
         [LoggerMessage(
            EventId = 4,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Dequeued webhook with ID {HookId} for processing.")]
         public static partial void DequeuedWebhook(ILogger logger, string? hookId);
 

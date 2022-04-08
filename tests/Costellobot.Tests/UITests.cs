@@ -157,6 +157,10 @@ public class UITests : IntegrationTests<HttpServerFixture>
                 created_at = "2022-03-23T23:13:43Z",
                 app_id = 349596565,
                 deliveries_url = "https://api.github.com/app/hook/deliveries",
+                installation = new
+                {
+                    id = 42,
+                },
             };
 
             string delivery = RandomNumberGenerator.GetInt32(int.MaxValue).ToString(CultureInfo.InvariantCulture);
@@ -165,7 +169,7 @@ public class UITests : IntegrationTests<HttpServerFixture>
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
             // Assert - Verify log entries were written
-            await app.WaitForLogsTextAsync("Received webhook with ID 109948940.");
+            await app.WaitForLogsTextAsync("Processed webhook with ID 109948940.");
 
             // Act - Get the log entry for the webhook
             var item = await app.WaitForWebhookAsync(delivery);

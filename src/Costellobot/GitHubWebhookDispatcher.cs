@@ -32,10 +32,18 @@ public sealed partial class GitHubWebhookDispatcher
             return;
         }
 
-        var handler = _handlerFactory.Create(message.Headers.Event);
-        await handler.HandleAsync(message.Event);
+        try
+        {
+            var handler = _handlerFactory.Create(message.Headers.Event);
+            await handler.HandleAsync(message.Event);
 
-        Log.ProcessedWebhook(_logger, message.Headers.HookId);
+            Log.ProcessedWebhook(_logger, message.Headers.HookId);
+        }
+        catch (Exception ex)
+        {
+            Log.WebhookProcessingFailed(_logger, ex, message.Headers.HookId);
+            throw;
+        }
     }
 
     private bool IsValidInstallation(GitHubEvent message)
@@ -46,7 +54,7 @@ public sealed partial class GitHubWebhookDispatcher
     {
         [LoggerMessage(
            EventId = 1,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Processing webhook with ID {HookId}.")]
         public static partial void ProcessingWebhook(ILogger logger, string? hookId);
 
@@ -61,5 +69,11 @@ public sealed partial class GitHubWebhookDispatcher
            Level = LogLevel.Warning,
            Message = "Ignored webhook with ID {HookId} as the installation ID {InstallationId} is incorrect.")]
         public static partial void IncorrectInstallationWebhookIgnored(ILogger logger, string? hookId, long? installationId);
+
+        [LoggerMessage(
+           EventId = 4,
+           Level = LogLevel.Error,
+           Message = "Failed to process webhook with ID {HookId}.")]
+        public static partial void WebhookProcessingFailed(ILogger logger, Exception exception, string? hookId);
     }
 }
