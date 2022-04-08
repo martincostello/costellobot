@@ -48,7 +48,7 @@ public sealed partial class GitHubEventProcessor : WebhookEventProcessor
         var webhookHeaders = WebhookHeaders.Parse(headers);
         var webhookEvent = this.DeserializeWebhookEvent(webhookHeaders, body);
 
-        Log.ReceivedWebhook(_logger, webhookHeaders.HookId);
+        Log.ReceivedWebhook(_logger, webhookHeaders.Delivery);
         _queue.Enqueue(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload));
     }
 

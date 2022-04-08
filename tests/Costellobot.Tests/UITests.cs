@@ -169,7 +169,7 @@ public class UITests : IntegrationTests<HttpServerFixture>
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
             // Assert - Verify log entries were written
-            await app.WaitForLogsTextAsync("Processed webhook with ID 109948940.");
+            await app.WaitForLogsTextAsync($"Processed webhook with ID {delivery}.");
 
             // Act - Get the log entry for the webhook
             var item = await app.WaitForWebhookAsync(delivery);

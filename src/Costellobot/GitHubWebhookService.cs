@@ -71,7 +71,7 @@ public sealed partial class GitHubWebhookService : IHostedService, IDisposable
         }
         catch (Exception ex)
         {
-            Log.ProcessingFailed(_logger, ex, message.Headers.HookId);
+            Log.ProcessingFailed(_logger, ex, message.Headers.Delivery);
         }
     }
 
