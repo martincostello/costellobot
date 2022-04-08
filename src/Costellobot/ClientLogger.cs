@@ -12,7 +12,7 @@ public sealed class ClientLogger : ILogger
 
     public ClientLogger(string categoryName, ClientLogQueue queue, IClock clock)
     {
-        CategoryName = categoryName;
+        CategoryName = categoryName[ClientLoggingProvider.CategoryPrefix.Length..].TrimStart('.');
         _queue = queue;
         _clock = clock;
     }
@@ -45,10 +45,17 @@ public sealed class ClientLogger : ILogger
             return;
         }
 
+        string levelString = logLevel switch
+        {
+            LogLevel.Information => "Info",
+            LogLevel.Warning => "Warn",
+            _ => logLevel.ToString(),
+        };
+
         var payload = new ClientLogMessage()
         {
             Category = CategoryName,
-            Level = logLevel.ToString(),
+            Level = levelString,
             EventId = eventId.Id,
             EventName = eventId.Name,
             Message = formatter(state, exception),

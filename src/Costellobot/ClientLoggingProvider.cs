@@ -8,6 +8,8 @@ namespace MartinCostello.Costellobot;
 
 public sealed class ClientLoggingProvider : ILoggerProvider
 {
+    internal const string CategoryPrefix = "MartinCostello.Costellobot";
+
     private readonly IClock _clock;
     private readonly ClientLogQueue _queue;
 
@@ -20,7 +22,7 @@ public sealed class ClientLoggingProvider : ILoggerProvider
     public ILogger CreateLogger(string categoryName)
     {
         return
-            categoryName.StartsWith("MartinCostello.Costellobot", StringComparison.Ordinal) ?
+            categoryName.StartsWith(CategoryPrefix, StringComparison.Ordinal) ?
             new ClientLogger(categoryName, _queue, _clock) :
             NullLoggerFactory.Instance.CreateLogger(categoryName);
     }
