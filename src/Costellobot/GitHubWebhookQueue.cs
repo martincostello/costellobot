@@ -21,7 +21,7 @@ public sealed partial class GitHubWebhookQueue : ChannelQueue<GitHubEvent>
 
         if (message is not null)
         {
-            Log.DequeuedWebhook(_logger, message.Headers.HookId);
+            Log.DequeuedWebhook(_logger, message.Headers.Delivery);
         }
 
         return message;
@@ -33,11 +33,11 @@ public sealed partial class GitHubWebhookQueue : ChannelQueue<GitHubEvent>
 
         if (success)
         {
-            Log.QueuedWebhook(_logger, item.Headers.HookId);
+            Log.QueuedWebhook(_logger, item.Headers.Delivery);
         }
         else
         {
-            Log.WebhookQueueFailed(_logger, item.Headers.HookId);
+            Log.WebhookQueueFailed(_logger, item.Headers.Delivery);
         }
 
         return success;
