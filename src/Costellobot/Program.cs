@@ -70,6 +70,9 @@ app.MapGet("/version", () => new
     {
         self = new { href = "https://costellobot.martincostello.com" },
         repo = new { href = "https://github.com/martincostello/costellobot" },
+        branch = new { href = $"https://github.com/martincostello/costellobot/tree/{GitMetadata.Branch}" },
+        commit = new { href = $"https://github.com/martincostello/costellobot/commit/{GitMetadata.Commit}" },
+        deploy = new { href = $"https://github.com/martincostello/costellobot/actions/runs/{GitMetadata.BuildId}" },
     },
 }).AllowAnonymous();
 
