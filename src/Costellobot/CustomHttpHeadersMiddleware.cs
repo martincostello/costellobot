@@ -18,7 +18,7 @@ public sealed class CustomHttpHeadersMiddleware
             "style-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com use.fontawesome.com",
             "style-src-elem 'self' cdn.jsdelivr.net cdnjs.cloudflare.com use.fontawesome.com",
             "img-src 'self' avatars.githubusercontent.com",
-            "font-src 'self' cdnjs.cloudflare.com  use.fontawesome.com",
+            "font-src 'self' cdnjs.cloudflare.com use.fontawesome.com",
             "connect-src 'self'",
             "media-src 'none'",
             "object-src 'none'",
