@@ -100,7 +100,7 @@ public static class AuthenticationEndpoints
             .AddDataProtection()
             .SetApplicationName(ApplicationName);
 
-        string connectionString = configuration["ConnectionStrings:AzureStorage"];
+        string? connectionString = configuration["ConnectionStrings:AzureStorage"];
 
         if (!string.IsNullOrWhiteSpace(connectionString))
         {

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <TypeScriptToolsVersion>latest</TypeScriptToolsVersion>
     <UserSecretsId>Costellobot</UserSecretsId>
