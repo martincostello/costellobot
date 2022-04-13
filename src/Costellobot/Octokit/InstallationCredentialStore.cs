@@ -31,13 +31,15 @@ public sealed class InstallationCredentialStore : ICredentialStore, GraphQL.ICre
         // See https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-an-installation
         long installationId = _options.CurrentValue.InstallationId;
 
-        return await _cache.GetOrCreateAsync($"github:installation-credentials:{installationId}", async (entry) =>
+        var credentials = await _cache.GetOrCreateAsync($"github:installation-credentials:{installationId}", async (entry) =>
         {
             entry.AbsoluteExpirationRelativeToNow = TokenLifetime - TokenSkew;
 
             var accessToken = await _client.GitHubApps.CreateInstallationToken(installationId);
             return new Credentials(accessToken.Token, AuthenticationType.Oauth);
         });
+
+        return credentials!;
     }
 
     async Task<string> GraphQL.ICredentialStore.GetCredentials(CancellationToken cancellationToken)
