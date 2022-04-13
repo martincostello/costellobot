@@ -69,7 +69,7 @@ public sealed partial class GitHubEventProcessor : WebhookEventProcessor
             {
                 if (headers.TryGetValue(header, out var value))
                 {
-                    webhookHeaders[header] = value;
+                    webhookHeaders[header] = value!;
                 }
             }
 

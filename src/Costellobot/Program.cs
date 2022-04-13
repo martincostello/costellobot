@@ -97,7 +97,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapAuthenticationRoutes();
-app.MapGitHubWebhooks("/github-webhook", app.Configuration["GitHub:WebhookSecret"]);
+app.MapGitHubWebhooks("/github-webhook", app.Configuration["GitHub:WebhookSecret"] ?? string.Empty);
 
 app.MapGet("/version", () => new
 {

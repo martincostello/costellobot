@@ -41,7 +41,7 @@ public sealed class AppCredentialStore : ICredentialStore
             return CreateJwtForApp();
         });
 
-        return Task.FromResult(credentials);
+        return Task.FromResult(credentials!);
     }
 
     private Credentials CreateJwtForApp()
