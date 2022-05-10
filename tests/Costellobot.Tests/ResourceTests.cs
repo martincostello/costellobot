@@ -27,7 +27,7 @@ public sealed class ResourceTests : IntegrationTests<AppFixture>
     [InlineData("/not-found.html", MediaTypeNames.Text.Html)]
     [InlineData("/robots.txt", MediaTypeNames.Text.Plain)]
     [InlineData("/sign-in", MediaTypeNames.Text.Html)]
-    [InlineData("/static/js/main.js", "application/javascript")]
+    [InlineData("/static/js/main.js", "text/javascript")]
     [InlineData("/static/js/main.js.map", MediaTypeNames.Text.Plain)]
     [InlineData("/unauthorized.html", MediaTypeNames.Text.Html)]
     public async Task Can_Get_Resource_Unauthenticated(string requestUri, string contentType)
@@ -57,7 +57,7 @@ public sealed class ResourceTests : IntegrationTests<AppFixture>
     [InlineData("/manifest.webmanifest", "application/manifest+json")]
     [InlineData("/not-found.html", MediaTypeNames.Text.Html)]
     [InlineData("/robots.txt", MediaTypeNames.Text.Plain)]
-    [InlineData("/static/js/main.js", "application/javascript")]
+    [InlineData("/static/js/main.js", "text/javascript")]
     [InlineData("/static/js/main.js.map", MediaTypeNames.Text.Plain)]
     [InlineData("/unauthorized.html", MediaTypeNames.Text.Html)]
     public async Task Can_Get_Resource_Authenticated(string requestUri, string contentType)
