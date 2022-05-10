@@ -19,7 +19,9 @@ public sealed class ClientLogger : ILogger
 
     public string CategoryName { get; }
 
-    public IDisposable BeginScope<TState>(TState state) => NullDisposable.Instance;
+    public IDisposable? BeginScope<TState>(TState state)
+        where TState : notnull
+        => NullDisposable.Instance;
 
     public bool IsEnabled(LogLevel logLevel)
     {

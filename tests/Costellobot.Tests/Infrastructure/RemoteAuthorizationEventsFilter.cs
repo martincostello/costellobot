@@ -17,7 +17,7 @@ public sealed class RemoteAuthorizationEventsFilter : IPostConfigureOptions<GitH
 
     public void PostConfigure(string? name, GitHubAuthenticationOptions options)
     {
-        options.Backchannel = HttpClientFactory.CreateClient(name);
+        options.Backchannel = HttpClientFactory.CreateClient(name ?? string.Empty);
         options.EventsType = typeof(LoopbackOAuthEvents);
     }
 }
