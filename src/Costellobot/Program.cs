@@ -3,10 +3,12 @@
 
 #pragma warning disable SA1516
 
+using System.IO.Compression;
 using System.Reflection;
 using MartinCostello.Costellobot;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.ResponseCompression;
 using Octokit.Webhooks.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,13 @@ builder.Host.ConfigureApplication();
 
 builder.Services.AddGitHub(builder.Configuration, builder.Environment);
 builder.Services.AddRazorPages();
+builder.Services.AddResponseCaching();
+
+builder.Services.AddResponseCompression((options) =>
+{
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+});
 
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ClientLogQueue>();
@@ -26,6 +35,34 @@ builder.Services.Configure<JsonOptions>((options) =>
 {
     options.SerializerOptions.WriteIndented = true;
 });
+
+builder.Services.Configure<StaticFileOptions>((options) =>
+{
+    options.OnPrepareResponse = (context) =>
+    {
+        var maxAge = TimeSpan.FromDays(7);
+
+        if (context.File.Exists)
+        {
+            string? extension = Path.GetExtension(context.File.PhysicalPath);
+
+            // These files are served with a content hash in the URL so can be cached for longer
+            bool isScriptOrStyle =
+                string.Equals(extension, ".css", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(extension, ".js", StringComparison.OrdinalIgnoreCase);
+
+            if (isScriptOrStyle)
+            {
+                maxAge = TimeSpan.FromDays(365);
+            }
+        }
+
+        context.Context.Response.GetTypedHeaders().CacheControl = new() { MaxAge = maxAge };
+    };
+});
+
+builder.Services.Configure<BrotliCompressionProviderOptions>((p) => p.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>((p) => p.Level = CompressionLevel.Fastest);
 
 if (string.Equals(builder.Configuration["CODESPACES"], bool.TrueString, StringComparison.OrdinalIgnoreCase))
 {
@@ -51,6 +88,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
     app.UseHttpsRedirection();
 }
+
+app.UseResponseCompression();
 
 app.UseStaticFiles();
 
