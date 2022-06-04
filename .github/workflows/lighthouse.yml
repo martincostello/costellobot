@@ -28,6 +28,9 @@ jobs:
 
     - name: Start website
       shell: pwsh
+      env:
+        GitHub__ClientId: 'github-client-id'
+        GitHub__ClientSecret: 'github-client-secret'
       run: |
         Start-Process nohup 'dotnet run --project ./src/Costellobot/Costellobot.csproj --configuration Release'
         $StatusCode = 0
