@@ -17,3 +17,12 @@ updates:
   reviewers:
     - "martincostello"
   open-pull-requests-limit: 99
+- package-ecosystem: npm
+  directory: "/src/Costellobot"
+  schedule:
+    interval: daily
+    time: "08:30"
+    timezone: Europe/London
+  reviewers:
+    - "martincostello"
+  open-pull-requests-limit: 99
