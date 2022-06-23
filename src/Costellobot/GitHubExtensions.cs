@@ -65,7 +65,6 @@ public static class GitHubExtensions
             var baseAddress = GetGitHubGraphQLUri(provider);
             var credentialStore = provider.GetRequiredService<InstallationCredentialStore>();
             var httpClient = provider.GetRequiredService<HttpClient>();
-            var serializer = provider.GetRequiredService<IJsonSerializer>();
 
             return new Octokit.GraphQL.Connection(productInformation, baseAddress, credentialStore, httpClient);
         });

@@ -344,8 +344,8 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         var target = Fixture.Services.GetRequiredService<PullRequestHandler>();
         var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
 
-        // Act (no Assert)
-        await target.HandleAsync(message);
+        // Act
+        await Should.NotThrowAsync(() => target.HandleAsync(message));
     }
 
     private static PullRequestBuilder CreatePullRequest(UserBuilder user)

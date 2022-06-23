@@ -16,7 +16,7 @@ public class GitHubWebhookDispatcherTests
     private ITestOutputHelper OutputHelper { get; }
 
     [Fact]
-    public async void Events_With_Incorrect_Installation_Id_Are_Ignored()
+    public async Task Events_With_Incorrect_Installation_Id_Are_Ignored()
     {
         // Arrange
         var handlerFactory = Mock.Of<IHandlerFactory>();
@@ -30,7 +30,7 @@ public class GitHubWebhookDispatcherTests
             options,
             logger);
 
-        // Act (no Assert)
-        await target.DispatchAsync(message);
+        // Act
+        await Should.NotThrowAsync(() => target.DispatchAsync(message));
     }
 }
