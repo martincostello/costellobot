@@ -705,8 +705,8 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         var target = Fixture.Services.GetRequiredService<DeploymentStatusHandler>();
         var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
 
-        // Act (no Assert)
-        await target.HandleAsync(message);
+        // Act
+        await Should.NotThrowAsync(() => target.HandleAsync(message));
     }
 
     private static GitHubCommitBuilder CreateTrustedCommit(RepositoryBuilder repo)

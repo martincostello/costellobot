@@ -513,8 +513,8 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
         var target = Fixture.Services.GetRequiredService<CheckSuiteHandler>();
         var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
 
-        // Act (no Assert)
-        await target.HandleAsync(message);
+        // Act
+        await Should.NotThrowAsync(() => target.HandleAsync(message));
     }
 
     private static CheckSuiteBuilder CreateCheckSuite(
