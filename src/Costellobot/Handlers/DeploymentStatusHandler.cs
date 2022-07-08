@@ -205,7 +205,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
 
         var connection = new ApiConnection(_client.Connection);
         var deployments = await connection.Get<Octokit.Deployment[]>(
-            new Uri($"/repos/{owner}/{name}/deployments", UriKind.Relative),
+            new Uri($"repos/{owner}/{name}/deployments", UriKind.Relative),
             parameters);
 
         var previousDeployments = deployments
