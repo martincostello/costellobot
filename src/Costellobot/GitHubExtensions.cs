@@ -72,13 +72,13 @@ public static class GitHubExtensions
         services.AddSingleton<WebhookEventProcessor, GitHubEventProcessor>();
         services.AddSingleton<GitHubWebhookQueue>();
         services.AddSingleton<GitHubWebhookService>();
-        services.AddScoped<GitCommitAnalyzer>();
-        services.AddScoped<GitHubWebhookDispatcher>();
+        services.AddTransient<GitCommitAnalyzer>();
+        services.AddTransient<GitHubWebhookDispatcher>();
 
         services.AddSingleton<IHandlerFactory, HandlerFactory>();
-        services.AddScoped<CheckSuiteHandler>();
-        services.AddScoped<DeploymentStatusHandler>();
-        services.AddScoped<PullRequestHandler>();
+        services.AddTransient<CheckSuiteHandler>();
+        services.AddTransient<DeploymentStatusHandler>();
+        services.AddTransient<PullRequestHandler>();
 
         services.AddHostedService<GitHubWebhookService>();
 
