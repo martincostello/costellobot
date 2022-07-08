@@ -18,7 +18,7 @@ public sealed class WorkflowRunsClient : IWorkflowRunsClient
         long checkSuiteId)
     {
         // See https://docs.github.com/en/rest/reference/actions#list-workflow-runs-for-a-repository
-        var uri = new Uri($"/repos/{owner}/{name}/actions/runs", UriKind.Relative);
+        var uri = new Uri($"repos/{owner}/{name}/actions/runs", UriKind.Relative);
 
         var parameters = new Dictionary<string, string>(1)
         {
@@ -34,7 +34,7 @@ public sealed class WorkflowRunsClient : IWorkflowRunsClient
         long runId)
     {
         // See https://docs.github.com/en/rest/reference/actions#get-pending-deployments-for-a-workflow-run
-        var uri = new Uri($"/repos/{owner}/{name}/actions/runs/{runId}/pending_deployments", UriKind.Relative);
+        var uri = new Uri($"repos/{owner}/{name}/actions/runs/{runId}/pending_deployments", UriKind.Relative);
         return await _connection.GetAll<PendingDeployment>(uri);
     }
 
@@ -44,7 +44,7 @@ public sealed class WorkflowRunsClient : IWorkflowRunsClient
         long runId)
     {
         // See https://docs.github.com/en/rest/reference/actions#re-run-failed-jobs-from-a-workflow-run
-        var uri = new Uri($"/repos/{owner}/{name}/actions/runs/{runId}/rerun-failed-jobs", UriKind.Relative);
+        var uri = new Uri($"repos/{owner}/{name}/actions/runs/{runId}/rerun-failed-jobs", UriKind.Relative);
         await _connection.Post(uri);
     }
 
@@ -55,7 +55,7 @@ public sealed class WorkflowRunsClient : IWorkflowRunsClient
         PendingDeploymentReview review)
     {
         // See https://docs.github.com/en/rest/reference/actions#re-run-failed-jobs-from-a-workflow-run
-        var uri = new Uri($"/repos/{owner}/{name}/actions/runs/{runId}/pending_deployments", UriKind.Relative);
+        var uri = new Uri($"repos/{owner}/{name}/actions/runs/{runId}/pending_deployments", UriKind.Relative);
         return await _connection.Post<Deployment>(uri, review);
     }
 }
