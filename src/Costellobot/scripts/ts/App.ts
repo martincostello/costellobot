@@ -19,7 +19,7 @@ export class App {
     private appId: string;
     private webhookEvent: HTMLInputElement;
     private webhookPayload: HTMLInputElement;
-    private webhookSecret: HTMLInputElement;
+    private webhookSignature: HTMLInputElement;
     private webhookSubmit: HTMLElement;
 
     constructor() {
@@ -68,7 +68,7 @@ export class App {
         this.appId = document.querySelector('[app-id]').getAttribute('app-id');
         this.webhookEvent = <HTMLInputElement>document.getElementById('webhook-event');
         this.webhookPayload = <HTMLInputElement>document.getElementById('webhook-payload');
-        this.webhookSecret = <HTMLInputElement>document.getElementById('webhook-secret');
+        this.webhookSignature = <HTMLInputElement>document.getElementById('webhook-signature');
         this.webhookSubmit = webhookSubmit;
 
         const onChange = () => {
@@ -88,10 +88,10 @@ export class App {
 
             const event = this.webhookEvent.value;
             const payload = JSON.parse(this.webhookPayload.value);
-            let secret = '';
+            let signature = '';
 
-            if (this.webhookSecret) {
-                secret = this.webhookSecret.value;
+            if (this.webhookSignature) {
+                signature = this.webhookSignature.value;
             }
 
             const loader = this.webhookSubmit.querySelector(this.loaderSelector);
@@ -101,7 +101,7 @@ export class App {
             this.disable(this.webhookSubmit);
             this.hide(badge);
 
-            const result = await this.postJson(event, payload, secret);
+            const result = await this.postJson(event, payload, signature);
 
             badge.textContent = result.status.toString(10);
             badge.classList.add(result.isOK ? 'badge-success' : 'badge-danger');
@@ -235,7 +235,7 @@ export class App {
         element.classList.remove(this.hidden);
     }
 
-    private async postJson(event: string, payload: any, secret: string): Promise<WebhookResult> {
+    private async postJson(event: string, payload: any, signature: string): Promise<WebhookResult> {
 
         const headers = new Headers();
 
@@ -244,8 +244,8 @@ export class App {
         headers.set('X-GitHub-Event', event);
         headers.set('X-GitHub-Hook-Installation-Target-ID', this.appId);
 
-        if (secret) {
-            headers.set('X-Hub-Signature-256', secret);
+        if (signature) {
+            headers.set('X-Hub-Signature-256', signature);
         }
 
         const init = {
