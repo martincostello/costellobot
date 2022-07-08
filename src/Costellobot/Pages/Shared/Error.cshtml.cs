@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-#pragma warning disable SA1649
-
 using System.Diagnostics;
 using System.Net;
 using Microsoft.AspNetCore.Authorization;
@@ -14,7 +12,7 @@ namespace MartinCostello.Costellobot.Pages;
 [AllowAnonymous]
 [IgnoreAntiforgeryToken]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-public sealed class ErrorModel : PageModel
+public sealed partial class ErrorModel : PageModel
 {
     public int ErrorStatusCode { get; private set; } = StatusCodes.Status500InternalServerError;
 
