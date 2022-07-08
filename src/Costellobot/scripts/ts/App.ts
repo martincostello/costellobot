@@ -8,11 +8,19 @@ import 'moment/locale/en-gb';
 export class App {
 
     private readonly connection: signalR.HubConnection;
+    private readonly hidden = 'd-none';
+    private readonly loaderSelector = '.spinner-border';
 
     private logsAutoscroll: HTMLInputElement;
     private logsContainer: HTMLInputElement;
     private webhooksIndexContainer: HTMLElement;
     private webhooksContentContainer: HTMLElement;
+
+    private appId: string;
+    private webhookEvent: HTMLInputElement;
+    private webhookPayload: HTMLInputElement;
+    private webhookSecret: HTMLInputElement;
+    private webhookSubmit: HTMLElement;
 
     constructor() {
         this.connection = new signalR.HubConnectionBuilder()
@@ -23,14 +31,22 @@ export class App {
 
     async initialize(): Promise<void> {
 
-        this.logsAutoscroll = <HTMLInputElement>document.getElementById('logs-auto-scroll');
-        this.logsContainer = <HTMLInputElement>document.getElementById('logs');
-        this.webhooksIndexContainer = document.getElementById('webhooks-index');
-        this.webhooksContentContainer = document.getElementById('webhooks-content');
+        const logsContainer = <HTMLInputElement>document.getElementById('logs');
+        const webhookSubmit = document.getElementById('post-webhook');
 
-        if (!this.logsContainer) {
-            return;
+        if (logsContainer) {
+            await this.initializeLogs(logsContainer);
+        } else if (webhookSubmit) {
+            this.initiailizeDebug(webhookSubmit);
         }
+    }
+
+    private async initializeLogs(logsContainer: HTMLInputElement): Promise<void> {
+
+        this.logsContainer = logsContainer;
+        this.webhooksIndexContainer = document.getElementById('webhooks-index');
+        this.logsAutoscroll = <HTMLInputElement>document.getElementById('logs-auto-scroll');
+        this.webhooksContentContainer = document.getElementById('webhooks-content');
 
         moment.locale('en-gb');
 
@@ -45,6 +61,58 @@ export class App {
         await this.connection
             .start()
             .catch((reason: any) => console.error(reason));
+    }
+
+    private initiailizeDebug(webhookSubmit: HTMLElement) {
+
+        this.appId = document.querySelector('[app-id]').getAttribute('app-id');
+        this.webhookEvent = <HTMLInputElement>document.getElementById('webhook-event');
+        this.webhookPayload = <HTMLInputElement>document.getElementById('webhook-payload');
+        this.webhookSecret = <HTMLInputElement>document.getElementById('webhook-secret');
+        this.webhookSubmit = webhookSubmit;
+
+        const onChange = () => {
+            try {
+                JSON.parse(this.webhookPayload.value);
+                this.enable(this.webhookSubmit);
+            } catch (err: any) {
+                this.disable(this.webhookSubmit);
+            }
+        };
+
+        ['blur', 'change', 'input', 'keydown'].forEach((name) => {
+            this.webhookPayload.addEventListener(name, onChange);
+        });
+
+        const onSubmit = async () => {
+
+            const event = this.webhookEvent.value;
+            const payload = JSON.parse(this.webhookPayload.value);
+            let secret = '';
+
+            if (this.webhookSecret) {
+                secret = this.webhookSecret.value;
+            }
+
+            const loader = this.webhookSubmit.querySelector(this.loaderSelector);
+            const badge = document.querySelector('.webhook-status');
+
+            this.show(loader);
+            this.disable(this.webhookSubmit);
+            this.hide(badge);
+
+            const result = await this.postJson(event, payload, secret);
+
+            badge.textContent = result.status.toString(10);
+            badge.classList.add(result.isOK ? 'badge-success' : 'badge-danger');
+            badge.classList.remove(result.isOK ? 'badge-danger' : 'badge-success');
+
+            this.show(badge);
+            this.enable(this.webhookSubmit);
+            this.hide(loader);
+        };
+
+        this.webhookSubmit.addEventListener('click', async () => await onSubmit());
     }
 
     private onApplicationLog(logEntry: LogEntry) {
@@ -150,6 +218,49 @@ export class App {
             this.logsContainer.scrollTop = this.logsContainer.scrollHeight;
         }
     }
+
+    private disable(element: Element): void {
+        element.setAttribute('disabled', '');
+    }
+
+    private enable(element: Element): void {
+        element.removeAttribute('disabled');
+    }
+
+    private hide(element: Element) {
+        element.classList.add(this.hidden);
+    }
+
+    private show(element: Element) {
+        element.classList.remove(this.hidden);
+    }
+
+    private async postJson(event: string, payload: any, secret: string): Promise<WebhookResult> {
+
+        const headers = new Headers();
+
+        headers.set('Accept', 'application/json');
+        headers.set('Content-Type', 'application/json');
+        headers.set('X-GitHub-Event', event);
+        headers.set('X-GitHub-Hook-Installation-Target-ID', this.appId);
+
+        if (secret) {
+            headers.set('X-Hub-Signature-256', secret);
+        }
+
+        const init = {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload)
+        };
+
+        const response = await fetch('/github-webhook', init);
+
+        return {
+            isOK: response.ok,
+            status: response.status
+        };
+    }
 }
 
 interface LogEntry {
@@ -159,4 +270,9 @@ interface LogEntry {
     eventName?: string;
     message: string;
     timestamp: string;
+}
+
+interface WebhookResult {
+    isOK: boolean;
+    status: number;
 }

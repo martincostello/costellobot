@@ -20,6 +20,10 @@ img.user-profile {
     max-width: 30px;
 }
 
+textarea.form-payload {
+    resize: none;
+}
+
 .body-content {
     padding-top: 10px;
 }
@@ -37,6 +41,10 @@ img.user-profile {
     max-height: 20rem;
     min-height: 20rem;
     resize: none;
+}
+
+.text-webhook {
+    font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
 }
 
 .webhook-item > pre {
