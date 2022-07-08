@@ -52,6 +52,7 @@ public sealed class ResourceTests : IntegrationTests<AppFixture>
     [InlineData("/error.html", MediaTypeNames.Text.Html)]
     [InlineData("/favicon.png", "image/png")]
     [InlineData("/forbidden.html", MediaTypeNames.Text.Html)]
+    [InlineData("/github-webhook", MediaTypeNames.Text.Html)]
     [InlineData("/humans.txt", MediaTypeNames.Text.Plain)]
     [InlineData("/manifest.webmanifest", "application/manifest+json")]
     [InlineData("/not-found.html", MediaTypeNames.Text.Html)]
@@ -76,6 +77,7 @@ public sealed class ResourceTests : IntegrationTests<AppFixture>
 
     [Theory]
     [InlineData("/")]
+    [InlineData("/github-webhook")]
     public async Task Cannot_Get_Resource_Unauthenticated(string requestUri)
     {
         // Arrange
