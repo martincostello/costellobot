@@ -107,6 +107,7 @@
                                     string profileUrl = User.GetProfileUrl();
                                     string? avatarUrl = User.GetAvatarUrl();
                                 }
+                                <a class="nav-link" href="@profileUrl" title="View your GitHub profile" target="_blank" rel="noopener">
                                     <span id="user-name">@displayName</span>
                                     @if (!string.IsNullOrWhiteSpace(avatarUrl))
                                     {
@@ -133,18 +134,18 @@
             <p>
                 &copy; @(DateTimeOffset.UtcNow.Year) - Martin Costello |
                 Built from
-                <a href="@commit" title="View commit @GitMetadata.Commit on GitHub" target="_blank">
+                <a href="@commit" title="View commit @GitMetadata.Commit on GitHub" target="_blank" rel="noopener">
                     <code>@string.Join(string.Empty, GitMetadata.Commit.Take(7))</code>
                 </a>
                 on
-                <a href="@branch" title="View branch @GitMetadata.Branch on GitHub" target="_blank">
+                <a href="@branch" title="View branch @GitMetadata.Branch on GitHub" target="_blank" rel="noopener">
                     <code>@GitMetadata.Branch</code>
                 </a>
                 @if (!string.IsNullOrWhiteSpace(GitMetadata.BuildId))
                 {
                     <text>
                     by
-                    <a href="@build" title="View deployment on GitHub" target="_blank">
+                    <a href="@build" title="View deployment on GitHub" target="_blank" rel="noopener">
                         GitHub
                     </a>
                     </text>
