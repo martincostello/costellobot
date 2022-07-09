@@ -9,6 +9,19 @@ html {
 
 a {
     color: #0060C7;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a.btn:hover,
+a.dropdown-item:hover,
+a.navbar-brand:hover,
+a.nav-link:hover,
+a:not([href]):not([class]):hover {
+    text-decoration: none;
 }
 
 code.webhook-content {
@@ -22,6 +35,10 @@ img.user-profile {
 
 textarea.form-payload {
     resize: none;
+}
+
+.bg-dark {
+    background-color: #343a40 !important;
 }
 
 .body-content {

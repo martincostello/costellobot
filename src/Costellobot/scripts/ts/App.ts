@@ -104,8 +104,8 @@ export class App {
             const result = await this.postJson(event, payload, signature);
 
             badge.textContent = result.status.toString(10);
-            badge.classList.add(result.isOK ? 'badge-success' : 'badge-danger');
-            badge.classList.remove(result.isOK ? 'badge-danger' : 'badge-success');
+            badge.classList.add(result.isOK ? 'bg-success' : 'bg-danger');
+            badge.classList.remove(result.isOK ? 'bg-danger' : 'bg-success');
 
             this.show(badge);
             this.enable(this.webhookSubmit);
@@ -158,7 +158,7 @@ export class App {
         indexItem.classList.add('webhook-item');
 
         indexItem.setAttribute('id', indexId);
-        indexItem.setAttribute('data-toggle', 'list');
+        indexItem.setAttribute('data-bs-toggle', 'list');
         indexItem.setAttribute('href', `#${contentId}`);
         indexItem.setAttribute('role', 'tab');
         indexItem.setAttribute('aria-controls', contentId);
