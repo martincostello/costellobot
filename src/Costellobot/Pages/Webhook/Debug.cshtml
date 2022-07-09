@@ -5,25 +5,33 @@
 }
 <div id="debug-content" app-id="@(Model.AppId)">
   <form action="#">
-    <div class="form-group">
-      <label for="webhook-event"><a href="https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads" target="_blank" rel="noopener">Event</a></label>
-      <select id="webhook-event" class="form-control text-webhook" autofocus="autofocus" aria-label="Event" aria-describedby="webhook-event-help">
+    <div class="mb-3">
+      <label for="webhook-event" class="form-label">Event</label>
+      <select id="webhook-event" class="form-select text-webhook" autofocus="autofocus" aria-label="Event" aria-describedby="webhook-event-help">
         <option value="check_suite">check_suite</option>
         <option value="deployment_status">deployment_status</option>
         <option value="installation">installation</option>
         <option value="pull_request" selected>pull_request</option>
         <option value="status">status</option>
       </select>
+      <div id="webhook-event-help" class="form-text">
+        The name of the
+        <a href="https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads" target="_blank" rel="noopener">GitHub event</a>
+        associated with the webhook payload.
+      </div>
     </div>
     @if (Model.RequireSignature)
     {
-      <div class="form-group">
+      <div class="mb-3">
         <label for="webhook-signature">Signature</label>
-        <input id="webhook-signature" class="form-control" type="text" autocomplete="off" spellcheck="false">
+        <input id="webhook-signature" class="form-control" placeholder="sha256=5a797ecce27d941c46c6ea5c39d5b17b31881eabccb6f83f0dc8a7cb2666d836" type="text" autocomplete="off" spellcheck="false">
+        <div id="webhook-signature-help" class="form-text">
+          The SHA-256 signature for the payload.
+        </div>
       </div>
     }
-    <div class="form-group">
-      <label for="webhook-payload">Payload</label>
+    <div class="mb-3">
+      <label for="webhook-payload" class="form-label">Payload</label>
       @{
         string example = @"{
   ""action"": ""opened"",
@@ -37,6 +45,9 @@
 }";
       }
       <textarea id="webhook-payload" class="form-control form-payload text-webhook" placeholder="@(example)" rows="20" spellcheck="false" aria-describedby="webhook-payload-help"></textarea>
+      <div id="webhook-payload-help" class="form-text">
+        The JSON payload of the GitHub event.
+      </div>
     </div>
     <button id="post-webhook" type="submit" class="btn btn-primary" disabled>
       POST
