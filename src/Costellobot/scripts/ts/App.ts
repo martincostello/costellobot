@@ -17,6 +17,7 @@ export class App {
     private webhooksContentContainer: HTMLElement;
 
     private appId: string;
+    private webhookDelivery: number;
     private webhookEvent: HTMLInputElement;
     private webhookPayload: HTMLInputElement;
     private webhookSignature: HTMLInputElement;
@@ -66,6 +67,7 @@ export class App {
     private initiailizeDebug(webhookSubmit: HTMLElement) {
 
         this.appId = document.querySelector('[app-id]').getAttribute('app-id');
+        this.webhookDelivery = 1;
         this.webhookEvent = <HTMLInputElement>document.getElementById('webhook-event');
         this.webhookPayload = <HTMLInputElement>document.getElementById('webhook-payload');
         this.webhookSignature = <HTMLInputElement>document.getElementById('webhook-signature');
@@ -241,8 +243,12 @@ export class App {
 
         headers.set('Accept', 'application/json');
         headers.set('Content-Type', 'application/json');
+
+        headers.set('X-GitHub-Delivery', `debug-${this.webhookDelivery++}`);
         headers.set('X-GitHub-Event', event);
+        headers.set('X-GitHub-Hook-ID', 'debug');
         headers.set('X-GitHub-Hook-Installation-Target-ID', this.appId);
+        headers.set('X-GitHub-Hook-Installation-Target-Type', 'integration');
 
         if (signature) {
             headers.set('X-Hub-Signature-256', signature);
