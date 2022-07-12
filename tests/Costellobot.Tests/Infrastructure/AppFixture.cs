@@ -21,7 +21,7 @@ namespace MartinCostello.Costellobot.Infrastructure;
 
 public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAccessor
 {
-    private readonly Dictionary<string, string> _configOverrides = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string?> _configOverrides = new(StringComparer.OrdinalIgnoreCase);
 
     public AppFixture()
     {
@@ -93,21 +93,21 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
 
             var config = new[]
             {
-                KeyValuePair.Create("AzureKeyVault:ClientId", string.Empty),
-                KeyValuePair.Create("AzureKeyVault:ClientSecret", string.Empty),
-                KeyValuePair.Create("AzureKeyVault:TenantId", string.Empty),
-                KeyValuePair.Create("AzureKeyVault:Uri", string.Empty),
-                KeyValuePair.Create("ConnectionStrings:AzureStorage", string.Empty),
-                KeyValuePair.Create("GitHub:AccessToken", "gho_github-access-token"),
-                KeyValuePair.Create("GitHub:AppId", "123"),
-                KeyValuePair.Create("GitHub:ClientId", "github-id"),
-                KeyValuePair.Create("GitHub:ClientSecret", "github-secret"),
-                KeyValuePair.Create("GitHub:EnterpriseDomain", string.Empty),
-                KeyValuePair.Create("GitHub:InstallationId", InstallationId),
-                KeyValuePair.Create("GitHub:PrivateKey", testKey),
-                KeyValuePair.Create("GitHub:WebhookSecret", "github-webhook-secret"),
-                KeyValuePair.Create("Site:AdminUsers:0", "john-smith"),
-                KeyValuePair.Create("Webhook:DeployEnvironments:0", "production"),
+                KeyValuePair.Create<string, string?>("AzureKeyVault:ClientId", string.Empty),
+                KeyValuePair.Create<string, string?>("AzureKeyVault:ClientSecret", string.Empty),
+                KeyValuePair.Create<string, string?>("AzureKeyVault:TenantId", string.Empty),
+                KeyValuePair.Create<string, string?>("AzureKeyVault:Uri", string.Empty),
+                KeyValuePair.Create<string, string?>("ConnectionStrings:AzureStorage", string.Empty),
+                KeyValuePair.Create<string, string?>("GitHub:AccessToken", "gho_github-access-token"),
+                KeyValuePair.Create<string, string?>("GitHub:AppId", "123"),
+                KeyValuePair.Create<string, string?>("GitHub:ClientId", "github-id"),
+                KeyValuePair.Create<string, string?>("GitHub:ClientSecret", "github-secret"),
+                KeyValuePair.Create<string, string?>("GitHub:EnterpriseDomain", string.Empty),
+                KeyValuePair.Create<string, string?>("GitHub:InstallationId", InstallationId),
+                KeyValuePair.Create<string, string?>("GitHub:PrivateKey", testKey),
+                KeyValuePair.Create<string, string?>("GitHub:WebhookSecret", "github-webhook-secret"),
+                KeyValuePair.Create<string, string?>("Site:AdminUsers:0", "john-smith"),
+                KeyValuePair.Create<string, string?>("Webhook:DeployEnvironments:0", "production"),
             };
 
             configBuilder.AddInMemoryCollection(config);
