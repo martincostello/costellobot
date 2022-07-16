@@ -6,7 +6,6 @@ import * as moment from 'moment';
 import 'moment/locale/en-gb';
 
 export class App {
-
     private readonly connection: signalR.HubConnection;
     private readonly hidden = 'd-none';
     private readonly loaderSelector = '.spinner-border';
@@ -24,14 +23,10 @@ export class App {
     private webhookSubmit: HTMLElement;
 
     constructor() {
-        this.connection = new signalR.HubConnectionBuilder()
-            .withUrl('/admin/git-hub')
-            .withAutomaticReconnect()
-            .build();
+        this.connection = new signalR.HubConnectionBuilder().withUrl('/admin/git-hub').withAutomaticReconnect().build();
     }
 
     async initialize(): Promise<void> {
-
         const logsContainer = <HTMLInputElement>document.getElementById('logs');
         const webhookSubmit = document.getElementById('post-webhook');
 
@@ -43,7 +38,6 @@ export class App {
     }
 
     private async initializeLogs(logsContainer: HTMLInputElement): Promise<void> {
-
         this.logsContainer = logsContainer;
         this.webhooksIndexContainer = document.getElementById('webhooks-index');
         this.logsAutoscroll = <HTMLInputElement>document.getElementById('logs-auto-scroll');
@@ -59,13 +53,10 @@ export class App {
             this.onWebhook(webhookHeaders, webhookEvent);
         });
 
-        await this.connection
-            .start()
-            .catch((reason: any) => console.error(reason));
+        await this.connection.start().catch((reason: any) => console.error(reason));
     }
 
     private initiailizeDebug(webhookSubmit: HTMLElement) {
-
         this.appId = document.querySelector('[app-id]').getAttribute('app-id');
         this.webhookDelivery = 1;
         this.webhookEvent = <HTMLInputElement>document.getElementById('webhook-event');
@@ -87,7 +78,6 @@ export class App {
         });
 
         const onSubmit = async () => {
-
             const event = this.webhookEvent.value;
             const payload = JSON.parse(this.webhookPayload.value);
             let signature = '';
@@ -128,7 +118,6 @@ export class App {
     }
 
     private addWebhook(webhookHeaders: any, webhookEvent: any) {
-
         const delivery = webhookHeaders['X-GitHub-Delivery'];
         const event = webhookHeaders['X-GitHub-Event'];
 
@@ -206,7 +195,6 @@ export class App {
     }
 
     private addLog(logEntry: LogEntry) {
-
         const event = logEntry.eventName ?? logEntry.eventId;
         const timestamp = moment(logEntry.timestamp);
 
@@ -214,7 +202,8 @@ export class App {
             this.logsContainer.textContent += '\n';
         }
 
-        this.logsContainer.textContent += `${timestamp.toISOString()} [${logEntry.level}] ${logEntry.category}[${event}]: ${logEntry.message}`;
+        const timestampString = timestamp.toISOString();
+        this.logsContainer.textContent += `${timestampString} [${logEntry.level}] ${logEntry.category}[${event}]: ${logEntry.message}`;
 
         if (this.logsAutoscroll.checked) {
             this.logsContainer.scrollTop = this.logsContainer.scrollHeight;
@@ -238,7 +227,6 @@ export class App {
     }
 
     private async postJson(event: string, payload: any, signature: string): Promise<WebhookResult> {
-
         const headers = new Headers();
 
         headers.set('Accept', 'application/json');
@@ -257,14 +245,14 @@ export class App {
         const init = {
             method: 'POST',
             headers,
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
         };
 
         const response = await fetch('/github-webhook', init);
 
         return {
             isOK: response.ok,
-            status: response.status
+            status: response.status,
         };
     }
 }
