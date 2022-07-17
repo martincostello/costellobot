@@ -5,7 +5,7 @@
   "description": "GitHub automation for martincostello's repositories.",
   "scripts": {
     "build": "gulp default",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --coverage"
   },
   "repository": {
     "type": "git",
@@ -15,7 +15,6 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@microsoft/signalr": "^6.0.7",
-    "@types/moment": "^2.13.0",
     "@typescript-eslint/eslint-plugin": "^5.30.6",
     "@typescript-eslint/parser": "^5.30.6",
     "babel-core": "^6.26.3",
@@ -26,15 +25,18 @@
     "browserify": "^17.0.0",
     "eslint": "^8.19.0",
     "eslint-config-prettier": "^8.5.0",
-    "eventsource": "^2.0.2",
+    "eslint-plugin-jest": "^26.6.0",
     "gulp": "^4.0.2",
     "gulp-eslint": "^6.0.0",
+    "gulp-jest": "^4.0.4",
     "gulp-prettier": "^4.0.0",
     "gulp-sourcemaps": "^3.0.0",
     "gulp-typescript": "^5.0.1",
     "gulp-uglify": "^3.0.2",
+    "jest": "^28.1.3",
     "moment": "^2.29.4",
     "prettier": "^2.7.1",
+    "ts-jest": "^28.0.6",
     "tsify": "^5.0.4",
     "typescript": "^4.7.4",
     "vinyl-buffer": "^1.0.1",
