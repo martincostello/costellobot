@@ -3,6 +3,7 @@ const browserify = require('browserify');
 const buffer = require('vinyl-buffer');
 const eslint = require('gulp-eslint');
 const gulp = require('gulp');
+const jest = require('gulp-jest').default;
 const prettier = require('gulp-prettier');
 const source = require('vinyl-source-stream');
 const sourcemaps = require('gulp-sourcemaps');
@@ -56,7 +57,14 @@ gulp.task('build', function () {
         .pipe(gulp.dest('wwwroot/static/js'));
 });
 
-gulp.task('default', gulp.series('prettier', 'lint', 'build'));
+gulp.task('test', function () {
+    return gulp.src('scripts')
+        .pipe(jest({
+            collectCoverage: true
+        }));
+});
+
+gulp.task('default', gulp.series('prettier', 'lint', 'build', 'test'));
 
 gulp.task('watch', function () {
     gulp.watch(sourceFiles, gulp.series('default'));

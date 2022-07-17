@@ -2,7 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 import * as signalR from '@microsoft/signalr';
-import * as moment from 'moment';
+import moment from 'moment';
 import 'moment/locale/en-gb';
 
 export class App {
