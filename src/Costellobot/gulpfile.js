@@ -36,17 +36,8 @@ gulp.task('build', function () {
     })
         .plugin(tsify)
         .transform('babelify', {
-            presets: ['es2015'],
-            extensions: ['.ts'],
-            plugins: [
-                [
-                    'transform-runtime',
-                    {
-                        'polyfill': false,
-                        'regenerator': true
-                    }
-                ]
-            ]
+            presets: ['@babel/preset-env'],
+            extensions: ['.ts']
         })
         .bundle()
         .pipe(source('main.js'))
