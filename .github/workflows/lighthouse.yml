@@ -38,7 +38,7 @@ jobs:
         Start-Process nohup 'dotnet run --project ./src/Costellobot/Costellobot.csproj --configuration Release'
         $StatusCode = 0
         $Attempts = 0
-        While ($Attempts -lt 10) {
+        While ($Attempts -lt 20) {
           $Response = Try {
             Invoke-WebRequest "https://localhost:5001" -SkipCertificateCheck
           } catch {
