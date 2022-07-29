@@ -304,7 +304,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
         [LoggerMessage(
            EventId = 3,
            Level = LogLevel.Information,
-           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Owner}/{Repository} as auto-deploy is not environment for the {Environment} environment.")]
+           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Owner}/{Repository} as auto-deploy is not enabled for the {Environment} environment.")]
         public static partial void IgnoringDeploymentStatusAsEnvironmentNotEnabled(
             ILogger logger,
             long deploymentStatusId,
