@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
-  "id": "oauth",
+  "id": "oauth-http-bundle",
   "version": 1,
   "comment": "HTTP bundle for GitHub OAuth authentication.",
   "items": [

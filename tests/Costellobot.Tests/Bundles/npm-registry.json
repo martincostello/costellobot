@@ -1,0 +1,479 @@
+{
+  "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
+  "id": "npm-registry",
+  "version": 1,
+  "comment": "HTTP bundle for npm packages.",
+  "items": [
+    {
+      "comment": "The package for typescript v4.6.3",
+      "uri": "https://registry.npmjs.org/typescript/4.6.3",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "name": "typescript",
+        "author": "Microsoft Corp.",
+        "homepage": "https://www.typescriptlang.org/",
+        "version": "4.6.3",
+        "license": "Apache-2.0",
+        "description": "TypeScript is a language for application scale JavaScript development",
+        "keywords": [ "TypeScript", "Microsoft", "compiler", "language", "javascript" ],
+        "bugs": { "url": "https://github.com/Microsoft/TypeScript/issues" },
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/Microsoft/TypeScript.git"
+        },
+        "main": "./lib/typescript.js",
+        "typings": "./lib/typescript.d.ts",
+        "bin": {
+          "tsc": "bin/tsc",
+          "tsserver": "bin/tsserver"
+        },
+        "engines": { "node": ">=4.2.0" },
+        "packageManager": "npm@6.14.15",
+        "devDependencies": {
+          "@octokit/rest": "latest",
+          "@types/browserify": "latest",
+          "@types/chai": "latest",
+          "@types/convert-source-map": "latest",
+          "@types/glob": "latest",
+          "@types/gulp": "^4.0.9",
+          "@types/gulp-concat": "latest",
+          "@types/gulp-newer": "latest",
+          "@types/gulp-rename": "0.0.33",
+          "@types/gulp-sourcemaps": "0.0.32",
+          "@types/jake": "latest",
+          "@types/merge2": "latest",
+          "@types/microsoft__typescript-etw": "latest",
+          "@types/minimatch": "latest",
+          "@types/minimist": "latest",
+          "@types/mkdirp": "latest",
+          "@types/mocha": "latest",
+          "@types/ms": "latest",
+          "@types/node": "latest",
+          "@types/node-fetch": "^2.3.4",
+          "@types/q": "latest",
+          "@types/source-map-support": "latest",
+          "@types/through2": "latest",
+          "@types/xml2js": "^0.4.0",
+          "@typescript-eslint/eslint-plugin": "^4.28.0",
+          "@typescript-eslint/experimental-utils": "^4.28.0",
+          "@typescript-eslint/parser": "^4.28.0",
+          "async": "latest",
+          "azure-devops-node-api": "^11.0.1",
+          "browser-resolve": "^1.11.2",
+          "browserify": "latest",
+          "chai": "latest",
+          "chalk": "^4.1.2",
+          "convert-source-map": "latest",
+          "del": "5.1.0",
+          "diff": "^4.0.2",
+          "eslint": "7.12.1",
+          "eslint-formatter-autolinkable-stylish": "1.1.4",
+          "eslint-plugin-import": "2.22.1",
+          "eslint-plugin-jsdoc": "30.7.6",
+          "eslint-plugin-no-null": "1.0.2",
+          "fancy-log": "latest",
+          "fs-extra": "^9.0.0",
+          "glob": "latest",
+          "gulp": "^4.0.0",
+          "gulp-concat": "latest",
+          "gulp-insert": "latest",
+          "gulp-newer": "latest",
+          "gulp-rename": "latest",
+          "gulp-sourcemaps": "latest",
+          "merge2": "latest",
+          "minimist": "latest",
+          "mkdirp": "latest",
+          "mocha": "latest",
+          "mocha-fivemat-progress-reporter": "latest",
+          "ms": "^2.1.3",
+          "node-fetch": "^2.6.1",
+          "plugin-error": "latest",
+          "pretty-hrtime": "^1.0.3",
+          "prex": "^0.4.3",
+          "q": "latest",
+          "source-map-support": "latest",
+          "through2": "latest",
+          "typescript": "^4.5.5",
+          "vinyl": "latest",
+          "vinyl-sourcemaps-apply": "latest",
+          "xml2js": "^0.4.19"
+        },
+        "scripts": {
+          "prepare": "gulp build-eslint-rules",
+          "pretest": "gulp tests",
+          "test": "gulp runtests-parallel --light=false",
+          "test:eslint-rules": "gulp run-eslint-rules-tests",
+          "build": "npm run build:compiler && npm run build:tests",
+          "build:compiler": "gulp local",
+          "build:tests": "gulp tests",
+          "start": "node lib/tsc",
+          "clean": "gulp clean",
+          "gulp": "gulp",
+          "jake": "gulp",
+          "lint": "gulp lint",
+          "lint:ci": "gulp lint --ci",
+          "lint:compiler": "gulp lint-compiler",
+          "lint:scripts": "gulp lint-scripts",
+          "setup-hooks": "node scripts/link-hooks.js"
+        },
+        "browser": {
+          "fs": false,
+          "os": false,
+          "path": false,
+          "crypto": false,
+          "buffer": false,
+          "@microsoft/typescript-etw": false,
+          "source-map-support": false,
+          "inspector": false
+        },
+        "volta": { "node": "14.15.5" },
+        "_id": "typescript@4.6.3",
+        "_integrity": "sha512-yNIatDa5iaofVozS/uQJEl3JRWLKKGJKh6Yaiv0GLGSuhpFJe7P3SbHZ8/yjAHRQwKRoA6YZqlfjXWmVzoVSMw==",
+        "_resolved": "/home/vsts/work/r1/a/typescript.tgz",
+        "_from": "file:/home/vsts/work/r1/a/typescript.tgz",
+        "_nodeVersion": "16.14.0",
+        "_npmVersion": "8.3.1",
+        "dist": {
+          "integrity": "sha512-yNIatDa5iaofVozS/uQJEl3JRWLKKGJKh6Yaiv0GLGSuhpFJe7P3SbHZ8/yjAHRQwKRoA6YZqlfjXWmVzoVSMw==",
+          "shasum": "eefeafa6afdd31d725584c67a0eaba80f6fc6c6c",
+          "tarball": "https://registry.npmjs.org/typescript/-/typescript-4.6.3.tgz",
+          "fileCount": 183,
+          "unpackedSize": 64715549,
+          "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v4.10.10\r\nComment: https://openpgpjs.org\r\n\r\nwsFzBAEBCAAGBQJiPPEQACEJED1NWxICdlZqFiEECWMYAoorWMhJKdjhPU1b\r\nEgJ2Vmq/Vg//V+dYtlW+QD3lT2MEt7HY0RX7xqKed6fdoCo0JPy9TLpASHWl\r\nuUkMLq/TWRmhwfFjrQCQ1DxuI1Ec5oArzjk3BapsRzpY2kqSgu5WACwnNcA1\r\nar65jnlbslf2KwYTWkl4y0TEoA1kSYLdFkn+DAZXp2FO9x10aqDs8F5PDpKe\r\no6Pf/2TN0buvzFskYkharLfNBL4JR2X3RK/oNcNzdmYHjJinL2g2hQPOURQl\r\nSF20n8Mt5ajcpuo1Nc0TNZ4Ca25lioBHIc+mCTSmgqoTU1AEynCuwhuFGYOs\r\nnr6Eshx+jeaQmmDPzu/vA39D/QXBXR7xv5iNr6V8ci5CzclN1IqPZQjGeOxX\r\nIQa+pPG5oceT1JSWl6MOwkYObKT3zCXiy2GcmjW+gKjxa0Je6pCvQSrC5M77\r\nKAUFQSJYmptXafkLqf5oyGseVv4s+VQUV4n75Kj02gvE08iR9uBbo+cZMyaU\r\nWGAYpds5YtZxs+ocGFWmS+ZYVpmfCYOXx/f7BKm6zcUTlD3wascCx3yvptoU\r\nsshrVVESGsYt/Zw4g6iDKVl7GzWaOT8dsUmyuIxZXUKH3vbDHi4e6E60jWXZ\r\nexb6900qpceMt58DfhXYLgzz2LspTi8EEbqQItqfL3kbqz2EeqPAEnXYQmt6\r\n+XgxowuXVVdsWUWXUOLb4ITknZqPyONdcp4=\r\n=RGTD\r\n-----END PGP SIGNATURE-----\r\n",
+          "signatures": [
+            {
+              "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA",
+              "sig": "MEYCIQC2nE+S21l9av4qUReQA6d4U7kRpn26FPohwhMwe+DlbwIhAOxpIvPQVfKj0R7j158f5hLdYchFfQYDAI13AMGWZcn/"
+            }
+          ]
+        },
+        "_npmUser": {
+          "name": "typescript-bot",
+          "email": "typescript@microsoft.com"
+        },
+        "directories": {},
+        "maintainers": [
+          {
+            "name": "typescript-bot",
+            "email": "typescript@microsoft.com"
+          },
+          {
+            "name": "weswigham",
+            "email": "wwigham@gmail.com"
+          },
+          {
+            "name": "sanders_n",
+            "email": "ncsander@indiana.edu"
+          },
+          {
+            "name": "andrewbranch",
+            "email": "andrew@wheream.io"
+          },
+          {
+            "name": "minestarks",
+            "email": "mineyalc@microsoft.com"
+          },
+          {
+            "name": "rbuckton",
+            "email": "rbuckton@chronicles.org"
+          },
+          {
+            "name": "sheetalkamat",
+            "email": "shkamat@microsoft.com"
+          },
+          {
+            "name": "typescript-deploys",
+            "email": "typescript-design@microsoft.com"
+          }
+        ],
+        "_npmOperationalInternal": {
+          "host": "s3://npm-registry-packages",
+          "tmp": "tmp/typescript_4.6.3_1648161039993_0.36016311652567445"
+        },
+        "_hasShrinkwrap": false
+      }
+    },
+    {
+      "comment": "The package for @types/node v18.6.2",
+      "uri": "https://registry.npmjs.org/%40types%2Fnode/18.6.2",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "name": "@types/node",
+        "version": "18.6.2",
+        "description": "TypeScript definitions for Node.js",
+        "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node",
+        "license": "MIT",
+        "contributors": [
+          {
+            "name": "Microsoft TypeScript",
+            "url": "https://github.com/Microsoft",
+            "githubUsername": "Microsoft"
+          },
+          {
+            "name": "DefinitelyTyped",
+            "url": "https://github.com/DefinitelyTyped",
+            "githubUsername": "DefinitelyTyped"
+          },
+          {
+            "name": "Alberto Schiabel",
+            "url": "https://github.com/jkomyno",
+            "githubUsername": "jkomyno"
+          },
+          {
+            "name": "Alvis HT Tang",
+            "url": "https://github.com/alvis",
+            "githubUsername": "alvis"
+          },
+          {
+            "name": "Andrew Makarov",
+            "url": "https://github.com/r3nya",
+            "githubUsername": "r3nya"
+          },
+          {
+            "name": "Benjamin Toueg",
+            "url": "https://github.com/btoueg",
+            "githubUsername": "btoueg"
+          },
+          {
+            "name": "Chigozirim C.",
+            "url": "https://github.com/smac89",
+            "githubUsername": "smac89"
+          },
+          {
+            "name": "David Junger",
+            "url": "https://github.com/touffy",
+            "githubUsername": "touffy"
+          },
+          {
+            "name": "Deividas Bakanas",
+            "url": "https://github.com/DeividasBakanas",
+            "githubUsername": "DeividasBakanas"
+          },
+          {
+            "name": "Eugene Y. Q. Shen",
+            "url": "https://github.com/eyqs",
+            "githubUsername": "eyqs"
+          },
+          {
+            "name": "Hannes Magnusson",
+            "url": "https://github.com/Hannes-Magnusson-CK",
+            "githubUsername": "Hannes-Magnusson-CK"
+          },
+          {
+            "name": "Huw",
+            "url": "https://github.com/hoo29",
+            "githubUsername": "hoo29"
+          },
+          {
+            "name": "Kelvin Jin",
+            "url": "https://github.com/kjin",
+            "githubUsername": "kjin"
+          },
+          {
+            "name": "Klaus Meinhardt",
+            "url": "https://github.com/ajafff",
+            "githubUsername": "ajafff"
+          },
+          {
+            "name": "Lishude",
+            "url": "https://github.com/islishude",
+            "githubUsername": "islishude"
+          },
+          {
+            "name": "Mariusz Wiktorczyk",
+            "url": "https://github.com/mwiktorczyk",
+            "githubUsername": "mwiktorczyk"
+          },
+          {
+            "name": "Mohsen Azimi",
+            "url": "https://github.com/mohsen1",
+            "githubUsername": "mohsen1"
+          },
+          {
+            "name": "Nicolas Even",
+            "url": "https://github.com/n-e",
+            "githubUsername": "n-e"
+          },
+          {
+            "name": "Nikita Galkin",
+            "url": "https://github.com/galkin",
+            "githubUsername": "galkin"
+          },
+          {
+            "name": "Parambir Singh",
+            "url": "https://github.com/parambirs",
+            "githubUsername": "parambirs"
+          },
+          {
+            "name": "Sebastian Silbermann",
+            "url": "https://github.com/eps1lon",
+            "githubUsername": "eps1lon"
+          },
+          {
+            "name": "Simon Schick",
+            "url": "https://github.com/SimonSchick",
+            "githubUsername": "SimonSchick"
+          },
+          {
+            "name": "Thomas den Hollander",
+            "url": "https://github.com/ThomasdenH",
+            "githubUsername": "ThomasdenH"
+          },
+          {
+            "name": "Wilco Bakker",
+            "url": "https://github.com/WilcoBakker",
+            "githubUsername": "WilcoBakker"
+          },
+          {
+            "name": "wwwy3y3",
+            "url": "https://github.com/wwwy3y3",
+            "githubUsername": "wwwy3y3"
+          },
+          {
+            "name": "Samuel Ainsworth",
+            "url": "https://github.com/samuela",
+            "githubUsername": "samuela"
+          },
+          {
+            "name": "Kyle Uehlein",
+            "url": "https://github.com/kuehlein",
+            "githubUsername": "kuehlein"
+          },
+          {
+            "name": "Thanik Bhongbhibhat",
+            "url": "https://github.com/bhongy",
+            "githubUsername": "bhongy"
+          },
+          {
+            "name": "Marcin Kopacz",
+            "url": "https://github.com/chyzwar",
+            "githubUsername": "chyzwar"
+          },
+          {
+            "name": "Trivikram Kamat",
+            "url": "https://github.com/trivikr",
+            "githubUsername": "trivikr"
+          },
+          {
+            "name": "Junxiao Shi",
+            "url": "https://github.com/yoursunny",
+            "githubUsername": "yoursunny"
+          },
+          {
+            "name": "Ilia Baryshnikov",
+            "url": "https://github.com/qwelias",
+            "githubUsername": "qwelias"
+          },
+          {
+            "name": "ExE Boss",
+            "url": "https://github.com/ExE-Boss",
+            "githubUsername": "ExE-Boss"
+          },
+          {
+            "name": "Piotr Błażejewicz",
+            "url": "https://github.com/peterblazejewicz",
+            "githubUsername": "peterblazejewicz"
+          },
+          {
+            "name": "Anna Henningsen",
+            "url": "https://github.com/addaleax",
+            "githubUsername": "addaleax"
+          },
+          {
+            "name": "Victor Perin",
+            "url": "https://github.com/victorperin",
+            "githubUsername": "victorperin"
+          },
+          {
+            "name": "Yongsheng Zhang",
+            "url": "https://github.com/ZYSzys",
+            "githubUsername": "ZYSzys"
+          },
+          {
+            "name": "NodeJS Contributors",
+            "url": "https://github.com/NodeJS",
+            "githubUsername": "NodeJS"
+          },
+          {
+            "name": "Linus Unnebäck",
+            "url": "https://github.com/LinusU",
+            "githubUsername": "LinusU"
+          },
+          {
+            "name": "wafuwafu13",
+            "url": "https://github.com/wafuwafu13",
+            "githubUsername": "wafuwafu13"
+          },
+          {
+            "name": "Matteo Collina",
+            "url": "https://github.com/mcollina",
+            "githubUsername": "mcollina"
+          }
+        ],
+        "main": "",
+        "types": "index.d.ts",
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+          "directory": "types/node"
+        },
+        "scripts": {},
+        "dependencies": {},
+        "typesPublisherContentHash": "a7df569b45848b5af802c513c0bac5e342b40f2297a1492597939b74c0033e42",
+        "typeScriptVersion": "4.0",
+        "_id": "@types/node@18.6.2",
+        "dist": {
+          "integrity": "sha512-KcfkBq9H4PI6Vpu5B/KoPeuVDAbmi+2mDBqGPGUgoL7yXQtcWGu2vJWmmRkneWK3Rh0nIAX192Aa87AqKHYChQ==",
+          "shasum": "ffc5f0f099d27887c8d9067b54e55090fcd54126",
+          "tarball": "https://registry.npmjs.org/@types/node/-/node-18.6.2.tgz",
+          "fileCount": 61,
+          "unpackedSize": 1732637,
+          "signatures": [
+            {
+              "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA",
+              "sig": "MEUCIQD9MoLB9GR4hzQgjJRGWZtnLqBm5ZcCWksCCLSXIpOdJAIgG2wByPTVhyCOAqxxLCQggUvphvI55fkxeugRAinMavU="
+            }
+          ],
+          "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v4.10.10\r\nComment: https://openpgpjs.org\r\n\r\nwsFzBAEBCAAGBQJi4fVBACEJED1NWxICdlZqFiEECWMYAoorWMhJKdjhPU1b\r\nEgJ2VmpA5Q/+LXEL8sCUEP0q/hG1pkGlib7WymBd/S1aDXmwEynof9ZsGKVb\r\nSyWe7s4oE7YnFA4shzfjVclb1CIm6gqsn40FU9JzImPT8t9Hj6yQijpRXjY8\r\nSQ2hd0VbKk+Fs5X5+zG3fB1Rw67OikKOF8EUfJWAM94BmEMGuDrMSbz44y/5\r\nvGdISoRdqDHSROPwLbVqeZ3AjUvU+2GrIS386w1zhfxv0EQWtRUZD/MjrH6B\r\nDeHwo1HqpIGsI9DU4T2YBPnrapLe40/0+aIG+rO2ZdRGi5dHai/wiuRBfuap\r\nb/uP5LFE5tJH7IMdXTax84JbN0X081mUBFkgosPeSHOR4zaaw0sFE0sadUE8\r\nGv5oSDta0/Tr3VkyfVa3GvL8RMRXmhKNRBYDiav8e+l9+Ez1KRwQoERosSzW\r\no2U51i2YjcuPmn+N/8akbYvPXyXj4treaCkxibr42+u/w7dDHtOsBX/0wJ8B\r\nJ76y4fZaaJQiRue9cY8jX7Y1DV6706aR9kNWINYy2pwooHGBTrkc9oAUi7YU\r\nE5g4aiOadXpQpAqfR26SVFFbWzG23l94VGSycveUC9v1sCQnDGkzRqtI0Fdn\r\nIcI2UsdOGTh03CR7FRPp4ezVjAtY9dkyVUUOoWsLCZ/B4HIxs2CDmPk4BGAb\r\nQoiW1FGs3/m5GjuF7rt50npLeu04MgrYqvA=\r\n=WiW+\r\n-----END PGP SIGNATURE-----\r\n"
+        },
+        "_npmUser": {
+          "name": "types",
+          "email": "ts-npm-types@microsoft.com"
+        },
+        "directories": {},
+        "maintainers": [
+          {
+            "name": "types",
+            "email": "ts-npm-types@microsoft.com"
+          }
+        ],
+        "_npmOperationalInternal": {
+          "host": "s3://npm-registry-packages",
+          "tmp": "tmp/node_18.6.2_1658975553745_0.44494289227152306"
+        },
+        "_hasShrinkwrap": false
+      }
+    },
+    {
+      "comment": "A package that does not exist",
+      "uri": "https://registry.npmjs.org/foo/0.0.0",
+      "method": "GET",
+      "status": "404",
+      "contentFormat": "string",
+      "contentString": "version not found: 10.0.0"
+    },
+    {
+      "comment": "A package with an invalid version number",
+      "uri": "https://registry.npmjs.org/foo/0.0",
+      "method": "GET",
+      "status": "405",
+      "contentFormat": "json",
+      "contentJson": {
+        "code": "MethodNotAllowedError",
+        "message": "GET is not allowed"
+      }
+    }
+  ]
+}

@@ -7,11 +7,20 @@ public sealed class CompareResultBuilder : ResponseBuilder
 {
     public IList<GitHubCommitBuilder> Commits { get; set; } = new List<GitHubCommitBuilder>();
 
+    public string Status { get; set; } = "ahead";
+
+    public int AheadBy { get; set; } = 1;
+
+    public int BehindBy { get; set; }
+
     public override object Build()
     {
         return new
         {
             commits = Commits.Build(),
+            status = Status,
+            ahead_by = AheadBy,
+            behind_by = BehindBy,
         };
     }
 }

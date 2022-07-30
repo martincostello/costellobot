@@ -28,6 +28,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         var workflowRun = repo.CreateWorkflowRun();
 
         var newCommit = CreateTrustedCommit(repo);
+        var pullRequest = CreatePullRequestForCommit(newCommit);
 
         var pendingDeployment = CreateDeployment(sha: newCommit.Sha);
         var deploymentStatus = CreateDeploymentStatus();
@@ -56,6 +57,8 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             previousDeployment);
 
         RegisterGetPendingDeployments(repo, workflowRun.Id, pendingDeployment.CreatePendingDeployment());
+
+        RegisterGetPullRequestsForCommit(repo, newCommit.Sha, pullRequest);
 
         RegisterApprovePendingDeployments(
             repo,
@@ -101,13 +104,23 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         RegisterGetAccessToken();
 
-        var comparison = CreateComparison(
+        var trustedCommits = new[]
+        {
             headCommit,
             CreateTrustedCommit(repo),
             CreateTrustedCommit(repo),
             CreateTrustedCommit(repo),
             CreateTrustedCommit(repo),
-            CreateTrustedCommit(repo));
+            CreateTrustedCommit(repo),
+        };
+
+        foreach (var commit in trustedCommits)
+        {
+            var pullRequest = CreatePullRequestForCommit(commit);
+            RegisterGetPullRequestsForCommit(repo, commit.Sha, pullRequest);
+        }
+
+        var comparison = CreateComparison(trustedCommits);
 
         RegisterGetCompare(baseCommit, headCommit, comparison);
 
@@ -148,6 +161,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         var workflowRun = repo.CreateWorkflowRun();
 
         var newCommit = CreateTrustedCommit(repo);
+        var pullRequest = CreatePullRequestForCommit(newCommit);
 
         var pendingDeployment = CreateDeployment(sha: newCommit.Sha);
         var deploymentStatus = CreateDeploymentStatus();
@@ -180,6 +194,8 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         RegisterGetPendingDeployments(repo, workflowRun.Id, pendingDeployment.CreatePendingDeployment());
 
+        RegisterGetPullRequestsForCommit(repo, newCommit.Sha, pullRequest);
+
         RegisterApprovePendingDeployments(
             repo,
             workflowRun.Id,
@@ -208,6 +224,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         var workflowRun = repo.CreateWorkflowRun();
 
         var newCommit = CreateTrustedCommit(repo);
+        var pullRequest = CreatePullRequestForCommit(newCommit);
 
         var pendingDeployment = CreateDeployment(sha: newCommit.Sha);
         var deploymentStatus = CreateDeploymentStatus();
@@ -236,6 +253,8 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             previousDeployment);
 
         RegisterGetPendingDeployments(repo, workflowRun.Id, pendingDeployment.CreatePendingDeployment());
+
+        RegisterGetPullRequestsForCommit(repo, newCommit.Sha, pullRequest);
 
         RegisterApprovePendingDeployments(
             repo,
@@ -538,6 +557,53 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Fact]
+    public async Task Deployment_Is_Not_Approved_For_Commits_Behind()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var workflowRun = repo.CreateWorkflowRun();
+
+        var commit = CreateTrustedCommit(repo);
+
+        var pendingDeployment = CreateDeployment(sha: commit.Sha);
+        var deploymentStatus = CreateDeploymentStatus();
+
+        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
+        activeDeployment.Sha = commit.Sha;
+
+        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+
+        var deploymentApproved = new TaskCompletionSource();
+
+        RegisterGetAccessToken();
+
+        var comparison = CreateComparison();
+        comparison.Status = "behind";
+        comparison.AheadBy = 0;
+        comparison.BehindBy = 1;
+
+        RegisterGetCompare(commit, commit, comparison);
+
+        RegisterGetDeployments(
+            repo,
+            pendingDeployment.Environment,
+            pendingDeployment,
+            activeDeployment,
+            previousDeployment);
+
+        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+
+        // Act
+        using var response = await PostWebhookAsync("deployment_status", value);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Fact]
     public async Task Deployment_Is_Not_Approved_For_Untrusted_User()
     {
         // Arrange
@@ -709,9 +775,18 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         await Should.NotThrowAsync(() => target.HandleAsync(message));
     }
 
+    private static PullRequestBuilder CreatePullRequestForCommit(GitHubCommitBuilder commit)
+    {
+        var pullRequest = commit.Repository.CreatePullRequest(commit.Author);
+
+        pullRequest.RefHead = "dependabot/nuget/NodaTimeVersion-3.0.10";
+
+        return pullRequest;
+    }
+
     private static GitHubCommitBuilder CreateTrustedCommit(RepositoryBuilder repo)
     {
-        var dependabot = CreateUser("dependabot[bot]");
+        var dependabot = CreateUserForDependabot();
 
         var commit = repo.CreateCommit(dependabot);
         commit.Message = TrustedCommitMessage();
@@ -721,7 +796,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
     private static GitHubCommitBuilder CreateUntrustedCommit(RepositoryBuilder repo)
     {
-        var dependabot = CreateUser("dependabot[bot]");
+        var dependabot = CreateUserForDependabot();
 
         var commit = repo.CreateCommit(dependabot);
         commit.Message = UntrustedCommitMessage();

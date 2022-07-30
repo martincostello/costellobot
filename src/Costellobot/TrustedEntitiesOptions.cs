@@ -7,5 +7,7 @@ public sealed class TrustedEntitiesOptions
 {
     public IList<string> Dependencies { get; set; } = new List<string>();
 
+    public IDictionary<DependencyEcosystem, IList<string>> Publishers { get; set; } = new Dictionary<DependencyEcosystem, IList<string>>();
+
     public IList<string> Users { get; set; } = new List<string>();
 }

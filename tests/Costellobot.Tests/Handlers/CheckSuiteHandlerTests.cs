@@ -158,7 +158,7 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "2");
 
-        var user = CreateUser("dependabot[bot]");
+        var user = CreateUserForDependabot();
         var owner = CreateUser();
         var repository = owner.CreateRepository();
         var pullRequest = repository.CreatePullRequest(user);
