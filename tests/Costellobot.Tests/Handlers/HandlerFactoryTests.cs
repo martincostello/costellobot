@@ -28,6 +28,7 @@ public static class HandlerFactoryTests
         var gitHubClient = Mock.Of<IGitHubClientForInstallation>();
 
         var commitAnalyzer = new GitCommitAnalyzer(
+            Array.Empty<Registries.IPackageRegistry>(),
             webhookOptions,
             NullLoggerFactory.Instance.CreateLogger<GitCommitAnalyzer>());
 

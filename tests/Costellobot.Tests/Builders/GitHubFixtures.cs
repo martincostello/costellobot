@@ -14,6 +14,8 @@ public static class GitHubFixtures
 
     public const string DependabotBotName = "app/dependabot";
 
+    public const string DependabotCommitter = "dependabot[bot]";
+
     public const string GitHubActionsBotName = "app/github-actions";
 
     public const string InstallationId = "42";
@@ -133,6 +135,9 @@ public static class GitHubFixtures
         return builder;
     }
 
+    public static UserBuilder CreateUserForDependabot()
+        => CreateUser(DependabotCommitter);
+
     public static UserBuilder CreateUser(
         string? login = null,
         int? id = null,
@@ -191,9 +196,9 @@ updated-dependencies:
 
 Signed-off-by: dependabot[bot] <support@github.com>";
 
-    public static string TrustedCommitMessage(string dependency) => $@"
-Bump {dependency} from 5.0.0 to 5.0.1
-Bumps [{dependency}](https://github.com/actions/toolkit/tree/HEAD/packages/github) from 5.0.0 to 5.0.1.
+    public static string TrustedCommitMessage(string dependency, string version = "5.0.1") => $@"
+Bump {dependency} from 5.0.0 to {version}
+Bumps [{dependency}](https://github.com/actions/toolkit/tree/HEAD/packages/github) from 5.0.0 to {version}.
 - [Release notes](https://github.com/actions/toolkit/releases)
 - [Changelog](https://github.com/actions/toolkit/blob/main/packages/github/RELEASES.md)
 - [Commits](https://github.com/actions/toolkit/commits/HEAD/packages/github)

@@ -23,6 +23,10 @@ public sealed class PullRequestBuilder : ResponseBuilder
 
     public RepositoryBuilder Repository { get; set; }
 
+    public string RefBase { get; set; } = "main";
+
+    public string RefHead { get; set; } = "dependabot/nuget/Foo-1.2.3";
+
     public string ShaBase { get; set; } = RandomString();
 
     public string ShaHead { get; set; } = RandomString();
@@ -41,13 +45,14 @@ public sealed class PullRequestBuilder : ResponseBuilder
             author_association = AuthorAssociation,
             @base = new
             {
-                @ref = "main",
+                @ref = RefBase,
                 sha = ShaBase,
                 repo = Repository.Build(),
             },
             draft = IsDraft,
             head = new
             {
+                @ref = RefHead,
                 sha = ShaHead,
             },
             html_url = $"https://github.com/{Repository.Owner.Login}/{Repository.Name}/pull/{Number}",

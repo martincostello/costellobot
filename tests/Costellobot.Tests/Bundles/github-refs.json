@@ -1,0 +1,130 @@
+{
+  "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
+  "id": "github-refs",
+  "version": 1,
+  "comment": "HTTP bundle for GitHub references.",
+  "items": [
+    {
+      "comment": "actions/checkout ref for tag v3",
+      "uri": "https://api.github.com/repos/actions/checkout/git/refs/tags/v3",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "ref": "refs/tags/v3",
+        "node_id": "MDM6UmVmMTk3ODE0NjI5OnJlZnMvdGFncy92Mw==",
+        "url": "https://api.github.com/repos/actions/checkout/git/refs/tags/v3",
+        "object": {
+          "sha": "d0651293c4a5a52e711f25b41b05b2212f385d28",
+          "type": "tag",
+          "url": "https://api.github.com/repos/actions/checkout/git/tags/d0651293c4a5a52e711f25b41b05b2212f385d28"
+        }
+      }
+    },
+    {
+      "comment": "actions/checkout ref for tag 3",
+      "uri": "https://api.github.com/repos/actions/checkout/git/refs/tags/3",
+      "method": "GET",
+      "status": "404",
+      "contentFormat": "json",
+      "contentJson": {
+        "message": "Not Found",
+        "documentation_url": "https://docs.github.com/rest/reference/git#get-a-reference"
+      }
+    },
+    {
+      "comment": "actions/checkout ref for tag 2541b1294d2704b0964813337f33b291d3f8596b",
+      "uri": "https://api.github.com/repos/actions/checkout/git/refs/tags/2541b1294d2704b0964813337f33b291d3f8596b",
+      "method": "GET",
+      "status": "404",
+      "contentFormat": "json",
+      "contentJson": {
+        "message": "Not Found",
+        "documentation_url": "https://docs.github.com/rest/reference/git#get-a-reference"
+      }
+    },
+    {
+      "comment": "actions/checkout ref for tag v2541b1294d2704b0964813337f33b291d3f8596b",
+      "uri": "https://api.github.com/repos/actions/checkout/git/refs/tags/v2541b1294d2704b0964813337f33b291d3f8596b",
+      "method": "GET",
+      "status": "404",
+      "contentFormat": "json",
+      "contentJson": {
+        "message": "Not Found",
+        "documentation_url": "https://docs.github.com/rest/reference/git#get-a-reference"
+      }
+    },
+    {
+      "comment": "foo/bar ref for tag v1",
+      "uri": "https://api.github.com/repos/foo/bar/git/refs/tags/v1",
+      "method": "GET",
+      "status": "404",
+      "contentFormat": "json",
+      "contentJson": {
+        "message": "Not Found",
+        "documentation_url": "https://docs.github.com/rest/reference/git#get-a-reference"
+      }
+    },
+    {
+      "comment": "foo/bar ref for tag 1",
+      "uri": "https://api.github.com/repos/foo/bar/git/refs/tags/1",
+      "method": "GET",
+      "status": "404",
+      "contentFormat": "json",
+      "contentJson": {
+        "message": "Not Found",
+        "documentation_url": "https://docs.github.com/rest/reference/git#get-a-reference"
+      }
+    },
+    {
+      "comment": "foo/bar ref for commit v1",
+      "uri": "https://api.github.com/repos/foo/bar/git/commits/v1",
+      "method": "GET",
+      "status": "404",
+      "contentFormat": "json",
+      "contentJson": {
+        "message": "Not Found",
+        "documentation_url": "https://docs.github.com/rest/reference/git#get-a-reference"
+      }
+    },
+    {
+      "comment": "actions/checkout commit for 2541b1294d2704b0964813337f33b291d3f8596b",
+      "uri": "https://api.github.com/repos/actions/checkout/git/commits/2541b1294d2704b0964813337f33b291d3f8596b",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "sha": "2541b1294d2704b0964813337f33b291d3f8596b",
+        "node_id": "C_kwDOC8ppZdoAKDI1NDFiMTI5NGQyNzA0YjA5NjQ4MTMzMzdmMzNiMjkxZDNmODU5NmI",
+        "url": "https://api.github.com/repos/actions/checkout/git/commits/2541b1294d2704b0964813337f33b291d3f8596b",
+        "html_url": "https://github.com/actions/checkout/commit/2541b1294d2704b0964813337f33b291d3f8596b",
+        "author": {
+          "name": "Tingluo Huang",
+          "email": "tingluohuang@github.com",
+          "date": "2022-04-21T14:29:04Z"
+        },
+        "committer": {
+          "name": "GitHub",
+          "email": "noreply@github.com",
+          "date": "2022-04-21T14:29:04Z"
+        },
+        "tree": {
+          "sha": "6d353f968fc9fef16beee1b8720266ca4c177006",
+          "url": "https://api.github.com/repos/actions/checkout/git/trees/6d353f968fc9fef16beee1b8720266ca4c177006"
+        },
+        "message": "Prepare changelog for v3.0.2. (#777)",
+        "parents": [
+          {
+            "sha": "0ffe6f9c5599e73776da5b7f113e994bc0a76ede",
+            "url": "https://api.github.com/repos/actions/checkout/git/commits/0ffe6f9c5599e73776da5b7f113e994bc0a76ede",
+            "html_url": "https://github.com/actions/checkout/commit/0ffe6f9c5599e73776da5b7f113e994bc0a76ede"
+          }
+        ],
+        "verification": {
+          "verified": true,
+          "reason": "valid",
+          "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsBcBAABCAAQBQJiYWowCRBK7hj4Ov3rIwAAgQwIAJTPPEYL2EKQp4zQ+QAHTVqF\nFjHh7B2v0nZ35z3hFo6CYthO16oKGRJTTKnAajsD3nXk+B7p9ufpdLvXDBbjUE9V\nS0/wKFGht8YV9KLud6KfdhGeZM9flhhCtC4rbJLsSpxQBgm2fag13OHSkzJ1zwIE\nUYEwDZnvMwh85L2CL0qTqnvAw9WcJJftyaCC4qg3HjBzLnxGwYi0bzdPPyXy0tm0\nIVMcxXWARICuNeoS6QTmyp/ZV2dupHdf2agEnn8hSQ+2P0APE3DM+db1zz3k6bEu\noz2XdwH0MleSMHpFhkkTpqXTh8j26lJdSjKaAPe2JnTBCSZ7n/PfZ+YcN3lADN0=\n=5dU9\n-----END PGP SIGNATURE-----\n",
+          "payload": "tree 6d353f968fc9fef16beee1b8720266ca4c177006\nparent 0ffe6f9c5599e73776da5b7f113e994bc0a76ede\nauthor Tingluo Huang <tingluohuang@github.com> 1650551344 -0400\ncommitter GitHub <noreply@github.com> 1650551344 -0400\n\nPrepare changelog for v3.0.2. (#777)\n\n"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
+  "id": "github-submodules",
+  "version": 1,
+  "comment": "HTTP bundle for GitHub submodule content.",
+  "items": [
+    {
+      "comment": "dotnet/aspnetcore content for src/submodules/foo",
+      "uri": "https://api.github.com/repos/dotnet/aspnetcore/contents/src/submodules/foo",
+      "contentFormat": "json",
+      "contentJson": {
+        "message": "Not Found",
+        "documentation_url": "https://docs.github.com/rest/reference/repos#get-repository-content"
+      }
+    },
+    {
+      "comment": "dotnet/aspnetcore content for src/submodules/googletest",
+      "uri": "https://api.github.com/repos/dotnet/aspnetcore/contents/src/submodules/googletest",
+      "contentFormat": "json",
+      "contentJson": {
+        "name": "googletest",
+        "path": "src/submodules/googletest",
+        "sha": "7735334a46da480a749945c0f645155d90d73855",
+        "size": 0,
+        "url": "https://api.github.com/repos/dotnet/aspnetcore/contents/src/submodules/googletest?ref=main",
+        "html_url": "https://github.com/google/googletest/tree/7735334a46da480a749945c0f645155d90d73855",
+        "git_url": "https://api.github.com/repos/google/googletest/git/trees/7735334a46da480a749945c0f645155d90d73855",
+        "download_url": null,
+        "type": "submodule",
+        "submodule_git_url": "https://github.com/google/googletest",
+        "_links": {
+          "self": "https://api.github.com/repos/dotnet/aspnetcore/contents/src/submodules/googletest?ref=main",
+          "git": "https://api.github.com/repos/google/googletest/git/trees/7735334a46da480a749945c0f645155d90d73855",
+          "html": "https://github.com/google/googletest/tree/7735334a46da480a749945c0f645155d90d73855"
+        }
+      }
+    }
+  ]
+}

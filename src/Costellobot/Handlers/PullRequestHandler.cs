@@ -7,6 +7,7 @@ using Octokit.GraphQL;
 using Octokit.GraphQL.Model;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
+using Octokit.Webhooks.Events.PullRequest;
 using IConnection = Octokit.GraphQL.IConnection;
 using PullRequestMergeMethod = Octokit.GraphQL.Model.PullRequestMergeMethod;
 
@@ -49,9 +50,11 @@ public sealed partial class PullRequestHandler : IHandler
 
         string owner = body.Repository!.Owner.Login;
         string name = body.Repository.Name;
-        long number = body.PullRequest!.Number;
+        int number = (int)body.PullRequest!.Number;
 
-        if (await IsTrustedDependencyUpdateAsync(body))
+        bool isTrusted = await IsTrustedDependencyUpdateAsync(body);
+
+        if (isTrusted)
         {
             var options = _options.CurrentValue;
 
@@ -95,12 +98,12 @@ public sealed partial class PullRequestHandler : IHandler
     private async Task ApproveAsync(
         string owner,
         string name,
-        long number)
+        int number)
     {
         await _client.PullRequest.Review.Create(
             owner,
             name,
-            (int)number,
+            number,
             new()
             {
                 Body = _options.CurrentValue.ApproveComment,
@@ -113,14 +116,14 @@ public sealed partial class PullRequestHandler : IHandler
     private async Task EnableAutoMergeAsync(
         string owner,
         string name,
-        long number,
+        int number,
         string nodeId,
         PullRequestMergeMethod mergeMethod)
     {
         var input = new EnablePullRequestAutoMergeInput()
         {
             MergeMethod = mergeMethod,
-            PullRequestId = new ID(nodeId),
+            PullRequestId = new(nodeId),
         };
 
         var query = new Mutation()
@@ -141,7 +144,7 @@ public sealed partial class PullRequestHandler : IHandler
 
     private bool IsNewPullRequestFromTrustedUser(PullRequestEvent message)
     {
-        if (!string.Equals(message.Action, "opened", StringComparison.Ordinal))
+        if (!string.Equals(message.Action, PullRequestActionValue.Opened, StringComparison.Ordinal))
         {
             Log.IgnoringPullRequestAction(
                 _logger,
@@ -191,9 +194,10 @@ public sealed partial class PullRequestHandler : IHandler
             name,
             message.PullRequest.Head.Sha);
 
-        return _commitAnalyzer.IsTrustedDependencyUpdate(
+        return await _commitAnalyzer.IsTrustedDependencyUpdateAsync(
             owner,
             name,
+            message.PullRequest.Head.Ref,
             commit);
     }
 

@@ -25,7 +25,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.OverrideConfiguration("Webhook:Approve", bool.TrueString);
 
-        var user = CreateUser("dependabot[bot]");
+        var user = CreateUserForDependabot();
         var pullRequest = CreatePullRequest(user);
 
         var commit = pullRequest.CreateCommit();
@@ -68,7 +68,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.OverrideConfiguration("Webhook:Automerge", bool.TrueString);
 
-        var user = CreateUser("dependabot[bot]");
+        var user = CreateUserForDependabot();
         var owner = CreateUser();
         var repo = owner.CreateRepository();
 
@@ -129,7 +129,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.OverrideConfiguration("Webhook:Automerge", bool.TrueString);
 
-        var user = CreateUser("dependabot[bot]");
+        var user = CreateUserForDependabot();
         var pullRequest = CreatePullRequest(user);
 
         var commit = pullRequest.CreateCommit();
@@ -167,7 +167,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.OverrideConfiguration("Webhook:Approve", bool.TrueString);
 
-        var user = CreateUser("dependabot[bot]");
+        var user = CreateUserForDependabot();
         var pullRequest = CreatePullRequest(user);
 
         var commit = pullRequest.CreateCommit();
@@ -231,7 +231,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.OverrideConfiguration("Webhook:Approve", bool.TrueString);
 
-        var user = CreateUser("dependabot[bot]");
+        var user = CreateUserForDependabot();
         var pullRequest = CreatePullRequest(user);
         var commit = pullRequest.CreateCommit();
 
@@ -277,7 +277,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.OverrideConfiguration("Webhook:Approve", bool.TrueString);
 
-        var user = CreateUser("dependabot[bot]");
+        var user = CreateUserForDependabot();
         var pullRequest = CreatePullRequest(user);
 
         var commit = pullRequest.CreateCommit();
@@ -309,7 +309,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.OverrideConfiguration("Webhook:Approve", bool.TrueString);
 
-        var user = CreateUser("dependabot[bot]");
+        var user = CreateUserForDependabot();
         var pullRequest = CreatePullRequest(user);
 
         pullRequest.IsDraft = true;

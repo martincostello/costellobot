@@ -75,39 +75,9 @@ public sealed partial class DeploymentStatusHandler : IHandler
             return;
         }
 
-        // Diff the active and pending deployment and verify that only trusted dependency
-        // changes from trusted users contribute to the changes pending to be deployed.
-        var comparison = await _client.Repository.Commit.Compare(
-            owner,
-            name,
-            activeDeployment.Sha,
-            deploy.Sha);
-
-        if (comparison.Commits.Count < 1)
+        if (!await CanDeployChangesAsync(repo, deploy, activeDeployment))
         {
-            Log.NoCommitsFoundForPendingDeployment(_logger, activeDeployment.Id, deploy.Id, owner, name);
             return;
-        }
-
-        foreach (var commit in comparison.Commits)
-        {
-            if (commit.Parents.Count > 1)
-            {
-                // Ignore merge commits
-                continue;
-            }
-
-            if (!options.TrustedEntities.Users.Contains(commit.Author.Login))
-            {
-                Log.UntrustedCommitAuthorFound(_logger, deploy.Id, owner, name, commit.Sha, commit.Author.Login);
-                return;
-            }
-
-            if (!_commitAnalyzer.IsTrustedDependencyUpdate(repo.Owner.Login, repo.Name, commit))
-            {
-                Log.IgnoringCommitThatIsNotATrustedCommit(_logger, deploy.Id, owner, name, commit.Sha);
-                return;
-            }
         }
 
         var workflowsClient = _client.WorkflowRuns();
@@ -165,7 +135,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
 
     private bool IsDeploymentWaitingForApproval(DeploymentStatusEvent message)
     {
-        if (!string.Equals(message.Action, DeploymentStatusAction.Created, StringComparison.Ordinal))
+        if (!string.Equals(message.Action, DeploymentStatusActionValue.Created, StringComparison.Ordinal))
         {
             Log.IgnoringDeploymentStatusAction(
                 _logger,
@@ -274,6 +244,97 @@ public sealed partial class DeploymentStatusHandler : IHandler
                 _ => false,
             };
         }
+    }
+
+    private async Task<string?> GetRefForCommitFromPullRequestAsync(
+        string owner,
+        string repo,
+        string sha)
+    {
+        // See https://docs.github.com/en/rest/commits/commits#list-pull-requests-associated-with-a-commit.
+        var pullRequests = await _client.Connection.GetResponse<PullRequest[]>(
+            new($"repos/{owner}/{repo}/commits/{sha}/pulls", UriKind.Relative));
+
+        if (pullRequests.Body is { Length: 1 } pulls)
+        {
+            var pullRequest = pulls[0];
+            string reference = pullRequest.Head.Ref;
+
+            Log.FoundReferenceForCommitPullRequest(
+                _logger,
+                sha,
+                reference,
+                owner,
+                repo,
+                pullRequest.Number);
+
+            return reference;
+        }
+
+        return null;
+    }
+
+    private async Task<bool> CanDeployChangesAsync(
+        Octokit.Webhooks.Models.Repository repository,
+        Octokit.Webhooks.Models.DeploymentStatusEvent.Deployment pendingDeployment,
+        Octokit.Deployment activeDeployment)
+    {
+        string owner = repository.Owner.Login;
+        string name = repository.Name;
+
+        // Diff the active and pending deployment and verify that only trusted dependency
+        // changes from trusted users contribute to the changes pending to be deployed.
+        var comparison = await _client.Repository.Commit.Compare(
+            owner,
+            name,
+            activeDeployment.Sha,
+            pendingDeployment.Sha);
+
+        if (comparison.Commits.Count < 1)
+        {
+            Log.NoCommitsFoundForPendingDeployment(_logger, activeDeployment.Id, pendingDeployment.Id, owner, name);
+            return false;
+        }
+
+        if (comparison.Status is not "ahead")
+        {
+            Log.PendingDeploymentIsBehindTheActiveDeployment(_logger, pendingDeployment.Id, owner, name, comparison.BehindBy);
+            return false;
+        }
+
+        foreach (var commit in comparison.Commits)
+        {
+            if (commit.Parents.Count > 1)
+            {
+                // Ignore merge commits
+                continue;
+            }
+
+            if (!_webhookOptions.CurrentValue.TrustedEntities.Users.Contains(commit.Author.Login))
+            {
+                Log.UntrustedCommitAuthorFound(_logger, pendingDeployment.Id, owner, name, commit.Sha, commit.Author.Login);
+                return false;
+            }
+
+            string? reference = await GetRefForCommitFromPullRequestAsync(
+                owner,
+                name,
+                commit.Sha);
+
+            bool isTrustedCommit = await _commitAnalyzer.IsTrustedDependencyUpdateAsync(
+                repository.Owner.Login,
+                repository.Name,
+                reference,
+                commit);
+
+            if (!isTrustedCommit)
+            {
+                Log.IgnoringCommitThatIsNotATrustedCommit(_logger, pendingDeployment.Id, owner, name, commit.Sha);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -417,5 +478,28 @@ public sealed partial class DeploymentStatusHandler : IHandler
             long runId,
             string owner,
             string repository);
+
+        [LoggerMessage(
+           EventId = 14,
+           Level = LogLevel.Debug,
+           Message = "Commit {Sha} is associated with reference {Reference} from pull request {Owner}/{Repository}#{Number}.")]
+        public static partial void FoundReferenceForCommitPullRequest(
+            ILogger logger,
+            string sha,
+            string reference,
+            string owner,
+            string repository,
+            long number);
+
+        [LoggerMessage(
+           EventId = 15,
+           Level = LogLevel.Information,
+           Message = "The pending deployment ID {PendingDeploymentId} for {Owner}/{Repository} is {Count} commits behind.")]
+        public static partial void PendingDeploymentIsBehindTheActiveDeployment(
+            ILogger logger,
+            long pendingDeploymentId,
+            string owner,
+            string repository,
+            int count);
     }
 }
