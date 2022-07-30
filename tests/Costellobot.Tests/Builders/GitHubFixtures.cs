@@ -66,6 +66,9 @@ public static class GitHubFixtures
         return builder;
     }
 
+    public static DeploymentBuilder CreateDeployment(GitHubCommitBuilder commit)
+        => CreateDeployment(sha: commit.Sha);
+
     public static DeploymentBuilder CreateDeployment(
         string? environment = null,
         string? sha = null)

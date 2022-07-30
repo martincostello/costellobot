@@ -2,7 +2,9 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Net;
+using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Builders;
+using MartinCostello.Costellobot.Drivers;
 using MartinCostello.Costellobot.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
@@ -23,53 +25,30 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
-        var workflowRun = repo.CreateWorkflowRun();
+        var driver = new DeploymentStatusDriver(
+            (repo) => repo.CreateCommit(),
+            (repo) => CreateTrustedCommit(repo));
 
-        var newCommit = CreateTrustedCommit(repo);
-        var pullRequest = CreatePullRequestForCommit(newCommit);
+        driver.WithPendingDeployment(
+            (commit) => CreateDeployment(commit));
 
-        var pendingDeployment = CreateDeployment(sha: newCommit.Sha);
-        var deploymentStatus = CreateDeploymentStatus();
-
-        var otherUser = CreateUser();
-        var existingCommit = repo.CreateCommit(otherUser);
-
-        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
-        activeDeployment.Sha = existingCommit.Sha;
-
-        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+        driver.WithActiveDeployment();
+        driver.WithInactiveDeployment();
 
         var deploymentApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
 
-        var comparison = CreateComparison(newCommit);
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
+        RegisterPullRequestForCommit(driver.HeadCommit);
 
-        RegisterGetCompare(existingCommit, newCommit, comparison);
-
-        RegisterGetDeployments(
-            repo,
-            pendingDeployment.Environment,
-            pendingDeployment,
-            activeDeployment,
-            previousDeployment);
-
-        RegisterGetPendingDeployments(repo, workflowRun.Id, pendingDeployment.CreatePendingDeployment());
-
-        RegisterGetPullRequestsForCommit(repo, newCommit.Sha, pullRequest);
-
-        RegisterApprovePendingDeployments(
-            repo,
-            workflowRun.Id,
-            pendingDeployment,
+        RegisterApprovePendingDeployment(
+            driver,
             (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
 
-        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
-
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -83,66 +62,40 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
-        var workflowRun = repo.CreateWorkflowRun();
+        var driver = new DeploymentStatusDriver(
+            (repo) => repo.CreateCommit(),
+            (repo) => CreateTrustedCommit(repo));
 
-        var headCommit = CreateTrustedCommit(repo);
+        driver.WithPendingDeployment(
+            (commit) => CreateDeployment(commit));
 
-        var pendingDeployment = CreateDeployment(sha: headCommit.Sha);
-        var deploymentStatus = CreateDeploymentStatus();
+        driver.WithActiveDeployment();
+        driver.WithInactiveDeployment();
 
-        var otherUser = CreateUser();
-        var baseCommit = repo.CreateCommit(otherUser);
+        for (int i = 0; i < 5; i++)
+        {
+            var commit = CreateTrustedCommit(driver.Repository);
+            driver.WithPendingCommit(commit);
+        }
 
-        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
-        activeDeployment.Sha = baseCommit.Sha;
-
-        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+        foreach (var commit in driver.Commits)
+        {
+            RegisterPullRequestForCommit(commit);
+        }
 
         var deploymentApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
 
-        var trustedCommits = new[]
-        {
-            headCommit,
-            CreateTrustedCommit(repo),
-            CreateTrustedCommit(repo),
-            CreateTrustedCommit(repo),
-            CreateTrustedCommit(repo),
-            CreateTrustedCommit(repo),
-        };
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
 
-        foreach (var commit in trustedCommits)
-        {
-            var pullRequest = CreatePullRequestForCommit(commit);
-            RegisterGetPullRequestsForCommit(repo, commit.Sha, pullRequest);
-        }
-
-        var comparison = CreateComparison(trustedCommits);
-
-        RegisterGetCompare(baseCommit, headCommit, comparison);
-
-        RegisterGetDeployments(
-            repo,
-            pendingDeployment.Environment,
-            pendingDeployment,
-            activeDeployment,
-            previousDeployment);
-
-        RegisterGetPendingDeployments(repo, workflowRun.Id, pendingDeployment.CreatePendingDeployment());
-
-        RegisterApprovePendingDeployments(
-            repo,
-            workflowRun.Id,
-            pendingDeployment,
+        RegisterApprovePendingDeployment(
+            driver,
             (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
 
-        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
-
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -156,56 +109,37 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
-        var workflowRun = repo.CreateWorkflowRun();
+        var driver = new DeploymentStatusDriver(
+            (repo) => repo.CreateCommit(),
+            (repo) => CreateTrustedCommit(repo));
 
-        var newCommit = CreateTrustedCommit(repo);
-        var pullRequest = CreatePullRequestForCommit(newCommit);
+        driver.WithPendingDeployment(
+            (commit) => CreateDeployment(commit));
 
-        var pendingDeployment = CreateDeployment(sha: newCommit.Sha);
-        var deploymentStatus = CreateDeploymentStatus();
+        driver.WithActiveDeployment();
+        driver.WithInactiveDeployment();
+        driver.WithSkippedDeployment();
 
-        var otherUser = CreateUser();
-        var existingCommit = repo.CreateCommit(otherUser);
+        driver.WithPendingCommit(CreateTrustedCommit(driver.Repository));
 
-        var skippedDeployment = RegisterSkippedDeployment(repo, pendingDeployment.Environment);
-
-        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
-        activeDeployment.Sha = existingCommit.Sha;
-
-        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+        foreach (var commit in driver.Commits)
+        {
+            RegisterPullRequestForCommit(commit);
+        }
 
         var deploymentApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
 
-        var comparison = CreateComparison(newCommit);
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
 
-        RegisterGetCompare(existingCommit, newCommit, comparison);
-
-        RegisterGetDeployments(
-            repo,
-            pendingDeployment.Environment,
-            pendingDeployment,
-            skippedDeployment,
-            activeDeployment,
-            previousDeployment);
-
-        RegisterGetPendingDeployments(repo, workflowRun.Id, pendingDeployment.CreatePendingDeployment());
-
-        RegisterGetPullRequestsForCommit(repo, newCommit.Sha, pullRequest);
-
-        RegisterApprovePendingDeployments(
-            repo,
-            workflowRun.Id,
-            pendingDeployment,
+        RegisterApprovePendingDeployment(
+            driver,
             (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
 
-        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
-
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -219,57 +153,32 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
-        var workflowRun = repo.CreateWorkflowRun();
+        var driver = new DeploymentStatusDriver(
+            (repo) => repo.CreateCommit(),
+            (repo) => CreateTrustedCommit(repo));
 
-        var newCommit = CreateTrustedCommit(repo);
-        var pullRequest = CreatePullRequestForCommit(newCommit);
+        driver.WithPendingDeployment(
+            (commit) => CreateDeployment(commit));
 
-        var pendingDeployment = CreateDeployment(sha: newCommit.Sha);
-        var deploymentStatus = CreateDeploymentStatus();
-
-        var otherUser = CreateUser();
-        var existingCommit = repo.CreateCommit(otherUser);
-
-        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
-        activeDeployment.Sha = existingCommit.Sha;
-
-        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+        driver.WithActiveDeployment();
+        driver.WithInactiveDeployment();
 
         var deploymentApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
 
-        var comparison = CreateComparison(newCommit);
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
+        RegisterPullRequestForCommit(driver.HeadCommit);
 
-        RegisterGetCompare(existingCommit, newCommit, comparison);
-
-        RegisterGetDeployments(
-            repo,
-            pendingDeployment.Environment,
-            pendingDeployment,
-            activeDeployment,
-            previousDeployment);
-
-        RegisterGetPendingDeployments(repo, workflowRun.Id, pendingDeployment.CreatePendingDeployment());
-
-        RegisterGetPullRequestsForCommit(repo, newCommit.Sha, pullRequest);
-
-        RegisterApprovePendingDeployments(
-            repo,
-            workflowRun.Id,
-            pendingDeployment,
-            (p) =>
-            {
-                p.WithStatus(HttpStatusCode.Forbidden)
-                 .WithInterceptionCallback((_) => deploymentApproved.SetResult());
-            });
-
-        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+        RegisterApprovePendingDeployment(driver, (p) =>
+        {
+            p.WithStatus(HttpStatusCode.Forbidden)
+             .WithInterceptionCallback((_) => deploymentApproved.SetResult());
+        });
 
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -288,17 +197,18 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
-        var deployment = CreateDeployment();
-        var deploymentStatus = CreateDeploymentStatus(state);
+        var driver = new DeploymentStatusDriver(
+            (repo) => repo.CreateCommit(),
+            (repo) => CreateTrustedCommit(repo));
+
+        driver.WithPendingDeployment(
+            (commit) => CreateDeployment(commit),
+            () => CreateDeploymentStatus(state));
 
         var deploymentApproved = new TaskCompletionSource();
 
-        var value = CreateWebhook(repo, deployment, deploymentStatus);
-
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -312,18 +222,15 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments(false);
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
+        var driver = new DeploymentStatusDriver();
 
-        var deployment = CreateDeployment();
-        var deploymentStatus = CreateDeploymentStatus();
+        driver.WithPendingDeployment(
+            (commit) => CreateDeployment(commit));
 
         var deploymentApproved = new TaskCompletionSource();
 
-        var value = CreateWebhook(repo, deployment, deploymentStatus);
-
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -340,18 +247,15 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
+        var driver = new DeploymentStatusDriver();
 
-        var deployment = CreateDeployment(environment);
-        var deploymentStatus = CreateDeploymentStatus();
+        driver.WithPendingDeployment(
+            (_) => CreateDeployment(environment));
 
         var deploymentApproved = new TaskCompletionSource();
 
-        var value = CreateWebhook(repo, deployment, deploymentStatus);
-
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -365,21 +269,16 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
-
-        var deployment = CreateDeployment();
-        var deploymentStatus = CreateDeploymentStatus();
+        var driver = new DeploymentStatusDriver();
+        driver.WithPendingDeployment();
 
         var deploymentApproved = new TaskCompletionSource();
 
-        var value = CreateWebhook(repo, deployment, deploymentStatus);
-
         RegisterGetAccessToken();
-        RegisterGetDeployments(repo, deployment.Environment);
+        RegisterGetDeployments(driver.Repository, driver.PendingDeployment.Environment);
 
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -393,21 +292,16 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
-
-        var deployment = CreateDeployment();
-        var deploymentStatus = CreateDeploymentStatus();
+        var driver = new DeploymentStatusDriver();
+        driver.WithPendingDeployment();
 
         var deploymentApproved = new TaskCompletionSource();
 
-        var value = CreateWebhook(repo, deployment, deploymentStatus);
-
         RegisterGetAccessToken();
-        RegisterGetDeployments(repo, deployment.Environment, deployment);
+        RegisterAllDeployments(driver);
 
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -421,24 +315,20 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
+        var driver = new DeploymentStatusDriver();
 
-        var pendingDeployment = CreateDeployment();
-        var previousDeployment = CreateDeployment();
-        var deploymentStatus = CreateDeploymentStatus();
+        driver.WithPendingDeployment();
+        driver.WithActiveDeployment();
 
         var deploymentApproved = new TaskCompletionSource();
 
-        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus);
-
         RegisterGetAccessToken();
-        RegisterGetDeployments(repo, pendingDeployment.Environment, pendingDeployment, previousDeployment);
-        RegisterGetDeploymentStatuses(repo, previousDeployment);
-        RegisterGetDeploymentStatuses(repo, pendingDeployment);
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
+        RegisterGetDeploymentStatuses(driver.Repository, driver.ActiveDeployment);
 
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -452,24 +342,20 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
+        var driver = new DeploymentStatusDriver();
 
-        var pendingDeployment = CreateDeployment();
-        var previousDeployment = CreateDeployment();
-        var deploymentStatus = CreateDeploymentStatus();
+        driver.WithPendingDeployment();
+        driver.WithActiveDeployment();
 
         var deploymentApproved = new TaskCompletionSource();
 
-        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus);
-
         RegisterGetAccessToken();
-        RegisterGetDeployments(repo, pendingDeployment.Environment, pendingDeployment, previousDeployment);
-        RegisterGetDeploymentStatuses(repo, previousDeployment, CreateDeploymentStatus("failure"));
-        RegisterGetDeploymentStatuses(repo, pendingDeployment, deploymentStatus);
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
+        RegisterGetDeploymentStatuses(driver.Repository, driver.ActiveDeployment, CreateDeploymentStatus("failure"));
 
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -483,26 +369,21 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
+        var driver = new DeploymentStatusDriver();
 
-        var pendingDeployment = CreateDeployment();
-        var previousDeployment1 = CreateDeployment();
-        var previousDeployment2 = CreateDeployment();
-        var deploymentStatus = CreateDeploymentStatus();
+        driver.WithPendingDeployment();
+        driver.WithInactiveDeployment();
+        driver.WithInactiveDeployment();
 
         var deploymentApproved = new TaskCompletionSource();
 
-        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus);
-
         RegisterGetAccessToken();
-        RegisterGetDeployments(repo, pendingDeployment.Environment, pendingDeployment, previousDeployment1, previousDeployment2);
-        RegisterGetDeploymentStatuses(repo, previousDeployment1, CreateDeploymentStatus("error"));
-        RegisterGetDeploymentStatuses(repo, previousDeployment2);
-        RegisterGetDeploymentStatuses(repo, pendingDeployment, deploymentStatus);
+        RegisterAllDeployments(driver);
+        RegisterGetDeploymentStatuses(driver.Repository, driver.InactiveDeployments[0], CreateDeploymentStatus("error"));
+        RegisterGetDeploymentStatuses(driver.Repository, driver.InactiveDeployments[1]);
 
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -516,39 +397,25 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
-        var workflowRun = repo.CreateWorkflowRun();
+        var driver = new DeploymentStatusDriver(
+            (repo) => CreateTrustedCommit(repo),
+            (repo) => CreateTrustedCommit(repo));
 
-        var commit = CreateTrustedCommit(repo);
+        driver.WithPendingDeployment(
+            (commit) => CreateDeployment(commit));
 
-        var pendingDeployment = CreateDeployment(sha: commit.Sha);
-        var deploymentStatus = CreateDeploymentStatus();
-
-        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
-        activeDeployment.Sha = commit.Sha;
-
-        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+        driver.WithActiveDeployment();
+        driver.WithInactiveDeployment();
 
         var deploymentApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
 
-        var comparison = CreateComparison();
-
-        RegisterGetCompare(commit, commit, comparison);
-
-        RegisterGetDeployments(
-            repo,
-            pendingDeployment.Environment,
-            pendingDeployment,
-            activeDeployment,
-            previousDeployment);
-
-        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver.BaseCommit, driver.HeadCommit, new());
 
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -562,42 +429,30 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
-        var workflowRun = repo.CreateWorkflowRun();
+        var driver = new DeploymentStatusDriver(
+            (repo) => CreateTrustedCommit(repo),
+            (repo) => CreateTrustedCommit(repo));
 
-        var commit = CreateTrustedCommit(repo);
+        driver.WithPendingDeployment(
+            (commit) => CreateDeployment(commit));
 
-        var pendingDeployment = CreateDeployment(sha: commit.Sha);
-        var deploymentStatus = CreateDeploymentStatus();
+        driver.WithActiveDeployment();
+        driver.WithInactiveDeployment();
 
-        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
-        activeDeployment.Sha = commit.Sha;
-
-        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+        var comparison = CreateComparison(driver.HeadCommit);
+        comparison.AheadBy = 0;
+        comparison.BehindBy = 1;
+        comparison.Status = "behind";
 
         var deploymentApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
 
-        var comparison = CreateComparison(commit);
-        comparison.Status = "behind";
-        comparison.AheadBy = 0;
-        comparison.BehindBy = 1;
-
-        RegisterGetCompare(commit, commit, comparison);
-
-        RegisterGetDeployments(
-            repo,
-            pendingDeployment.Environment,
-            pendingDeployment,
-            activeDeployment,
-            previousDeployment);
-
-        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver.BaseCommit, driver.HeadCommit, comparison);
 
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -611,43 +466,40 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
-        var workflowRun = repo.CreateWorkflowRun();
+        var driver = new DeploymentStatusDriver(
+            (repo) => repo.CreateCommit(),
+            (repo) =>
+            {
+                var commit = CreateTrustedCommit(repo);
+                commit.Author = CreateUser();
+                return commit;
+            });
 
-        var newCommit = CreateTrustedCommit(repo);
-        newCommit.Author = CreateUser();
+        driver.WithPendingDeployment(
+            (commit) => CreateDeployment(commit));
 
-        var pendingDeployment = CreateDeployment(sha: newCommit.Sha);
-        var deploymentStatus = CreateDeploymentStatus();
-
-        var otherUser = CreateUser();
-        var existingCommit = repo.CreateCommit(otherUser);
-
-        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
-        activeDeployment.Sha = existingCommit.Sha;
-
-        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+        driver.WithActiveDeployment();
+        driver.WithInactiveDeployment();
 
         var deploymentApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
 
-        var comparison = CreateComparison(newCommit);
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
+        RegisterPullRequestForCommit(driver.HeadCommit);
 
-        RegisterGetCompare(existingCommit, newCommit, comparison);
+        RegisterApprovePendingDeployment(
+            driver,
+            (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
 
-        RegisterGetDeployments(
-            repo,
-            pendingDeployment.Environment,
-            pendingDeployment,
-            activeDeployment,
-            previousDeployment);
+        RegisterGetAccessToken();
 
-        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
 
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -661,49 +513,38 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
-        var workflowRun = repo.CreateWorkflowRun();
+        var driver = new DeploymentStatusDriver(
+            (repo) => CreateTrustedCommit(repo),
+            (repo) => CreateTrustedCommit(repo));
 
-        var headCommit = CreateTrustedCommit(repo);
-        var additionalCommit = CreateUntrustedCommit(repo);
+        driver.WithPendingDeployment(
+            (commit) => CreateDeployment(commit));
 
-        var pullRequestForHead = CreatePullRequestForCommit(headCommit);
-        var pullRequestForAdditional = CreatePullRequestForCommit(additionalCommit);
+        driver.WithActiveDeployment();
+        driver.WithInactiveDeployment();
 
-        var pendingDeployment = CreateDeployment(sha: headCommit.Sha);
-        var deploymentStatus = CreateDeploymentStatus();
-
-        var otherUser = CreateUser();
-        var baseCommit = repo.CreateCommit(otherUser);
-
-        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
-        activeDeployment.Sha = baseCommit.Sha;
-
-        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+        var dependabot = CreateUserForDependabot();
+        var additional = CreateUntrustedCommit(driver.Repository);
+        driver.WithPendingCommit(additional);
 
         var deploymentApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
 
-        var comparison = CreateComparison(headCommit, additionalCommit);
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
 
-        RegisterGetCompare(baseCommit, headCommit, comparison);
+        foreach (var commit in driver.Commits)
+        {
+            RegisterPullRequestForCommit(commit);
+        }
 
-        RegisterGetDeployments(
-            repo,
-            pendingDeployment.Environment,
-            pendingDeployment,
-            activeDeployment,
-            previousDeployment);
-
-        RegisterGetPullRequestsForCommit(repo, headCommit.Sha, pullRequestForHead);
-        RegisterGetPullRequestsForCommit(repo, additionalCommit.Sha, pullRequestForAdditional);
-
-        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+        RegisterApprovePendingDeployment(
+            driver,
+            (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
 
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -719,51 +560,39 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApproveDeployments();
 
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
-        var workflowRun = repo.CreateWorkflowRun();
+        var driver = new DeploymentStatusDriver(
+            (repo) => repo.CreateCommit(),
+            (repo) => CreateTrustedCommit(repo));
 
-        var newCommit = CreateTrustedCommit(repo);
+        driver.WithPendingDeployment(
+            (commit) => CreateDeployment(commit));
 
-        var pendingDeployment = CreateDeployment(sha: newCommit.Sha);
-        var deploymentStatus = CreateDeploymentStatus();
-
-        var otherUser = CreateUser();
-        var existingCommit = repo.CreateCommit(otherUser);
-
-        var activeDeployment = RegisterActiveDeployment(repo, pendingDeployment.Environment);
-        activeDeployment.Sha = existingCommit.Sha;
-
-        var previousDeployment = RegisterInactiveDeployment(repo, pendingDeployment.Environment);
+        driver.WithActiveDeployment();
+        driver.WithInactiveDeployment();
 
         var deploymentApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
 
-        var comparison = CreateComparison(newCommit);
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
+        RegisterPullRequestForCommit(driver.HeadCommit);
 
-        RegisterGetCompare(existingCommit, newCommit, comparison);
-
-        RegisterGetDeployments(
-            repo,
-            pendingDeployment.Environment,
-            pendingDeployment,
-            activeDeployment,
-            previousDeployment);
+        RegisterApprovePendingDeployment(
+            driver,
+            (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
 
         var pendingDeployments = new List<PendingDeploymentBuilder>(count);
 
         for (int i = 0; i < count; i++)
         {
-            pendingDeployments.Add(pendingDeployment.CreatePendingDeployment());
+            pendingDeployments.Add(driver.PendingDeployment.CreatePendingDeployment());
         }
 
-        RegisterGetPendingDeployments(repo, workflowRun.Id, pendingDeployments.ToArray());
-
-        var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
+        RegisterGetPendingDeployments(driver.Repository, driver.WorkflowRun.Id, pendingDeployments.ToArray());
 
         // Act
-        using var response = await PostWebhookAsync("deployment_status", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -811,65 +640,179 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         return commit;
     }
 
-    private static object CreateWebhook(
-        RepositoryBuilder repository,
-        DeploymentBuilder deployment,
-        DeploymentStatusBuilder deploymentStatus,
-        WorkflowRunBuilder? workflowRun = null,
-        string action = "created")
+    private async Task<HttpResponseMessage> PostWebhookAsync(DeploymentStatusDriver driver, string action = "created")
     {
-        return new
+        var value = driver.CreateWebhook(action);
+        return await PostWebhookAsync("deployment_status", value);
+    }
+
+    private void RegisterSkippedDeployment(DeploymentStatusDriver driver)
+    {
+        var inactive = CreateDeploymentStatus("inactive");
+        var waiting = CreateDeploymentStatus("waiting");
+
+        RegisterGetDeploymentStatuses(
+            driver.Repository,
+            driver.SkippedDeployment!,
+            inactive,
+            waiting);
+    }
+
+    private void RegisterActiveDeployment(DeploymentStatusDriver driver)
+    {
+        var success = CreateDeploymentStatus("success");
+        var inProgress = CreateDeploymentStatus("in_progress");
+        var waiting = CreateDeploymentStatus("waiting");
+
+        RegisterGetDeploymentStatuses(
+            driver.Repository,
+            driver.ActiveDeployment!,
+            success,
+            inProgress,
+            waiting);
+    }
+
+    private void RegisterInactiveDeployments(DeploymentStatusDriver driver)
+    {
+        foreach (var deployment in driver.InactiveDeployments)
         {
-            action,
-            deployment_status = deploymentStatus.Build(),
-            deployment = deployment.Build(),
-            check_run = new { },
-            workflow = new { },
-            workflow_run = workflowRun?.Build() ?? new { },
-            repository = repository.Build(),
-            installation = new
-            {
-                id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
-            },
-        };
+            var inactive = CreateDeploymentStatus("inactive");
+            var success = CreateDeploymentStatus("success");
+            var inProgress = CreateDeploymentStatus("in_progress");
+            var waiting = CreateDeploymentStatus("waiting");
+
+            RegisterGetDeploymentStatuses(
+                driver.Repository,
+                deployment,
+                inactive,
+                success,
+                inProgress,
+                waiting);
+        }
     }
 
-    private DeploymentBuilder RegisterSkippedDeployment(RepositoryBuilder repo, string environmentName)
+    private void RegisterApprovePendingDeployment(
+        DeploymentStatusDriver driver,
+        Action<HttpRequestInterceptionBuilder>? configure = null)
     {
-        var deployment = CreateDeployment(environmentName);
+        var builder = CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/actions/runs/{driver.WorkflowRun.Id}/pending_deployments")
+            .Responds()
+            .WithJsonContent(driver.PendingDeployment!);
 
-        var inactive = CreateDeploymentStatus("inactive");
-        var waiting = CreateDeploymentStatus("waiting");
+        configure?.Invoke(builder);
 
-        RegisterGetDeploymentStatuses(repo, deployment, inactive, waiting);
-
-        return deployment;
+        builder.RegisterWith(Fixture.Interceptor);
     }
 
-    private DeploymentBuilder RegisterActiveDeployment(RepositoryBuilder repo, string environmentName)
+    private void RegisterCommitComparison(
+        GitHubCommitBuilder @base,
+        GitHubCommitBuilder head,
+        CompareResultBuilder comparison)
     {
-        var deployment = CreateDeployment(environmentName);
-
-        var success = CreateDeploymentStatus("success");
-        var inProgress = CreateDeploymentStatus("in_progress");
-        var waiting = CreateDeploymentStatus("waiting");
-
-        RegisterGetDeploymentStatuses(repo, deployment, success, inProgress, waiting);
-
-        return deployment;
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{@base.Repository.Owner.Login}/{@base.Repository.Name}/compare/{@base.Sha}...{head.Sha}")
+            .Responds()
+            .WithJsonContent(comparison)
+            .RegisterWith(Fixture.Interceptor);
     }
 
-    private DeploymentBuilder RegisterInactiveDeployment(RepositoryBuilder repo, string environmentName)
+    private void RegisterCommitComparison(DeploymentStatusDriver driver)
     {
-        var deployment = CreateDeployment(environmentName);
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{driver.BaseCommit.Repository.Owner.Login}/{driver.BaseCommit.Repository.Name}/compare/{driver.BaseCommit.Sha}...{driver.HeadCommit.Sha}")
+            .Responds()
+            .WithJsonContent(driver.Comparison())
+            .RegisterWith(Fixture.Interceptor);
+    }
 
-        var inactive = CreateDeploymentStatus("inactive");
-        var success = CreateDeploymentStatus("success");
-        var inProgress = CreateDeploymentStatus("in_progress");
-        var waiting = CreateDeploymentStatus("waiting");
+    private void RegisterGetDeployments(
+        RepositoryBuilder repository,
+        string environmentName,
+        params DeploymentBuilder[] deployments)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{repository.Owner.Login}/{repository.Name}/deployments")
+            .ForQuery($"environment={environmentName}")
+            .Responds()
+            .WithJsonContent(deployments)
+            .RegisterWith(Fixture.Interceptor);
+    }
 
-        RegisterGetDeploymentStatuses(repo, deployment, inactive, success, inProgress, waiting);
+    private void RegisterAllDeployments(DeploymentStatusDriver driver)
+    {
+        var deployments = new List<DeploymentBuilder>();
 
-        return deployment;
+        if (driver.PendingDeployment is { } pending)
+        {
+            deployments.Add(pending);
+            RegisterPendingDeployment(driver);
+        }
+
+        if (driver.SkippedDeployment is { } skipped)
+        {
+            deployments.Add(skipped);
+            RegisterSkippedDeployment(driver);
+        }
+
+        if (driver.ActiveDeployment is { } active)
+        {
+            deployments.Add(active);
+            RegisterActiveDeployment(driver);
+        }
+
+        if (driver.InactiveDeployments is { Count: > 0 } inactive)
+        {
+            deployments.AddRange(inactive);
+            RegisterInactiveDeployments(driver);
+        }
+
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/deployments")
+            .ForQuery($"environment={driver.PendingDeployment!.Environment}")
+            .Responds()
+            .WithJsonContent(deployments)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    private void RegisterGetPendingDeployments(
+        RepositoryBuilder repository,
+        long runId,
+        params PendingDeploymentBuilder[] deployments)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{repository.Owner.Login}/{repository.Name}/actions/runs/{runId}/pending_deployments")
+            .Responds()
+            .WithJsonContent(deployments)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    private void RegisterPendingDeployment(DeploymentStatusDriver driver)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/actions/runs/{driver.WorkflowRun.Id}/pending_deployments")
+            .Responds()
+            .WithJsonContent(driver.PendingDeployment!.CreatePendingDeployment())
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    private void RegisterPullRequestForCommit(GitHubCommitBuilder commit)
+    {
+        var pullRequest = CreatePullRequestForCommit(commit);
+
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{commit.Repository.Owner.Login}/{commit.Repository.Name}/commits/{commit.Sha}/pulls")
+            .Responds()
+            .WithJsonContent(pullRequest)
+            .RegisterWith(Fixture.Interceptor);
     }
 }
