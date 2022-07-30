@@ -21,7 +21,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Approved_For_Trusted_User_And_Dependency()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -81,7 +81,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Approved_For_Trusted_User_And_Multiple_Dependencies()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -154,7 +154,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Approved_For_Trusted_User_And_Dependency_When_Penultimate_Build_Skipped()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -217,7 +217,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Approval_Failure_For_Trusted_User_And_Dependency_Is_Handled()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -286,7 +286,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_For_Deployment_That_Is_Not_Waiting(string state)
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -310,7 +310,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_If_Deployment_Approval_Disabled()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.FalseString);
+        Fixture.ApproveDeployments(false);
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -338,7 +338,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         string environment)
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -363,7 +363,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_If_No_Deployments_Found()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -391,7 +391,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_If_No_Other_Deployments_Found()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -419,7 +419,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_If_No_Deployment_Statuses_Found()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -450,7 +450,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_If_No_Active_Deployment_Statuses_Found()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -481,7 +481,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_If_No_Active_Deployment_Found()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -514,7 +514,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_For_No_Diff()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -560,6 +560,8 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_For_Commits_Behind()
     {
         // Arrange
+        Fixture.ApproveDeployments();
+
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var workflowRun = repo.CreateWorkflowRun();
@@ -578,7 +580,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         RegisterGetAccessToken();
 
-        var comparison = CreateComparison();
+        var comparison = CreateComparison(commit);
         comparison.Status = "behind";
         comparison.AheadBy = 0;
         comparison.BehindBy = 1;
@@ -607,7 +609,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_For_Untrusted_User()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
@@ -657,13 +659,17 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_For_Trusted_User_And_Untrusted_Dependency()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var workflowRun = repo.CreateWorkflowRun();
 
         var headCommit = CreateTrustedCommit(repo);
+        var additionalCommit = CreateUntrustedCommit(repo);
+
+        var pullRequestForHead = CreatePullRequestForCommit(headCommit);
+        var pullRequestForAdditional = CreatePullRequestForCommit(additionalCommit);
 
         var pendingDeployment = CreateDeployment(sha: headCommit.Sha);
         var deploymentStatus = CreateDeploymentStatus();
@@ -680,9 +686,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         RegisterGetAccessToken();
 
-        var comparison = CreateComparison(
-            headCommit,
-            CreateUntrustedCommit(repo));
+        var comparison = CreateComparison(headCommit, additionalCommit);
 
         RegisterGetCompare(baseCommit, headCommit, comparison);
 
@@ -692,6 +696,9 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             pendingDeployment,
             activeDeployment,
             previousDeployment);
+
+        RegisterGetPullRequestsForCommit(repo, headCommit.Sha, pullRequestForHead);
+        RegisterGetPullRequestsForCommit(repo, additionalCommit.Sha, pullRequestForAdditional);
 
         var value = CreateWebhook(repo, pendingDeployment, deploymentStatus, workflowRun);
 
@@ -710,7 +717,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_If_Not_Exactly_One_Pending_Deployment(int count)
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Deploy", bool.TrueString);
+        Fixture.ApproveDeployments();
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();

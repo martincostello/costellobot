@@ -2,8 +2,11 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Net;
+using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Builders;
+using MartinCostello.Costellobot.Drivers;
 using MartinCostello.Costellobot.Infrastructure;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
@@ -21,32 +24,21 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
     public async Task Check_Suite_Is_Rerequested_For_Pull_Request_Run_Failure_Associated_With_Workflow_Run()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "1");
+        Fixture.FailedCheckRerunAttempts(1);
 
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
-        var pullRequest = repository.CreatePullRequest();
-        var checkSuite = CreateCheckSuite(repository);
-        var workflowRun = repository.CreateWorkflowRun();
-
-        var checkRun = CreateCheckRun("ubuntu-latest", "completed", "failure");
-        checkRun.PullRequests.Add(pullRequest);
+        var driver = new CheckSuiteDriver()
+            .WithCheckRun(
+                (p) => CreateCheckRun(p, "ubuntu-latest", "completed", "failure"));
 
         var rerequestCheckSuite = new TaskCompletionSource();
 
-        RegisterGetAccessToken();
-        RegisterGetCheckRuns(repository, checkSuite.Id, checkRun);
-        RegisterGetPullRequest(pullRequest);
-        RegisterGetWorkflows(checkSuite);
-
+        RegisterCheckSuiteWithNoWorkflowRun(driver);
         RegisterRerequestCheckSuite(
-            checkSuite,
+            driver,
             (p) => p.WithInterceptionCallback((_) => rerequestCheckSuite.SetResult()));
 
-        var value = CreateWebhook(checkSuite);
-
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -62,41 +54,26 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
         string authorAssociation)
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "1");
+        Fixture.FailedCheckRerunAttempts(1);
 
-        var owner = CreateUser(login);
-        var repository = owner.CreateRepository();
+        var driver = new CheckSuiteDriver(login)
+            .WithCheckRun(
+                (p) => CreateCheckRun(p, "ubuntu-latest", "completed", "failure"));
 
-        var pullRequest = repository.CreatePullRequest(owner);
-        pullRequest.AuthorAssociation = authorAssociation;
-
-        var checkSuite = CreateCheckSuite(repository);
-        checkSuite.PullRequests.Add(pullRequest);
-
-        var workflowRun = repository.CreateWorkflowRun();
-
-        var checkRun = CreateCheckRun("ubuntu-latest", "completed", "failure");
-        checkRun.PullRequests.Add(pullRequest);
+        driver.PullRequest.AuthorAssociation = authorAssociation;
+        driver.CheckSuite.PullRequests.Add(driver.PullRequest);
 
         var rerequestCheckSuite = new TaskCompletionSource();
 
-        RegisterGetAccessToken();
-        RegisterGetCheckRuns(repository, checkSuite.Id, checkRun);
-        RegisterGetPullRequest(pullRequest);
-        RegisterGetWorkflows(checkSuite);
-
-        RegisterRerequestCheckSuite(
-            checkSuite,
-            (p) =>
-            {
-                p.WithStatus(HttpStatusCode.BadRequest)
-                 .WithInterceptionCallback((_) => rerequestCheckSuite.SetResult());
-            });
-
-        var value = CreateWebhook(checkSuite);
+        RegisterCheckSuiteWithNoWorkflowRun(driver);
+        RegisterRerequestCheckSuite(driver, (p) =>
+        {
+            p.WithStatus(HttpStatusCode.BadRequest)
+             .WithInterceptionCallback((_) => rerequestCheckSuite.SetResult());
+        });
 
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -105,46 +82,33 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Theory]
-    [InlineData(1, "1")]
-    [InlineData(1, "2")]
-    [InlineData(2, "2")]
+    [InlineData(1, 1)]
+    [InlineData(1, 2)]
+    [InlineData(2, 2)]
     public async Task Failed_Jobs_Are_Rerun_For_Pull_Request_Run_Failure_Associated_With_Workflow_Run(
         int actualAttempts,
-        string maximumAttempts)
+        int maximumAttempts)
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", maximumAttempts);
+        Fixture.FailedCheckRerunAttempts(maximumAttempts);
 
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
-        var pullRequest = repository.CreatePullRequest();
-        var checkSuite = CreateCheckSuite(repository);
-        var workflowRun = repository.CreateWorkflowRun();
-
-        var checkRuns = new List<CheckRunBuilder>();
+        var driver = new CheckSuiteDriver();
 
         for (int i = 0; i < actualAttempts; i++)
         {
-            var checkRun = CreateCheckRun("ubuntu-latest", "completed", "failure");
-            checkRun.PullRequests.Add(pullRequest);
-            checkRuns.Add(checkRun);
+            driver.WithCheckRun(
+                (p) => CreateCheckRun(p, "ubuntu-latest", "completed", "failure"));
         }
 
         var failedJobsRetried = new TaskCompletionSource();
 
-        RegisterGetAccessToken();
-        RegisterGetCheckRuns(repository, checkSuite.Id, checkRuns.ToArray());
-        RegisterGetPullRequest(pullRequest);
-        RegisterGetWorkflows(checkSuite, workflowRun);
-
+        RegisterCheckSuiteWithWorkflowRun(driver);
         RegisterRerunFailedJobs(
-            workflowRun,
+            driver.WorkflowRun,
             (p) => p.WithInterceptionCallback((_) => failedJobsRetried.SetResult()));
 
-        var value = CreateWebhook(checkSuite);
-
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -156,47 +120,28 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
     public async Task Failed_Jobs_Are_Rerun_For_Pull_Request_Run_Failures_Associated_With_Some_Workflow_Runs()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "2");
+        Fixture.FailedCheckRerunAttempts(2);
 
-        var user = CreateUserForDependabot();
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
-        var pullRequest = repository.CreatePullRequest(user);
-
-        var checkSuite = CreateCheckSuite(repository);
-        checkSuite.PullRequests.Add(pullRequest);
-
-        var workflowRun = repository.CreateWorkflowRun();
+        var driver = new CheckSuiteDriver(DependabotCommitter);
+        driver.CheckSuite.PullRequests.Add(driver.PullRequest);
 
         var checkRuns = new List<CheckRunBuilder>();
 
         for (int i = 0; i < 2; i++)
         {
-            var failedRun = CreateCheckRun("ubuntu-latest", "completed", "failure");
-            failedRun.PullRequests.Add(pullRequest);
-
-            var successRun = CreateCheckRun("windows-latest", "completed", "success");
-            successRun.PullRequests.Add(pullRequest);
-
-            checkRuns.Add(failedRun);
-            checkRuns.Add(successRun);
+            driver.WithCheckRun((p) => CreateCheckRun(p, "ubuntu-latest", "completed", "failure"));
+            driver.WithCheckRun((p) => CreateCheckRun(p, "windows-latest", "completed", "success"));
         }
 
         var failedJobsRetried = new TaskCompletionSource();
 
-        RegisterGetAccessToken();
-        RegisterGetCheckRuns(repository, checkSuite.Id, checkRuns.ToArray());
-        RegisterGetPullRequest(pullRequest);
-        RegisterGetWorkflows(checkSuite, workflowRun);
-
+        RegisterCheckSuiteWithWorkflowRun(driver);
         RegisterRerunFailedJobs(
-            workflowRun,
+            driver.WorkflowRun,
             (p) => p.WithInterceptionCallback((_) => failedJobsRetried.SetResult()));
 
-        var value = CreateWebhook(checkSuite);
-
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -205,45 +150,33 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Theory]
-    [InlineData(2, "1")]
-    [InlineData(3, "2")]
+    [InlineData(2, 1)]
+    [InlineData(3, 2)]
     public async Task Failed_Jobs_Are_Not_Rerun_For_Pull_Request_Run_Failure_Associated_With_Workflow_Run_If_Too_Many_Attempts(
         int actualAttempts,
-        string maximumAttempts)
+        int maximumAttempts)
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", maximumAttempts);
+        Fixture.FailedCheckRerunAttempts(maximumAttempts);
 
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
-        var pullRequest = repository.CreatePullRequest();
-        var checkSuite = CreateCheckSuite(repository);
-        var workflowRun = repository.CreateWorkflowRun();
+        var driver = new CheckSuiteDriver();
 
         var checkRuns = new List<CheckRunBuilder>();
 
         for (int i = 0; i < actualAttempts; i++)
         {
-            var checkRun = CreateCheckRun("windows-latest", "completed", "failure");
-            checkRun.PullRequests.Add(pullRequest);
-            checkRuns.Add(checkRun);
+            driver.WithCheckRun((p) => CreateCheckRun(p, "windows-latest", "completed", "failure"));
         }
 
         var failedJobsRetried = new TaskCompletionSource();
 
-        RegisterGetAccessToken();
-        RegisterGetCheckRuns(repository, checkSuite.Id, checkRuns.ToArray());
-        RegisterGetPullRequest(pullRequest);
-        RegisterGetWorkflows(checkSuite, workflowRun);
-
+        RegisterCheckSuiteWithNoWorkflowRun(driver);
         RegisterRerunFailedJobs(
-            workflowRun,
+            driver.WorkflowRun,
             (p) => p.WithInterceptionCallback((_) => failedJobsRetried.SetResult()));
 
-        var value = CreateWebhook(checkSuite);
-
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -261,184 +194,143 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
     public async Task Failed_Jobs_Are_Not_Rerun_For_Check_Suite_That_Did_Not_Fail(string conclusion)
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "1");
+        Fixture.FailedCheckRerunAttempts(1);
 
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
-        var checkSuite = CreateCheckSuite(repository, conclusion);
-
-        var value = CreateWebhook(checkSuite);
+        var driver = new CheckSuiteDriver(conclusion: conclusion);
 
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        await WaitForProcessingAsync();
     }
 
     [Fact]
     public async Task Failed_Jobs_Are_Not_Rerun_If_No_Retries_Are_Configured()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "0");
+        Fixture.FailedCheckRerunAttempts(0);
 
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
-        var checkSuite = CreateCheckSuite(repository);
-
-        var value = CreateWebhook(checkSuite);
+        var driver = new CheckSuiteDriver();
 
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        await WaitForProcessingAsync();
     }
 
     [Fact]
     public async Task Failed_Jobs_Are_Not_Rerun_If_Check_Suite_Cannot_Be_Rerun()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "1");
+        Fixture.FailedCheckRerunAttempts(1);
 
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
+        var driver = new CheckSuiteDriver();
 
-        var checkSuite = CreateCheckSuite(repository);
-        checkSuite.Rerequestable = false;
-
-        var value = CreateWebhook(checkSuite);
+        driver.CheckSuite.Rerequestable = false;
 
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        await WaitForProcessingAsync();
     }
 
     [Fact]
     public async Task Failed_Jobs_Are_Not_Rerun_If_No_Checks_Found()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "1");
+        Fixture.FailedCheckRerunAttempts(1);
 
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
-        var pullRequest = repository.CreatePullRequest();
-        var checkSuite = CreateCheckSuite(repository);
-        var value = CreateWebhook(checkSuite);
+        var driver = new CheckSuiteDriver();
 
         RegisterGetAccessToken();
-        RegisterGetPullRequest(pullRequest);
-        RegisterGetCheckRuns(repository, checkSuite.Id);
+        RegisterGetPullRequest(driver);
+        RegisterGetCheckRuns(driver);
 
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        await WaitForProcessingAsync();
     }
 
     [Fact]
     public async Task Failed_Jobs_Are_Not_Rerun_If_No_Failed_Checks_Found()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "1");
+        Fixture.FailedCheckRerunAttempts(1);
 
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
-        var pullRequest = repository.CreatePullRequest();
-        var checkSuite = CreateCheckSuite(repository);
-
-        var checkRun = CreateCheckRun("ubuntu-latest", "completed", "success");
-        checkRun.PullRequests.Add(pullRequest);
-
-        var value = CreateWebhook(checkSuite);
+        var driver = new CheckSuiteDriver()
+            .WithCheckRun(
+                (p) => CreateCheckRun(p, "ubuntu-latest", "completed", "success"));
 
         RegisterGetAccessToken();
-        RegisterGetPullRequest(pullRequest);
-        RegisterGetCheckRuns(repository, checkSuite.Id, checkRun);
+        RegisterGetPullRequest(driver);
+        RegisterGetCheckRuns(driver);
 
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        await WaitForProcessingAsync();
     }
 
     [Fact]
     public async Task Failed_Jobs_Are_Not_Rerun_If_No_Eligible_Failed_Checks_Found()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "1");
+        Fixture.FailedCheckRerunAttempts(1);
 
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
-        var pullRequest = repository.CreatePullRequest();
-        var checkSuite = CreateCheckSuite(repository);
-
-        var checkRun = CreateCheckRun("foo", "completed", "failure");
-        checkRun.PullRequests.Add(pullRequest);
+        var driver = new CheckSuiteDriver()
+            .WithCheckRun(
+                (p) => CreateCheckRun(p, "foo", "completed", "failure"));
 
         RegisterGetAccessToken();
-        RegisterGetPullRequest(pullRequest);
-        RegisterGetCheckRuns(repository, checkSuite.Id, checkRun);
-
-        var value = CreateWebhook(checkSuite);
+        RegisterGetPullRequest(driver);
+        RegisterGetCheckRuns(driver);
 
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        await WaitForProcessingAsync();
     }
 
     [Fact]
     public async Task Check_Suite_Is_Rerequested_But_Does_Not_Throw_If_Failed()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "1");
+        Fixture.FailedCheckRerunAttempts(1);
 
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
-        var pullRequest = repository.CreatePullRequest();
-        var checkSuite = CreateCheckSuite(repository);
-        var workflowRun = repository.CreateWorkflowRun();
-
-        var checkRun = CreateCheckRun("macos-latest", "completed", "failure");
-        checkRun.PullRequests.Add(pullRequest);
+        var driver = new CheckSuiteDriver()
+            .WithCheckRun(
+                (p) => CreateCheckRun(p, "macos-latest", "completed", "failure"));
 
         var failedJobsRetried = new TaskCompletionSource();
 
-        RegisterGetAccessToken();
-        RegisterGetCheckRuns(repository, checkSuite.Id, checkRun);
-        RegisterGetPullRequest(pullRequest);
-        RegisterGetWorkflows(checkSuite, workflowRun);
-
-        RegisterRerunFailedJobs(
-            workflowRun,
-            (p) =>
-            {
-                p.WithStatus(HttpStatusCode.BadRequest)
-                 .WithInterceptionCallback((_) => failedJobsRetried.SetResult());
-            });
-
-        var value = CreateWebhook(checkSuite);
+        RegisterCheckSuiteWithWorkflowRun(driver);
+        RegisterRerunFailedJobs(driver.WorkflowRun, (p) =>
+        {
+            p.WithStatus(HttpStatusCode.BadRequest)
+             .WithInterceptionCallback((_) => failedJobsRetried.SetResult());
+        });
 
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -457,30 +349,23 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
         string authorAssociation)
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "1");
+        Fixture.FailedCheckRerunAttempts(1);
 
-        var user = CreateUser(login);
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
+        var driver = new CheckSuiteDriver(login);
 
-        var pullRequest = repository.CreatePullRequest(user);
-        pullRequest.AuthorAssociation = authorAssociation;
-
-        var checkSuite = CreateCheckSuite(repository);
-        checkSuite.PullRequests.Add(pullRequest);
-
-        var value = CreateWebhook(checkSuite);
+        driver.CheckSuite.PullRequests.Add(driver.PullRequest);
+        driver.PullRequest.AuthorAssociation = authorAssociation;
 
         RegisterGetAccessToken();
-        RegisterGetPullRequest(pullRequest);
+        RegisterGetPullRequest(driver);
 
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        await WaitForProcessingAsync();
     }
 
     [Theory]
@@ -489,18 +374,14 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
     public async Task Check_Suite_Is_Ignored_For_Ignored_Action(string action)
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", "1");
+        Fixture.FailedCheckRerunAttempts(1);
 
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
-        var checkSuite = CreateCheckSuite(repository);
+        var driver = new CheckSuiteDriver();
 
         RegisterGetAccessToken();
 
-        var value = CreateWebhook(checkSuite, action);
-
         // Act
-        using var response = await PostWebhookAsync("check_suite", value);
+        using var response = await PostWebhookAsync(driver, action);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -517,28 +398,83 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
         await Should.NotThrowAsync(() => target.HandleAsync(message));
     }
 
-    private static CheckSuiteBuilder CreateCheckSuite(
-        RepositoryBuilder repository,
-        string? conclusion = null,
-        bool rerequestable = true)
+    private static async Task WaitForProcessingAsync()
+        => await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+    private async Task<HttpResponseMessage> PostWebhookAsync(CheckSuiteDriver driver, string action = "completed")
     {
-        return new(repository, "completed", conclusion ?? "failure")
-        {
-            Rerequestable = rerequestable,
-        };
+        var value = driver.CreateWebhook(action);
+        return await PostWebhookAsync("check_suite", value);
     }
 
-    private static object CreateWebhook(CheckSuiteBuilder checkSuite, string action = "completed")
+    private void RegisterCheckSuiteWithNoWorkflowRun(CheckSuiteDriver driver)
     {
-        return new
-        {
-            action,
-            check_suite = checkSuite.Build(),
-            repository = checkSuite.Repository.Build(),
-            installation = new
-            {
-                id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
-            },
-        };
+        RegisterGetAccessToken();
+        RegisterGetCheckRuns(driver);
+        RegisterGetPullRequest(driver);
+        RegisterGetWorkflows(driver.CheckSuite);
+    }
+
+    private void RegisterCheckSuiteWithWorkflowRun(CheckSuiteDriver driver)
+    {
+        RegisterGetAccessToken();
+        RegisterGetCheckRuns(driver);
+        RegisterGetPullRequest(driver);
+        RegisterGetWorkflows(driver.CheckSuite, driver.WorkflowRun);
+    }
+
+    private void RegisterGetCheckRuns(CheckSuiteDriver driver)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/check-suites/{driver.CheckSuite.Id}/check-runs")
+            .ForQuery("status=completed&filter=all")
+            .Responds()
+            .WithJsonContent(CreateCheckRuns(driver.CheckRuns.ToArray()))
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    private void RegisterGetPullRequest(CheckSuiteDriver driver)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/pulls/{driver.PullRequest.Number}")
+            .Responds()
+            .WithJsonContent(driver.PullRequest)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    private void RegisterRerequestCheckSuite(
+        CheckSuiteDriver driver,
+        Action<HttpRequestInterceptionBuilder>? configure = null)
+    {
+        var builder = CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/check-suites/{driver.CheckSuite.Id}/rerequest")
+            .Responds()
+            .WithStatus(StatusCodes.Status201Created)
+            .WithSystemTextJsonContent(new { });
+
+        configure?.Invoke(builder);
+
+        builder.RegisterWith(Fixture.Interceptor);
+    }
+
+    private void RegisterRerunFailedJobs(
+        WorkflowRunBuilder workflowRun,
+        Action<HttpRequestInterceptionBuilder>? configure = null)
+    {
+        var builder = CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath($"/repos/{workflowRun.Repository.Owner.Login}/{workflowRun.Repository.Name}/actions/runs/{workflowRun.Id}/rerun-failed-jobs")
+            .Responds()
+            .WithStatus(StatusCodes.Status201Created)
+            .WithSystemTextJsonContent(new { });
+
+        configure?.Invoke(builder);
+
+        builder.RegisterWith(Fixture.Interceptor);
     }
 }
