@@ -29,7 +29,7 @@ public sealed class PullRequestDriver
     public UserBuilder User { get; set; }
 
     public static PullRequestDriver ForDependabot()
-        => new PullRequestDriver(DependabotCommitter);
+        => new(DependabotCommitter);
 
     public PullRequestDriver WithCommitMessage(string message)
     {

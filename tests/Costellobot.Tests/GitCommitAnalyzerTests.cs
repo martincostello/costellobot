@@ -69,6 +69,20 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     }
 
     [Theory]
+    [InlineData("")]
+    [InlineData("Do some stuff")]
+    [InlineData("Bump src/submodules/dependabot-helper to aca93c2")]
+    public static void No_Version_Is_Extracted_From_Arbitrary_Commit_Message(string commitMessage)
+    {
+        // Act
+        bool result = GitCommitAnalyzer.TryParseVersionNumber(commitMessage, out var actual);
+
+        // Assert
+        result.ShouldBeFalse();
+        actual.ShouldBeNull();
+    }
+
+    [Theory]
     [InlineData("@actions/github", "dependabot/npm_and_yarn/actions/github-5.0.3", true)]
     [InlineData("actions/checkout", "dependabot/github_actions/actions/checkout-3", true)]
     [InlineData("JustEat.HttpClientInterception", "dependabot/nuget/JustEat.HttpClientInterception-3.1.1", true)]
@@ -211,6 +225,159 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Assert
         actual.ShouldBe(expected);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Untrusted_Publisher()
+    {
+        // Arrange
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.GitHubActions] = new[] { "actions" },
+                    [DependencyEcosystem.Npm] = new[] { "types", "typescript-bot" },
+                    [DependencyEcosystem.NuGet] = new[] { "aspnet", "Microsoft" },
+                    [DependencyEcosystem.Submodules] = new[] { "https://github.com/martincostello" },
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { Mock.Of<IPackageRegistry>() });
+
+        var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
+        var commitMessage = @"Bump Foo to 1.0.1
+Bumps `Foo` to 1.0.1.
+
+---
+updated-dependencies:
+- dependency-name: Foo
+  dependency-type: direct:production
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>";
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            "someone",
+            "something",
+            "blah-blah",
+            sha,
+            commitMessage);
+
+        // Assert
+        actual.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_If_No_Trusted_Publishers()
+    {
+        // Arrange
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new(),
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { Mock.Of<IPackageRegistry>() });
+
+        var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
+        var commitMessage = TrustedCommitMessage();
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            "someone",
+            "something",
+            "dependabot/nuget/NodaTimeVersion-3.1.0",
+            sha,
+            commitMessage);
+
+        // Assert
+        actual.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_If_No_Trusted_Publishers_For_Ecosystem()
+    {
+        // Arrange
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = Array.Empty<string>(),
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { Mock.Of<IPackageRegistry>() });
+
+        var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
+        var commitMessage = TrustedCommitMessage();
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            "someone",
+            "something",
+            "dependabot/nuget/NodaTimeVersion-3.1.0",
+            sha,
+            commitMessage);
+
+        // Assert
+        actual.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_If_Package_Registry_Lookup_Fails()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+
+        var mock = new Mock<IPackageRegistry>();
+
+        mock.Setup((p) => p.Ecosystem)
+            .Returns(DependencyEcosystem.GitHubActions);
+
+        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "actions/checkout", "3"))
+            .ThrowsAsync(new InvalidOperationException());
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.GitHubActions] = new[] { "actions" },
+                    [DependencyEcosystem.Npm] = new[] { "types", "typescript-bot" },
+                    [DependencyEcosystem.NuGet] = new[] { "aspnet", "Microsoft" },
+                    [DependencyEcosystem.Submodules] = new[] { "https://github.com/martincostello" },
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { mock.Object });
+
+        var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
+        var commitMessage = TrustedCommitMessage("actions/checkout", "3");
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            owner.Login,
+            repo.Name,
+            "dependabot/github_actions/actions/checkout-3",
+            sha,
+            commitMessage);
+
+        // Assert
+        actual.ShouldBeFalse();
     }
 
     private static GitCommitAnalyzer CreateTarget(
