@@ -444,6 +444,19 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
             .RegisterWith(Fixture.Interceptor);
     }
 
+    private void RegisterGetWorkflows(
+        CheckSuiteBuilder checkSuite,
+        params WorkflowRunBuilder[] workflows)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{checkSuite.Repository.Owner.Login}/{checkSuite.Repository.Name}/actions/runs")
+            .ForQuery($"check_suite_id={checkSuite.Id}")
+            .Responds()
+            .WithJsonContent(CreateWorkflowRuns(workflows))
+            .RegisterWith(Fixture.Interceptor);
+    }
+
     private void RegisterRerequestCheckSuite(
         CheckSuiteDriver driver,
         Action<HttpRequestInterceptionBuilder>? configure = null)
