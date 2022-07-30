@@ -744,6 +744,19 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             .RegisterWith(Fixture.Interceptor);
     }
 
+    private void RegisterGetDeploymentStatuses(
+        RepositoryBuilder repository,
+        DeploymentBuilder deployment,
+        params DeploymentStatusBuilder[] deploymentStatuses)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{repository.Owner.Login}/{repository.Name}/deployments/{deployment.Id}/statuses")
+            .Responds()
+            .WithJsonContent(deploymentStatuses)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
     private void RegisterAllDeployments(DeploymentStatusDriver driver)
     {
         var deployments = new List<DeploymentBuilder>();

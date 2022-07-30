@@ -120,37 +120,6 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         return authenticatedClient;
     }
 
-    protected void RegisterEnableAutomerge(
-        PullRequestBuilder pullRequest,
-        Action<HttpRequestInterceptionBuilder>? configure = null)
-    {
-        var response = new
-        {
-            data = new
-            {
-                enablePullRequestAutoMerge = new
-                {
-                    number = new
-                    {
-                        number = pullRequest.Number,
-                    },
-                },
-            },
-        };
-
-        var builder = CreateDefaultBuilder()
-            .Requests()
-            .ForPost()
-            .ForPath("graphql")
-            .Responds()
-            .WithStatus(StatusCodes.Status201Created)
-            .WithSystemTextJsonContent(response);
-
-        configure?.Invoke(builder);
-
-        builder.RegisterWith(Fixture.Interceptor);
-    }
-
     protected void RegisterGetAccessToken(AccessTokenBuilder? accessToken = null)
     {
         accessToken ??= new();
@@ -162,59 +131,6 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .Responds()
             .WithJsonContent(accessToken)
             .RegisterWith(Fixture.Interceptor);
-    }
-
-    protected void RegisterGetCommit(GitHubCommitBuilder commit)
-    {
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPath($"/repos/{commit.Repository.Owner.Login}/{commit.Repository.Name}/commits/{commit.Sha}")
-            .Responds()
-            .WithJsonContent(commit)
-            .RegisterWith(Fixture.Interceptor);
-    }
-
-    protected void RegisterGetDeploymentStatuses(
-        RepositoryBuilder repository,
-        DeploymentBuilder deployment,
-        params DeploymentStatusBuilder[] deploymentStatuses)
-    {
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPath($"/repos/{repository.Owner.Login}/{repository.Name}/deployments/{deployment.Id}/statuses")
-            .Responds()
-            .WithJsonContent(deploymentStatuses)
-            .RegisterWith(Fixture.Interceptor);
-    }
-
-    protected void RegisterGetWorkflows(
-        CheckSuiteBuilder checkSuite,
-        params WorkflowRunBuilder[] workflows)
-    {
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPath($"/repos/{checkSuite.Repository.Owner.Login}/{checkSuite.Repository.Name}/actions/runs")
-            .ForQuery($"check_suite_id={checkSuite.Id}")
-            .Responds()
-            .WithJsonContent(CreateWorkflowRuns(workflows))
-            .RegisterWith(Fixture.Interceptor);
-    }
-
-    protected void RegisterPostReview(
-        PullRequestBuilder pullRequest,
-        Action<HttpRequestInterceptionBuilder>? configure = null)
-    {
-        var builder = CreateDefaultBuilder()
-            .Requests()
-            .ForPost()
-            .ForPath($"/repos/{pullRequest.Repository.Owner.Login}/{pullRequest.Repository.Name}/pulls/{pullRequest.Number}/reviews")
-            .Responds()
-            .WithStatus(StatusCodes.Status201Created)
-            .WithSystemTextJsonContent(new { });
-
-        configure?.Invoke(builder);
-
-        builder.RegisterWith(Fixture.Interceptor);
     }
 
     protected async Task<HttpResponseMessage> PostWebhookAsync(

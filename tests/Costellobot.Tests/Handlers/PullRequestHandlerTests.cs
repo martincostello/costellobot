@@ -4,8 +4,9 @@
 using System.Net;
 using System.Text.Json;
 using JustEat.HttpClientInterception;
-using MartinCostello.Costellobot.Builders;
+using MartinCostello.Costellobot.Drivers;
 using MartinCostello.Costellobot.Infrastructure;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
@@ -25,25 +26,20 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApprovePullRequests();
 
-        var user = CreateUserForDependabot();
-        var pullRequest = CreatePullRequest(user);
-
-        var commit = pullRequest.CreateCommit();
-        commit.Message = TrustedCommitMessage();
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(TrustedCommitMessage());
 
         var pullRequestApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
-        RegisterGetCommit(commit);
+        RegisterCommit(driver);
 
-        RegisterPostReview(
-            pullRequest,
+        RegisterReview(
+            driver,
             (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
 
-        var value = CreateWebhook(pullRequest);
-
         // Act
-        using var response = await PostWebhookAsync("pull_request", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -68,54 +64,44 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.AutoMergeEnabled();
 
-        var user = CreateUserForDependabot();
-        var owner = CreateUser();
-        var repo = owner.CreateRepository();
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(TrustedCommitMessage());
 
-        repo.AllowMergeCommit = allowMergeCommit;
-        repo.AllowRebaseMerge = allowRebaseMerge;
-        repo.AllowSquashMerge = allowSquashMerge;
-
-        var pullRequest = repo.CreatePullRequest(user);
-
-        var commit = pullRequest.CreateCommit();
-        commit.Message = TrustedCommitMessage();
+        driver.Repository.AllowMergeCommit = allowMergeCommit;
+        driver.Repository.AllowRebaseMerge = allowRebaseMerge;
+        driver.Repository.AllowSquashMerge = allowSquashMerge;
 
         var automergeEnabled = new TaskCompletionSource();
 
         RegisterGetAccessToken();
-        RegisterGetCommit(commit);
-        RegisterPostReview(pullRequest);
+        RegisterCommit(driver);
+        RegisterReview(driver);
 
-        RegisterEnableAutomerge(
-            pullRequest,
-            (p) => p.WithInterceptionCallback(async (request) =>
+        RegisterEnableAutomerge(driver, (p) => p.WithInterceptionCallback(async (request) =>
+        {
+            request.Content.ShouldNotBeNull();
+
+            byte[] body = await request.Content.ReadAsByteArrayAsync();
+            using var document = JsonDocument.Parse(body);
+
+            var query = document.RootElement.GetProperty("query").GetString();
+
+            query.ShouldNotBeNull();
+
+            bool hasCorrectPayload =
+                query.Contains(@$"pullRequestId:""{driver.PullRequest.NodeId}""", StringComparison.Ordinal) &&
+                query.Contains($"mergeMethod:{mergeMethod}", StringComparison.Ordinal);
+
+            if (hasCorrectPayload)
             {
-                request.Content.ShouldNotBeNull();
+                automergeEnabled.SetResult();
+            }
 
-                byte[] body = await request.Content.ReadAsByteArrayAsync();
-                using var document = JsonDocument.Parse(body);
-
-                var query = document.RootElement.GetProperty("query").GetString();
-
-                query.ShouldNotBeNull();
-
-                bool hasCorrectPayload =
-                    query.Contains(@$"pullRequestId:""{pullRequest.NodeId}""", StringComparison.Ordinal) &&
-                    query.Contains($"mergeMethod:{mergeMethod}", StringComparison.Ordinal);
-
-                if (hasCorrectPayload)
-                {
-                    automergeEnabled.SetResult();
-                }
-
-                return hasCorrectPayload;
-            }));
-
-        var value = CreateWebhook(pullRequest);
+            return hasCorrectPayload;
+        }));
 
         // Act
-        using var response = await PostWebhookAsync("pull_request", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -129,31 +115,24 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.AutoMergeEnabled();
 
-        var user = CreateUserForDependabot();
-        var pullRequest = CreatePullRequest(user);
-
-        var commit = pullRequest.CreateCommit();
-        commit.Message = TrustedCommitMessage();
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(TrustedCommitMessage());
 
         var automergeEnabled = new TaskCompletionSource();
 
         RegisterGetAccessToken();
-        RegisterGetCommit(commit);
-        RegisterPostReview(pullRequest);
+        RegisterCommit(driver);
+        RegisterReview(driver);
 
-        RegisterEnableAutomerge(
-            pullRequest,
-            (p) =>
-            {
-                p.Responds()
-                 .WithStatus(HttpStatusCode.BadRequest)
-                 .WithInterceptionCallback((_) => automergeEnabled.SetResult());
-            });
-
-        var value = CreateWebhook(pullRequest);
+        RegisterEnableAutomerge(driver, (p) =>
+        {
+            p.Responds()
+             .WithStatus(HttpStatusCode.BadRequest)
+             .WithInterceptionCallback((_) => automergeEnabled.SetResult());
+        });
 
         // Act
-        using var response = await PostWebhookAsync("pull_request", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -167,25 +146,20 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApprovePullRequests();
 
-        var user = CreateUserForDependabot();
-        var pullRequest = CreatePullRequest(user);
-
-        var commit = pullRequest.CreateCommit();
-        commit.Message = UntrustedCommitMessage();
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(UntrustedCommitMessage());
 
         var pullRequestApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
-        RegisterGetCommit(commit);
+        RegisterCommit(driver);
 
-        RegisterPostReview(
-            pullRequest,
+        RegisterReview(
+            driver,
             (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
 
-        var value = CreateWebhook(pullRequest);
-
         // Act
-        using var response = await PostWebhookAsync("pull_request", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -199,25 +173,20 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApprovePullRequests();
 
-        var user = CreateUser("rando-calrissian");
-        var pullRequest = CreatePullRequest(user);
-
-        var commit = pullRequest.CreateCommit();
-        commit.Message = TrustedCommitMessage();
+        var driver = new PullRequestDriver("rando-calrissian")
+            .WithCommitMessage(TrustedCommitMessage());
 
         var pullRequestApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
-        RegisterGetCommit(commit);
+        RegisterCommit(driver);
 
-        RegisterPostReview(
-            pullRequest,
+        RegisterReview(
+            driver,
             (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
 
-        var value = CreateWebhook(pullRequest);
-
         // Act
-        using var response = await PostWebhookAsync("pull_request", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -231,23 +200,20 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApprovePullRequests();
 
-        var user = CreateUserForDependabot();
-        var pullRequest = CreatePullRequest(user);
-        var commit = pullRequest.CreateCommit();
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage("Fix a typo");
 
         var pullRequestApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
-        RegisterGetCommit(commit);
+        RegisterCommit(driver);
 
-        RegisterPostReview(
-            pullRequest,
+        RegisterReview(
+            driver,
             (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
 
-        var value = CreateWebhook(pullRequest);
-
         // Act
-        using var response = await PostWebhookAsync("pull_request", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -277,25 +243,20 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApprovePullRequests();
 
-        var user = CreateUserForDependabot();
-        var pullRequest = CreatePullRequest(user);
-
-        var commit = pullRequest.CreateCommit();
-        commit.Message = TrustedCommitMessage();
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(TrustedCommitMessage());
 
         var pullRequestApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
-        RegisterGetCommit(commit);
+        RegisterCommit(driver);
 
-        RegisterPostReview(
-            pullRequest,
+        RegisterReview(
+            driver,
             (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
 
-        var value = CreateWebhook(pullRequest, action);
-
         // Act
-        using var response = await PostWebhookAsync("pull_request", value);
+        using var response = await PostWebhookAsync(driver, action);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -309,27 +270,22 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         // Arrange
         Fixture.ApprovePullRequests();
 
-        var user = CreateUserForDependabot();
-        var pullRequest = CreatePullRequest(user);
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(TrustedCommitMessage());
 
-        pullRequest.IsDraft = true;
-
-        var commit = pullRequest.CreateCommit();
-        commit.Message = TrustedCommitMessage();
+        driver.PullRequest.IsDraft = true;
 
         var pullRequestApproved = new TaskCompletionSource();
 
         RegisterGetAccessToken();
-        RegisterGetCommit(commit);
+        RegisterCommit(driver);
 
-        RegisterPostReview(
-            pullRequest,
+        RegisterReview(
+            driver,
             (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
 
-        var value = CreateWebhook(pullRequest);
-
         // Act
-        using var response = await PostWebhookAsync("pull_request", value);
+        using var response = await PostWebhookAsync(driver);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -348,25 +304,67 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         await Should.NotThrowAsync(() => target.HandleAsync(message));
     }
 
-    private static PullRequestBuilder CreatePullRequest(UserBuilder user)
+    private async Task<HttpResponseMessage> PostWebhookAsync(PullRequestDriver driver, string action = "opened")
     {
-        var owner = CreateUser();
-        var repository = owner.CreateRepository();
-        return repository.CreatePullRequest(user);
+        var value = driver.CreateWebhook(action);
+        return await PostWebhookAsync("pull_request", value);
     }
 
-    private static object CreateWebhook(PullRequestBuilder pullRequest, string action = "opened")
+    private void RegisterCommit(PullRequestDriver driver)
     {
-        return new
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/commits/{driver.Commit.Sha}")
+            .Responds()
+            .WithJsonContent(driver.Commit)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    private void RegisterEnableAutomerge(
+        PullRequestDriver driver,
+        Action<HttpRequestInterceptionBuilder>? configure = null)
+    {
+        var response = new
         {
-            action,
-            number = pullRequest.Number,
-            pull_request = pullRequest.Build(),
-            repository = pullRequest.Repository.Build(),
-            installation = new
+            data = new
             {
-                id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
+                enablePullRequestAutoMerge = new
+                {
+                    number = new
+                    {
+                        number = driver.PullRequest.Number,
+                    },
+                },
             },
         };
+
+        var builder = CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath("graphql")
+            .Responds()
+            .WithStatus(StatusCodes.Status201Created)
+            .WithSystemTextJsonContent(response);
+
+        configure?.Invoke(builder);
+
+        builder.RegisterWith(Fixture.Interceptor);
+    }
+
+    private void RegisterReview(
+        PullRequestDriver driver,
+        Action<HttpRequestInterceptionBuilder>? configure = null)
+    {
+        var builder = CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath($"/repos/{driver.PullRequest.Repository.Owner.Login}/{driver.PullRequest.Repository.Name}/pulls/{driver.PullRequest.Number}/reviews")
+            .Responds()
+            .WithStatus(StatusCodes.Status201Created)
+            .WithSystemTextJsonContent(new { });
+
+        configure?.Invoke(builder);
+
+        builder.RegisterWith(Fixture.Interceptor);
     }
 }
