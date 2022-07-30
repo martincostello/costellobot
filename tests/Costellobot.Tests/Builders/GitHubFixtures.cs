@@ -21,6 +21,7 @@ public static class GitHubFixtures
     public const string InstallationId = "42";
 
     public static CheckRunBuilder CreateCheckRun(
+        PullRequestBuilder pullRequest,
         string name,
         string status,
         string? conclusion = null,
@@ -35,6 +36,8 @@ public static class GitHubFixtures
         {
             builder.ApplicationName = applicationName;
         }
+
+        builder.PullRequests.Add(pullRequest);
 
         return builder;
     }

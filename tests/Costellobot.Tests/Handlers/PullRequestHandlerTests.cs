@@ -23,7 +23,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
     public async Task Pull_Request_Is_Approved_For_Trusted_User_And_Dependency()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Approve", bool.TrueString);
+        Fixture.ApprovePullRequests();
 
         var user = CreateUserForDependabot();
         var pullRequest = CreatePullRequest(user);
@@ -66,7 +66,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         string mergeMethod)
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Automerge", bool.TrueString);
+        Fixture.AutoMergeEnabled();
 
         var user = CreateUserForDependabot();
         var owner = CreateUser();
@@ -127,7 +127,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
     public async Task Exception_Is_Not_Thrown_If_Enabling_Automerge_Fails()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Automerge", bool.TrueString);
+        Fixture.AutoMergeEnabled();
 
         var user = CreateUserForDependabot();
         var pullRequest = CreatePullRequest(user);
@@ -165,7 +165,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
     public async Task Pull_Request_Is_Not_Approved_For_Trusted_User_But_Untusted_Dependency()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Approve", bool.TrueString);
+        Fixture.ApprovePullRequests();
 
         var user = CreateUserForDependabot();
         var pullRequest = CreatePullRequest(user);
@@ -197,7 +197,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
     public async Task Pull_Request_Is_Not_Approved_For_Untrusted_User()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Approve", bool.TrueString);
+        Fixture.ApprovePullRequests();
 
         var user = CreateUser("rando-calrissian");
         var pullRequest = CreatePullRequest(user);
@@ -229,7 +229,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
     public async Task Pull_Request_Is_Not_Approved_For_Trusted_User_With_No_Dependencies_Detected()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Approve", bool.TrueString);
+        Fixture.ApprovePullRequests();
 
         var user = CreateUserForDependabot();
         var pullRequest = CreatePullRequest(user);
@@ -275,7 +275,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
     public async Task Pull_Request_Is_Not_Approved_For_Ignored_Action(string action)
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Approve", bool.TrueString);
+        Fixture.ApprovePullRequests();
 
         var user = CreateUserForDependabot();
         var pullRequest = CreatePullRequest(user);
@@ -307,7 +307,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
     public async Task Pull_Request_Is_Not_Approved_For_Draft()
     {
         // Arrange
-        Fixture.OverrideConfiguration("Webhook:Approve", bool.TrueString);
+        Fixture.ApprovePullRequests();
 
         var user = CreateUserForDependabot();
         var pullRequest = CreatePullRequest(user);

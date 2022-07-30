@@ -56,7 +56,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
 
     protected static async Task AssertTaskNotRun(TaskCompletionSource source)
     {
-        await Task.Delay(TimeSpan.FromSeconds(0.1));
+        await Task.Delay(TimeSpan.FromSeconds(0.2));
         source.Task.Status.ShouldBe(TaskStatus.WaitingForActivation);
     }
 
@@ -164,20 +164,6 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .RegisterWith(Fixture.Interceptor);
     }
 
-    protected void RegisterGetCheckRuns(
-        RepositoryBuilder repository,
-        int id,
-        params CheckRunBuilder[] checkRuns)
-    {
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPath($"/repos/{repository.Owner.Login}/{repository.Name}/check-suites/{id}/check-runs")
-            .ForQuery("status=completed&filter=all")
-            .Responds()
-            .WithJsonContent(CreateCheckRuns(checkRuns))
-            .RegisterWith(Fixture.Interceptor);
-    }
-
     protected void RegisterGetCommit(GitHubCommitBuilder commit)
     {
         CreateDefaultBuilder()
@@ -259,16 +245,6 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         builder.RegisterWith(Fixture.Interceptor);
     }
 
-    protected void RegisterGetPullRequest(PullRequestBuilder pullRequest)
-    {
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPath($"/repos/{pullRequest.Repository.Owner.Login}/{pullRequest.Repository.Name}/pulls/{pullRequest.Number}")
-            .Responds()
-            .WithJsonContent(pullRequest)
-            .RegisterWith(Fixture.Interceptor);
-    }
-
     protected void RegisterGetPullRequestsForCommit(
         RepositoryBuilder repository,
         string sha,
@@ -303,40 +279,6 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .Requests()
             .ForPost()
             .ForPath($"/repos/{pullRequest.Repository.Owner.Login}/{pullRequest.Repository.Name}/pulls/{pullRequest.Number}/reviews")
-            .Responds()
-            .WithStatus(StatusCodes.Status201Created)
-            .WithSystemTextJsonContent(new { });
-
-        configure?.Invoke(builder);
-
-        builder.RegisterWith(Fixture.Interceptor);
-    }
-
-    protected void RegisterRerequestCheckSuite(
-        CheckSuiteBuilder checkSuite,
-        Action<HttpRequestInterceptionBuilder>? configure = null)
-    {
-        var builder = CreateDefaultBuilder()
-            .Requests()
-            .ForPost()
-            .ForPath($"/repos/{checkSuite.Repository.Owner.Login}/{checkSuite.Repository.Name}/check-suites/{checkSuite.Id}/rerequest")
-            .Responds()
-            .WithStatus(StatusCodes.Status201Created)
-            .WithSystemTextJsonContent(new { });
-
-        configure?.Invoke(builder);
-
-        builder.RegisterWith(Fixture.Interceptor);
-    }
-
-    protected void RegisterRerunFailedJobs(
-        WorkflowRunBuilder workflowRun,
-        Action<HttpRequestInterceptionBuilder>? configure = null)
-    {
-        var builder = CreateDefaultBuilder()
-            .Requests()
-            .ForPost()
-            .ForPath($"/repos/{workflowRun.Repository.Owner.Login}/{workflowRun.Repository.Name}/actions/runs/{workflowRun.Id}/rerun-failed-jobs")
             .Responds()
             .WithStatus(StatusCodes.Status201Created)
             .WithSystemTextJsonContent(new { });
