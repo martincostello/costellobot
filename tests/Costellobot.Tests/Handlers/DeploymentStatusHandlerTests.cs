@@ -35,17 +35,13 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
 
-        var deploymentApproved = new TaskCompletionSource();
-
         RegisterGetAccessToken();
 
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
         RegisterPullRequestForCommit(driver.HeadCommit);
 
-        RegisterApprovePendingDeployment(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -83,16 +79,12 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             RegisterPullRequestForCommit(commit);
         }
 
-        var deploymentApproved = new TaskCompletionSource();
-
         RegisterGetAccessToken();
 
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
 
-        RegisterApprovePendingDeployment(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -127,16 +119,12 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             RegisterPullRequestForCommit(commit);
         }
 
-        var deploymentApproved = new TaskCompletionSource();
-
         RegisterGetAccessToken();
 
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
 
-        RegisterApprovePendingDeployment(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -163,14 +151,13 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
 
-        var deploymentApproved = new TaskCompletionSource();
-
         RegisterGetAccessToken();
 
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
         RegisterPullRequestForCommit(driver.HeadCommit);
 
+        var deploymentApproved = new TaskCompletionSource();
         RegisterApprovePendingDeployment(driver, (p) =>
         {
             p.WithStatus(HttpStatusCode.Forbidden)
@@ -205,7 +192,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             (commit) => CreateDeployment(commit),
             () => CreateDeploymentStatus(state));
 
-        var deploymentApproved = new TaskCompletionSource();
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -227,7 +214,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         driver.WithPendingDeployment(
             (commit) => CreateDeployment(commit));
 
-        var deploymentApproved = new TaskCompletionSource();
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -252,7 +239,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         driver.WithPendingDeployment(
             (_) => CreateDeployment(environment));
 
-        var deploymentApproved = new TaskCompletionSource();
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -272,7 +259,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         var driver = new DeploymentStatusDriver();
         driver.WithPendingDeployment();
 
-        var deploymentApproved = new TaskCompletionSource();
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         RegisterGetAccessToken();
         RegisterGetDeployments(driver.Repository, driver.PendingDeployment.Environment);
@@ -295,7 +282,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         var driver = new DeploymentStatusDriver();
         driver.WithPendingDeployment();
 
-        var deploymentApproved = new TaskCompletionSource();
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         RegisterGetAccessToken();
         RegisterAllDeployments(driver);
@@ -320,7 +307,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         driver.WithPendingDeployment();
         driver.WithActiveDeployment();
 
-        var deploymentApproved = new TaskCompletionSource();
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         RegisterGetAccessToken();
         RegisterAllDeployments(driver);
@@ -347,7 +334,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         driver.WithPendingDeployment();
         driver.WithActiveDeployment();
 
-        var deploymentApproved = new TaskCompletionSource();
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         RegisterGetAccessToken();
         RegisterAllDeployments(driver);
@@ -375,7 +362,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         driver.WithInactiveDeployment();
         driver.WithInactiveDeployment();
 
-        var deploymentApproved = new TaskCompletionSource();
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         RegisterGetAccessToken();
         RegisterAllDeployments(driver);
@@ -407,7 +394,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
 
-        var deploymentApproved = new TaskCompletionSource();
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         RegisterGetAccessToken();
 
@@ -444,7 +431,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         comparison.BehindBy = 1;
         comparison.Status = "behind";
 
-        var deploymentApproved = new TaskCompletionSource();
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         RegisterGetAccessToken();
 
@@ -481,17 +468,13 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
 
-        var deploymentApproved = new TaskCompletionSource();
-
         RegisterGetAccessToken();
 
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
         RegisterPullRequestForCommit(driver.HeadCommit);
 
-        RegisterApprovePendingDeployment(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         RegisterGetAccessToken();
 
@@ -527,8 +510,6 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         var additional = CreateUntrustedCommit(driver.Repository);
         driver.WithPendingCommit(additional);
 
-        var deploymentApproved = new TaskCompletionSource();
-
         RegisterGetAccessToken();
 
         RegisterAllDeployments(driver);
@@ -539,9 +520,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             RegisterPullRequestForCommit(commit);
         }
 
-        RegisterApprovePendingDeployment(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -570,17 +549,13 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
 
-        var deploymentApproved = new TaskCompletionSource();
-
         RegisterGetAccessToken();
 
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
         RegisterPullRequestForCommit(driver.HeadCommit);
 
-        RegisterApprovePendingDeployment(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
         var pendingDeployments = new List<PendingDeploymentBuilder>(count);
 
@@ -691,9 +666,20 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         }
     }
 
+    private TaskCompletionSource RegisterApprovePendingDeployment(DeploymentStatusDriver driver)
+    {
+        var deploymentApproved = new TaskCompletionSource();
+
+        RegisterApprovePendingDeployment(
+            driver,
+            (p) => p.WithInterceptionCallback((_) => deploymentApproved.SetResult()));
+
+        return deploymentApproved;
+    }
+
     private void RegisterApprovePendingDeployment(
         DeploymentStatusDriver driver,
-        Action<HttpRequestInterceptionBuilder>? configure = null)
+        Action<HttpRequestInterceptionBuilder> configure)
     {
         var builder = CreateDefaultBuilder()
             .Requests()
@@ -702,7 +688,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             .Responds()
             .WithJsonContent(driver.PendingDeployment!);
 
-        configure?.Invoke(builder);
+        configure(builder);
 
         builder.RegisterWith(Fixture.Interceptor);
     }
