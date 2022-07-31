@@ -29,14 +29,10 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(TrustedCommitMessage());
 
-        var pullRequestApproved = new TaskCompletionSource();
-
         RegisterGetAccessToken();
         RegisterCommit(driver);
 
-        RegisterReview(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
+        var pullRequestApproved = RegisterReview(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -71,12 +67,11 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         driver.Repository.AllowRebaseMerge = allowRebaseMerge;
         driver.Repository.AllowSquashMerge = allowSquashMerge;
 
-        var automergeEnabled = new TaskCompletionSource();
-
         RegisterGetAccessToken();
         RegisterCommit(driver);
         RegisterReview(driver);
 
+        var automergeEnabled = new TaskCompletionSource();
         RegisterEnableAutomerge(driver, (p) => p.WithInterceptionCallback(async (request) =>
         {
             request.Content.ShouldNotBeNull();
@@ -118,12 +113,11 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(TrustedCommitMessage());
 
-        var automergeEnabled = new TaskCompletionSource();
-
         RegisterGetAccessToken();
         RegisterCommit(driver);
         RegisterReview(driver);
 
+        var automergeEnabled = new TaskCompletionSource();
         RegisterEnableAutomerge(driver, (p) =>
         {
             p.Responds()
@@ -149,14 +143,10 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(UntrustedCommitMessage());
 
-        var pullRequestApproved = new TaskCompletionSource();
-
         RegisterGetAccessToken();
         RegisterCommit(driver);
 
-        RegisterReview(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
+        var pullRequestApproved = RegisterReview(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -176,14 +166,10 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         var driver = new PullRequestDriver("rando-calrissian")
             .WithCommitMessage(TrustedCommitMessage());
 
-        var pullRequestApproved = new TaskCompletionSource();
-
         RegisterGetAccessToken();
         RegisterCommit(driver);
 
-        RegisterReview(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
+        var pullRequestApproved = RegisterReview(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -203,14 +189,10 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage("Fix a typo");
 
-        var pullRequestApproved = new TaskCompletionSource();
-
         RegisterGetAccessToken();
         RegisterCommit(driver);
 
-        RegisterReview(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
+        var pullRequestApproved = RegisterReview(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -246,14 +228,10 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(TrustedCommitMessage());
 
-        var pullRequestApproved = new TaskCompletionSource();
-
         RegisterGetAccessToken();
         RegisterCommit(driver);
 
-        RegisterReview(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
+        var pullRequestApproved = RegisterReview(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver, action);
@@ -275,14 +253,10 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
 
         driver.PullRequest.IsDraft = true;
 
-        var pullRequestApproved = new TaskCompletionSource();
-
         RegisterGetAccessToken();
         RegisterCommit(driver);
 
-        RegisterReview(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
+        var pullRequestApproved = RegisterReview(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -351,9 +325,20 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         builder.RegisterWith(Fixture.Interceptor);
     }
 
+    private TaskCompletionSource RegisterReview(PullRequestDriver driver)
+    {
+        var pullRequestApproved = new TaskCompletionSource();
+
+        RegisterReview(
+            driver,
+            (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
+
+        return pullRequestApproved;
+    }
+
     private void RegisterReview(
         PullRequestDriver driver,
-        Action<HttpRequestInterceptionBuilder>? configure = null)
+        Action<HttpRequestInterceptionBuilder> configure)
     {
         var builder = CreateDefaultBuilder()
             .Requests()
@@ -363,7 +348,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
             .WithStatus(StatusCodes.Status201Created)
             .WithSystemTextJsonContent(new { });
 
-        configure?.Invoke(builder);
+        configure(builder);
 
         builder.RegisterWith(Fixture.Interceptor);
     }

@@ -30,12 +30,9 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
             .WithCheckRun(
                 (p) => CreateCheckRun(p, "ubuntu-latest", "completed", "failure"));
 
-        var rerequestCheckSuite = new TaskCompletionSource();
-
         RegisterCheckSuiteWithNoWorkflowRun(driver);
-        RegisterRerequestCheckSuite(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => rerequestCheckSuite.SetResult()));
+
+        var rerequestCheckSuite = RegisterRerequestCheckSuite(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -63,14 +60,9 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
         driver.PullRequest.AuthorAssociation = authorAssociation;
         driver.CheckSuite.PullRequests.Add(driver.PullRequest);
 
-        var rerequestCheckSuite = new TaskCompletionSource();
-
         RegisterCheckSuiteWithNoWorkflowRun(driver);
-        RegisterRerequestCheckSuite(driver, (p) =>
-        {
-            p.WithStatus(HttpStatusCode.BadRequest)
-             .WithInterceptionCallback((_) => rerequestCheckSuite.SetResult());
-        });
+
+        var rerequestCheckSuite = RegisterRerequestCheckSuite(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -100,12 +92,9 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
                 (p) => CreateCheckRun(p, "ubuntu-latest", "completed", "failure"));
         }
 
-        var failedJobsRetried = new TaskCompletionSource();
-
         RegisterCheckSuiteWithWorkflowRun(driver);
-        RegisterRerunFailedJobs(
-            driver.WorkflowRun,
-            (p) => p.WithInterceptionCallback((_) => failedJobsRetried.SetResult()));
+
+        var failedJobsRetried = RegisterRerunFailedJobs(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -133,12 +122,9 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
             driver.WithCheckRun((p) => CreateCheckRun(p, "windows-latest", "completed", "success"));
         }
 
-        var failedJobsRetried = new TaskCompletionSource();
-
         RegisterCheckSuiteWithWorkflowRun(driver);
-        RegisterRerunFailedJobs(
-            driver.WorkflowRun,
-            (p) => p.WithInterceptionCallback((_) => failedJobsRetried.SetResult()));
+
+        var failedJobsRetried = RegisterRerunFailedJobs(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -168,12 +154,9 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
             driver.WithCheckRun((p) => CreateCheckRun(p, "windows-latest", "completed", "failure"));
         }
 
-        var failedJobsRetried = new TaskCompletionSource();
-
         RegisterCheckSuiteWithNoWorkflowRun(driver);
-        RegisterRerunFailedJobs(
-            driver.WorkflowRun,
-            (p) => p.WithInterceptionCallback((_) => failedJobsRetried.SetResult()));
+
+        var failedJobsRetried = RegisterRerunFailedJobs(driver);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -320,9 +303,9 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
             .WithCheckRun(
                 (p) => CreateCheckRun(p, "macos-latest", "completed", "failure"));
 
-        var failedJobsRetried = new TaskCompletionSource();
-
         RegisterCheckSuiteWithWorkflowRun(driver);
+
+        var failedJobsRetried = new TaskCompletionSource();
         RegisterRerunFailedJobs(driver.WorkflowRun, (p) =>
         {
             p.WithStatus(HttpStatusCode.BadRequest)
@@ -457,21 +440,32 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
             .RegisterWith(Fixture.Interceptor);
     }
 
-    private void RegisterRerequestCheckSuite(
-        CheckSuiteDriver driver,
-        Action<HttpRequestInterceptionBuilder>? configure = null)
+    private TaskCompletionSource RegisterRerequestCheckSuite(CheckSuiteDriver driver)
     {
-        var builder = CreateDefaultBuilder()
+        var rerequestCheckSuite = new TaskCompletionSource();
+
+        _ = CreateDefaultBuilder()
             .Requests()
             .ForPost()
             .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/check-suites/{driver.CheckSuite.Id}/rerequest")
             .Responds()
             .WithStatus(StatusCodes.Status201Created)
-            .WithSystemTextJsonContent(new { });
+            .WithSystemTextJsonContent(new { })
+            .WithInterceptionCallback((_) => rerequestCheckSuite.SetResult())
+            .RegisterWith(Fixture.Interceptor);
 
-        configure?.Invoke(builder);
+        return rerequestCheckSuite;
+    }
 
-        builder.RegisterWith(Fixture.Interceptor);
+    private TaskCompletionSource RegisterRerunFailedJobs(CheckSuiteDriver driver)
+    {
+        var failedJobsRetried = new TaskCompletionSource();
+
+        RegisterRerunFailedJobs(
+            driver.WorkflowRun,
+            (p) => p.WithInterceptionCallback((_) => failedJobsRetried.SetResult()));
+
+        return failedJobsRetried;
     }
 
     private void RegisterRerunFailedJobs(
