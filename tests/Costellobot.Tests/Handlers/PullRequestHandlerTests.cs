@@ -21,13 +21,37 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Fact]
-    public async Task Pull_Request_Is_Approved_For_Trusted_User_And_Dependency()
+    public async Task Pull_Request_Is_Approved_For_Trusted_User_And_Dependency_Name()
     {
         // Arrange
         Fixture.ApprovePullRequests();
 
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(TrustedCommitMessage());
+
+        RegisterGetAccessToken();
+        RegisterCommit(driver);
+
+        var pullRequestApproved = RegisterReview(driver);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await pullRequestApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public async Task Pull_Request_Is_Approved_For_Trusted_User_And_Dependency_Owner()
+    {
+        // Arrange
+        Fixture.ApprovePullRequests();
+        Fixture.Interceptor.RegisterBundle(Path.Combine("Bundles", "nuget-search.json"));
+
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(TrustedCommitMessage("Newtonsoft.Json", "13.0.1"));
 
         RegisterGetAccessToken();
         RegisterCommit(driver);

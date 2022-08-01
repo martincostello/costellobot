@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using MartinCostello.Costellobot.Handlers;
+using MartinCostello.Costellobot.Registries;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -74,6 +75,11 @@ public static class GitHubExtensions
         services.AddSingleton<GitHubWebhookService>();
         services.AddTransient<GitCommitAnalyzer>();
         services.AddTransient<GitHubWebhookDispatcher>();
+
+        services.AddTransient<IPackageRegistry, GitHubActionsPackageRegistry>();
+        services.AddTransient<IPackageRegistry, GitSubmodulePackageRegistry>();
+        services.AddTransient<IPackageRegistry, NpmPackageRegistry>();
+        services.AddTransient<IPackageRegistry, NuGetPackageRegistry>();
 
         services.AddSingleton<IHandlerFactory, HandlerFactory>();
         services.AddTransient<CheckSuiteHandler>();
