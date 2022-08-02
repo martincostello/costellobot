@@ -1,0 +1,72 @@
+@page "/deliveries"
+@using Humanizer
+@model DeliveriesModel
+@{
+    ViewData["Title"] = "Deliveries";
+}
+<div id="deliveries-content">
+  <h1>
+    <span class="fa-solid fa-truck-ramp-box" aria-hidden="true"></span>
+    @(ViewData["Title"])
+  </h1>
+  <form method="post">
+    <div class="mb-3">
+      <div id="delivery-id-help" class="form-text">
+        The ID of the delivery to find.
+      </div>
+      <div class="input-group">
+        <input asp-for="DeliveryId" id="delivery-id" class="form-control" type="text" autocomplete="off" placeholder="2f5f9aed-819e-451f-8573-3e83b2ab2454" spellcheck="false" aria-describedby="delivery-id-help">
+        <input class="btn btn-primary" type="submit" id="find-delivery" value="Find" />
+      </div>
+    </div>
+  </form>
+  <hr />
+  <table class="table">
+    <caption class="caption-top">
+      The last @(Model.Deliveries.Count) webhook deliveries.
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Delivery</th>
+        <th scope="col">Timestamp</th>
+        <th scope="col">Event</th>
+        <th scope="col">Action</th>
+        <th scope="col">Installation ID</th>
+        <th scope="col">Repository ID</th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach (var delivery in Model.Deliveries)
+      {
+        <tr class="webhook-delivery">
+          <td>
+            <code>
+              <a asp-page="Delivery" asp-route-id="@(delivery.Id)" class="delivery-id">@(delivery.Id)</a>
+            </code>
+          </td>
+          <td>
+            <code class="delivery-guid">@(delivery.Guid)</code>
+          </td>
+          <td>
+            <code class="delivery-timestamp" title="@(delivery.DeliveredAt.Humanize())">
+              @(delivery.DeliveredAt.ToString("u", CultureInfo.InvariantCulture))
+            </code>
+          </td>
+          <td>
+            <code class="delivery-event">@(delivery.Event)</code>
+          </td>
+          <td>
+            <code class="delivery-action">@(delivery.Action ?? "-")</code>
+          </td>
+          <td>
+            <code class="delivery-installation-id">@(delivery.InstallationId?.ToString(CultureInfo.InvariantCulture) ?? "-")</code>
+          </td>
+          <td>
+            <code class="delivery-repository-id">@(delivery.RepositoryId?.ToString(CultureInfo.InvariantCulture) ?? "-")</code>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

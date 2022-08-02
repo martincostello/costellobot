@@ -28,4 +28,10 @@ public static class ShouldlyTaskExtensions
         bool actual = await task;
         actual.ShouldBeTrue();
     }
+
+    public static async Task ShouldNotBeNullOrWhiteSpace(this Task<string> task)
+    {
+        string actual = await task;
+        actual.ShouldNotBeNullOrWhiteSpace();
+    }
 }

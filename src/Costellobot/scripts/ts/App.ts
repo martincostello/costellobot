@@ -35,6 +35,17 @@ export class App {
         } else if (webhookSubmit) {
             this.initiailizeDebug(webhookSubmit);
         }
+
+        if ('ClipboardJS' in window) {
+            const selector = '.copy-button';
+            const copyButton = document.querySelector(selector);
+
+            const clipboard: any = window['ClipboardJS' as any];
+            new clipboard(selector);
+            copyButton.addEventListener('click', (event) => {
+                event.preventDefault();
+            });
+        }
     }
 
     private async initializeLogs(logsContainer: HTMLInputElement): Promise<void> {

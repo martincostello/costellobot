@@ -14,7 +14,13 @@ public abstract class AppPage
 
     protected IPage Page { get; }
 
-    public async Task<AdminPage> HomeAsync()
+    public async Task<DeliveriesPage> DeliveriesAsync()
+    {
+        await Page.ClickAsync(Selectors.DeliveriesLink);
+        return new(Page);
+    }
+
+    public async Task<HomePage> HomeAsync()
     {
         await Page.ClickAsync(Selectors.AdminLink);
         return new(Page);
@@ -52,6 +58,7 @@ public abstract class AppPage
     private sealed class Selectors
     {
         internal const string AdminLink = "id=admin-link";
+        internal const string DeliveriesLink = "id=deliveries-link";
         internal const string SignIn = "id=sign-in";
         internal const string SignOut = "id=sign-out";
         internal const string UserName = "id=user-name";

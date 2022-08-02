@@ -77,6 +77,8 @@ public sealed class ResourceTests : IntegrationTests<AppFixture>
 
     [Theory]
     [InlineData("/")]
+    [InlineData("/deliveries")]
+    [InlineData("/delivery/1")]
     [InlineData("/github-webhook")]
     public async Task Cannot_Get_Resource_Unauthenticated(string requestUri)
     {

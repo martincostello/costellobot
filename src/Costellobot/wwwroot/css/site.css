@@ -33,6 +33,17 @@ img.user-profile {
     max-width: 30px;
 }
 
+pre.hook-delivery-container {
+    padding: 8px 12px;
+    margin: 8px 0;
+    overflow: auto;
+    font-size: 13px;
+    line-height: 1.5;
+    background-color: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+}
+
 textarea.form-payload {
     resize: none;
 }
