@@ -55,7 +55,7 @@ public sealed partial class DeliveryModel : PageModel
 
     public int ResponseStatusCode => Delivery.GetProperty("status_code").GetInt32();
 
-    public JsonElement Delivery { get; private set; }
+    private JsonElement Delivery { get; set; }
 
     public async Task<IActionResult> OnGet([FromRoute(Name = "id")] long id)
     {
