@@ -76,10 +76,7 @@ public sealed partial class DeliveryModel : PageModel
 
         var request = Delivery.GetProperty("request");
 
-        foreach (var property in request.GetProperty("headers").EnumerateObject().OrderBy((p) => p.Name, StringComparer.OrdinalIgnoreCase))
-        {
-            RequestHeaders[property.Name] = property.Value.ToString();
-        }
+        TryPopulateHeaders(request.GetProperty("headers"), RequestHeaders);
 
         RequestPayload = JsonSerializer.Serialize(
             request.GetProperty("payload"),
@@ -87,10 +84,7 @@ public sealed partial class DeliveryModel : PageModel
 
         var response = Delivery.GetProperty("response");
 
-        foreach (var property in response.GetProperty("headers").EnumerateObject().OrderBy((p) => p.Name, StringComparer.OrdinalIgnoreCase))
-        {
-            ResponseHeaders[property.Name] = property.Value.ToString();
-        }
+        TryPopulateHeaders(response.GetProperty("headers"), ResponseHeaders);
 
         ResponseBody = response.GetProperty("payload").ToString();
 
@@ -102,6 +96,17 @@ public sealed partial class DeliveryModel : PageModel
         }
 
         return Page();
+
+        static void TryPopulateHeaders(JsonElement element, IDictionary<string, string> headers)
+        {
+            if (element.ValueKind != JsonValueKind.Null)
+            {
+                foreach (var property in element.EnumerateObject().OrderBy((p) => p.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    headers[property.Name] = property.Value.ToString();
+                }
+            }
+        }
     }
 
     public async Task<IActionResult> OnPost()

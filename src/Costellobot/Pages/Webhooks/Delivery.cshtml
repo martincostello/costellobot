@@ -108,8 +108,11 @@
       <pre id="request-payload" class="hook-delivery-container">@(Model.RequestPayload)</pre>
     </div>
     <div class="tab-pane fade" id="response" role="tabpanel" aria-labelledby="response-tab">
-      <h3>Headers</h3>
-      <pre class="hook-delivery-container">@foreach ((var key, var value) in Model.ResponseHeaders){<strong>@(key):</strong> @(value)<br/>}</pre>
+      @if (Model.ResponseHeaders.Count > 0)
+      {
+        <h3>Headers</h3>
+        <pre class="hook-delivery-container">@foreach ((var key, var value) in Model.ResponseHeaders){<strong>@(key):</strong> @(value)<br/>}</pre>
+      }
       @if (!string.IsNullOrWhiteSpace(Model.ResponseBody))
       {
         <h3>Body</h3>
