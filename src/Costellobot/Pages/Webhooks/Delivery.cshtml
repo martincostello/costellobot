@@ -69,7 +69,6 @@
       <button class="nav-link" id="response-tab" data-bs-toggle="tab" data-bs-target="#response" type="button" role="tab" aria-controls="response" aria-selected="false">
         Response
         @{
-            int statusCode = Model.Delivery.GetProperty("status_code").GetInt32();
             string @class = Model.ResponseStatusCode switch
             {
               int value when value >= 200 && value < 300 => "bg-success",
