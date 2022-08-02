@@ -44,21 +44,18 @@ public class WebhookTests : UITests
             await items[0].EventAsync().ShouldBe("issues");
             await items[0].GuidAsync().ShouldBe(third.Guid.ToString());
             await items[0].IdAsync().ShouldBe(third.Id.ToString(CultureInfo.InvariantCulture));
-            await items[0].InstallationIdAsync().ShouldBe("-");
             await items[0].RepositoryIdAsync().ShouldBe("-");
 
             await items[1].ActionAsync().ShouldBe("opened");
             await items[1].EventAsync().ShouldBe("issues");
             await items[1].GuidAsync().ShouldBe(second.Guid.ToString());
             await items[1].IdAsync().ShouldBe(second.Id.ToString(CultureInfo.InvariantCulture));
-            await items[1].InstallationIdAsync().ShouldBe("123");
             await items[1].RepositoryIdAsync().ShouldBe("456");
 
             await items[2].ActionAsync().ShouldBe("-");
             await items[2].EventAsync().ShouldBe("status");
             await items[2].GuidAsync().ShouldBe(first.Guid.ToString());
             await items[2].IdAsync().ShouldBe(first.Id.ToString(CultureInfo.InvariantCulture));
-            await items[2].InstallationIdAsync().ShouldBe("-");
             await items[2].RepositoryIdAsync().ShouldBe("-");
         });
     }
@@ -178,7 +175,6 @@ public class WebhookTests : UITests
             await items[0].EventAsync().ShouldBe(delivery.Event);
             await items[0].GuidAsync().ShouldBe(delivery.Guid.ToString());
             await items[0].IdAsync().ShouldBe(delivery.Id.ToString(CultureInfo.InvariantCulture));
-            await items[0].InstallationIdAsync().ShouldBe("-");
             await items[0].RepositoryIdAsync().ShouldBe("-");
         });
     }

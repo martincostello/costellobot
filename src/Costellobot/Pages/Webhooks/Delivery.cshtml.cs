@@ -37,8 +37,6 @@ public sealed partial class DeliveryModel : PageModel
 
     public string Event => Delivery.GetProperty("event").GetString() ?? "-";
 
-    public string InstallationId { get; set; } = "-";
-
     public bool Redelivery => Delivery.GetProperty("redelivery").GetBoolean();
 
     public string RepositoryId { get; set; } = "-";
@@ -96,16 +94,9 @@ public sealed partial class DeliveryModel : PageModel
 
         ResponseBody = response.GetProperty("payload").ToString();
 
-        if (Delivery.TryGetProperty("installation_id", out var installationId) &&
-            installationId.ValueKind != JsonValueKind.Null &&
-            installationId.TryGetInt64(out var value))
-        {
-            InstallationId = value.ToString(CultureInfo.InvariantCulture);
-        }
-
         if (Delivery.TryGetProperty("repository_id", out var repositoryId) &&
             repositoryId.ValueKind != JsonValueKind.Null &&
-            repositoryId.TryGetInt64(out value))
+            repositoryId.TryGetInt64(out var value))
         {
             RepositoryId = value.ToString(CultureInfo.InvariantCulture);
         }

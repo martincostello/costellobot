@@ -32,7 +32,6 @@
         <th scope="col">Timestamp</th>
         <th scope="col">Event</th>
         <th scope="col">Action</th>
-        <th scope="col">Installation ID</th>
         <th scope="col">Repository ID</th>
       </tr>
     </thead>
@@ -58,9 +57,6 @@
           </td>
           <td>
             <code class="delivery-action">@(delivery.Action ?? "-")</code>
-          </td>
-          <td>
-            <code class="delivery-installation-id">@(delivery.InstallationId?.ToString(CultureInfo.InvariantCulture) ?? "-")</code>
           </td>
           <td>
             <code class="delivery-repository-id">@(delivery.RepositoryId?.ToString(CultureInfo.InvariantCulture) ?? "-")</code>

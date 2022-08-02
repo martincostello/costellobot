@@ -57,9 +57,6 @@ public sealed class DeliveriesPage : AppPage
         public async Task<string> IdAsync()
             => await StringAsync(Selectors.DeliveryId);
 
-        public async Task<string> InstallationIdAsync()
-            => await StringAsync(Selectors.DeliveryInstallationId);
-
         public async Task<string> RepositoryIdAsync()
             => await StringAsync(Selectors.DeliveryRepositoryId);
 
@@ -95,7 +92,6 @@ public sealed class DeliveriesPage : AppPage
         internal const string DeliveryEvent = "[class*='delivery-event']";
         internal const string DeliveryGuid = "[class*='delivery-guid']";
         internal const string DeliveryId = "[class*='delivery-id']";
-        internal const string DeliveryInstallationId = "[class*='delivery-installation-id']";
         internal const string DeliveryRepositoryId = "[class*='delivery-repository-id']";
         internal const string DeliveryItem = "[class*='webhook-delivery']";
         internal const string FindDeliveryInput = "id=delivery-id";
