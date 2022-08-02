@@ -1,0 +1,130 @@
+@page "/delivery/{id}"
+@using Humanizer
+@model DeliveryModel
+@{
+    ViewData["Title"] = Model.DeliveryId;
+}
+<div id="delivery-content" data-delivery-id="@(Model.Id)" data-delivery-guid="@(Model.DeliveryId)">
+  <h1>
+    <span class="fa-solid fa-box-open" aria-hidden="true"></span>
+    @(ViewData["Title"])
+  </h1>
+  <table class="table table-sm">
+    <caption class="caption-top">
+      Properties of the webhook delivery.
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">Property</th>
+        <th scope="col">Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Event</td>
+        <td>
+          <code id="event">@(Model.Event)</code>
+        </td>
+      </tr>
+      <tr>
+        <td>Action</td>
+        <td>
+          <code id="action">@(Model.Action)</code>
+        </td>
+      </tr>
+      <tr>
+        <td>Installation ID</td>
+        <td>
+          <code id="installation-id">@(Model.InstallationId)</code>
+        </td>
+      </tr>
+      <tr>
+        <td>Repository ID</td>
+        <td>
+          <code id="repository-id">@(Model.RepositoryId)</code>
+        </td>
+      </tr>
+      <tr>
+        <td>URL</td>
+        <td>
+          <code id="url">@(Model.RequestUrl)</code>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <hr/>
+  <ul class="nav nav-tabs" id="tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="request-tab" data-bs-toggle="tab" data-bs-target="#request" type="button" role="tab" aria-controls="request" aria-selected="true">
+        Request
+        <span class="text-muted">
+          <span class="fa-solid fa-clock" aria-hidden="true"></span>
+          <span class="text-muted" title="@(Model.DeliveredAt.Humanize())">
+            @@@(Model.DeliveredAt.ToString("u", CultureInfo.InvariantCulture))
+          </span>
+        </span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="response-tab" data-bs-toggle="tab" data-bs-target="#response" type="button" role="tab" aria-controls="response" aria-selected="false">
+        Response
+        @{
+            int statusCode = Model.Delivery.GetProperty("status_code").GetInt32();
+            string @class = Model.ResponseStatusCode switch
+            {
+              int value when value >= 200 && value < 300 => "bg-success",
+              _ => "bg-danger",
+            };
+        }
+        <span class="badge bg-secondary @(@class)">
+          @(Model.ResponseStatusCode.ToString(CultureInfo.InvariantCulture))
+        </span>
+        @if (Model.Redelivery)
+        {
+          <span class="badge rounded-pill bg-primary">Redelivery</span>
+        }
+        <span class="text-muted">
+          <span class="fa-solid fa-stopwatch text-muted" aria-hidden="true"></span>
+          in @(Model.Duration) seconds
+        </span>
+      </button>
+    </li>
+  </ul>
+  <div class="tab-content" id="tab-content">
+    <div class="tab-pane fade show active" id="request" role="tabpanel" aria-labelledby="request-tab">
+      <h3>Headers</h3>
+      <pre id="request-headers" class="hook-delivery-container">@foreach ((var key, var value) in Model.RequestHeaders){<strong>@(key):</strong> @(value)<br/>}</pre>
+      <h3>Payload</h3>
+      <div class="btn-toolbar mb-3" role="toolbar">
+        <div class="btn-group me-2" role="group">
+          <button id="copy-payload" class="btn btn-primary copy-button" data-clipboard-target="#request-payload" title="Copy the webhook payload to the clipboard">
+            Copy to clipboard
+            <span class="far fa-clipboard" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="btn-group" role="group">
+          <form method="post">
+            <input asp-for="Id" type="hidden" value="@Model.Id">
+            <button id="redeliver-payload" class="btn btn-outline-danger" title="Redeliver the webhook payload" type="submit">
+              Redeliver
+              <span class="fa-solid fa-rocket" aria-hidden="true"></span>
+            </button>
+          </form>
+        </div>
+      </div>
+      <pre id="request-payload" class="hook-delivery-container">@(Model.RequestPayload)</pre>
+    </div>
+    <div class="tab-pane fade" id="response" role="tabpanel" aria-labelledby="response-tab">
+      <h3>Headers</h3>
+      <pre class="hook-delivery-container">@foreach ((var key, var value) in Model.ResponseHeaders){<strong>@(key):</strong> @(value)<br/>}</pre>
+      @if (!string.IsNullOrWhiteSpace(Model.ResponseBody))
+      {
+        <h3>Body</h3>
+        <pre class="hook-delivery-container">@(Model.ResponseBody)</pre>
+      }
+    </div>
+  </div>
+</div>
+@section scripts {
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.1/clipboard.min.js" integrity="sha256-hIvIxeqhGZF+VVeM55k0mJvWpQ6gTkWk3Emc+NmowYA=" crossorigin="anonymous" defer></script>
+}

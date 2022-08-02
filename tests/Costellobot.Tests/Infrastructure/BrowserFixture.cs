@@ -10,6 +10,11 @@ public class BrowserFixture
 {
     private const string VideosDirectory = "videos";
 
+    public BrowserFixture(ITestOutputHelper outputHelper)
+        : this(new(), outputHelper)
+    {
+    }
+
     public BrowserFixture(
         BrowserFixtureOptions options,
         ITestOutputHelper outputHelper)

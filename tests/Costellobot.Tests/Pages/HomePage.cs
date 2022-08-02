@@ -5,9 +5,9 @@ using Microsoft.Playwright;
 
 namespace MartinCostello.Costellobot.Pages;
 
-public class AdminPage : AppPage
+public class HomePage : AppPage
 {
-    public AdminPage(IPage page)
+    public HomePage(IPage page)
         : base(page)
     {
     }
