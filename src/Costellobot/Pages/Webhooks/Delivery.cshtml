@@ -69,7 +69,7 @@
               _ => "bg-danger",
             };
         }
-        <span class="badge bg-secondary @(@class)">
+        <span class="badge bg-secondary @(@class)" title="@(Model.ResponseStatus)">
           @(Model.ResponseStatusCode.ToString(CultureInfo.InvariantCulture))
         </span>
         @if (Model.Redelivery)
