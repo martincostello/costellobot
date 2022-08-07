@@ -41,6 +41,13 @@
         <tr class="webhook-delivery">
           <td>
             <code>
+              @{
+                string classes =
+                  string.Equals(delivery.Status, "OK", StringComparison.Ordinal) ?
+                  "fa-check text-success" :
+                  "fa-triangle-exclamation text-danger";
+              }
+              <span class="fa-solid @(classes)" title="@(delivery.StatusCode) - @(delivery.Status)"></span>
               <a asp-page="Delivery" asp-route-id="@(delivery.Id)" class="delivery-id">@(delivery.Id)</a>
             </code>
           </td>

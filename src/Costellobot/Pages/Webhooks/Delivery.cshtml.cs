@@ -51,6 +51,8 @@ public sealed partial class DeliveryModel : PageModel
 
     public string ResponseBody { get; set; } = string.Empty;
 
+    public string? ResponseStatus => Delivery.GetProperty("status").GetString();
+
     public int ResponseStatusCode => Delivery.GetProperty("status_code").GetInt32();
 
     private JsonElement Delivery { get; set; }
