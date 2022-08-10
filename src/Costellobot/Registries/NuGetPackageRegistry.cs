@@ -92,7 +92,7 @@ public sealed class NuGetPackageRegistry : PackageRegistry
             return owners
                 .EnumerateArray()
                 .Select((p) => p.GetString()!)
-                .OrderBy((p) => p)
+                .Order()
                 .ToArray();
         }
     }
