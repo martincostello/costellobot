@@ -135,6 +135,34 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
         await failedJobsRetried.Task.WaitAsync(TimeSpan.FromSeconds(1));
     }
 
+    [Fact]
+    public async Task Failed_Jobs_Are_Not_Rerun_For_Pull_Request_Run_Failures_Associated_With_Ineligible_Workflow_Run()
+    {
+        // Arrange
+        Fixture.FailedCheckRerunAttempts(2);
+
+        var driver = new CheckSuiteDriver(DependabotCommitter);
+        driver.CheckSuite.PullRequests.Add(driver.PullRequest);
+
+        var checkRuns = new List<CheckRunBuilder>();
+
+        driver.WithCheckRun((p) => CreateCheckRun(p, "ubuntu-latest", "completed", "failure"));
+        driver.WithCheckRun((p) => CreateCheckRun(p, "ubuntu-latest", "completed", "success"));
+        driver.WithCheckRun((p) => CreateCheckRun(p, "publish", "completed", "failure"));
+
+        RegisterCheckSuiteWithWorkflowRun(driver);
+
+        var failedJobsRetried = RegisterRerunFailedJobs(driver);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(failedJobsRetried);
+    }
+
     [Theory]
     [InlineData(2, 1)]
     [InlineData(3, 2)]
@@ -436,12 +464,29 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
 
     private void RegisterGetCheckRuns(CheckSuiteDriver driver)
     {
+        string path = $"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/check-suites/{driver.CheckSuite.Id}/check-runs";
+
+        var allCheckRuns = driver.CheckRuns.ToArray();
+
         CreateDefaultBuilder()
             .Requests()
-            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/check-suites/{driver.CheckSuite.Id}/check-runs")
+            .ForPath(path)
             .ForQuery("status=completed&filter=all")
             .Responds()
             .WithJsonContent(CreateCheckRuns(driver.CheckRuns.ToArray()))
+            .RegisterWith(Fixture.Interceptor);
+
+        var latestCheckRuns = allCheckRuns
+            .GroupBy((p) => p.Name)
+            .Select((p) => p.Last())
+            .ToArray();
+
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath(path)
+            .ForQuery(string.Empty)
+            .Responds()
+            .WithJsonContent(CreateCheckRuns(latestCheckRuns))
             .RegisterWith(Fixture.Interceptor);
     }
 

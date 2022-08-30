@@ -167,6 +167,30 @@ public sealed partial class CheckSuiteHandler : IHandler
             return false;
         }
 
+        // Get the latest status for each check unique check run that might run in the suite
+        // to determine if the latest check run for the suite(s) of interest have failed or not.
+        // This prevents the scenario where a workflow of "build -> publish" does the following
+        // when "^build*" is configured to allow up to 2 retries:
+        //   1. build is eligible for retries, and fails;
+        //   2. build is retried and succeeds;
+        //   3. publish runs and fails.
+        // In this scenario without this check, it would be seen that the check suite failed and
+        // that build only failed once, so the build would be retried even though the check run that
+        // is causing the check suite to fail is the "publish" check run.
+        var latestCheckSuites = await _client.Check.Run.GetAllForCheckSuite(owner, name, checkSuiteId);
+
+        var latestFailingCheckRuns = latestCheckSuites.CheckRuns
+            .Where((p) => retryEligibleRuns.Any((group) => group.Key == p.Name))
+            .Where((p) => p.Status == CheckStatus.Completed)
+            .Where((p) => p.Conclusion == CheckConclusion.Failure)
+            .ToList();
+
+        if (latestFailingCheckRuns.Count < 1)
+        {
+            Log.NoEligibleFailedCheckRunsFound(_logger, checkSuiteId, owner, name);
+            return false;
+        }
+
         Log.EligibileFailedCheckRunsFound(
             _logger,
             retryEligibleRuns.Count,
