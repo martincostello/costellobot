@@ -18,6 +18,7 @@
     <PackageReference Include="Microsoft.Extensions.Http.Polly" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <PackageReference Include="Microsoft.TypeScript.MSBuild" PrivateAssets="all" />
+    <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="NodaTime" />
     <PackageReference Include="Octokit" />
     <PackageReference Include="Octokit.GraphQL" />
