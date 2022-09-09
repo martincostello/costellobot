@@ -9,7 +9,7 @@
     "noImplicitThis": true,
     "outDir": "./wwwroot/static/js",
     "removeComments": false,
-    "sourceMap": false,
+    "sourceMap": true,
     "target": "ES2015"
   },
   "exclude": [
