@@ -23,6 +23,7 @@
     <PackageReference Include="Octokit.GraphQL" />
     <PackageReference Include="Octokit.Webhooks.AspNetCore" />
     <PackageReference Include="Polly" />
+    <PackageReference Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
     <Content Update=".prettierrc.json;package.json;package-lock.json;tsconfig.json" CopyToPublishDirectory="Never" />
