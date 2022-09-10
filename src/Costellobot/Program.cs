@@ -1,10 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-#pragma warning disable SA1516
-
 using System.IO.Compression;
-using System.Reflection;
 using MartinCostello.Costellobot;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -104,7 +101,7 @@ app.MapGet("/version", () => new
     branch = GitMetadata.Branch,
     build = GitMetadata.BuildId,
     commit = GitMetadata.Commit,
-    version = typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion,
+    version = GitMetadata.Version,
     _links = new
     {
         self = new { href = "https://costellobot.martincostello.com" },
