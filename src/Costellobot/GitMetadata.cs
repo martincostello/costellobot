@@ -15,6 +15,8 @@ public static class GitMetadata
 
     public static DateTimeOffset Timestamp { get; } = DateTimeOffset.Parse(GetMetadataValue("BuildTimestamp", DateTimeOffset.UtcNow.ToString("u", CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
 
+    public static string Version { get; } = typeof(GitMetadata).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+
     private static string GetMetadataValue(string name, string defaultValue)
     {
         return typeof(GitMetadata).Assembly
