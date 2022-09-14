@@ -28,7 +28,7 @@ builder.Services.AddHostedService<ClientLogBroadcastService>();
 
 builder.Logging.AddSignalR();
 
-builder.Services.Configure<JsonOptions>((options) =>
+builder.Services.ConfigureHttpJsonOptions((options) =>
 {
     options.SerializerOptions.WriteIndented = true;
 });
