@@ -26,7 +26,7 @@
     <PackageVersion Include="NodaTime" Version="3.1.4" />
     <PackageVersion Include="Octokit" Version="4.0.0" />
     <PackageVersion Include="Octokit.GraphQL" Version="0.1.8-beta" />
-    <PackageVersion Include="Octokit.Webhooks.AspNetCore" Version="1.3.4+build.365" />
+    <PackageVersion Include="Octokit.Webhooks.AspNetCore" Version="1.3.5+build.378" />
     <PackageVersion Include="Polly" Version="7.2.3" />
     <PackageVersion Include="ReportGenerator" Version="5.1.10" />
     <PackageVersion Include="Shouldly" Version="4.1.0" />
