@@ -1,9 +1,9 @@
 <Project>
   <PropertyGroup>
-    <MicrosoftAspNetCoreVersion>7.0.0-rc.2.22476.2</MicrosoftAspNetCoreVersion>
+    <MicrosoftAspNetCoreVersion>7.0.0</MicrosoftAspNetCoreVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="7.0.0-rc.2.22552.63" />
+    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="7.0.0" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.2.2" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" Version="1.2.3" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.1.0" />
