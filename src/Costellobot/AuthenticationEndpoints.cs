@@ -37,8 +37,9 @@ public static class AuthenticationEndpoints
             .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
             {
-                options.AccessDeniedPath = ForbiddenPath;
+                options.AccessDeniedPath = DeniedPath;
                 options.Cookie.Name = CookiePrefix + "authentication";
+                options.ExpireTimeSpan = TimeSpan.FromDays(60);
                 options.LoginPath = SignInPath;
                 options.LogoutPath = SignOutPath;
             })
