@@ -5,24 +5,8 @@ namespace Octokit;
 
 public interface IWorkflowRunsClient
 {
-    Task<WorkflowRunsResponse> ListAsync(
-        string owner,
-        string name,
-        long checkSuiteId);
-
     Task<IReadOnlyList<PendingDeployment>> GetPendingDeploymentsAsync(
         string owner,
         string name,
         long runId);
-
-    Task RerunFailedJobsAsync(
-        string owner,
-        string name,
-        long runId);
-
-    Task<Deployment> ReviewPendingDeploymentsAsync(
-        string owner,
-        string name,
-        long runId,
-        PendingDeploymentReview review);
 }

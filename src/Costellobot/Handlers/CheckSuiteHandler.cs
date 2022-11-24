@@ -60,12 +60,10 @@ public sealed partial class CheckSuiteHandler : IHandler
         }
 
         // Is the check suite associated with a GitHub Actions workflow?
-        var workflowsClient = _client.WorkflowRuns();
-
-        var workflows = await workflowsClient.ListAsync(
+        var workflows = await _client.Actions.Workflows.Runs.List(
             body.Repository.Owner.Login,
             body.Repository.Name,
-            checkSuiteId);
+            new() { CheckSuiteId = checkSuiteId });
 
         if (workflows.TotalCount < 1)
         {
@@ -74,7 +72,6 @@ public sealed partial class CheckSuiteHandler : IHandler
         else
         {
             await RerunFailedJobsAsync(
-                workflowsClient,
                 owner,
                 name,
                 workflows.WorkflowRuns[0]);
@@ -254,14 +251,13 @@ public sealed partial class CheckSuiteHandler : IHandler
     }
 
     private async Task RerunFailedJobsAsync(
-        IWorkflowRunsClient client,
         string owner,
         string name,
         WorkflowRun run)
     {
         try
         {
-            await client.RerunFailedJobsAsync(owner, name, run.Id);
+            await _client.Actions.Workflows.Runs.RerunFailedJobs(owner, name, run.Id);
 
             Log.RerunningFailedJobs(_logger, run.Name, run.Id, owner, name);
         }

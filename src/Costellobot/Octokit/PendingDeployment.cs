@@ -12,6 +12,4 @@ public sealed class PendingDeployment
     public DateTimeOffset? WaitTimerStartedAt { get; set; }
 
     public bool CurrentUserCanApprove { get; set; }
-
-    public IReadOnlyList<DeploymentReviewer> Reviewers { get; set; } = new List<DeploymentReviewer>();
 }

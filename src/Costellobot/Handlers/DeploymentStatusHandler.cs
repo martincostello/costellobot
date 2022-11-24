@@ -104,28 +104,25 @@ public sealed partial class DeploymentStatusHandler : IHandler
         long runId,
         PendingDeployment deployment)
     {
-        var workflowsClient = _client.WorkflowRuns();
-
         if (!deployment.CurrentUserCanApprove)
         {
             // HACK Use OAuth token for user that has permissions to review instead of the app.
             // This can be removed in the future if GitHub Apps can be allowed review deployments.
             _client.Connection.Credentials = new Credentials(_gitHubOptions.CurrentValue.AccessToken);
-            workflowsClient = _client.WorkflowRuns();
         }
 
         try
         {
-            await workflowsClient.ReviewPendingDeploymentsAsync(
+            var review = new PendingDeploymentReview(
+                new[] { deployment.Environment.Id },
+                PendingDeploymentReviewState.Approved,
+                _webhookOptions.CurrentValue.DeployComment);
+
+            await _client.Actions.Workflows.Runs.ReviewPendingDeployments(
                 owner,
                 name,
                 runId,
-                new()
-                {
-                    EnvironmentIds = new[] { deployment.Environment.Id },
-                    Comment = _webhookOptions.CurrentValue.DeployComment,
-                    State = "approved",
-                });
+                review);
         }
         catch (Exception ex)
         {
