@@ -99,26 +99,19 @@ public static class GitHubExtensions
         var httpClient = provider.GetRequiredService<IHttpClient>();
         var serializer = provider.GetRequiredService<IJsonSerializer>();
 
+        if (baseAddress != GitHubClient.GitHubApiUrl)
+        {
+            baseAddress = new Uri(baseAddress, "/api/v3/");
+        }
+
         return new Connection(UserAgent, baseAddress, credentialStore, httpClient, serializer);
     }
 
     private static GitHubClientAdapter CreateClient<T>(this IServiceProvider provider)
         where T : ICredentialStore
     {
-        var baseAddress = GetGitHubUri(provider);
-
-        if (baseAddress == GitHubClient.GitHubApiUrl)
-        {
-            var connection = provider.CreateConnection<T>();
-            return new GitHubClientAdapter(connection);
-        }
-        else
-        {
-            // Using IConnection does not seem to work correctly with
-            // GitHub Enterprise as the requests still get sent to github.com.
-            var credentialStore = provider.GetRequiredService<T>();
-            return new GitHubClientAdapter(UserAgent, credentialStore, baseAddress);
-        }
+        var connection = provider.CreateConnection<T>();
+        return new GitHubClientAdapter(connection);
     }
 
     private static ProductHeaderValue CreateUserAgent()
