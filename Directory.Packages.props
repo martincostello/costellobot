@@ -16,7 +16,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="$(MicrosoftAspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="$(MicrosoftAspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Http.Polly" Version="$(MicrosoftAspNetCoreVersion)" />
-    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="6.25.1" />
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="6.26.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.29.0" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.1.1" />
