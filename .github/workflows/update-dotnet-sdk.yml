@@ -41,7 +41,6 @@ jobs:
       if : ${{ steps.update-dotnet-sdk.outputs.sdk-updated == 'true' }}
       shell: pwsh
       env:
-        DOTNET_OUTDATED_VERSION: '4.5.0'
         DOTNET_CLI_TELEMETRY_OPTOUT: true
         DOTNET_NOLOGO: true
         DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
@@ -50,10 +49,12 @@ jobs:
       run: |
         $ErrorActionPreference = "Stop"
 
-        dotnet tool install --global dotnet-outdated-tool --version $env:DOTNET_OUTDATED_VERSION
+        dotnet tool install --global dotnet-outdated-tool
 
         $tempPath = [System.IO.Path]::GetTempPath()
         $updatesPath = (Join-Path $tempPath "dotnet-outdated.json")
+        
+        Write-Host "Checking for .NET NuGet package(s) to update..." -ForegroundColor Yellow
 
         dotnet outdated `
           --upgrade `
@@ -73,6 +74,8 @@ jobs:
           Sort-Object -Property Name -Unique
 
         if ($dependencies.Count -gt 0) {
+          Write-Host "Found $($dependencies.Count) .NET NuGet package(s) to update." -ForegroundColor Yellow
+
           $commitMessageLines = @(
             "Update .NET NuGet packages",
             "",
@@ -100,4 +103,9 @@ jobs:
           git add .
           git commit -m $commitMessage
           git push
+          
+          Write-Host "Pushed update to $($dependencies.Count) NuGet package(s)." -ForegroundColor Green
+        }
+        else {
+          Write-Host "There are no .NET NuGet packages to update." -ForegroundColor Green
         }
