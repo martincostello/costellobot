@@ -102,7 +102,7 @@ public sealed partial class GitCommitAnalyzer
         return isTrusted;
     }
 
-    private static IReadOnlyList<string> ParseDependencies(string commitMessage)
+    private static List<string> ParseDependencies(string commitMessage)
     {
         string[] commitLines = commitMessage
             .ReplaceLineEndings("\n")
@@ -259,7 +259,7 @@ public sealed partial class GitCommitAnalyzer
                 dependency,
                 version);
 
-            if (owners.Any((p) => publishers.Contains(p)))
+            if (owners.Any(publishers.Contains))
             {
                 return true;
             }
