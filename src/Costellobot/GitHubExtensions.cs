@@ -91,7 +91,7 @@ public static class GitHubExtensions
         return services;
     }
 
-    private static IConnection CreateConnection<T>(this IServiceProvider provider)
+    private static Connection CreateConnection<T>(this IServiceProvider provider)
         where T : ICredentialStore
     {
         var baseAddress = GetGitHubUri(provider);

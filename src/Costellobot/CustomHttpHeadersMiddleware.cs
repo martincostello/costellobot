@@ -3,6 +3,7 @@
 
 using AspNet.Security.OAuth.GitHub;
 using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
 
 namespace MartinCostello.Costellobot;
 
@@ -45,12 +46,12 @@ public sealed class CustomHttpHeadersMiddleware
     {
         context.Response.OnStarting(() =>
         {
-            context.Response.Headers.Remove("Server");
-            context.Response.Headers.Remove("X-Powered-By");
+            context.Response.Headers.Remove(HeaderNames.Server);
+            context.Response.Headers.Remove(HeaderNames.XPoweredBy);
 
             if (environment.IsProduction())
             {
-                context.Response.Headers["Content-Security-Policy"] = ContentSecurityPolicy(gitHubOptions.Value.AuthorizationEndpoint);
+                context.Response.Headers.ContentSecurityPolicy = ContentSecurityPolicy(gitHubOptions.Value.AuthorizationEndpoint);
             }
 
             if (context.Request.IsHttps)
@@ -60,16 +61,16 @@ public sealed class CustomHttpHeadersMiddleware
 
             context.Response.Headers["Permissions-Policy"] = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
             context.Response.Headers["Referrer-Policy"] = "no-referrer-when-downgrade";
-            context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+            context.Response.Headers.XContentTypeOptions = "nosniff";
             context.Response.Headers["X-Download-Options"] = "noopen";
 
-            if (!context.Response.Headers.ContainsKey("X-Frame-Options"))
+            if (!context.Response.Headers.ContainsKey(HeaderNames.XFrameOptions))
             {
-                context.Response.Headers.Add("X-Frame-Options", "DENY");
+                context.Response.Headers.XFrameOptions = "DENY";
             }
 
             context.Response.Headers["X-Request-Id"] = context.TraceIdentifier;
-            context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+            context.Response.Headers.XXSSProtection = "1; mode=block";
 
             return Task.CompletedTask;
         });
