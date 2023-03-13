@@ -42,6 +42,7 @@ public static class AuthenticationEndpoints
                 options.ExpireTimeSpan = TimeSpan.FromDays(60);
                 options.LoginPath = SignInPath;
                 options.LogoutPath = SignOutPath;
+                options.SlidingExpiration = true;
             })
             .AddGitHub()
             .Services
@@ -66,6 +67,16 @@ public static class AuthenticationEndpoints
                 {
                     options.ClaimActions.MapJsonKey(GitHubAvatarClaim, "avatar_url");
                 }
+
+                options.Events.OnTicketReceived = (context) =>
+                {
+                    var clock = context.HttpContext.RequestServices.GetRequiredService<ISystemClock>();
+
+                    context.Properties!.ExpiresUtc = clock.UtcNow.AddDays(60);
+                    context.Properties.IsPersistent = true;
+
+                    return Task.CompletedTask;
+                };
             })
             .ValidateOnStart();
 

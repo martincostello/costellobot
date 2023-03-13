@@ -5,7 +5,6 @@
 
 using System.IO.Compression;
 using MartinCostello.Costellobot;
-using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 using Octokit.Webhooks.AspNetCore;
