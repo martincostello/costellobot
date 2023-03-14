@@ -1,7 +1,4 @@
 <Project>
-  <PropertyGroup>
-    <MicrosoftAspNetCoreVersion>7.0.3</MicrosoftAspNetCoreVersion>
-  </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="7.0.0" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.2.2" />
