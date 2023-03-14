@@ -21,7 +21,7 @@
   "dependencies": {
     "@babel/core": "^7.22.9",
     "@babel/preset-env": "^7.22.9",
-    "@microsoft/signalr": "^8.0.0-preview.1.23112.2",
+    "@microsoft/signalr": "^8.0.0-preview.2.23153.2",
     "@typescript-eslint/eslint-plugin": "^6.1.0",
     "@typescript-eslint/parser": "^6.1.0",
     "css-loader": "^6.8.1",
