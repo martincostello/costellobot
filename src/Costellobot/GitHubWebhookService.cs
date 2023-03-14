@@ -51,7 +51,11 @@ public sealed partial class GitHubWebhookService : IHostedService, IDisposable
 
         try
         {
-            _cts?.Cancel();
+            if (_cts is not null)
+            {
+                await _cts.CancelAsync();
+            }
+
             await _queue.WaitForQueueToDrainAsync().WaitAsync(cancellationToken);
         }
         catch (Exception ex)
