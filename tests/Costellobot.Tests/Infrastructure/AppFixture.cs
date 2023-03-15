@@ -34,6 +34,8 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
 
     public ITestOutputHelper? OutputHelper { get; set; }
 
+    public virtual Uri ServerUri => ClientOptions.BaseAddress;
+
     public void ClearOutputHelper()
         => OutputHelper = null;
 
@@ -83,6 +85,11 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
             cancellationToken);
 
         return tokens!;
+    }
+
+    protected override void ConfigureClient(HttpClient client)
+    {
+        client.BaseAddress = ServerUri;
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
