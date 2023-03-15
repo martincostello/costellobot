@@ -20,7 +20,16 @@ public sealed class HttpServerFixture : AppFixture
         get
         {
             EnsureServer();
-            return ClientOptions.BaseAddress.ToString();
+            return ServerUri.ToString();
+        }
+    }
+
+    public override Uri ServerUri
+    {
+        get
+        {
+            EnsureServer();
+            return base.ServerUri;
         }
     }
 
@@ -43,7 +52,7 @@ public sealed class HttpServerFixture : AppFixture
 
         return new HttpClient(handler, disposeHandler: true)
         {
-            BaseAddress = new(ServerAddress, UriKind.Absolute),
+            BaseAddress = ServerUri,
         };
     }
 
