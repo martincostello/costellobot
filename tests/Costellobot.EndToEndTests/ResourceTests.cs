@@ -15,7 +15,6 @@ public class ResourceTests : EndToEndTest
 
     [SkippableTheory]
     [InlineData("/bad-request.html", MediaTypeNames.Text.Html)]
-    [InlineData("/css/site.css", "text/css")]
     [InlineData("/error.html", MediaTypeNames.Text.Html)]
     [InlineData("/favicon.png", "image/png")]
     [InlineData("/forbidden.html", MediaTypeNames.Text.Html)]
@@ -24,6 +23,8 @@ public class ResourceTests : EndToEndTest
     [InlineData("/not-found.html", MediaTypeNames.Text.Html)]
     [InlineData("/robots.txt", MediaTypeNames.Text.Plain)]
     [InlineData("/sign-in", MediaTypeNames.Text.Html)]
+    [InlineData("/static/css/main.css", "text/css")]
+    [InlineData("/static/css/main.css.map", MediaTypeNames.Text.Plain)]
     [InlineData("/static/js/main.js", "text/javascript")]
     [InlineData("/static/js/main.js.map", MediaTypeNames.Text.Plain)]
     [InlineData("/unauthorized.html", MediaTypeNames.Text.Html)]
