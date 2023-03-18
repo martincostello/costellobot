@@ -20,7 +20,7 @@ a.btn:hover,
 a.dropdown-item:hover,
 a.navbar-brand:hover,
 a.nav-link:hover,
-a:not([href]):not([class]):hover {
+a:not([href], [class]):hover {
     text-decoration: none;
 }
 
@@ -84,7 +84,6 @@ textarea.form-payload {
 }
 
 @media (min-width: 1200px) {
-
     code.webhook-content {
         font-size: initial;
     }
