@@ -292,6 +292,32 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Fact]
+    public async Task Pull_Request_Is_Not_Approved_For_Trusted_User_And_Dependency_Name_But_Ignored_Repo()
+    {
+        // Arrange
+        Fixture.ApprovePullRequests();
+
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(TrustedCommitMessage());
+
+        driver.Repository.Name = "ignored-repo";
+        driver.Repository.Owner.Login = "ignored-org";
+
+        RegisterGetAccessToken();
+        RegisterCommit(driver);
+
+        var pullRequestApproved = RegisterReview(driver);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(pullRequestApproved);
+    }
+
+    [Fact]
     public async Task Handler_Ignores_Events_That_Are_Not_Pull_Requests()
     {
         // Arrange
