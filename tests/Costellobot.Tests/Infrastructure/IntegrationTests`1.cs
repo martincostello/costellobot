@@ -56,7 +56,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
 
     protected static async Task AssertTaskNotRun(TaskCompletionSource source)
     {
-        await Task.Delay(TimeSpan.FromSeconds(0.2));
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
         source.Task.Status.ShouldBe(TaskStatus.WaitingForActivation);
     }
 

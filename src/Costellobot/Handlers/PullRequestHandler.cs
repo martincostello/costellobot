@@ -59,6 +59,12 @@ public sealed partial class PullRequestHandler : IHandler
         {
             var options = _options.CurrentValue;
 
+            if (options.IgnoreRepositories.Contains($"{owner}/{name}", StringComparer.OrdinalIgnoreCase))
+            {
+                Log.IgnoringPullRequestAsRepositoryIgnored(_logger, owner, name, number);
+                return;
+            }
+
             if (options.Approve)
             {
                 await ApproveAsync(owner, name, number);
@@ -279,5 +285,15 @@ public sealed partial class PullRequestHandler : IHandler
             string repository,
             long number,
             string nodeId);
+
+        [LoggerMessage(
+           EventId = 7,
+           Level = LogLevel.Information,
+           Message = "Ignoring pull request {Owner}/{Repository}#{Number} as the repository is configured to be ignored.")]
+        public static partial void IgnoringPullRequestAsRepositoryIgnored(
+            ILogger logger,
+            string? owner,
+            string? repository,
+            long? number);
     }
 }
