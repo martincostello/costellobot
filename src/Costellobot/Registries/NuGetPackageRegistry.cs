@@ -66,7 +66,25 @@ public sealed class NuGetPackageRegistry : PackageRegistry
         var versionFound = package.Versions
             .Where((p) => string.Equals(p.Version, version, StringComparison.OrdinalIgnoreCase))
             .Select((p) => p.Version)
-            .FirstOrDefault(package.Version);
+            .FirstOrDefault();
+
+        if (versionFound is null)
+        {
+            var semVer2Versions = package.Versions
+                .Where((p) => p.Version.Contains('+', StringComparison.Ordinal))
+                .Select((p) => p.Version.Split('+')[0])
+                .ToArray();
+
+            if (semVer2Versions.Length == semVer2Versions.Distinct().Count())
+            {
+                versionFound = package.Versions
+                    .Select((p) => p.Version.Split('+')[0])
+                    .Where((p) => string.Equals(p, version, StringComparison.OrdinalIgnoreCase))
+                    .FirstOrDefault();
+            }
+
+            versionFound ??= package.Version;
+        }
 
         if (!string.Equals(versionFound, version, StringComparison.OrdinalIgnoreCase))
         {
