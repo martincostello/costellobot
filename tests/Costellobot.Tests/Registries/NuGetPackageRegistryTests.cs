@@ -15,6 +15,7 @@ public static class NuGetPackageRegistryTests
     [InlineData("Microsoft.AspNetCore.Mvc.Testing", "6.0.7", new[] { "aspnet", "Microsoft" })]
     [InlineData("Newtonsoft.Json", "13.0.1", new[] { "dotnetfoundation", "jamesnk", "newtonsoft" })]
     [InlineData("Octokit.GraphQL", "0.1.9-beta", new[] { "GitHub", "grokys", "jcansdale", "nickfloyd", "StanleyGoldman" })]
+    [InlineData("Octokit.Webhooks.AspNetCore", "1.4.0", new[] { "GitHub", "kfcampbell" })]
     [InlineData("foo", "1.0.0", new string[0])]
     public static async Task Can_Get_Package_Owners(string id, string version, string[] expected)
     {

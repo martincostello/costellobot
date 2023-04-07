@@ -414,6 +414,51 @@
       }
     },
     {
+      "comment": "NuGet search result for Octokit.Webhooks.AspNetCore",
+      "uri": "https://azuresearch-usnc.nuget.org/query?prerelease=true&q=PackageId%3AOctokit.Webhooks.AspNetCore&semVerLevel=2.0.0&take=1",
+      "contentFormat": "json",
+      "contentJson": {
+        "@context": {
+          "@vocab": "http://schema.nuget.org/schema#",
+          "@base": "https://api.nuget.org/v3/registration5-gz-semver2/"
+        },
+        "totalHits": 1,
+        "data": [
+          {
+            "@id": "https://api.nuget.org/v3/registration5-gz-semver2/octokit.webhooks.aspnetcore/index.json",
+            "@type": "Package",
+            "registration": "https://api.nuget.org/v3/registration5-gz-semver2/octokit.webhooks.aspnetcore/index.json",
+            "id": "Octokit.Webhooks.AspNetCore",
+            "version": "1.4.0+build.648",
+            "description": "GitHub webhook events toolset for .NET",
+            "summary": "",
+            "title": "Octokit.Webhooks.AspNetCore",
+            "iconUrl": "https://api.nuget.org/v3-flatcontainer/octokit.webhooks.aspnetcore/1.4.0/icon",
+            "licenseUrl": "https://www.nuget.org/packages/Octokit.Webhooks.AspNetCore/1.4.0/license",
+            "projectUrl": "https://github.com/octokit/webhooks.net",
+            "tags": [ "Octokit", "GitHub", "Webhooks" ],
+            "authors": [ "Octokit Contributors" ],
+            "owners": [ "GitHub", "kfcampbell" ],
+            "totalDownloads": 27573,
+            "verified": true,
+            "packageTypes": [ { "name": "Dependency" } ],
+            "versions": [
+              {
+                "version": "1.3.5+build.378",
+                "downloads": 6347,
+                "@id": "https://api.nuget.org/v3/registration5-gz-semver2/octokit.webhooks.aspnetcore/1.3.5.json"
+              },
+              {
+                "version": "1.4.0+build.648",
+                "downloads": 1,
+                "@id": "https://api.nuget.org/v3/registration5-gz-semver2/octokit.webhooks.aspnetcore/1.4.0.json"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "comment": "NuGet search result for foo",
       "uri": "https://azuresearch-usnc.nuget.org/query?prerelease=true&q=PackageId%3Afoo&semVerLevel=2.0.0&take=1",
       "contentFormat": "json",
