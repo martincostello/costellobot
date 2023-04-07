@@ -82,9 +82,9 @@ public sealed class NuGetPackageRegistry : PackageRegistry
                     .Where((p) => string.Equals(p, version, StringComparison.OrdinalIgnoreCase))
                     .FirstOrDefault();
             }
-
-            versionFound ??= package.Version;
         }
+
+        versionFound ??= package.Version;
 
         if (!string.Equals(versionFound, version, StringComparison.OrdinalIgnoreCase))
         {
