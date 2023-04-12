@@ -22,6 +22,7 @@ public class GitCommitAnalyzerTests : IntegrationTests<AppFixture>
     [Fact]
     public static void Version_Is_Extracted_From_NuGet_Package_Update_Commit_Message()
     {
+        string dependencyName = "AWSSDK.S3";
         string commitMessage = @"Bump AWSSDK.S3 from 3.7.9.32 to 3.7.9.33
 Bumps [AWSSDK.S3](https://github.com/aws/aws-sdk-net) from 3.7.9.32 to 3.7.9.33.
 - [Release notes](https://github.com/aws/aws-sdk-net/releases)
@@ -37,7 +38,7 @@ updated-dependencies:
 Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Act
-        bool result = GitCommitAnalyzer.TryParseVersionNumber(commitMessage, out var actual);
+        bool result = GitCommitAnalyzer.TryParseVersionNumber(commitMessage, dependencyName, out var actual);
 
         // Assert
         result.ShouldBeTrue();
@@ -47,21 +48,24 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     [Fact]
     public static void Version_Is_Extracted_From_Submodule_Update_Commit_Message()
     {
-        string commitMessage = @"Bump src/submodules/dependabot-helper from 697aaa7 to aca93c2
-Bumps [src/submodules/dependabot-helper](https://github.com/martincostello/dependabot-helper) from `697aaa7` to `aca93c2`.
-- [Release notes](https://github.com/martincostello/dependabot-helper/releases)
-- [Commits](https://github.com/martincostello/dependabot-helper/compare/697aaa778e5e0a27c7ba6a2c82f83cd5ddf9ae55...aca93c280ec51a3e7ffd9314de799d805cf7a407)
-
----
-updated-dependencies:
-- dependency-name: src/submodules/dependabot-helper
-  dependency-type: direct:production
-...
-
-Signed-off-by: dependabot[bot] <support@github.com>";
+        string dependencyName = "src/submodules/dependabot-helper";
+        string commitMessage = @"""
+                               Bump src/submodules/dependabot-helper from 697aaa7 to aca93c2
+                               Bumps [src/submodules/dependabot-helper](https://github.com/martincostello/dependabot-helper) from `697aaa7` to `aca93c2`.
+                               - [Release notes](https://github.com/martincostello/dependabot-helper/releases)
+                               - [Commits](https://github.com/martincostello/dependabot-helper/compare/697aaa778e5e0a27c7ba6a2c82f83cd5ddf9ae55...aca93c280ec51a3e7ffd9314de799d805cf7a407)
+                               
+                               ---
+                               updated-dependencies:
+                               - dependency-name: src/submodules/dependabot-helper
+                                 dependency-type: direct:production
+                               ...
+                               
+                               Signed-off-by: dependabot[bot] <support@github.com>
+                               """;
 
         // Act
-        bool result = GitCommitAnalyzer.TryParseVersionNumber(commitMessage, out var actual);
+        bool result = GitCommitAnalyzer.TryParseVersionNumber(commitMessage, dependencyName, out var actual);
 
         // Assert
         result.ShouldBeTrue();
@@ -75,7 +79,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public static void No_Version_Is_Extracted_From_Arbitrary_Commit_Message(string commitMessage)
     {
         // Act
-        bool result = GitCommitAnalyzer.TryParseVersionNumber(commitMessage, out var actual);
+        bool result = GitCommitAnalyzer.TryParseVersionNumber(commitMessage, "whatever", out var actual);
 
         // Assert
         result.ShouldBeFalse();
@@ -249,17 +253,19 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var target = CreateTarget(scope.ServiceProvider, options, new[] { Mock.Of<IPackageRegistry>() });
 
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
-        var commitMessage = @"Bump Foo to 1.0.1
-Bumps `Foo` to 1.0.1.
-
----
-updated-dependencies:
-- dependency-name: Foo
-  dependency-type: direct:production
-  update-type: version-update:semver-patch
-...
-
-Signed-off-by: dependabot[bot] <support@github.com>";
+        var commitMessage = @"""
+                            Bump Foo to 1.0.1
+                            Bumps `Foo` to 1.0.1.
+                            
+                            ---
+                            updated-dependencies:
+                            - dependency-name: Foo
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                            ...
+                            
+                            Signed-off-by: dependabot[bot] <support@github.com>
+                            """;
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
@@ -378,6 +384,211 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Assert
         actual.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Multiple_Package_Updates()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+
+        var mock = new Mock<IPackageRegistry>();
+
+        mock.Setup((p) => p.Ecosystem)
+            .Returns(DependencyEcosystem.NuGet);
+
+        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "OpenTelemetry.Instrumentation.AspNetCore", "1.0.0-rc9.12"))
+            .ReturnsAsync(new[] { "OpenTelemetry" });
+
+        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "OpenTelemetry.Instrumentation.Http", "1.0.0-rc9.12"))
+            .ReturnsAsync(new[] { "OpenTelemetry" });
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.GitHubActions] = new[] { "actions" },
+                    [DependencyEcosystem.Npm] = new[] { "types", "typescript-bot" },
+                    [DependencyEcosystem.NuGet] = new[] { "aspnet", "Microsoft", "OpenTelemetry" },
+                    [DependencyEcosystem.Submodules] = new[] { "https://github.com/martincostello" },
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { mock.Object });
+
+        var sha = "987879d752236a5a574000f40da7630be061faca";
+        var commitMessage = """
+                            Bump OpenTelemetryInstrumentationVersion
+                            Bumps `OpenTelemetryInstrumentationVersion` from 1.0.0-rc9.11 to 1.0.0-rc9.12.
+                            
+                            Updates `OpenTelemetry.Instrumentation.AspNetCore` from 1.0.0-rc9.11 to 1.0.0-rc9.12
+                            - [Release notes](https://github.com/open-telemetry/opentelemetry-dotnet/releases)
+                            - [Commits](https://github.com/open-telemetry/opentelemetry-dotnet/compare/1.0.0-rc9.11...1.0.0-rc9.12)
+                            
+                            Updates `OpenTelemetry.Instrumentation.Http` from 1.0.0-rc9.11 to 1.0.0-rc9.12
+                            - [Release notes](https://github.com/open-telemetry/opentelemetry-dotnet/releases)
+                            - [Commits](https://github.com/open-telemetry/opentelemetry-dotnet/compare/1.0.0-rc9.11...1.0.0-rc9.12)
+                            
+                            ---
+                            updated-dependencies:
+                            - dependency-name: OpenTelemetry.Instrumentation.AspNetCore
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                            - dependency-name: OpenTelemetry.Instrumentation.Http
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                            ...
+                            
+                            Signed-off-by: dependabot[bot] <support@github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            owner.Login,
+            repo.Name,
+            "dependabot/nuget/OpenTelemetryInstrumentationVersion-1.0.0-rc9.12",
+            sha,
+            commitMessage);
+
+        // Assert
+        actual.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Single_Package_Update()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+
+        var mock = new Mock<IPackageRegistry>();
+
+        mock.Setup((p) => p.Ecosystem)
+            .Returns(DependencyEcosystem.NuGet);
+
+        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.TypeScript.MSBuild", "4.9.5"))
+            .ReturnsAsync(new[] { "Microsoft", "TypeScriptTeam" });
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.GitHubActions] = new[] { "actions" },
+                    [DependencyEcosystem.Npm] = new[] { "types", "typescript-bot" },
+                    [DependencyEcosystem.NuGet] = new[] { "aspnet", "Microsoft" },
+                    [DependencyEcosystem.Submodules] = new[] { "https://github.com/martincostello" },
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { mock.Object });
+
+        var sha = "552aae859c24f0ed63bcc1f82ef96dd83040762f";
+        var commitMessage = """
+                            Bump Microsoft.TypeScript.MSBuild from 4.9.4 to 4.9.5
+                            Bumps Microsoft.TypeScript.MSBuild from 4.9.4 to 4.9.5.
+                            ---
+                            updated-dependencies:
+                            - dependency-name: Microsoft.TypeScript.MSBuild
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                            ...
+                            Signed-off-by: dependabot[bot] <support@github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            owner.Login,
+            repo.Name,
+            "dependabot/nuget/Microsoft.TypeScript.MSBuild-4.9.5",
+            sha,
+            commitMessage);
+
+        // Assert
+        actual.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Multiple_Package_Update_Using_Update_DotNet_Sdk()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+
+        var mock = new Mock<IPackageRegistry>();
+
+        mock.Setup((p) => p.Ecosystem)
+            .Returns(DependencyEcosystem.NuGet);
+
+        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.Extensions.Configuration.Binder", "7.0.4"))
+            .ReturnsAsync(new[] { "Microsoft", "aspnet" });
+
+        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.Extensions.Http.Polly", "7.0.5"))
+            .ReturnsAsync(new[] { "Microsoft", "aspnet" });
+
+        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.NET.Test.Sdk", "17.5.0"))
+            .ReturnsAsync(new[] { "Microsoft", "aspnet" });
+
+        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "System.Text.Json", "7.0.2"))
+            .ReturnsAsync(new[] { "Microsoft", "dotnetframework" });
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = new[] { "aspnet", "dotnetframework", "Microsoft" },
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { mock.Object });
+
+        var sha = "4f01e284f9bfac38bcf14f7595b1258fc5b1b542";
+        var commitMessage = """
+                            Bump .NET NuGet packages
+                            Bumps .NET dependencies to their latest versions for the .NET 7.0.203 SDK.
+                            Bumps Microsoft.Extensions.Configuration.Binder from 7.0.0 to 7.0.4.
+                            Bumps Microsoft.Extensions.Http.Polly from 7.0.2 to 7.0.5.
+                            Bumps Microsoft.NET.Test.Sdk from 17.4.0 to 17.5.0.
+                            Bumps System.Text.Json from 7.0.0 to 7.0.2.
+                            ---
+                            updated-dependencies:
+                            - dependency-name: Microsoft.Extensions.Configuration.Binder
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                            - dependency-name: Microsoft.Extensions.Http.Polly
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                            - dependency-name: Microsoft.NET.Test.Sdk
+                              dependency-type: direct:production
+                              update-type: version-update:semver-minor
+                            - dependency-name: System.Text.Json
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                            ...
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            owner.Login,
+            repo.Name,
+            "update-dotnet-sdk-7.0.203",
+            sha,
+            commitMessage);
+
+        // Assert
+        actual.ShouldBeTrue();
     }
 
     private static GitCommitAnalyzer CreateTarget(

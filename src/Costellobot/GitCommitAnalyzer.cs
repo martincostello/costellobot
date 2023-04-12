@@ -25,14 +25,21 @@ public sealed partial class GitCommitAnalyzer
         _logger = logger;
     }
 
-    public static bool TryParseVersionNumber(string commitMessage, [MaybeNullWhen(false)] out string? version)
+    public static bool TryParseVersionNumber(
+        string commitMessage,
+        string dependencyName,
+        [MaybeNullWhen(false)] out string? version)
     {
         // Extract the version numbers from the commit message.
         // See https://github.com/dependabot/fetch-metadata/blob/d9606730415777cc0dc46d64c4ce0e16624bd714/src/dependabot/update_metadata.ts#L30
+        string escapedName = Regex.Escape(dependencyName).Replace("/", @"\/", StringComparison.Ordinal);
         string[] patterns = new[]
         {
-            @"Bumps .* from (?<from>\d[^ ]*) to (?<to>\d[^ ]*)\.", // Normal version updates
-            @"Bumps .* from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ ]*)\`\.", // Git submodule updates
+            $@"(Bumps|Updates) {escapedName} from (?<from>\d[^ ]*) to (?<to>\d[^ ]*)\.", // Normal version updates
+            $@"(Bumps|Updates) `{escapedName}` from (?<from>\d[^ ]*) to (?<to>\d[^ ]*)\.?$", // Normal version updates with escaped name
+            $@"(Bumps|Updates) \[{escapedName}\]\(.*\) from (?<from>\d[^ ]*) to (?<to>\d[^ ]*)\.?$", // Normal version updates with link to repo
+            $@"(Bumps|Updates) `?{escapedName}`? from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ ]*)\`\.?$", // Git submodule updates
+            $@"(Bumps|Updates) \[{escapedName}\]\(.*\) from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ ]*)\`\.?", // Git submodule updates with link to repo
         };
 
         foreach (var pattern in patterns)
@@ -42,7 +49,7 @@ public sealed partial class GitCommitAnalyzer
 
             if (group.Success)
             {
-                version = group.Value;
+                version = group.Value.Trim().TrimEnd('.');
                 return true;
             }
         }
@@ -138,6 +145,13 @@ public sealed partial class GitCommitAnalyzer
 
     private static DependencyEcosystem ParseEcosystem(string? reference)
     {
+        // Special case for use of martincostello/update-dotnet-sdk with dotnet-outdated to also update NuGet packages.
+        // See https://github.com/martincostello/update-dotnet-sdk#advanced-example-workflow.
+        if (reference?.StartsWith("update-dotnet-sdk-", StringComparison.Ordinal) == true)
+        {
+            return DependencyEcosystem.NuGet;
+        }
+
         // Approach based on what Dependabot itself does to parse commits to generate release notes.
         // See https://github.com/dependabot/fetch-metadata/blob/d9606730415777cc0dc46d64c4ce0e16624bd714/src/dependabot/update_metadata.ts#L55.
         // Example ref (branch) names:
@@ -199,6 +213,13 @@ public sealed partial class GitCommitAnalyzer
 
                 return false;
             }
+
+            Log.TrustedDependencyNameUpdated(
+                _logger,
+                sha,
+                owner,
+                name,
+                dependency);
         }
 
         return true;
@@ -211,72 +232,99 @@ public sealed partial class GitCommitAnalyzer
         string commitMessage,
         IReadOnlyList<string> dependencies)
     {
-        if (dependencies.Count != 1 || _registries.Count < 1)
+        if (dependencies.Count < 1 || _registries.Count < 1)
         {
-            // Either no dependencies were parsed, or more than one was found,
-            // in which case we're not able to look up the version for every one.
+            // No dependencies were parsed or there are no applicable registries
             return false;
         }
+
+        foreach (string dependency in dependencies)
+        {
+            if (!await IsTrustedDependencyOwnerAsync(
+                    owner,
+                    name,
+                    dependency,
+                    reference,
+                    commitMessage))
+            {
+                return false;
+            }
+        }
+
+        return true;
 
         // If only one dependency was found, we can attempt to extract the version
         // from the commit message to see if the package was from a trusted publisher.
-        string dependency = dependencies[0];
-
-        if (!TryParseVersionNumber(commitMessage, out var version) ||
-            string.IsNullOrWhiteSpace(version))
+        async Task<bool> IsTrustedDependencyOwnerAsync(
+            string owner,
+            string name,
+            string dependency,
+            string? reference,
+            string commitMessage)
         {
-            return false;
-        }
-
-        var ecosystem = ParseEcosystem(reference);
-
-        if (ecosystem == DependencyEcosystem.Unknown ||
-            ecosystem == DependencyEcosystem.Unsupported)
-        {
-            return false;
-        }
-
-        if (!_options.CurrentValue.TrustedEntities.Publishers.TryGetValue(ecosystem, out var publishers) ||
-            publishers.Count < 1)
-        {
-            return false;
-        }
-
-        var registry = _registries
-            .Where((p) => p.Ecosystem == ecosystem)
-            .FirstOrDefault();
-
-        if (registry is null)
-        {
-            return false;
-        }
-
-        try
-        {
-            var owners = await registry.GetPackageOwnersAsync(
-                owner,
-                name,
-                dependency,
-                version);
-
-            if (owners.Any(publishers.Contains))
+            if (!TryParseVersionNumber(commitMessage, dependency, out var version) ||
+                string.IsNullOrWhiteSpace(version))
             {
-                return true;
+                return false;
             }
 
-            Log.UntrustedDependencyOwnerUpdated(
-                _logger,
-                reference,
-                owner,
-                name,
-                dependency);
-        }
-        catch (Exception ex)
-        {
-            Log.FailedToQueryPackageRegistry(_logger, dependency, version, ecosystem, ex);
-        }
+            var ecosystem = ParseEcosystem(reference);
 
-        return false;
+            if (ecosystem == DependencyEcosystem.Unknown ||
+                ecosystem == DependencyEcosystem.Unsupported)
+            {
+                return false;
+            }
+
+            if (!_options.CurrentValue.TrustedEntities.Publishers.TryGetValue(ecosystem, out var publishers) ||
+                publishers.Count < 1)
+            {
+                return false;
+            }
+
+            var registry = _registries
+                .Where((p) => p.Ecosystem == ecosystem)
+                .FirstOrDefault();
+
+            if (registry is null)
+            {
+                return false;
+            }
+
+            try
+            {
+                var owners = await registry.GetPackageOwnersAsync(
+                    owner,
+                    name,
+                    dependency,
+                    version);
+
+                if (owners.Any(publishers.Contains))
+                {
+                    Log.TrustedDependencyOwnerUpdated(
+                        _logger,
+                        reference,
+                        owner,
+                        name,
+                        dependency);
+
+                    return true;
+                }
+
+                Log.UntrustedDependencyOwnerUpdated(
+                    _logger,
+                    reference,
+                    owner,
+                    name,
+                    dependency);
+            }
+            catch (Exception ex)
+            {
+                Log.FailedToQueryPackageRegistry(_logger, dependency, version, ecosystem, ex);
+            }
+
+            return false;
+        }
     }
 
     [ExcludeFromCodeCoverage]
@@ -331,6 +379,28 @@ public sealed partial class GitCommitAnalyzer
            Level = LogLevel.Information,
            Message = "Reference {Reference} for {Owner}/{Repository} updates dependency {Dependency} which is not trusted by its owner.")]
         public static partial void UntrustedDependencyOwnerUpdated(
+            ILogger logger,
+            string? reference,
+            string owner,
+            string repository,
+            string dependency);
+
+        [LoggerMessage(
+           EventId = 6,
+           Level = LogLevel.Information,
+           Message = "Commit {Sha} for {Owner}/{Repository} updates dependency {Dependency} which is trusted by its name.")]
+        public static partial void TrustedDependencyNameUpdated(
+            ILogger logger,
+            string sha,
+            string owner,
+            string repository,
+            string dependency);
+
+        [LoggerMessage(
+           EventId = 7,
+           Level = LogLevel.Information,
+           Message = "Reference {Reference} for {Owner}/{Repository} updates dependency {Dependency} which is trusted through its owner.")]
+        public static partial void TrustedDependencyOwnerUpdated(
             ILogger logger,
             string? reference,
             string owner,
