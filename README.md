@@ -1,6 +1,8 @@
 # Costellobot
 
 [![Build status](https://github.com/martincostello/costellobot/workflows/build/badge.svg?branch=main&event=push)](https://github.com/martincostello/costellobot/actions?query=workflow%3Abuild+branch%3Amain+event%3Apush)
+[![codecov](https://codecov.io/gh/martincostello/costellobot/branch/main/graph/badge.svg)](https://codecov.io/gh/martincostello/costellobot)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/martincostello/costellobot/badge)](https://api.securityscorecards.dev/projects/github.com/martincostello/costellobot)
 
 ## Introduction
 
