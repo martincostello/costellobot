@@ -9,7 +9,11 @@ public sealed class WebhookOptions
 
     public string ApproveComment { get; set; } = string.Empty;
 
+    public IList<string> ApproveLabels { get; set; } = new List<string>();
+
     public bool Automerge { get; set; }
+
+    public IList<string> AutomergeLabels { get; set; } = new List<string>();
 
     public bool Deploy { get; set; }
 

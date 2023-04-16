@@ -12,6 +12,7 @@ public sealed class PullRequestDriver
     public PullRequestDriver(string? login = null)
     {
         User = CreateUser(login);
+        Sender = User;
         Owner = CreateUser();
         Repository = Owner.CreateRepository();
         PullRequest = Repository.CreatePullRequest(User);
@@ -20,11 +21,15 @@ public sealed class PullRequestDriver
 
     public GitHubCommitBuilder Commit { get; set; }
 
+    public LabelBuilder? Label { get; set; }
+
     public UserBuilder Owner { get; set; }
 
     public PullRequestBuilder PullRequest { get; set; }
 
     public RepositoryBuilder Repository { get; set; }
+
+    public UserBuilder Sender { get; set; }
 
     public UserBuilder User { get; set; }
 
@@ -49,6 +54,8 @@ public sealed class PullRequestDriver
             {
                 id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
             },
+            label = Label?.Build(),
+            sender = Sender.Build(),
         };
     }
 }

@@ -39,31 +39,38 @@ public sealed partial class PullRequestHandler : IHandler
     public async Task HandleAsync(WebhookEvent message)
     {
         if (message is not PullRequestEvent body ||
-            body.Repository is null)
+            body.Repository is not { } repo ||
+            body.PullRequest is not { } pr)
         {
             return;
         }
+
+        bool isManualApproval = false;
 
         if (!IsNewPullRequestFromTrustedUser(body))
         {
-            return;
-        }
-
-        string owner = body.Repository!.Owner.Login;
-        string name = body.Repository.Name;
-        int number = (int)body.PullRequest!.Number;
-
-        bool isTrusted = await IsTrustedDependencyUpdateAsync(body);
-
-        if (isTrusted)
-        {
-            var options = _options.CurrentValue;
-
-            if (options.IgnoreRepositories.Contains($"{owner}/{name}", StringComparer.OrdinalIgnoreCase))
+            if (!await IsManuallyApprovedAsync(body))
             {
-                Log.IgnoringPullRequestAsRepositoryIgnored(_logger, owner, name, number);
                 return;
             }
+
+            isManualApproval = true;
+        }
+
+        string owner = repo.Owner.Login;
+        string name = repo.Name;
+        int number = (int)pr.Number;
+
+        bool isTrusted = false;
+
+        if (!isManualApproval)
+        {
+            isTrusted = await IsTrustedDependencyUpdateAsync(body);
+        }
+
+        if (isManualApproval || isTrusted)
+        {
+            var options = _options.CurrentValue;
 
             if (options.Approve)
             {
@@ -76,8 +83,8 @@ public sealed partial class PullRequestHandler : IHandler
                     owner,
                     name,
                     number,
-                    body.PullRequest.NodeId,
-                    GetMergeMethod(body.PullRequest.Base.Repo));
+                    pr.NodeId,
+                    GetMergeMethod(pr.Base.Repo));
             }
         }
     }
@@ -162,26 +169,31 @@ public sealed partial class PullRequestHandler : IHandler
 
     private bool IsNewPullRequestFromTrustedUser(PullRequestEvent message)
     {
+        string owner = message.Repository!.Owner.Login;
+        string name = message.Repository.Name;
+        int number = (int)message.PullRequest!.Number;
+
         if (!string.Equals(message.Action, PullRequestActionValue.Opened, StringComparison.Ordinal))
         {
-            Log.IgnoringPullRequestAction(
-                _logger,
-                message.Repository!.Owner.Login,
-                message.Repository.Name,
-                message.PullRequest.Number,
-                message.Action);
+            if (!string.Equals(message.Action, PullRequestActionValue.Labeled, StringComparison.Ordinal))
+            {
+                Log.IgnoringPullRequestAction(_logger, owner, name, number, message.Action);
+            }
 
+            return false;
+        }
+
+        var options = _options.CurrentValue;
+
+        if (options.IgnoreRepositories.Contains($"{owner}/{name}", StringComparer.OrdinalIgnoreCase))
+        {
+            Log.IgnoringPullRequestAsRepositoryIgnored(_logger, owner, name, number);
             return false;
         }
 
         if (message.PullRequest is not { } pr || pr.Draft)
         {
-            Log.IgnoringPullRequestDraft(
-                _logger,
-                message.Repository!.Owner.Login,
-                message.Repository.Name,
-                message.PullRequest.Number);
-
+            Log.IgnoringPullRequestDraft(_logger, owner, name, number);
             return false;
         }
 
@@ -191,15 +203,54 @@ public sealed partial class PullRequestHandler : IHandler
 
         if (!isTrusted)
         {
-            Log.IgnoringPullRequestFromUntrustedUser(
-                _logger,
-                message.Repository!.Owner.Login,
-                message.Repository.Name,
-                message.PullRequest.Number,
-                message.PullRequest.User.Login);
+            Log.IgnoringPullRequestFromUntrustedUser(_logger, owner, name, number, message.PullRequest.User.Login);
         }
 
         return isTrusted;
+    }
+
+    private async Task<bool> IsManuallyApprovedAsync(PullRequestEvent message)
+    {
+        if (message is not PullRequestLabeledEvent labelled ||
+            message.Repository is not { } repository ||
+            message.Sender is not { } sender)
+        {
+            return false;
+        }
+
+        var comparer = StringComparer.Ordinal;
+        var options = _options.CurrentValue;
+        var presentLabels = message.PullRequest.Labels.Select((p) => p.Name).ToHashSet(comparer);
+        var requiredLabels = options.ApproveLabels.Intersect(options.AutomergeLabels).ToHashSet(comparer);
+
+        if (presentLabels.Count < 1 ||
+            requiredLabels.Count < 1 ||
+            !presentLabels.Intersect(requiredLabels).SequenceEqual(requiredLabels, comparer))
+        {
+            // All of the required labels are not present.
+            return false;
+        }
+
+        string owner = repository.Owner.Login;
+        string name = repository.Name;
+        string actor = sender.Login;
+
+        bool isCollaborator = await _client.Repository.Collaborator.IsCollaborator(
+            owner,
+            name,
+            actor);
+
+        if (isCollaborator)
+        {
+            Log.PullRequestManuallyApproved(
+                _logger,
+                owner,
+                name,
+                (int)message.PullRequest!.Number,
+                actor);
+        }
+
+        return isCollaborator;
     }
 
     private async Task<bool> IsTrustedDependencyUpdateAsync(PullRequestEvent message)
@@ -295,5 +346,16 @@ public sealed partial class PullRequestHandler : IHandler
             string? owner,
             string? repository,
             long? number);
+
+        [LoggerMessage(
+           EventId = 8,
+           Level = LogLevel.Information,
+           Message = "Pull request {Owner}/{Repository}#{Number} was manually approved by {Actor}.")]
+        public static partial void PullRequestManuallyApproved(
+            ILogger logger,
+            string owner,
+            string repository,
+            long number,
+            string actor);
     }
 }
