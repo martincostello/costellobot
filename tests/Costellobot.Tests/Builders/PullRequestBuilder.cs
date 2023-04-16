@@ -40,6 +40,12 @@ public sealed class PullRequestBuilder : ResponseBuilder
     public GitHubCommitBuilder CreateCommit()
         => new(Repository) { Sha = ShaHead };
 
+    public PullRequestBuilder WithLabel(string name)
+    {
+        Labels.Add(new(name));
+        return this;
+    }
+
     public override object Build()
     {
         return new
