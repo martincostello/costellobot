@@ -213,7 +213,9 @@ public sealed partial class PullRequestHandler : IHandler
     {
         if (message is not PullRequestLabeledEvent labelled ||
             message.Repository is not { } repository ||
-            message.Sender is not { } sender)
+            message.Sender is not { } sender ||
+            message.PullRequest.State != Octokit.Webhooks.Models.PullRequestEvent.PullRequestState.Open ||
+            message.PullRequest.Draft)
         {
             return false;
         }
@@ -227,7 +229,7 @@ public sealed partial class PullRequestHandler : IHandler
             requiredLabels.Count < 1 ||
             !presentLabels.Intersect(requiredLabels).SequenceEqual(requiredLabels, comparer))
         {
-            // All of the required labels are not present.
+            // All of the required labels are not present
             return false;
         }
 
