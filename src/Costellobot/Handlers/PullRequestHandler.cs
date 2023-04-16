@@ -161,6 +161,27 @@ public sealed partial class PullRequestHandler : IHandler
             await _connection.Run(query);
             Log.AutoMergeEnabled(_logger, owner, name, number);
         }
+        catch (Octokit.GraphQL.Core.Deserializers.ResponseDeserializerException ex) when (ex.Message == "[\"Pull request Pull request is in clean status\"]")
+        {
+            try
+            {
+                // If auto-merge failed as the PR is ready to merge, then just merge it
+                var response = await _client.PullRequest.Merge(owner, name, number, new()
+                {
+                    MergeMethod = Enum.Parse<Octokit.PullRequestMergeMethod>(mergeMethod.ToString()),
+                });
+
+                if (response.Merged)
+                {
+                    Log.PullRequestMerged(_logger, owner, name, number);
+                }
+            }
+            catch (Exception ex2)
+            {
+                Log.EnableAutoMergeFailed(_logger, ex, owner, name, number, nodeId);
+                Log.MergeFailed(_logger, ex2, owner, name, number);
+            }
+        }
         catch (Exception ex)
         {
             Log.EnableAutoMergeFailed(_logger, ex, owner, name, number, nodeId);
@@ -359,5 +380,26 @@ public sealed partial class PullRequestHandler : IHandler
             string repository,
             long number,
             string actor);
+
+        [LoggerMessage(
+           EventId = 9,
+           Level = LogLevel.Information,
+           Message = "Pull request {Owner}/{Repository}#{Number} merged.")]
+        public static partial void PullRequestMerged(
+            ILogger logger,
+            string owner,
+            string repository,
+            long number);
+
+        [LoggerMessage(
+           EventId = 10,
+           Level = LogLevel.Warning,
+           Message = "Failed to merge pull request {Owner}/{Repository}#{Number}.")]
+        public static partial void MergeFailed(
+            ILogger logger,
+            Exception exception,
+            string owner,
+            string repository,
+            long number);
     }
 }

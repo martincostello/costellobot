@@ -95,8 +95,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         RegisterCommit(driver);
         RegisterReview(driver);
 
-        var automergeEnabled = new TaskCompletionSource();
-        RegisterEnableAutomerge(driver, (p) => p.WithInterceptionCallback(async (request) =>
+        var automergeEnabled = RegisterEnableAutomerge(driver, (p, tcs) => p.WithInterceptionCallback(async (request) =>
         {
             request.Content.ShouldNotBeNull();
 
@@ -113,7 +112,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
 
             if (hasCorrectPayload)
             {
-                automergeEnabled.SetResult();
+                tcs.SetResult();
             }
 
             return hasCorrectPayload;
@@ -142,9 +141,9 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
             .WithCommitMessage(UntrustedCommitMessage());
 
         driver.Label = new(label);
-        driver.PullRequest.Labels.Add(new("dependencies"));
-        driver.PullRequest.Labels.Add(new("merge-approved"));
-        driver.PullRequest.Labels.Add(new(".NET"));
+        driver.PullRequest.WithLabel("dependencies");
+        driver.PullRequest.WithLabel("merge-approved");
+        driver.PullRequest.WithLabel(".NET");
         driver.Sender = new("repo-admin");
 
         RegisterGetAccessToken();
@@ -165,6 +164,77 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         await automergeEnabled.Task.WaitAsync(TimeSpan.FromSeconds(1));
     }
 
+    [Theory]
+    [InlineData("dependencies")]
+    [InlineData("merge-approved")]
+    public async Task Pull_Request_Is_Approved_And_Merged_For_Trusted_User_With_Untusted_Dependency_When_Labelled_By_Collaborator(
+        string label)
+    {
+        // Arrange
+        Fixture.ApprovePullRequests();
+        Fixture.AutoMergeEnabled();
+
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(UntrustedCommitMessage());
+
+        driver.Label = new(label);
+        driver.PullRequest.WithLabel("dependencies");
+        driver.PullRequest.WithLabel("merge-approved");
+        driver.PullRequest.WithLabel(".NET");
+        driver.Sender = new("repo-admin");
+
+        RegisterGetAccessToken();
+        RegisterCollaborator(driver, driver.Sender.Login, isCollaborator: true);
+        RegisterCommit(driver);
+        RegisterReview(driver);
+
+        var pullRequestMerged = RegisterPutPullRequestMerge(driver, mergeable: true);
+        var pullRequestApproved = RegisterReview(driver);
+        var automergeEnabled = RegisterEnableAutomerge(driver, (p, tcs) =>
+        {
+            p.Responds()
+             .WithStatus(HttpStatusCode.OK)
+             .WithJsonContent(new
+             {
+                 data = new
+                 {
+                    enablePullRequestAutoMerge = null as object,
+                 },
+                 errors = new[]
+                 {
+                     new
+                     {
+                         type = "UNPROCESSABLE",
+                         path = new[]
+                         {
+                             "enablePullRequestAutoMerge",
+                         },
+                         locations = new[]
+                         {
+                             new
+                             {
+                                 line = 1,
+                                 column = 21,
+                             },
+                         },
+                         message = "[\"Pull request Pull request is in clean status\"]",
+                     },
+                 },
+             })
+             .WithInterceptionCallback((_) => tcs.SetResult());
+        });
+
+        // Act
+        using var response = await PostWebhookAsync(driver, "labeled");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await pullRequestApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await automergeEnabled.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await pullRequestMerged.Task.WaitAsync(TimeSpan.FromSeconds(1));
+    }
+
     [Fact]
     public async Task Exception_Is_Not_Thrown_If_Enabling_Automerge_Fails()
     {
@@ -178,12 +248,11 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         RegisterCommit(driver);
         RegisterReview(driver);
 
-        var automergeEnabled = new TaskCompletionSource();
-        RegisterEnableAutomerge(driver, (p) =>
+        var automergeEnabled = RegisterEnableAutomerge(driver, (p, tcs) =>
         {
             p.Responds()
              .WithStatus(HttpStatusCode.BadRequest)
-             .WithInterceptionCallback((_) => automergeEnabled.SetResult());
+             .WithInterceptionCallback((_) => tcs.SetResult());
         });
 
         // Act
@@ -364,9 +433,9 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
             .WithCommitMessage(UntrustedCommitMessage());
 
         driver.Label = new("merge-approved");
-        driver.PullRequest.Labels.Add(new("dependencies"));
-        driver.PullRequest.Labels.Add(new("merge-approved"));
-        driver.PullRequest.Labels.Add(new(".NET"));
+        driver.PullRequest.WithLabel("dependencies");
+        driver.PullRequest.WithLabel("merge-approved");
+        driver.PullRequest.WithLabel(".NET");
         driver.Sender = new("rando-user");
 
         RegisterGetAccessToken();
@@ -396,9 +465,9 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
             .WithCommitMessage(UntrustedCommitMessage());
 
         driver.Label = new("invalid-label");
-        driver.PullRequest.Labels.Add(new("dependencies"));
-        driver.PullRequest.Labels.Add(new("invalid-label"));
-        driver.PullRequest.Labels.Add(new(".NET"));
+        driver.PullRequest.WithLabel("dependencies");
+        driver.PullRequest.WithLabel("invalid-label");
+        driver.PullRequest.WithLabel(".NET");
         driver.Sender = new("repo-collaborator");
 
         RegisterGetAccessToken();
@@ -430,8 +499,8 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
             .WithCommitMessage(UntrustedCommitMessage());
 
         driver.Label = new(label);
-        driver.PullRequest.Labels.Add(new(label));
-        driver.PullRequest.Labels.Add(new(".NET"));
+        driver.PullRequest.WithLabel(label);
+        driver.PullRequest.WithLabel(".NET");
         driver.Sender = new("repo-collaborator");
 
         RegisterGetAccessToken();
@@ -448,6 +517,74 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         await AssertTaskNotRun(pullRequestApproved);
+    }
+
+    [Fact]
+    public async Task Exception_Is_Not_Thrown_If_Merge_Fails()
+    {
+        // Arrange
+        Fixture.ApprovePullRequests();
+        Fixture.AutoMergeEnabled();
+
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(UntrustedCommitMessage());
+
+        driver.Label = new("dependencies");
+        driver.PullRequest.WithLabel("dependencies");
+        driver.PullRequest.WithLabel("merge-approved");
+        driver.PullRequest.WithLabel(".NET");
+        driver.Sender = new("repo-admin");
+
+        RegisterGetAccessToken();
+        RegisterCollaborator(driver, driver.Sender.Login, isCollaborator: true);
+        RegisterCommit(driver);
+        RegisterReview(driver);
+
+        var pullRequestMerged = RegisterPutPullRequestMerge(driver, mergeable: false);
+        var pullRequestApproved = RegisterReview(driver);
+        var automergeEnabled = RegisterEnableAutomerge(driver, (p, tcs) =>
+        {
+            p.Responds()
+             .WithStatus(HttpStatusCode.OK)
+             .WithJsonContent(new
+             {
+                 data = new
+                 {
+                     enablePullRequestAutoMerge = null as object,
+                 },
+                 errors = new[]
+                 {
+                     new
+                     {
+                         type = "UNPROCESSABLE",
+                         path = new[]
+                         {
+                             "enablePullRequestAutoMerge",
+                         },
+                         locations = new[]
+                         {
+                             new
+                             {
+                                 line = 1,
+                                 column = 21,
+                             },
+                         },
+                         message = "[\"Pull request Pull request is in clean status\"]",
+                     },
+                 },
+             })
+             .WithInterceptionCallback((_) => tcs.SetResult());
+        });
+
+        // Act
+        using var response = await PostWebhookAsync(driver, "labeled");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await pullRequestApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await automergeEnabled.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await pullRequestMerged.Task.WaitAsync(TimeSpan.FromSeconds(1));
     }
 
     [Fact]
@@ -487,21 +624,12 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
             .RegisterWith(Fixture.Interceptor);
     }
 
-    private TaskCompletionSource RegisterEnableAutomerge(PullRequestDriver driver)
+    private TaskCompletionSource RegisterEnableAutomerge(
+        PullRequestDriver driver,
+        Action<HttpRequestInterceptionBuilder, TaskCompletionSource>? configure = null)
     {
         var automergeEnabled = new TaskCompletionSource();
 
-        RegisterEnableAutomerge(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => automergeEnabled.SetResult()));
-
-        return automergeEnabled;
-    }
-
-    private void RegisterEnableAutomerge(
-        PullRequestDriver driver,
-        Action<HttpRequestInterceptionBuilder>? configure)
-    {
         var response = new
         {
             data = new
@@ -522,11 +650,31 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
             .ForPath("graphql")
             .Responds()
             .WithStatus(StatusCodes.Status201Created)
-            .WithSystemTextJsonContent(response);
+            .WithSystemTextJsonContent(response)
+            .WithInterceptionCallback((_) => automergeEnabled.SetResult());
 
-        configure?.Invoke(builder);
+        configure?.Invoke(builder, automergeEnabled);
 
         builder.RegisterWith(Fixture.Interceptor);
+
+        return automergeEnabled;
+    }
+
+    private TaskCompletionSource RegisterPutPullRequestMerge(PullRequestDriver driver, bool mergeable = true)
+    {
+        var pullRequestMerged = new TaskCompletionSource();
+
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPut()
+            .ForPath($"/repos/{driver.PullRequest.Repository.Owner.Login}/{driver.PullRequest.Repository.Name}/pulls/{driver.PullRequest.Number}/merge")
+            .Responds()
+            .WithStatus(mergeable ? StatusCodes.Status200OK : StatusCodes.Status405MethodNotAllowed)
+            .WithSystemTextJsonContent(new { merged = mergeable })
+            .WithInterceptionCallback((_) => pullRequestMerged.SetResult())
+            .RegisterWith(Fixture.Interceptor);
+
+        return pullRequestMerged;
     }
 
     private TaskCompletionSource RegisterReview(PullRequestDriver driver)
