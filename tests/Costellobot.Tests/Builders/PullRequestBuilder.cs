@@ -17,6 +17,8 @@ public sealed class PullRequestBuilder : ResponseBuilder
 
     public bool? IsMergeable { get; set; }
 
+    public IList<LabelBuilder> Labels { get; set; } = new List<LabelBuilder>();
+
     public string NodeId { get; set; } = RandomString();
 
     public int Number { get; set; } = RandomNumber();
@@ -56,6 +58,7 @@ public sealed class PullRequestBuilder : ResponseBuilder
                 sha = ShaHead,
             },
             html_url = $"https://github.com/{Repository.Owner.Login}/{Repository.Name}/pull/{Number}",
+            labels = Labels.Build(),
             mergeable = IsMergeable,
             node_id = NodeId,
             number = Number,
