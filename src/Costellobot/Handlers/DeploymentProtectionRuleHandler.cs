@@ -24,30 +24,46 @@ public sealed partial class DeploymentProtectionRuleHandler : IHandler
         _logger = logger;
     }
 
-    public Task HandleAsync(WebhookEvent message)
+    public async Task HandleAsync(WebhookEvent message)
     {
-        if (message is DeploymentProtectionRuleRequestedEvent body &&
-            body.Repository is { } repo)
+        if (message is not DeploymentProtectionRuleRequestedEvent body ||
+            body.Repository is not { } repo)
         {
-            string owner = repo.Owner.Login;
-            string name = repo.Name;
+            return;
+        }
 
-            Log.DeploymentProtectionRuleRequested(
+        string owner = repo.Owner.Login;
+        string name = repo.Name;
+
+        Log.DeploymentProtectionRuleRequested(
+            _logger,
+            owner,
+            name,
+            body.Environment,
+            body.Deployment.Id,
+            body.DeploymentCallbackUrl);
+
+        try
+        {
+            var review = new ReviewDeploymentProtectionRule(
+                body.Environment,
+                PendingDeploymentReviewState.Approved,
+                _options.CurrentValue.DeployComment);
+
+            await _client.WorkflowRuns().ReviewCustomProtectionRuleAsync(
+                body.DeploymentCallbackUrl,
+                review);
+        }
+        catch (Exception ex)
+        {
+            Log.FailedToApproveDeployment(
                 _logger,
+                ex,
                 owner,
                 name,
                 body.Environment,
-                body.Event,
-                body.Deployment.Id,
-                body.DeploymentCallbackUrl);
-
-            if (_client is not null && _options is not null)
-            {
-                // TODO Use these to approve, reject or comment on the request
-            }
+                body.Deployment.Id);
         }
-
-        return Task.CompletedTask;
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -56,14 +72,25 @@ public sealed partial class DeploymentProtectionRuleHandler : IHandler
         [LoggerMessage(
            EventId = 1,
            Level = LogLevel.Information,
-           Message = "Received deployment protection rule check for {Owner}/{Repository} for environment {EnvironmentName} for event {EventName} and deployment {DeploymentId} with deployment callback {DeploymentCallbackUrl}.")]
+           Message = "Received deployment protection rule check for {Owner}/{Repository} for environment {EnvironmentName} for deployment {DeploymentId} with deployment callback {DeploymentCallbackUrl}.")]
         public static partial void DeploymentProtectionRuleRequested(
             ILogger logger,
             string? owner,
             string? repository,
             string? environmentName,
-            string? eventName,
             long deploymentId,
             string? deploymentCallbackUrl);
+
+        [LoggerMessage(
+           EventId = 2,
+           Level = LogLevel.Warning,
+           Message = "Failed to approve deployment protection rule check for {Owner}/{Repository} for environment {EnvironmentName} for deployment {DeploymentId}.")]
+        public static partial void FailedToApproveDeployment(
+            ILogger logger,
+            Exception exception,
+            string? owner,
+            string? repository,
+            string? environmentName,
+            long deploymentId);
     }
 }

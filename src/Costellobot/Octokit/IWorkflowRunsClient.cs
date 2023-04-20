@@ -9,4 +9,8 @@ public interface IWorkflowRunsClient
         string owner,
         string name,
         long runId);
+
+    Task ReviewCustomProtectionRuleAsync(
+        string deploymentCallbackUrl,
+        ReviewDeploymentProtectionRule review);
 }

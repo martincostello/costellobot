@@ -21,4 +21,18 @@ public sealed class WorkflowRunsClient : IWorkflowRunsClient
         var uri = new Uri($"repos/{owner}/{name}/actions/runs/{runId}/pending_deployments", UriKind.Relative);
         return await _connection.GetAll<PendingDeployment>(uri);
     }
+
+    public async Task ReviewCustomProtectionRuleAsync(
+        string deploymentCallbackUrl,
+        ReviewDeploymentProtectionRule review)
+    {
+        // See https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#review-custom-deployment-protection-rules-for-a-workflow-run
+        var uri = new Uri(deploymentCallbackUrl, UriKind.Absolute);
+        var status = await _connection.Connection.Post(uri, review, "application/vnd.github+json");
+
+        if (status is not System.Net.HttpStatusCode.NoContent)
+        {
+            throw new ApiException("Failed to review custom deployment protection rule.", status);
+        }
+    }
 }
