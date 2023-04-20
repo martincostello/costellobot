@@ -43,26 +43,38 @@ public sealed partial class DeploymentProtectionRuleHandler : IHandler
             body.Deployment.Id,
             body.DeploymentCallbackUrl);
 
-        try
-        {
-            var review = new ReviewDeploymentProtectionRule(
-                body.Environment,
-                PendingDeploymentReviewState.Approved,
-                _options.CurrentValue.DeployComment);
+        var options = _options.CurrentValue;
 
-            await _client.WorkflowRuns().ReviewCustomProtectionRuleAsync(
-                body.DeploymentCallbackUrl,
-                review);
-        }
-        catch (Exception ex)
+        if (options.Deploy)
         {
-            Log.FailedToApproveDeployment(
-                _logger,
-                ex,
-                owner,
-                name,
-                body.Environment,
-                body.Deployment.Id);
+            try
+            {
+                var review = new ReviewDeploymentProtectionRule(
+                    body.Environment,
+                    PendingDeploymentReviewState.Approved,
+                    options.DeployComment);
+
+                await _client.WorkflowRuns().ReviewCustomProtectionRuleAsync(
+                    body.DeploymentCallbackUrl,
+                    review);
+
+                Log.ApprovedDeployment(
+                    _logger,
+                    owner,
+                    name,
+                    body.Environment,
+                    body.Deployment.Id);
+            }
+            catch (Exception ex)
+            {
+                Log.FailedToApproveDeployment(
+                    _logger,
+                    ex,
+                    owner,
+                    name,
+                    body.Environment,
+                    body.Deployment.Id);
+            }
         }
     }
 
@@ -83,6 +95,17 @@ public sealed partial class DeploymentProtectionRuleHandler : IHandler
 
         [LoggerMessage(
            EventId = 2,
+           Level = LogLevel.Information,
+           Message = "Approved deployment protection rule check for {Owner}/{Repository} for environment {EnvironmentName} for deployment {DeploymentId}.")]
+        public static partial void ApprovedDeployment(
+            ILogger logger,
+            string? owner,
+            string? repository,
+            string? environmentName,
+            long deploymentId);
+
+        [LoggerMessage(
+           EventId = 3,
            Level = LogLevel.Warning,
            Message = "Failed to approve deployment protection rule check for {Owner}/{Repository} for environment {EnvironmentName} for deployment {DeploymentId}.")]
         public static partial void FailedToApproveDeployment(

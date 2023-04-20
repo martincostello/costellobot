@@ -27,10 +27,9 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         var driver = new DeploymentStatusDriver(
             (repo) => repo.CreateCommit(),
-            (repo) => CreateTrustedCommit(repo));
+            CreateTrustedCommit);
 
-        driver.WithPendingDeployment(
-            (commit) => CreateDeployment(commit));
+        driver.WithPendingDeployment(CreateDeployment);
 
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
@@ -60,10 +59,9 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         var driver = new DeploymentStatusDriver(
             (repo) => repo.CreateCommit(),
-            (repo) => CreateTrustedCommit(repo));
+            CreateTrustedCommit);
 
-        driver.WithPendingDeployment(
-            (commit) => CreateDeployment(commit));
+        driver.WithPendingDeployment(CreateDeployment);
 
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
@@ -103,10 +101,9 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         var driver = new DeploymentStatusDriver(
             (repo) => repo.CreateCommit(),
-            (repo) => CreateTrustedCommit(repo));
+            CreateTrustedCommit);
 
-        driver.WithPendingDeployment(
-            (commit) => CreateDeployment(commit));
+        driver.WithPendingDeployment(CreateDeployment);
 
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
@@ -143,10 +140,9 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         var driver = new DeploymentStatusDriver(
             (repo) => repo.CreateCommit(),
-            (repo) => CreateTrustedCommit(repo));
+            CreateTrustedCommit);
 
-        driver.WithPendingDeployment(
-            (commit) => CreateDeployment(commit));
+        driver.WithPendingDeployment(CreateDeployment);
 
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
@@ -186,10 +182,10 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         var driver = new DeploymentStatusDriver(
             (repo) => repo.CreateCommit(),
-            (repo) => CreateTrustedCommit(repo));
+            CreateTrustedCommit);
 
         driver.WithPendingDeployment(
-            (commit) => CreateDeployment(commit),
+            CreateDeployment,
             () => CreateDeploymentStatus(state));
 
         var deploymentApproved = RegisterApprovePendingDeployment(driver);
@@ -211,8 +207,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         var driver = new DeploymentStatusDriver();
 
-        driver.WithPendingDeployment(
-            (commit) => CreateDeployment(commit));
+        driver.WithPendingDeployment(CreateDeployment);
 
         var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
@@ -385,11 +380,10 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         Fixture.ApproveDeployments();
 
         var driver = new DeploymentStatusDriver(
-            (repo) => CreateTrustedCommit(repo),
-            (repo) => CreateTrustedCommit(repo));
+            CreateTrustedCommit,
+            CreateTrustedCommit);
 
-        driver.WithPendingDeployment(
-            (commit) => CreateDeployment(commit));
+        driver.WithPendingDeployment(CreateDeployment);
 
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
@@ -417,11 +411,10 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         Fixture.ApproveDeployments();
 
         var driver = new DeploymentStatusDriver(
-            (repo) => CreateTrustedCommit(repo),
-            (repo) => CreateTrustedCommit(repo));
+            CreateTrustedCommit,
+            CreateTrustedCommit);
 
-        driver.WithPendingDeployment(
-            (commit) => CreateDeployment(commit));
+        driver.WithPendingDeployment(CreateDeployment);
 
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
@@ -462,8 +455,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
                 return commit;
             });
 
-        driver.WithPendingDeployment(
-            (commit) => CreateDeployment(commit));
+        driver.WithPendingDeployment(CreateDeployment);
 
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
@@ -497,11 +489,10 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         Fixture.ApproveDeployments();
 
         var driver = new DeploymentStatusDriver(
-            (repo) => CreateTrustedCommit(repo),
-            (repo) => CreateTrustedCommit(repo));
+            CreateTrustedCommit,
+            CreateTrustedCommit);
 
-        driver.WithPendingDeployment(
-            (commit) => CreateDeployment(commit));
+        driver.WithPendingDeployment(CreateDeployment);
 
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
@@ -541,10 +532,9 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         var driver = new DeploymentStatusDriver(
             (repo) => repo.CreateCommit(),
-            (repo) => CreateTrustedCommit(repo));
+            CreateTrustedCommit);
 
-        driver.WithPendingDeployment(
-            (commit) => CreateDeployment(commit));
+        driver.WithPendingDeployment(CreateDeployment);
 
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
