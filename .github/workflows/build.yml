@@ -95,7 +95,7 @@ jobs:
       if: ${{ runner.os == 'Windows' && success() }}
       with:
         name: webapp
-        path: ./artifacts/publish
+        path: ./.artifacts/publish/Costellobot/release_${{ env.PUBLISH_RUNTIME }}
         if-no-files-found: error
 
     - name: Publish screenshots
@@ -103,7 +103,7 @@ jobs:
       if: ${{ always() }}
       with:
         name: screenshots
-        path: ./artifacts/screenshots/*
+        path: ./.artifacts/screenshots/*
         if-no-files-found: ignore
 
     - name: Publish traces
@@ -111,7 +111,7 @@ jobs:
       if: ${{ always() }}
       with:
         name: traces
-        path: ./artifacts/traces/*
+        path: ./.artifacts/traces/*
         if-no-files-found: ignore
 
     - name: Publish videos
@@ -119,7 +119,7 @@ jobs:
       if: ${{ always() }}
       with:
         name: videos
-        path: ./artifacts/videos/*
+        path: ./.artifacts/videos/*
         if-no-files-found: ignore
 
   deploy:
@@ -188,7 +188,7 @@ jobs:
 
     - name: Run end-to-end tests
       shell: pwsh
-      run: dotnet test ./tests/Costellobot.EndToEndTests --configuration Release --output ./artifacts --logger "GitHubActions;report-warnings=false"
+      run: dotnet test ./tests/Costellobot.EndToEndTests --configuration Release --logger "GitHubActions;report-warnings=false"
       env:
         APPLICATION_URL: ${{ env.APPLICATION_URL_PROD }}
 
@@ -197,7 +197,7 @@ jobs:
       if: ${{ always() }}
       with:
         name: screenshots
-        path: ./artifacts/screenshots/*
+        path: ./.artifacts/screenshots/*
         if-no-files-found: ignore
 
     - name: Publish traces
@@ -205,7 +205,7 @@ jobs:
       if: ${{ always() }}
       with:
         name: traces
-        path: ./artifacts/traces/*
+        path: ./.artifacts/traces/*
         if-no-files-found: ignore
 
     - name: Publish videos
@@ -213,5 +213,5 @@ jobs:
       if: ${{ always() }}
       with:
         name: videos
-        path: ./artifacts/videos/*
+        path: ./.artifacts/videos/*
         if-no-files-found: ignore
