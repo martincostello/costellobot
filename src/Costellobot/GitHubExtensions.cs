@@ -83,6 +83,7 @@ public static class GitHubExtensions
 
         services.AddSingleton<IHandlerFactory, HandlerFactory>();
         services.AddTransient<CheckSuiteHandler>();
+        services.AddTransient<DeploymentProtectionRuleHandler>();
         services.AddTransient<DeploymentStatusHandler>();
         services.AddTransient<PullRequestHandler>();
 

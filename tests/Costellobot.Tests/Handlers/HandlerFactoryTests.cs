@@ -15,6 +15,7 @@ public static class HandlerFactoryTests
     [InlineData("", typeof(NullHandler))]
     [InlineData("check_run", typeof(NullHandler))]
     [InlineData("check_suite", typeof(CheckSuiteHandler))]
+    [InlineData("deployment_protection_rule", typeof(DeploymentProtectionRuleHandler))]
     [InlineData("deployment_status", typeof(DeploymentStatusHandler))]
     [InlineData("issues", typeof(NullHandler))]
     [InlineData("ping", typeof(NullHandler))]
@@ -41,6 +42,15 @@ public static class HandlerFactoryTests
                     gitHubClient,
                     webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<CheckSuiteHandler>());
+            });
+
+        mock.Setup((p) => p.GetService(typeof(DeploymentProtectionRuleHandler)))
+            .Returns(() =>
+            {
+                return new DeploymentProtectionRuleHandler(
+                    gitHubClient,
+                    webhookOptions,
+                    NullLoggerFactory.Instance.CreateLogger<DeploymentProtectionRuleHandler>());
             });
 
         mock.Setup((p) => p.GetService(typeof(DeploymentStatusHandler)))
