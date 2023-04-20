@@ -83,3 +83,4 @@ jobs:
       with:
         name: lighthouse
         path: ${{ github.workspace }}/artifacts
+        if-no-files-found: ignore
