@@ -7,6 +7,8 @@ public interface IPackageRegistry
 {
     DependencyEcosystem Ecosystem { get; }
 
+    Task<bool> AreOwnersTrustedAsync(IReadOnlyList<string> owners);
+
     Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         string owner,
         string repository,

@@ -311,6 +311,19 @@ public sealed partial class GitCommitAnalyzer
                     return true;
                 }
 
+                if (await registry.AreOwnersTrustedAsync(owners))
+                {
+                    Log.TrustedDependencyOwnerViaRegistryUpdated(
+                        _logger,
+                        reference,
+                        owner,
+                        name,
+                        dependency,
+                        registry.Ecosystem.ToString());
+
+                    return true;
+                }
+
                 Log.UntrustedDependencyOwnerUpdated(
                     _logger,
                     reference,
@@ -406,5 +419,17 @@ public sealed partial class GitCommitAnalyzer
             string owner,
             string repository,
             string dependency);
+
+        [LoggerMessage(
+           EventId = 8,
+           Level = LogLevel.Information,
+           Message = "Reference {Reference} for {Owner}/{Repository} updates dependency {Dependency} whose owner is trusted by its registry {Registry}.")]
+        public static partial void TrustedDependencyOwnerViaRegistryUpdated(
+            ILogger logger,
+            string? reference,
+            string owner,
+            string repository,
+            string dependency,
+            string registry);
     }
 }

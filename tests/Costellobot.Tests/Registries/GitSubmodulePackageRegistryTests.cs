@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using JustEat.HttpClientInterception;
+using Moq;
 using Octokit;
 
 namespace MartinCostello.Costellobot.Registries;
@@ -24,8 +25,9 @@ public static class GitSubmodulePackageRegistryTests
         var adapter = new Octokit.Internal.HttpClientAdapter(options.CreateHttpMessageHandler);
         var connection = new Connection(new("costellobot", "1.0.0"), adapter);
         var client = new GitHubClientAdapter(connection);
+        var graphConnection = Mock.Of<Octokit.GraphQL.IConnection>();
 
-        var target = new GitSubmodulePackageRegistry(client);
+        var target = new GitSubmodulePackageRegistry(client, graphConnection);
 
         // Act
         var actual = await target.GetPackageOwnersAsync(

@@ -5,18 +5,18 @@ using Octokit;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed class GitSubmodulePackageRegistry : IPackageRegistry
+public sealed class GitSubmodulePackageRegistry : GitHubPackageRegistry
 {
-    private readonly IGitHubClient _client;
-
-    public GitSubmodulePackageRegistry(IGitHubClientForInstallation client)
+    public GitSubmodulePackageRegistry(
+        IGitHubClientForInstallation client,
+        Octokit.GraphQL.IConnection connection)
+        : base(client, connection)
     {
-        _client = client;
     }
 
-    public DependencyEcosystem Ecosystem => DependencyEcosystem.Submodules;
+    public override DependencyEcosystem Ecosystem => DependencyEcosystem.Submodules;
 
-    public async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
+    public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         string owner,
         string repository,
         string id,
@@ -26,7 +26,7 @@ public sealed class GitSubmodulePackageRegistry : IPackageRegistry
 
         try
         {
-            items = await _client.Repository.Content.GetAllContents(owner, repository, id);
+            items = await RestClient.Repository.Content.GetAllContents(owner, repository, id);
         }
         catch (NotFoundException)
         {

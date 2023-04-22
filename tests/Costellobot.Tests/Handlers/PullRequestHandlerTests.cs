@@ -628,36 +628,21 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         PullRequestDriver driver,
         Action<HttpRequestInterceptionBuilder, TaskCompletionSource>? configure = null)
     {
-        var automergeEnabled = new TaskCompletionSource();
-
-        var response = new
+        var data = new
         {
-            data = new
+            enablePullRequestAutoMerge = new
             {
-                enablePullRequestAutoMerge = new
+                number = new
                 {
-                    number = new
-                    {
-                        number = driver.PullRequest.Number,
-                    },
+                    number = driver.PullRequest.Number,
                 },
             },
         };
 
-        var builder = CreateDefaultBuilder()
-            .Requests()
-            .ForPost()
-            .ForPath("graphql")
-            .Responds()
-            .WithStatus(StatusCodes.Status201Created)
-            .WithSystemTextJsonContent(response)
-            .WithInterceptionCallback((_) => automergeEnabled.SetResult());
-
-        configure?.Invoke(builder, automergeEnabled);
-
-        builder.RegisterWith(Fixture.Interceptor);
-
-        return automergeEnabled;
+        return RegisterGraphQLQuery(
+            (_) => true,
+            data,
+            configure);
     }
 
     private TaskCompletionSource RegisterPutPullRequestMerge(PullRequestDriver driver, bool mergeable = true)
@@ -703,5 +688,62 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         configure(builder);
 
         builder.RegisterWith(Fixture.Interceptor);
+    }
+
+    private TaskCompletionSource RegisterGetIsGitHubStar(
+        string login,
+        bool isGitHubStar,
+        Action<HttpRequestInterceptionBuilder, TaskCompletionSource>? configure = null)
+    {
+        var data = new
+        {
+            user = new
+            {
+                isGitHubStar,
+            },
+        };
+
+        return RegisterGraphQLQuery(
+            (query) => query.Contains(@$"user(login:""{login}"")", StringComparison.Ordinal),
+            data,
+            configure);
+    }
+
+    private TaskCompletionSource RegisterGraphQLQuery(
+        Predicate<string> queryPredicate,
+        object data,
+        Action<HttpRequestInterceptionBuilder, TaskCompletionSource>? configure = null)
+    {
+        var tcs = new TaskCompletionSource();
+
+        var response = new { data };
+
+        var builder = CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath("graphql")
+            .ForContent(async (request) =>
+            {
+                request.ShouldNotBeNull();
+
+                byte[] body = await request.ReadAsByteArrayAsync();
+                using var document = JsonDocument.Parse(body);
+
+                var query = document.RootElement.GetProperty("query").GetString();
+
+                query.ShouldNotBeNull();
+
+                return queryPredicate(query);
+            })
+            .Responds()
+            .WithStatus(StatusCodes.Status201Created)
+            .WithSystemTextJsonContent(response)
+            .WithInterceptionCallback((_) => tcs.SetResult());
+
+        configure?.Invoke(builder, tcs);
+
+        builder.RegisterWith(Fixture.Interceptor);
+
+        return tcs;
     }
 }

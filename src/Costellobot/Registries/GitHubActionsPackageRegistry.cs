@@ -5,18 +5,18 @@ using Octokit;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed class GitHubActionsPackageRegistry : IPackageRegistry
+public sealed class GitHubActionsPackageRegistry : GitHubPackageRegistry
 {
-    private readonly IGitHubClient _client;
-
-    public GitHubActionsPackageRegistry(IGitHubClientForInstallation client)
+    public GitHubActionsPackageRegistry(
+        IGitHubClientForInstallation client,
+        Octokit.GraphQL.IConnection connection)
+        : base(client, connection)
     {
-        _client = client;
     }
 
-    public DependencyEcosystem Ecosystem => DependencyEcosystem.GitHubActions;
+    public override DependencyEcosystem Ecosystem => DependencyEcosystem.GitHubActions;
 
-    public async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
+    public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         string owner,
         string repository,
         string id,
@@ -48,14 +48,14 @@ public sealed class GitHubActionsPackageRegistry : IPackageRegistry
 
             foreach (var reference in refs)
             {
-                if (await ExistsAsync(() => _client.Git.Reference.Get(actionOwner, actionName, $"tags/{reference}")))
+                if (await ExistsAsync(() => RestClient.Git.Reference.Get(actionOwner, actionName, $"tags/{reference}")))
                 {
                     return new[] { actionOwner };
                 }
             }
 
             // If we didn't find the tag(s), maybe it's a sha to a specific commit
-            if (await ExistsAsync(() => _client.Git.Commit.Get(actionOwner, actionName, version)))
+            if (await ExistsAsync(() => RestClient.Git.Commit.Get(actionOwner, actionName, version)))
             {
                 return new[] { actionOwner };
             }
