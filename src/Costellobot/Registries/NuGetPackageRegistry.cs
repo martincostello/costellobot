@@ -68,14 +68,11 @@ public sealed class NuGetPackageRegistry : PackageRegistry
             .Select((p) => p.Version)
             .FirstOrDefault();
 
-        if (versionFound is null)
-        {
-            versionFound = package.Versions
-                .Where((p) => p.Version.StartsWith(version, StringComparison.Ordinal))
-                .Where((p) => p.Version.Contains('+', StringComparison.Ordinal))
-                .Select((p) => p.Version.Split('+')[0])
-                .SingleOrDefault();
-        }
+        versionFound ??= package.Versions
+            .Where((p) => p.Version.StartsWith(version, StringComparison.Ordinal))
+            .Where((p) => p.Version.Contains('+', StringComparison.Ordinal))
+            .Select((p) => p.Version.Split('+')[0])
+            .SingleOrDefault();
 
         versionFound ??= package.Version;
 
