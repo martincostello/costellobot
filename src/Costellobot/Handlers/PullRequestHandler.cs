@@ -151,14 +151,14 @@ public sealed partial class PullRequestHandler : IHandler
             PullRequestId = new(nodeId),
         };
 
-        var query = new Mutation()
+        var mutation = new Mutation()
             .EnablePullRequestAutoMerge(input)
             .Select((p) => new { p.PullRequest.Number })
             .Compile();
 
         try
         {
-            await _connection.Run(query);
+            await _connection.Run(mutation);
             Log.AutoMergeEnabled(_logger, owner, name, number);
         }
         catch (Octokit.GraphQL.Core.Deserializers.ResponseDeserializerException ex) when (ex.Message == "[\"Pull request Pull request is in clean status\"]")
