@@ -216,6 +216,12 @@ export class App {
         const timestampString = timestamp.toISOString();
         this.logsContainer.textContent += `${timestampString} [${logEntry.level}] ${logEntry.category}[${event}]: ${logEntry.message}`;
 
+        if (logEntry.exception !== '') {
+            this.logsContainer.textContent += '\n';
+            this.logsContainer.textContent += logEntry.exception;
+            this.logsContainer.textContent += '\n';
+        }
+
         if (this.logsAutoscroll.checked) {
             this.logsContainer.scrollTop = this.logsContainer.scrollHeight;
         }
@@ -273,6 +279,7 @@ interface LogEntry {
     level: string;
     eventId: number;
     eventName?: string;
+    exception?: string;
     message: string;
     timestamp: string;
 }
