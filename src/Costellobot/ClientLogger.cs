@@ -60,6 +60,7 @@ public sealed class ClientLogger : ILogger
             Level = levelString,
             EventId = eventId.Id,
             EventName = eventId.Name,
+            Exception = exception?.ToString().ReplaceLineEndings("\n") ?? string.Empty,
             Message = formatter(state, exception),
             Timestamp = _clock.GetCurrentInstant().ToDateTimeOffset(),
         };

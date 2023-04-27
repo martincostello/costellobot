@@ -16,4 +16,6 @@ public sealed class ClientLogMessage
     public string Message { get; init; } = string.Empty;
 
     public DateTimeOffset Timestamp { get; init; }
+
+    public string Exception { get; init; } = string.Empty;
 }
