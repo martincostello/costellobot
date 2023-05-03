@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Octokit;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events.DeploymentProtectionRule;
+using Polly;
 
 namespace MartinCostello.Costellobot.Handlers;
 
@@ -54,9 +55,12 @@ public sealed partial class DeploymentProtectionRuleHandler : IHandler
                     PendingDeploymentReviewState.Approved,
                     options.DeployComment);
 
-                await _client.WorkflowRuns().ReviewCustomProtectionRuleAsync(
-                    body.DeploymentCallbackUrl,
-                    review);
+                await Policy.Handle<Exception>()
+                    .WaitAndRetryAsync(3, static (_) => TimeSpan.FromSeconds(1))
+                    .ExecuteAsync(
+                        () => _client.WorkflowRuns().ReviewCustomProtectionRuleAsync(
+                            body.DeploymentCallbackUrl,
+                            review));
 
                 Log.ApprovedDeployment(
                     _logger,
