@@ -87,7 +87,7 @@ jobs:
     - uses: codecov/codecov-action@894ff025c7b54547a9a2a1e9f228beae737ad3c2 # v3.1.3
       name: Upload coverage to Codecov
       with:
-        files: ./.artifacts/coverage/coverage.cobertura.xml,./src/Costellobot/coverage/lcov.info
+        files: ./artifacts/coverage/coverage.cobertura.xml,./src/Costellobot/coverage/lcov.info
         flags: ${{ matrix.codecov_os }}
 
     - name: Publish artifacts
@@ -95,7 +95,7 @@ jobs:
       if: ${{ runner.os == 'Windows' && success() }}
       with:
         name: webapp
-        path: ./.artifacts/publish/Costellobot/release_${{ env.PUBLISH_RUNTIME }}
+        path: ./artifacts/publish/Costellobot/release_${{ env.PUBLISH_RUNTIME }}
         if-no-files-found: error
 
     - name: Publish screenshots
@@ -103,7 +103,7 @@ jobs:
       if: ${{ always() }}
       with:
         name: screenshots
-        path: ./.artifacts/screenshots/*
+        path: ./artifacts/screenshots/*
         if-no-files-found: ignore
 
     - name: Publish traces
@@ -111,7 +111,7 @@ jobs:
       if: ${{ always() }}
       with:
         name: traces
-        path: ./.artifacts/traces/*
+        path: ./artifacts/traces/*
         if-no-files-found: ignore
 
     - name: Publish videos
@@ -119,7 +119,7 @@ jobs:
       if: ${{ always() }}
       with:
         name: videos
-        path: ./.artifacts/videos/*
+        path: ./artifacts/videos/*
         if-no-files-found: ignore
 
   deploy:
@@ -187,7 +187,7 @@ jobs:
       if: ${{ always() }}
       with:
         name: screenshots
-        path: ./.artifacts/screenshots/*
+        path: ./artifacts/screenshots/*
         if-no-files-found: ignore
 
     - name: Publish traces
@@ -195,7 +195,7 @@ jobs:
       if: ${{ always() }}
       with:
         name: traces
-        path: ./.artifacts/traces/*
+        path: ./artifacts/traces/*
         if-no-files-found: ignore
 
     - name: Publish videos
@@ -203,5 +203,5 @@ jobs:
       if: ${{ always() }}
       with:
         name: videos
-        path: ./.artifacts/videos/*
+        path: ./artifacts/videos/*
         if-no-files-found: ignore
