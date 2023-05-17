@@ -1,20 +1,18 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using NodaTime;
-
 namespace MartinCostello.Costellobot;
 
 public sealed class ClientLogger : ILogger
 {
-    private readonly IClock _clock;
+    private readonly TimeProvider _timeProvider;
     private readonly ClientLogQueue _queue;
 
-    public ClientLogger(string categoryName, ClientLogQueue queue, IClock clock)
+    public ClientLogger(string categoryName, ClientLogQueue queue, TimeProvider timeProvider)
     {
         CategoryName = categoryName[ClientLoggingProvider.CategoryPrefix.Length..].TrimStart('.');
         _queue = queue;
-        _clock = clock;
+        _timeProvider = timeProvider;
     }
 
     public string CategoryName { get; }
@@ -62,7 +60,7 @@ public sealed class ClientLogger : ILogger
             EventName = eventId.Name,
             Exception = exception?.ToString().ReplaceLineEndings("\n") ?? string.Empty,
             Message = formatter(state, exception),
-            Timestamp = _clock.GetCurrentInstant().ToDateTimeOffset(),
+            Timestamp = _timeProvider.GetUtcNow(),
         };
 
         _queue.Enqueue(payload);
