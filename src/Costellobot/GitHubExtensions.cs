@@ -35,7 +35,7 @@ public static class GitHubExtensions
         services.Configure<SiteOptions>(configuration.GetSection("Site"));
         services.Configure<WebhookOptions>(configuration.GetSection("Webhook"));
 
-        services.TryAddSingleton((_) => TimeProvider.System);
+        services.TryAddSingleton(TimeProvider.System);
 
         services.AddSingleton((provider) =>
         {
