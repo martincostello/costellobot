@@ -2,7 +2,6 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.Logging.Abstractions;
-using NodaTime;
 
 namespace MartinCostello.Costellobot;
 
@@ -10,20 +9,20 @@ public sealed class ClientLoggingProvider : ILoggerProvider
 {
     internal const string CategoryPrefix = "MartinCostello.Costellobot";
 
-    private readonly IClock _clock;
+    private readonly TimeProvider _timeProvider;
     private readonly ClientLogQueue _queue;
 
-    public ClientLoggingProvider(ClientLogQueue queue, IClock clock)
+    public ClientLoggingProvider(ClientLogQueue queue, TimeProvider timeProvider)
     {
         _queue = queue;
-        _clock = clock;
+        _timeProvider = timeProvider;
     }
 
     public ILogger CreateLogger(string categoryName)
     {
         return
             categoryName.StartsWith(CategoryPrefix, StringComparison.Ordinal) ?
-            new ClientLogger(categoryName, _queue, _clock) :
+            new ClientLogger(categoryName, _queue, _timeProvider) :
             NullLoggerFactory.Instance.CreateLogger(categoryName);
     }
 
