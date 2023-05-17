@@ -17,3 +17,58 @@ jobs:
       user-name: ${{ vars.GIT_COMMIT_USER_NAME }}
     secrets:
       repo-token: ${{ secrets.ACCESS_TOKEN }}
+
+  update-signalr:
+    needs: update-sdk
+    runs-on: ubuntu-latest
+    if : ${{ needs.update-sdk.outputs.sdk-updated == 'true' }}
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      with:
+        token: ${{ secrets.ACCESS_TOKEN }}
+
+    - name: Setup Node
+      uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
+      with:
+        node-version: '18'
+
+    - name: Update SignalR npm package
+      shell: pwsh
+      run: |
+        $package = "@microsoft/signalr"
+        $channel = (Get-Content .\global.json | ConvertFrom-Json).sdk.version.Split('.')[0]
+        $newVersion = (npm view $package versions --json | ConvertFrom-Json | Where { $_ -Like "$channel*" } | Sort-Object -Descending)[0]
+
+        Push-Location "./src/Costellobot"
+        $currentVersion = (Get-Content .\package.json | ConvertFrom-Json).dependencies.$package.TrimStart('^')
+
+        if ($currentVersion -ne $newVersion) {
+          npm install "${package}@${newVersion}"
+          Pop-Location
+
+          $commitMessageLines = @(
+            "Bump ${package} from ${currentVersion} to ${newVersion}",
+            "",
+            "Bumps ${package} from ${currentVersion} to ${newVersion}.",
+            "",
+            "---",
+            "updated-dependencies:",
+            "- dependency-name: ${package}",
+            "  dependency-type: direct:production",
+            "  update-type: version-update:semver-patch",
+            "...",
+            "",
+            ""
+          )
+
+          $commitMessage = $commitMessageLines -join "`n"
+
+          git config user.email "${{ vars.GIT_COMMIT_USER_EMAIL }}"
+          git config user.name "${{ vars.GIT_COMMIT_USER_NAME }}"
+
+          git add .
+          git commit -m $commitMessage -s
+          git push
+        }
