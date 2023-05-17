@@ -87,7 +87,7 @@ jobs:
     - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
       name: Upload coverage to Codecov
       with:
-        files: ./artifacts/coverage.cobertura.xml,./src/Costellobot/coverage/lcov.info
+        files: ./artifacts/coverage/coverage.cobertura.xml,./src/Costellobot/coverage/lcov.info
         flags: ${{ matrix.codecov_os }}
 
     - name: Publish artifacts
