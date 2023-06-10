@@ -690,25 +690,6 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
         builder.RegisterWith(Fixture.Interceptor);
     }
 
-    private TaskCompletionSource RegisterGetIsGitHubStar(
-        string login,
-        bool isGitHubStar,
-        Action<HttpRequestInterceptionBuilder, TaskCompletionSource>? configure = null)
-    {
-        var data = new
-        {
-            user = new
-            {
-                isGitHubStar,
-            },
-        };
-
-        return RegisterGraphQLQuery(
-            (query) => query.Contains(@$"user(login:""{login}"")", StringComparison.Ordinal),
-            data,
-            configure);
-    }
-
     private TaskCompletionSource RegisterGraphQLQuery(
         Predicate<string> queryPredicate,
         object data,
