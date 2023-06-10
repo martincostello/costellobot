@@ -91,7 +91,7 @@ public sealed partial class CheckSuiteHandler : IHandler
             return false;
         }
 
-        if (checkSuite.Conclusion != CheckSuiteConclusion.Failure)
+        if (checkSuite.Conclusion?.Value != CheckSuiteConclusion.Failure)
         {
             Log.IgnoringCheckRunThatDidNotFail(_logger, checkSuiteId, owner, name);
             return false;
@@ -133,7 +133,7 @@ public sealed partial class CheckSuiteHandler : IHandler
             });
 
         var failedRuns = checkRuns.CheckRuns
-            .Where((p) => p.Conclusion == CheckConclusion.Failure)
+            .Where((p) => p.Conclusion?.Value == CheckConclusion.Failure)
             .Where((p) => p.PullRequests.Count > 0)
             .ToList();
 
@@ -178,8 +178,8 @@ public sealed partial class CheckSuiteHandler : IHandler
 
         var latestFailingCheckRuns = latestCheckSuites.CheckRuns
             .Where((p) => retryEligibleRuns.Any((group) => group.Key == p.Name))
-            .Where((p) => p.Status == CheckStatus.Completed)
-            .Where((p) => p.Conclusion == CheckConclusion.Failure)
+            .Where((p) => p.Status.Value == CheckStatus.Completed)
+            .Where((p) => p.Conclusion?.Value == CheckConclusion.Failure)
             .ToList();
 
         if (latestFailingCheckRuns.Count < 1)

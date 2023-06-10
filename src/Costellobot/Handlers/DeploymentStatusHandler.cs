@@ -144,14 +144,14 @@ public sealed partial class DeploymentStatusHandler : IHandler
             return false;
         }
 
-        if (message.DeploymentStatus.State != DeploymentStatusState.Waiting)
+        if (message.DeploymentStatus.State.Value != DeploymentStatusState.Waiting)
         {
             Log.IgnoringDeploymentStatusAsNotWaiting(
                 _logger,
                 message.DeploymentStatus.Id,
                 message.Repository!.Owner.Login,
                 message.Repository.Name,
-                message.DeploymentStatus.State);
+                message.DeploymentStatus.State.Value);
 
             return false;
         }
