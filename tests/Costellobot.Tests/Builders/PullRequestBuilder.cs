@@ -33,6 +33,8 @@ public sealed class PullRequestBuilder : ResponseBuilder
 
     public string ShaHead { get; set; } = RandomString();
 
+    public string State { get; set; } = "open";
+
     public string Title { get; set; } = RandomString();
 
     public UserBuilder? User { get; set; }
@@ -68,6 +70,7 @@ public sealed class PullRequestBuilder : ResponseBuilder
             mergeable = IsMergeable,
             node_id = NodeId,
             number = Number,
+            state = State,
             title = Title,
             url = $"https://api.github.com/repos/{Repository.Owner.Login}/{Repository.Name}/pulls/{Number}",
             user = (User ?? Repository.Owner).Build(),
