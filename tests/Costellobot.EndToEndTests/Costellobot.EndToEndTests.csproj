@@ -2,7 +2,7 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <NoWarn>$(NoWarn);CA1054;CA1707;CA1711;CA1812;CA2007;CA2234;SA1600</NoWarn>
+    <NoWarn>$(NoWarn);CA1054;CA1707;CA1711;CA1812;CA1861;CA2007;CA2234;SA1600</NoWarn>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
