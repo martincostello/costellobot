@@ -27,7 +27,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       with:
-        ref: ${{ format('update-dotnet-sdk-{0}', needs.update-sdk.outputs.sdk-version) }}
+        ref: ${{ needs.update-sdk.outputs.branch-name }}
         token: ${{ secrets.ACCESS_TOKEN }}
 
     - name: Setup Node
