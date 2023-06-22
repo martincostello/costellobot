@@ -46,7 +46,14 @@ jobs:
         $currentVersion = (Get-Content .\package.json | ConvertFrom-Json).dependencies.$package.TrimStart('^')
 
         if ($currentVersion -ne $newVersion) {
-          npm install "${package}@${newVersion}"
+          $packageVersion = "${package}@${newVersion}"
+          npm install $packageVersion
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to install $packageVersion."
+            exit $LASTEXITCODE
+          }
+
           Pop-Location
 
           $commitMessageLines = @(
