@@ -86,6 +86,7 @@ public static class GitHubExtensions
         services.AddTransient<DeploymentProtectionRuleHandler>();
         services.AddTransient<DeploymentStatusHandler>();
         services.AddTransient<PullRequestHandler>();
+        services.AddTransient<PushHandler>();
 
         services.AddHostedService<GitHubWebhookService>();
 

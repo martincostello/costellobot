@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using Octokit.Webhooks;
+
 namespace MartinCostello.Costellobot.Handlers;
 
 public sealed class HandlerFactory : IHandlerFactory
@@ -16,10 +18,11 @@ public sealed class HandlerFactory : IHandlerFactory
     {
         return eventType switch
         {
-            "check_suite" => _serviceProvider.GetRequiredService<CheckSuiteHandler>(),
-            "deployment_protection_rule" => _serviceProvider.GetRequiredService<DeploymentProtectionRuleHandler>(),
-            "deployment_status" => _serviceProvider.GetRequiredService<DeploymentStatusHandler>(),
-            "pull_request" => _serviceProvider.GetRequiredService<PullRequestHandler>(),
+            WebhookEventType.CheckSuite => _serviceProvider.GetRequiredService<CheckSuiteHandler>(),
+            WebhookEventType.DeploymentProtectionRule => _serviceProvider.GetRequiredService<DeploymentProtectionRuleHandler>(),
+            WebhookEventType.DeploymentStatus => _serviceProvider.GetRequiredService<DeploymentStatusHandler>(),
+            WebhookEventType.PullRequest => _serviceProvider.GetRequiredService<PullRequestHandler>(),
+            WebhookEventType.Push => _serviceProvider.GetRequiredService<PushHandler>(),
             _ => NullHandler.Instance,
         };
     }
