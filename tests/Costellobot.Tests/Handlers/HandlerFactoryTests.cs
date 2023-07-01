@@ -20,6 +20,7 @@ public static class HandlerFactoryTests
     [InlineData("issues", typeof(NullHandler))]
     [InlineData("ping", typeof(NullHandler))]
     [InlineData("pull_request", typeof(PullRequestHandler))]
+    [InlineData("push", typeof(PushHandler))]
     public static void Create_Creates_Correct_Handler_Type(string? eventType, Type expected)
     {
         // Arrange
@@ -73,6 +74,14 @@ public static class HandlerFactoryTests
                     commitAnalyzer,
                     webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<PullRequestHandler>());
+            });
+
+        mock.Setup((p) => p.GetService(typeof(PushHandler)))
+            .Returns(() =>
+            {
+                return new PushHandler(
+                    gitHubClient,
+                    NullLoggerFactory.Instance.CreateLogger<PushHandler>());
             });
 
         var target = new HandlerFactory(mock.Object);
