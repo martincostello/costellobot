@@ -20,9 +20,10 @@ updates:
 - package-ecosystem: npm
   directory: "/src/Costellobot"
   groups:
-    patterns:
-      - "@babel/*"
-      - "@typescript-eslint/*"
+    dependencies:
+      patterns:
+        - "@babel/*"
+        - "@typescript-eslint/*"
   schedule:
     interval: daily
     time: "08:30"
