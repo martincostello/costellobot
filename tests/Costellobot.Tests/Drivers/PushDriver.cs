@@ -9,10 +9,10 @@ namespace MartinCostello.Costellobot.Drivers;
 
 public sealed class PushDriver
 {
-    public PushDriver()
+    public PushDriver(bool isFork = false)
     {
         Owner = Sender = User = CreateUser();
-        Repository = Owner.CreateRepository();
+        Repository = Owner.CreateRepository(isFork: isFork);
     }
 
     public bool Created { get; set; }

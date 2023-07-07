@@ -45,14 +45,16 @@ public class PushHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Theory]
-    [InlineData("refs/heads/main", false, false, new string[0], new string[0], new[] { "global.json" })]
-    [InlineData("refs/heads/some-branch", false, false, new string[0], new[] { "global.json" }, new string[0])]
-    [InlineData("refs/heads/main", true, false, new string[0], new[] { "global.json" }, new string[0])]
-    [InlineData("refs/heads/main", false, true, new string[0], new[] { "global.json" }, new string[0])]
-    [InlineData("refs/heads/main", false, false, new string[0], new[] { "something.json" }, new string[0])]
-    [InlineData("refs/heads/main", false, false, new[] { "tests/assets/global.json" }, new string[0], new string[0])]
-    [InlineData("refs/heads/main", false, false, new string[0], new[] { "tests/assets/global.json" }, new string[0])]
-    public async Task Repository_Dispatch_Is_Not_Created_If_DotNet_Dependency_File_Added_Or_Modified_On_Main_Branch(
+    [InlineData(false, "refs/heads/main", false, false, new string[0], new string[0], new[] { "global.json" })]
+    [InlineData(false, "refs/heads/some-branch", false, false, new string[0], new[] { "global.json" }, new string[0])]
+    [InlineData(false, "refs/heads/main", true, false, new string[0], new[] { "global.json" }, new string[0])]
+    [InlineData(false, "refs/heads/main", false, true, new string[0], new[] { "global.json" }, new string[0])]
+    [InlineData(false, "refs/heads/main", false, false, new string[0], new[] { "something.json" }, new string[0])]
+    [InlineData(false, "refs/heads/main", false, false, new[] { "tests/assets/global.json" }, new string[0], new string[0])]
+    [InlineData(false, "refs/heads/main", false, false, new string[0], new[] { "tests/assets/global.json" }, new string[0])]
+    [InlineData(true, "refs/heads/main", false, false, new string[0], new[] { "global.json" }, new string[0])]
+    public async Task Repository_Dispatch_Is_Not_Created_If_DotNet_Dependency_File_Added_Or_Modified_On_Main_Branch_Of_Source_Repository(
+        bool isFork,
         string reference,
         bool created,
         bool deleted,
@@ -61,7 +63,7 @@ public class PushHandlerTests : IntegrationTests<AppFixture>
         string[] removed)
     {
         // Arrange
-        var driver = new PushDriver()
+        var driver = new PushDriver(isFork)
         {
             Ref = reference,
             Created = created,
