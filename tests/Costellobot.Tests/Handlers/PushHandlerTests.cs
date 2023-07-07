@@ -19,8 +19,20 @@ public class PushHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Theory]
+    [InlineData(new string[0], new[] { "Directory.Packages.props" })]
+    [InlineData(new[] { "Directory.Packages.props" }, new string[0])]
     [InlineData(new string[0], new[] { "global.json" })]
     [InlineData(new[] { "global.json" }, new string[0])]
+    [InlineData(new string[0], new[] { "package.json" })]
+    [InlineData(new[] { "package.json" }, new string[0])]
+    [InlineData(new string[0], new[] { "src/project/package.json" })]
+    [InlineData(new[] { "src/project/package.json" }, new string[0])]
+    [InlineData(new string[0], new[] { "package-lock.json" })]
+    [InlineData(new[] { "package-lock.json" }, new string[0])]
+    [InlineData(new string[0], new[] { "src/project/package-lock.json" })]
+    [InlineData(new[] { "src/project/package-lock.json" }, new string[0])]
+    [InlineData(new[] { "Directory.Packages.props", "global.json", "src/project/package.json", "src/project/package-lock.json" }, new string[0])]
+    [InlineData(new string[0], new[] { "Directory.Packages.props", "global.json", "src/project/package.json", "src/project/package-lock.json" })]
     public async Task Repository_Dispatch_Is_Created_If_DotNet_Dependency_File_Added_Or_Modified_On_Main_Branch(string[] added, string[] modified)
     {
         // Arrange
@@ -51,6 +63,7 @@ public class PushHandlerTests : IntegrationTests<AppFixture>
     [InlineData(false, "refs/heads/main", false, true, new string[0], new[] { "global.json" }, new string[0])]
     [InlineData(false, "refs/heads/main", false, false, new string[0], new[] { "something.json" }, new string[0])]
     [InlineData(false, "refs/heads/main", false, false, new[] { "tests/assets/global.json" }, new string[0], new string[0])]
+    [InlineData(false, "refs/heads/main", false, false, new string[0], new[] { "tests/assets/Directory.Packages.props" }, new string[0])]
     [InlineData(false, "refs/heads/main", false, false, new string[0], new[] { "tests/assets/global.json" }, new string[0])]
     [InlineData(true, "refs/heads/main", false, false, new string[0], new[] { "global.json" }, new string[0])]
     public async Task Repository_Dispatch_Is_Not_Created_If_DotNet_Dependency_File_Added_Or_Modified_On_Main_Branch_Of_Source_Repository(

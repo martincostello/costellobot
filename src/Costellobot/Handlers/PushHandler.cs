@@ -50,36 +50,35 @@ public sealed partial class PushHandler : IHandler
             }
         }
 
-        if (DotNetDependencyFileChanged(filesChanged))
+        if (DependencyFileChanged(filesChanged))
         {
             Log.CreatedRepositoryDispatchForPush(_logger, repo.Owner.Login, repo.Name, push.Ref);
             await CreateDispatchAsync(repo.FullName);
         }
     }
 
-    private static bool DotNetDependencyFileChanged(HashSet<string> filesChanged)
+    private static bool DependencyFileChanged(HashSet<string> filesChanged)
     {
-        if (filesChanged.Contains("global.json"))
-        {
-            // .NET SDK updated
-            return true;
-        }
+        return filesChanged.Any(IsDependencyFile);
 
-        /*
-        if (filesChanged.Contains("Directory.Packages.props"))
+        static bool IsDependencyFile(string path)
         {
-            // NuGet package(s) added/removed or version(s) updated
-            return true;
-        }
+            return Path.GetExtension(path) switch
+            {
+                ".csproj" => true,
+                _ => Path.GetFileName(path) switch
+                {
+                    "Directory.Packages.props" => IsFileInRepositoryRoot(path),
+                    "global.json" => IsFileInRepositoryRoot(path),
+                    "package.json" => true,
+                    "package-lock.json" => true,
+                    _ => false,
+                },
+            };
 
-        if (filesChanged.Any((p) => p.EndsWith(".csproj", StringComparison.Ordinal)))
-        {
-            // NuGet dependencies possibly changed
-            return true;
+            static bool IsFileInRepositoryRoot(string path)
+                => Path.GetDirectoryName(path) is "";
         }
-        */
-
-        return false;
     }
 
     private async Task CreateDispatchAsync(string repository)
