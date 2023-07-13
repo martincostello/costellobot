@@ -22,9 +22,9 @@ public static class GitHubActionsPackageRegistryTests
         string owner = "some-org";
         string repository = "some-repo";
 
-        var options = new HttpClientInterceptorOptions()
-            .RegisterBundle(Path.Combine("Bundles", "github-refs.json"))
-            .ThrowsOnMissingRegistration();
+        var options = await new HttpClientInterceptorOptions()
+            .ThrowsOnMissingRegistration()
+            .RegisterBundleAsync(Path.Combine("Bundles", "github-refs.json"));
 
         var httpClient = new HttpClientAdapter(options.CreateHttpMessageHandler);
         var connection = new Connection(new("costellobot", "1.0.0"), httpClient);

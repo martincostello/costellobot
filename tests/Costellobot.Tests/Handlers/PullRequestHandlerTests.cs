@@ -48,7 +48,7 @@ public class PullRequestHandlerTests : IntegrationTests<AppFixture>
     {
         // Arrange
         Fixture.ApprovePullRequests();
-        Fixture.Interceptor.RegisterBundle(Path.Combine("Bundles", "nuget-search.json"));
+        await Fixture.Interceptor.RegisterBundleAsync(Path.Combine("Bundles", "nuget-search.json"));
 
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(TrustedCommitMessage("Newtonsoft.Json", "13.0.1"));

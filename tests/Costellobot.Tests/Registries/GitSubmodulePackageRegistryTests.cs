@@ -18,9 +18,9 @@ public static class GitSubmodulePackageRegistryTests
         string owner = "dotnet";
         string repository = "aspnetcore";
 
-        var options = new HttpClientInterceptorOptions()
-            .RegisterBundle(Path.Combine("Bundles", "github-submodules.json"))
-            .ThrowsOnMissingRegistration();
+        var options = await new HttpClientInterceptorOptions()
+            .ThrowsOnMissingRegistration()
+            .RegisterBundleAsync(Path.Combine("Bundles", "github-submodules.json"));
 
         var adapter = new Octokit.Internal.HttpClientAdapter(options.CreateHttpMessageHandler);
         var connection = new Connection(new("costellobot", "1.0.0"), adapter);

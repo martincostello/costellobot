@@ -23,9 +23,9 @@ public static class NuGetPackageRegistryTests
         string owner = "some-org";
         string repository = "some-repo";
 
-        var options = new HttpClientInterceptorOptions()
-            .RegisterBundle(Path.Combine("Bundles", "nuget-search.json"))
-            .ThrowsOnMissingRegistration();
+        var options = await new HttpClientInterceptorOptions()
+            .ThrowsOnMissingRegistration()
+            .RegisterBundleAsync(Path.Combine("Bundles", "nuget-search.json"));
 
         using var client = options.CreateHttpClient();
         using var cache = new MemoryCache(new MemoryCacheOptions());
