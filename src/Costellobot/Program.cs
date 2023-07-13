@@ -4,6 +4,7 @@
 #pragma warning disable CA1852
 
 using System.IO.Compression;
+using System.Text.Json.Nodes;
 using MartinCostello.Costellobot;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -97,19 +98,19 @@ app.UseAuthorization();
 app.MapAuthenticationRoutes();
 app.MapGitHubWebhooks("/github-webhook", app.Configuration["GitHub:WebhookSecret"] ?? string.Empty);
 
-app.MapGet("/version", () => new
+app.MapGet("/version", () => new JsonObject()
 {
-    branch = GitMetadata.Branch,
-    build = GitMetadata.BuildId,
-    commit = GitMetadata.Commit,
-    version = GitMetadata.Version,
-    _links = new
+    ["branch"] = GitMetadata.Branch,
+    ["build"] = GitMetadata.BuildId,
+    ["commit"] = GitMetadata.Commit,
+    ["version"] = GitMetadata.Version,
+    ["_links"] = new JsonObject()
     {
-        self = new { href = "https://costellobot.martincostello.com" },
-        repo = new { href = "https://github.com/martincostello/costellobot" },
-        branch = new { href = $"https://github.com/martincostello/costellobot/tree/{GitMetadata.Branch}" },
-        commit = new { href = $"https://github.com/martincostello/costellobot/commit/{GitMetadata.Commit}" },
-        deploy = new { href = $"https://github.com/martincostello/costellobot/actions/runs/{GitMetadata.BuildId}" },
+        ["self"] = new JsonObject() { ["href"] = "https://costellobot.martincostello.com" },
+        ["repo"] = new JsonObject() { ["href"] = "https://github.com/martincostello/costellobot" },
+        ["branch"] = new JsonObject() { ["href"] = $"https://github.com/martincostello/costellobot/tree/{GitMetadata.Branch}" },
+        ["commit"] = new JsonObject() { ["href"] = $"https://github.com/martincostello/costellobot/commit/{GitMetadata.Commit}" },
+        ["deploy"] = new JsonObject() { ["href"] = $"https://github.com/martincostello/costellobot/actions/runs/{GitMetadata.BuildId}" },
     },
 }).AllowAnonymous();
 

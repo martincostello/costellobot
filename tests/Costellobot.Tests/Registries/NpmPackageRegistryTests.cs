@@ -18,9 +18,9 @@ public static class NpmPackageRegistryTests
         string owner = "some-org";
         string repository = "some-repo";
 
-        var options = new HttpClientInterceptorOptions()
-            .RegisterBundle(Path.Combine("Bundles", "npm-registry.json"))
-            .ThrowsOnMissingRegistration();
+        var options = await new HttpClientInterceptorOptions()
+            .ThrowsOnMissingRegistration()
+            .RegisterBundleAsync(Path.Combine("Bundles", "npm-registry.json"));
 
         using var client = options.CreateHttpClient();
 
