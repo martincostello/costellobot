@@ -21,6 +21,8 @@ public sealed class RepositoryBuilder : ResponseBuilder
 
     public bool IsPrivate { get; set; }
 
+    public string Language { get; set; } = "C#";
+
     public string Name { get; set; }
 
     public UserBuilder Owner { get; set; }
@@ -45,6 +47,7 @@ public sealed class RepositoryBuilder : ResponseBuilder
             full_name = $"{Owner.Login}/{Name}",
             html_url = $"https://github.com/{Owner.Login}/{Name}",
             id = Id,
+            language = Language,
             name = Name,
             owner = Owner.Build(),
             @private = IsPrivate,
