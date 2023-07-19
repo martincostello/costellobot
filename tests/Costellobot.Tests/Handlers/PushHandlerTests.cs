@@ -57,17 +57,19 @@ public class PushHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Theory]
-    [InlineData(false, "refs/heads/main", false, false, new string[0], new string[0], new[] { "global.json" })]
-    [InlineData(false, "refs/heads/some-branch", false, false, new string[0], new[] { "global.json" }, new string[0])]
-    [InlineData(false, "refs/heads/main", true, false, new string[0], new[] { "global.json" }, new string[0])]
-    [InlineData(false, "refs/heads/main", false, true, new string[0], new[] { "global.json" }, new string[0])]
-    [InlineData(false, "refs/heads/main", false, false, new string[0], new[] { "something.json" }, new string[0])]
-    [InlineData(false, "refs/heads/main", false, false, new[] { "tests/assets/global.json" }, new string[0], new string[0])]
-    [InlineData(false, "refs/heads/main", false, false, new string[0], new[] { "tests/assets/Directory.Packages.props" }, new string[0])]
-    [InlineData(false, "refs/heads/main", false, false, new string[0], new[] { "tests/assets/global.json" }, new string[0])]
-    [InlineData(true, "refs/heads/main", false, false, new string[0], new[] { "global.json" }, new string[0])]
-    public async Task Repository_Dispatch_Is_Not_Created_If_DotNet_Dependency_File_Added_Or_Modified_On_Main_Branch_Of_Source_Repository(
+    [InlineData(false, "C#", "refs/heads/main", false, false, new string[0], new string[0], new[] { "global.json" })]
+    [InlineData(false, "C#", "refs/heads/some-branch", false, false, new string[0], new[] { "global.json" }, new string[0])]
+    [InlineData(false, "C#", "refs/heads/main", true, false, new string[0], new[] { "global.json" }, new string[0])]
+    [InlineData(false, "C#", "refs/heads/main", false, true, new string[0], new[] { "global.json" }, new string[0])]
+    [InlineData(false, "C#", "refs/heads/main", false, false, new string[0], new[] { "something.json" }, new string[0])]
+    [InlineData(false, "C#", "refs/heads/main", false, false, new[] { "tests/assets/global.json" }, new string[0], new string[0])]
+    [InlineData(false, "C#", "refs/heads/main", false, false, new string[0], new[] { "tests/assets/Directory.Packages.props" }, new string[0])]
+    [InlineData(false, "C#", "refs/heads/main", false, false, new string[0], new[] { "tests/assets/global.json" }, new string[0])]
+    [InlineData(true, "C#", "refs/heads/main", false, false, new string[0], new[] { "global.json" }, new string[0])]
+    [InlineData(false, "JavaScript", "refs/heads/main", false, false, new string[0], new[] { "global.json" }, new string[0])]
+    public async Task Repository_Dispatch_Is_Not_Created_If_DotNet_Dependency_File_Added_Or_Modified_On_Main_Branch_Of_DotNet_Source_Repository(
         bool isFork,
+        string language,
         string reference,
         bool created,
         bool deleted,
@@ -76,7 +78,7 @@ public class PushHandlerTests : IntegrationTests<AppFixture>
         string[] removed)
     {
         // Arrange
-        var driver = new PushDriver(isFork)
+        var driver = new PushDriver(isFork, language)
         {
             Ref = reference,
             Created = created,

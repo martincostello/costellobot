@@ -26,7 +26,7 @@ public sealed partial class PushHandler : IHandler
     public async Task HandleAsync(WebhookEvent message)
     {
         if (message is not PushEvent push ||
-            push.Repository is not { Fork: false } repo ||
+            push.Repository is not { Fork: false, Language: "C#" } repo ||
             push.Commits is not { } commits ||
             push.Created ||
             push.Deleted ||
