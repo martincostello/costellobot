@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Text;
 using AspNet.Security.OAuth.GitHub;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
@@ -9,7 +10,7 @@ namespace MartinCostello.Costellobot;
 
 public sealed class CustomHttpHeadersMiddleware
 {
-    private static readonly string ContentSecurityPolicyTemplate = string.Join(
+    private static readonly CompositeFormat ContentSecurityPolicyTemplate = CompositeFormat.Parse(string.Join(
         ';',
         new[]
         {
@@ -30,7 +31,7 @@ public sealed class CustomHttpHeadersMiddleware
             "base-uri 'self'",
             "manifest-src 'self'",
             "upgrade-insecure-requests",
-        });
+        }));
 
     private readonly RequestDelegate _next;
 
