@@ -53,7 +53,7 @@ public sealed partial class PushHandler : IHandler
         if (DependencyFileChanged(filesChanged))
         {
             Log.CreatedRepositoryDispatchForPush(_logger, repo.Owner.Login, repo.Name, push.Ref);
-            await CreateDispatchAsync(repo.FullName);
+            await CreateDispatchAsync(repo.FullName, push.Ref, push.After);
         }
     }
 
@@ -81,13 +81,18 @@ public sealed partial class PushHandler : IHandler
         }
     }
 
-    private async Task CreateDispatchAsync(string repository)
+    private async Task CreateDispatchAsync(string repository, string reference, string sha)
     {
         // See https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-dispatch-event
         var dispatch = new
         {
             event_type = "dotnet_dependencies_updated",
-            client_payload = new { repository },
+            client_payload = new
+            {
+                repository,
+                @ref = reference,
+                sha,
+            },
         };
 
         var uri = new Uri($"repos/{DispatchDestination}/dispatches", UriKind.Relative);

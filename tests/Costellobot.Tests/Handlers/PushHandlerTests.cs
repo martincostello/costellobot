@@ -152,8 +152,13 @@ public class PushHandlerTests : IntegrationTests<AppFixture>
                 }
 
                 var repository = clientPayload.GetProperty("repository").GetString();
+                var reference = clientPayload.GetProperty("ref").GetString();
+                var sha = clientPayload.GetProperty("sha").GetString();
 
-                return string.Equals(repository, $"{driver.Owner.Login}/{driver.Repository.Name}", StringComparison.Ordinal);
+                return
+                    string.Equals(repository, $"{driver.Owner.Login}/{driver.Repository.Name}", StringComparison.Ordinal) &&
+                    string.Equals(reference, "refs/heads/main", StringComparison.Ordinal) &&
+                    string.Equals(sha, driver.After, StringComparison.Ordinal);
             })
             .Responds()
             .WithStatus(HttpStatusCode.NoContent)

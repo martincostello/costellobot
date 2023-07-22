@@ -16,6 +16,8 @@ public sealed class PushDriver
         Repository.Language = language;
     }
 
+    public string After { get; set; } = Guid.NewGuid().ToString();
+
     public bool Created { get; set; }
 
     public IList<GitCommitBuilder> Commits { get; set; } = new List<GitCommitBuilder>();
@@ -39,6 +41,7 @@ public sealed class PushDriver
         return new
         {
             @ref = Ref,
+            after = After,
             repository = Repository.Build(),
             installation = new
             {
