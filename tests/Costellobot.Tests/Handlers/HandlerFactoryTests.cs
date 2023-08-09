@@ -3,7 +3,7 @@
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
+using NSubstitute;
 using Octokit;
 
 namespace MartinCostello.Costellobot.Handlers;
@@ -27,17 +27,17 @@ public static class HandlerFactoryTests
         var gitHubOptions = new GitHubOptions().ToMonitor();
         var webhookOptions = new WebhookOptions().ToMonitor();
 
-        var gitHubClient = Mock.Of<IGitHubClientForInstallation>();
+        var gitHubClient = Substitute.For<IGitHubClientForInstallation>();
 
         var commitAnalyzer = new GitCommitAnalyzer(
             Array.Empty<Registries.IPackageRegistry>(),
             webhookOptions,
             NullLoggerFactory.Instance.CreateLogger<GitCommitAnalyzer>());
 
-        var mock = new Mock<IServiceProvider>();
+        var serviceProvider = Substitute.For<IServiceProvider>();
 
-        mock.Setup((p) => p.GetService(typeof(CheckSuiteHandler)))
-            .Returns(() =>
+        serviceProvider.GetService(typeof(CheckSuiteHandler))
+            .Returns((_) =>
             {
                 return new CheckSuiteHandler(
                     gitHubClient,
@@ -45,8 +45,8 @@ public static class HandlerFactoryTests
                     NullLoggerFactory.Instance.CreateLogger<CheckSuiteHandler>());
             });
 
-        mock.Setup((p) => p.GetService(typeof(DeploymentProtectionRuleHandler)))
-            .Returns(() =>
+        serviceProvider.GetService(typeof(DeploymentProtectionRuleHandler))
+            .Returns((_) =>
             {
                 return new DeploymentProtectionRuleHandler(
                     gitHubClient,
@@ -54,8 +54,8 @@ public static class HandlerFactoryTests
                     NullLoggerFactory.Instance.CreateLogger<DeploymentProtectionRuleHandler>());
             });
 
-        mock.Setup((p) => p.GetService(typeof(DeploymentStatusHandler)))
-            .Returns(() =>
+        serviceProvider.GetService(typeof(DeploymentStatusHandler))
+            .Returns((_) =>
             {
                 return new DeploymentStatusHandler(
                     gitHubClient,
@@ -65,26 +65,26 @@ public static class HandlerFactoryTests
                     NullLoggerFactory.Instance.CreateLogger<DeploymentStatusHandler>());
             });
 
-        mock.Setup((p) => p.GetService(typeof(PullRequestHandler)))
-            .Returns(() =>
+        serviceProvider.GetService(typeof(PullRequestHandler))
+            .Returns((_) =>
             {
                 return new PullRequestHandler(
                     gitHubClient,
-                    Mock.Of<Octokit.GraphQL.IConnection>(),
+                    Substitute.For<Octokit.GraphQL.IConnection>(),
                     commitAnalyzer,
                     webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<PullRequestHandler>());
             });
 
-        mock.Setup((p) => p.GetService(typeof(PushHandler)))
-            .Returns(() =>
+        serviceProvider.GetService(typeof(PushHandler))
+            .Returns((_) =>
             {
                 return new PushHandler(
                     gitHubClient,
                     NullLoggerFactory.Instance.CreateLogger<PushHandler>());
             });
 
-        var target = new HandlerFactory(mock.Object);
+        var target = new HandlerFactory(serviceProvider);
 
         // Act
         var actual = target.Create(eventType);

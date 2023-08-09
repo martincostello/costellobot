@@ -4,7 +4,7 @@
 using System.Text.Json;
 using MartinCostello.Costellobot.Handlers;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
+using NSubstitute;
 using Octokit.Webhooks;
 
 namespace MartinCostello.Costellobot;
@@ -49,11 +49,8 @@ public class GitHubWebhookServiceTests
 
         // Assert
         var handler = serviceProvider.GetRequiredService<IHandler>();
-        var mock = Mock.Get(handler);
 
-        mock.Verify(
-            (p) => p.HandleAsync(It.IsAny<WebhookEvent>()),
-            Times.Once());
+        await handler.Received(1).HandleAsync(Arg.Any<WebhookEvent>());
     }
 
     private IServiceProvider CreateServiceProvider(long installationId)
@@ -63,52 +60,50 @@ public class GitHubWebhookServiceTests
             InstallationId = installationId,
         }.ToMonitor();
 
-        var handler = new Mock<IHandler>();
+        var handler = Substitute.For<IHandler>();
 
-        handler
-            .Setup((p) => p.HandleAsync(It.IsAny<WebhookEvent>()))
-            .ThrowsAsync(new InvalidOperationException("boom"))
-            .Verifiable();
+        handler.When((p) => p.HandleAsync(Arg.Any<WebhookEvent>()))
+               .Throw(new InvalidOperationException("boom"));
 
-        var handlerFactory = new Mock<IHandlerFactory>();
+        var handlerFactory = Substitute.For<IHandlerFactory>();
 
         handlerFactory
-            .Setup((p) => p.Create(It.IsAny<string?>()))
-            .Returns(handler.Object);
+            .Create(Arg.Any<string?>())
+            .Returns(handler);
 
         var dispatcher = new GitHubWebhookDispatcher(
-            handlerFactory.Object,
+            handlerFactory,
             options,
             OutputHelper.ToLogger<GitHubWebhookDispatcher>());
 
-        var serviceProvider = new Mock<IServiceProvider>();
-        var serviceScope = new Mock<IServiceScope>();
-        var serviceScopeFactory = new Mock<IServiceScopeFactory>();
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var serviceScope = Substitute.For<IServiceScope>();
+        var serviceScopeFactory = Substitute.For<IServiceScopeFactory>();
 
         serviceScope
-            .Setup((p) => p.ServiceProvider)
-            .Returns(() => serviceProvider.Object);
+            .ServiceProvider
+            .Returns(serviceProvider);
 
         serviceScopeFactory
-            .Setup((p) => p.CreateScope())
-            .Returns(() => serviceScope.Object);
+            .CreateScope()
+            .Returns(serviceScope);
 
         serviceProvider
-            .Setup((p) => p.GetService(typeof(IHandler)))
-            .Returns(handler.Object);
+            .GetService(typeof(IHandler))
+            .Returns(handler);
 
         serviceProvider
-            .Setup((p) => p.GetService(typeof(IServiceScope)))
-            .Returns(serviceScope.Object);
+            .GetService(typeof(IServiceScope))
+            .Returns(serviceScope);
 
         serviceProvider
-            .Setup((p) => p.GetService(typeof(IServiceScopeFactory)))
-            .Returns(serviceScopeFactory.Object);
+            .GetService(typeof(IServiceScopeFactory))
+            .Returns(serviceScopeFactory);
 
         serviceProvider
-            .Setup((p) => p.GetService(typeof(GitHubWebhookDispatcher)))
+            .GetService(typeof(GitHubWebhookDispatcher))
             .Returns(dispatcher);
 
-        return serviceProvider.Object;
+        return serviceProvider;
     }
 }

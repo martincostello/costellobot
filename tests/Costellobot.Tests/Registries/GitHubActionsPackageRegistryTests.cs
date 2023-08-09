@@ -2,7 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using JustEat.HttpClientInterception;
-using Moq;
+using NSubstitute;
 using Octokit;
 using Octokit.Internal;
 
@@ -29,7 +29,7 @@ public static class GitHubActionsPackageRegistryTests
         var httpClient = new HttpClientAdapter(options.CreateHttpMessageHandler);
         var connection = new Connection(new("costellobot", "1.0.0"), httpClient);
         var client = new GitHubClientAdapter(connection);
-        var graphConnection = Mock.Of<Octokit.GraphQL.IConnection>();
+        var graphConnection = Substitute.For<Octokit.GraphQL.IConnection>();
 
         var target = new GitHubActionsPackageRegistry(client, graphConnection);
 

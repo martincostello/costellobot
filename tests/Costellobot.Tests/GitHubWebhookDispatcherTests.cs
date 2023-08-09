@@ -2,7 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using MartinCostello.Costellobot.Handlers;
-using Moq;
+using NSubstitute;
 
 namespace MartinCostello.Costellobot;
 
@@ -19,7 +19,7 @@ public class GitHubWebhookDispatcherTests
     public async Task Events_With_Incorrect_Installation_Id_Are_Ignored()
     {
         // Arrange
-        var handlerFactory = Mock.Of<IHandlerFactory>();
+        var handlerFactory = Substitute.For<IHandlerFactory>();
         var options = new GitHubOptions() { InstallationId = 37 }.ToMonitor();
         var logger = OutputHelper.ToLogger<GitHubWebhookDispatcher>();
 
