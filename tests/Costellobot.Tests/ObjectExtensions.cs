@@ -2,7 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.Options;
-using Moq;
+using NSubstitute;
 
 namespace MartinCostello.Costellobot;
 
@@ -11,22 +11,20 @@ public static class ObjectExtensions
     public static IOptionsMonitor<T> ToMonitor<T>(this T options)
         where T : class
     {
-        var mock = new Mock<IOptionsMonitor<T>>();
+        var monitor = Substitute.For<IOptionsMonitor<T>>();
 
-        mock.Setup((p) => p.CurrentValue)
-            .Returns(options);
+        monitor.CurrentValue.Returns(options);
 
-        return mock.Object;
+        return monitor;
     }
 
     public static IOptionsSnapshot<T> ToSnapshot<T>(this T options)
         where T : class
     {
-        var mock = new Mock<IOptionsSnapshot<T>>();
+        var snapshot = Substitute.For<IOptionsSnapshot<T>>();
 
-        mock.Setup((p) => p.Value)
-            .Returns(options);
+        snapshot.Value.Returns(options);
 
-        return mock.Object;
+        return snapshot;
     }
 }

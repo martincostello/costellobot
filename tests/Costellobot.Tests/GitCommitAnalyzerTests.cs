@@ -6,7 +6,7 @@ using MartinCostello.Costellobot.Registries;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Moq;
+using NSubstitute;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot;
@@ -54,13 +54,13 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                                Bumps [src/submodules/dependabot-helper](https://github.com/martincostello/dependabot-helper) from `697aaa7` to `aca93c2`.
                                - [Release notes](https://github.com/martincostello/dependabot-helper/releases)
                                - [Commits](https://github.com/martincostello/dependabot-helper/compare/697aaa778e5e0a27c7ba6a2c82f83cd5ddf9ae55...aca93c280ec51a3e7ffd9314de799d805cf7a407)
-                               
+
                                ---
                                updated-dependencies:
                                - dependency-name: src/submodules/dependabot-helper
                                  dependency-type: direct:production
                                ...
-                               
+
                                Signed-off-by: dependabot[bot] <support@github.com>
                                """;
 
@@ -191,13 +191,12 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
 
-        var mock = new Mock<IPackageRegistry>();
+        var registry = Substitute.For<IPackageRegistry>();
 
-        mock.Setup((p) => p.Ecosystem)
-            .Returns(ecosystem);
+        registry.Ecosystem.Returns(ecosystem);
 
-        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, dependency, version))
-            .ReturnsAsync(owners);
+        registry.GetPackageOwnersAsync(owner.Login, repo.Name, dependency, version)
+                .Returns(Task.FromResult<IReadOnlyList<string>>(owners));
 
         var options = new WebhookOptions()
         {
@@ -214,7 +213,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { mock.Object });
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
 
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage(dependency, version);
@@ -250,20 +249,20 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { Mock.Of<IPackageRegistry>() });
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { Substitute.For<IPackageRegistry>() });
 
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = @"""
                             Bump Foo to 1.0.1
                             Bumps `Foo` to 1.0.1.
-                            
+
                             ---
                             updated-dependencies:
                             - dependency-name: Foo
                               dependency-type: direct:production
                               update-type: version-update:semver-patch
                             ...
-                            
+
                             Signed-off-by: dependabot[bot] <support@github.com>
                             """;
 
@@ -289,7 +288,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { Mock.Of<IPackageRegistry>() });
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { Substitute.For<IPackageRegistry>() });
 
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage();
@@ -322,7 +321,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { Mock.Of<IPackageRegistry>() });
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { Substitute.For<IPackageRegistry>() });
 
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage();
@@ -346,13 +345,13 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
 
-        var mock = new Mock<IPackageRegistry>();
+        var registry = Substitute.For<IPackageRegistry>();
 
-        mock.Setup((p) => p.Ecosystem)
-            .Returns(DependencyEcosystem.GitHubActions);
+        registry.Ecosystem
+                .Returns(DependencyEcosystem.GitHubActions);
 
-        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "actions/checkout", "3"))
-            .ThrowsAsync(new InvalidOperationException());
+        registry.When((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "actions/checkout", "3"))
+                .Throw(new InvalidOperationException());
 
         var options = new WebhookOptions()
         {
@@ -369,7 +368,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { mock.Object });
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
 
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage("actions/checkout", "3");
@@ -393,16 +392,15 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
 
-        var mock = new Mock<IPackageRegistry>();
+        var registry = Substitute.For<IPackageRegistry>();
 
-        mock.Setup((p) => p.Ecosystem)
-            .Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "OpenTelemetry.Instrumentation.AspNetCore", "1.0.0-rc9.12"))
-            .ReturnsAsync(new[] { "OpenTelemetry" });
+        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "OpenTelemetry.Instrumentation.AspNetCore", "1.0.0-rc9.12")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "OpenTelemetry" }));
 
-        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "OpenTelemetry.Instrumentation.Http", "1.0.0-rc9.12"))
-            .ReturnsAsync(new[] { "OpenTelemetry" });
+        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "OpenTelemetry.Instrumentation.Http", "1.0.0-rc9.12")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "OpenTelemetry" }));
 
         var options = new WebhookOptions()
         {
@@ -419,21 +417,21 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { mock.Object });
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
 
         var sha = "987879d752236a5a574000f40da7630be061faca";
         var commitMessage = """
                             Bump OpenTelemetryInstrumentationVersion
                             Bumps `OpenTelemetryInstrumentationVersion` from 1.0.0-rc9.11 to 1.0.0-rc9.12.
-                            
+
                             Updates `OpenTelemetry.Instrumentation.AspNetCore` from 1.0.0-rc9.11 to 1.0.0-rc9.12
                             - [Release notes](https://github.com/open-telemetry/opentelemetry-dotnet/releases)
                             - [Commits](https://github.com/open-telemetry/opentelemetry-dotnet/compare/1.0.0-rc9.11...1.0.0-rc9.12)
-                            
+
                             Updates `OpenTelemetry.Instrumentation.Http` from 1.0.0-rc9.11 to 1.0.0-rc9.12
                             - [Release notes](https://github.com/open-telemetry/opentelemetry-dotnet/releases)
                             - [Commits](https://github.com/open-telemetry/opentelemetry-dotnet/compare/1.0.0-rc9.11...1.0.0-rc9.12)
-                            
+
                             ---
                             updated-dependencies:
                             - dependency-name: OpenTelemetry.Instrumentation.AspNetCore
@@ -443,7 +441,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                               dependency-type: direct:production
                               update-type: version-update:semver-patch
                             ...
-                            
+
                             Signed-off-by: dependabot[bot] <support@github.com>
                             """;
 
@@ -466,13 +464,13 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
 
-        var mock = new Mock<IPackageRegistry>();
+        var registry = Substitute.For<IPackageRegistry>();
 
-        mock.Setup((p) => p.Ecosystem)
+        registry.Ecosystem
             .Returns(DependencyEcosystem.NuGet);
 
-        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.TypeScript.MSBuild", "4.9.5"))
-            .ReturnsAsync(new[] { "Microsoft", "TypeScriptTeam" });
+        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.TypeScript.MSBuild", "4.9.5")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "Microsoft", "TypeScriptTeam" }));
 
         var options = new WebhookOptions()
         {
@@ -489,7 +487,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { mock.Object });
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
 
         var sha = "552aae859c24f0ed63bcc1f82ef96dd83040762f";
         var commitMessage = """
@@ -523,22 +521,21 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
 
-        var mock = new Mock<IPackageRegistry>();
+        var registry = Substitute.For<IPackageRegistry>();
 
-        mock.Setup((p) => p.Ecosystem)
-            .Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.Extensions.Configuration.Binder", "7.0.4"))
-            .ReturnsAsync(new[] { "Microsoft", "aspnet" });
+        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.Extensions.Configuration.Binder", "7.0.4")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "Microsoft", "aspnet" }));
 
-        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.Extensions.Http.Polly", "7.0.5"))
-            .ReturnsAsync(new[] { "Microsoft", "aspnet" });
+        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.Extensions.Http.Polly", "7.0.5")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "Microsoft", "aspnet" }));
 
-        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.NET.Test.Sdk", "17.5.0"))
-            .ReturnsAsync(new[] { "Microsoft", "aspnet" });
+        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.NET.Test.Sdk", "17.5.0")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "Microsoft", "aspnet" }));
 
-        mock.Setup((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "System.Text.Json", "7.0.2"))
-            .ReturnsAsync(new[] { "Microsoft", "dotnetframework" });
+        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "System.Text.Json", "7.0.2")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "Microsoft", "dotnetframework" }));
 
         var options = new WebhookOptions()
         {
@@ -552,7 +549,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { mock.Object });
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
 
         var sha = "4f01e284f9bfac38bcf14f7595b1258fc5b1b542";
         var commitMessage = """
