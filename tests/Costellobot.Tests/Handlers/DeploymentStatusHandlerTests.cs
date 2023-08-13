@@ -523,9 +523,14 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Theory]
-    [InlineData(0)]
-    [InlineData(2)]
-    public async Task Deployment_Is_Not_Approved_If_Not_Exactly_One_Pending_Deployment(int count)
+    [InlineData("production", new string[0], false)]
+    [InlineData("production", new string[] { "production", "production" }, false)]
+    [InlineData("production", new string[] { "development", "staging" }, false)]
+    [InlineData("production", new string[] { "development", "staging", "production" }, true)]
+    public async Task Deployment_Is_Not_Approved_If_Not_Exactly_One_Pending_Deployment(
+        string environmentName,
+        string[] environmentNames,
+        bool shouldApprove)
     {
         // Arrange
         Fixture.ApproveDeployments();
@@ -534,7 +539,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             (repo) => repo.CreateCommit(),
             CreateTrustedCommit);
 
-        driver.WithPendingDeployment(CreateDeployment);
+        driver.WithPendingDeployment((commit) => CreateDeployment(environmentName, commit.Sha));
 
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
@@ -547,11 +552,14 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
-        var pendingDeployments = new List<PendingDeploymentBuilder>(count);
+        var pendingDeployments = new List<PendingDeploymentBuilder>(environmentNames.Length);
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < environmentNames.Length; i++)
         {
-            pendingDeployments.Add(driver.PendingDeployment.CreatePendingDeployment());
+            var deployment = driver.PendingDeployment.CreatePendingDeployment();
+            deployment.Environment = environmentNames[i];
+
+            pendingDeployments.Add(deployment);
         }
 
         RegisterGetPendingDeployments(driver.Repository, driver.WorkflowRun.Id, pendingDeployments.ToArray());
@@ -562,7 +570,14 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await AssertTaskNotRun(deploymentApproved);
+        if (shouldApprove)
+        {
+            await deploymentApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        }
+        else
+        {
+            await AssertTaskNotRun(deploymentApproved);
+        }
     }
 
     [Fact]
