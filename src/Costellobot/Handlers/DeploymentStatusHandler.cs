@@ -87,9 +87,23 @@ public sealed partial class DeploymentStatusHandler : IHandler
             repo.Name,
             run.Id);
 
+        if (pendingDeployments.Count > 0)
+        {
+            pendingDeployments = pendingDeployments
+                .Where((p) => p.Environment.Name == deploy.Environment)
+                .ToList();
+        }
+
         if (pendingDeployments.Count != 1)
         {
-            Log.NoPendingDeploymentsFound(_logger, run.Id, owner, name, pendingDeployments.Count);
+            Log.NoSinglePendingDeploymentFound(
+                _logger,
+                run.Id,
+                deploy.Environment,
+                owner,
+                name,
+                pendingDeployments.Count);
+
             return;
         }
 
@@ -457,10 +471,11 @@ public sealed partial class DeploymentStatusHandler : IHandler
         [LoggerMessage(
            EventId = 12,
            Level = LogLevel.Information,
-           Message = "Did not find exactly one pending deployments found for workflow run ID {RunId} for {Owner}/{Repository}; found {Count}.")]
-        public static partial void NoPendingDeploymentsFound(
+           Message = "Did not find exactly one pending deployment for workflow run ID {RunId} for environment {EnvironmentName} for {Owner}/{Repository}; found {Count}.")]
+        public static partial void NoSinglePendingDeploymentFound(
             ILogger logger,
             long runId,
+            string environmentName,
             string owner,
             string repository,
             int count);
