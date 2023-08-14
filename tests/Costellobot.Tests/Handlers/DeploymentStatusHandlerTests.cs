@@ -527,7 +527,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     [InlineData("production", new string[] { "production", "production" }, false)]
     [InlineData("production", new string[] { "development", "staging" }, false)]
     [InlineData("production", new string[] { "development", "staging", "production" }, true)]
-    public async Task Deployment_Is_Not_Approved_Unless_Exactly_One_Pending_Deployment_For_Environment(
+    public async Task Deployment_Is_Not_Approved_Unless_Exactly_One_Pending_Deployment_For_The_Same_Environment(
         string environmentName,
         string[] environmentNames,
         bool shouldApprove)
