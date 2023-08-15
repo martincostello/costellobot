@@ -1,0 +1,83 @@
+name: update-dotnet-sdk
+
+on:
+  schedule:
+    - cron:  '00 19 * * TUE'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update-sdk:
+    uses: martincostello/update-dotnet-sdk/.github/workflows/update-dotnet-sdk.yml@36ffd470d46d8242ad2ad722345a3a6d3e512274 # v2.3.0
+    with:
+      labels: 'dependencies,.NET'
+      quality: 'daily'
+      user-email: ${{ vars.GIT_COMMIT_USER_EMAIL }}
+      user-name: ${{ vars.GIT_COMMIT_USER_NAME }}
+    secrets:
+      repo-token: ${{ secrets.ACCESS_TOKEN }}
+
+  update-signalr:
+    needs: update-sdk
+    runs-on: ubuntu-latest
+    if : ${{ needs.update-sdk.outputs.sdk-updated == 'true' }}
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      with:
+        ref: ${{ needs.update-sdk.outputs.branch-name }}
+        token: ${{ secrets.ACCESS_TOKEN }}
+
+    - name: Setup Node
+      uses: actions/setup-node@bea5baf987ba7aa777a8a0b4ace377a21c45c381 # v3.8.0
+      with:
+        node-version: '18'
+
+    - name: Update SignalR npm package
+      shell: pwsh
+      run: |
+        $package = "@microsoft/signalr"
+        $channel = (Get-Content .\global.json | ConvertFrom-Json).sdk.version.Split('.')[0]
+        $newVersion = (npm view $package versions --json | ConvertFrom-Json | Where { $_ -Like "$channel*" } | Sort-Object -Descending)[0]
+
+        Push-Location "./src/Costellobot"
+        $currentVersion = (Get-Content .\package.json | ConvertFrom-Json).dependencies.$package.TrimStart('^')
+
+        if ($currentVersion -ne $newVersion) {
+          $packageVersion = "${package}@${newVersion}"
+          npm install $packageVersion
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to install $packageVersion."
+            exit $LASTEXITCODE
+          }
+
+          Pop-Location
+
+          $commitMessageLines = @(
+            "Bump ${package} from ${currentVersion} to ${newVersion}",
+            "",
+            "Bumps ${package} from ${currentVersion} to ${newVersion}.",
+            "",
+            "---",
+            "updated-dependencies:",
+            "- dependency-name: ${package}",
+            "  dependency-type: direct:production",
+            "  update-type: version-update:semver-patch",
+            "...",
+            "",
+            ""
+          )
+
+          $commitMessage = $commitMessageLines -join "`n"
+
+          git config user.email "${{ vars.GIT_COMMIT_USER_EMAIL }}"
+          git config user.name "${{ vars.GIT_COMMIT_USER_NAME }}"
+
+          git add .
+          git commit -m $commitMessage -s
+          git push
+        }
