@@ -19,24 +19,35 @@ public class PushHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Theory]
-    [InlineData(new string[0], new[] { "Directory.Packages.props" })]
-    [InlineData(new[] { "Directory.Packages.props" }, new string[0])]
-    [InlineData(new string[0], new[] { "global.json" })]
-    [InlineData(new[] { "global.json" }, new string[0])]
-    [InlineData(new string[0], new[] { "package.json" })]
-    [InlineData(new[] { "package.json" }, new string[0])]
-    [InlineData(new string[0], new[] { "src/project/package.json" })]
-    [InlineData(new[] { "src/project/package.json" }, new string[0])]
-    [InlineData(new string[0], new[] { "package-lock.json" })]
-    [InlineData(new[] { "package-lock.json" }, new string[0])]
-    [InlineData(new string[0], new[] { "src/project/package-lock.json" })]
-    [InlineData(new[] { "src/project/package-lock.json" }, new string[0])]
-    [InlineData(new[] { "Directory.Packages.props", "global.json", "src/project/package.json", "src/project/package-lock.json" }, new string[0])]
-    [InlineData(new string[0], new[] { "Directory.Packages.props", "global.json", "src/project/package.json", "src/project/package-lock.json" })]
-    public async Task Repository_Dispatch_Is_Created_If_DotNet_Dependency_File_Added_Or_Modified_On_Main_Branch(string[] added, string[] modified)
+    [InlineData("main", "refs/heads/main", new string[0], new[] { "Directory.Packages.props" })]
+    [InlineData("main", "refs/heads/main", new[] { "Directory.Packages.props" }, new string[0])]
+    [InlineData("main", "refs/heads/main", new string[0], new[] { "global.json" })]
+    [InlineData("dotnet-vnext", "refs/heads/dotnet-vnext", new string[0], new[] { "Directory.Packages.props" })]
+    [InlineData("dotnet-vnext", "refs/heads/dotnet-vnext", new[] { "Directory.Packages.props" }, new string[0])]
+    [InlineData("dotnet-vnext", "refs/heads/dotnet-vnext", new string[0], new[] { "global.json" })]
+    [InlineData("main", "refs/heads/main", new[] { "global.json" }, new string[0])]
+    [InlineData("main", "refs/heads/main", new string[0], new[] { "package.json" })]
+    [InlineData("main", "refs/heads/main", new[] { "package.json" }, new string[0])]
+    [InlineData("main", "refs/heads/main", new string[0], new[] { "src/project/package.json" })]
+    [InlineData("main", "refs/heads/main", new[] { "src/project/package.json" }, new string[0])]
+    [InlineData("main", "refs/heads/main", new string[0], new[] { "package-lock.json" })]
+    [InlineData("main", "refs/heads/main", new[] { "package-lock.json" }, new string[0])]
+    [InlineData("main", "refs/heads/main", new string[0], new[] { "src/project/package-lock.json" })]
+    [InlineData("main", "refs/heads/main", new[] { "src/project/package-lock.json" }, new string[0])]
+    [InlineData("main", "refs/heads/main", new[] { "Directory.Packages.props", "global.json", "src/project/package.json", "src/project/package-lock.json" }, new string[0])]
+    [InlineData("main", "refs/heads/main", new string[0], new[] { "Directory.Packages.props", "global.json", "src/project/package.json", "src/project/package-lock.json" })]
+    public async Task Repository_Dispatch_Is_Created_If_DotNet_Dependency_File_Added_Or_Modified_On_Supported_Branch(
+        string branch,
+        string reference,
+        string[] added,
+        string[] modified)
     {
         // Arrange
-        var driver = new PushDriver();
+        var driver = new PushDriver()
+        {
+            Ref = reference,
+        };
+
         driver.Commits.Add(new(new("some-person"))
         {
             Added = added,
@@ -45,7 +56,7 @@ public class PushHandlerTests : IntegrationTests<AppFixture>
 
         RegisterGetAccessToken();
 
-        var dispatched = RegisterDispatch(driver);
+        var dispatched = RegisterDispatch(driver, branch);
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -58,6 +69,7 @@ public class PushHandlerTests : IntegrationTests<AppFixture>
 
     [Theory]
     [InlineData(false, "C#", "refs/heads/main", false, false, new string[0], new string[0], new[] { "global.json" })]
+    [InlineData(false, "C#", "refs/heads/dotnet-vnext", false, false, new string[0], new string[0], new[] { "global.json" })]
     [InlineData(false, "C#", "refs/heads/some-branch", false, false, new string[0], new[] { "global.json" }, new string[0])]
     [InlineData(false, "C#", "refs/heads/main", true, false, new string[0], new[] { "global.json" }, new string[0])]
     [InlineData(false, "C#", "refs/heads/main", false, true, new string[0], new[] { "global.json" }, new string[0])]
@@ -67,7 +79,7 @@ public class PushHandlerTests : IntegrationTests<AppFixture>
     [InlineData(false, "C#", "refs/heads/main", false, false, new string[0], new[] { "tests/assets/global.json" }, new string[0])]
     [InlineData(true, "C#", "refs/heads/main", false, false, new string[0], new[] { "global.json" }, new string[0])]
     [InlineData(false, "JavaScript", "refs/heads/main", false, false, new string[0], new[] { "global.json" }, new string[0])]
-    public async Task Repository_Dispatch_Is_Not_Created_If_DotNet_Dependency_File_Added_Or_Modified_On_Main_Branch_Of_DotNet_Source_Repository(
+    public async Task Repository_Dispatch_Is_Not_Created_If_DotNet_Dependency_File_Added_Or_Modified_On_Supported_Branch_Of_DotNet_Source_Repository(
         bool isFork,
         string language,
         string reference,
@@ -122,7 +134,7 @@ public class PushHandlerTests : IntegrationTests<AppFixture>
         return await PostWebhookAsync("push", value);
     }
 
-    private TaskCompletionSource RegisterDispatch(PushDriver driver)
+    private TaskCompletionSource RegisterDispatch(PushDriver driver, string branch = "main")
     {
         var dispatched = new TaskCompletionSource();
 
@@ -153,11 +165,13 @@ public class PushHandlerTests : IntegrationTests<AppFixture>
 
                 var repository = clientPayload.GetProperty("repository").GetString();
                 var reference = clientPayload.GetProperty("ref").GetString();
+                var referenceName = clientPayload.GetProperty("ref_name").GetString();
                 var sha = clientPayload.GetProperty("sha").GetString();
 
                 return
                     string.Equals(repository, $"{driver.Owner.Login}/{driver.Repository.Name}", StringComparison.Ordinal) &&
-                    string.Equals(reference, "refs/heads/main", StringComparison.Ordinal) &&
+                    string.Equals(reference, driver.Ref, StringComparison.Ordinal) &&
+                    string.Equals(referenceName, branch, StringComparison.Ordinal) &&
                     string.Equals(sha, driver.After, StringComparison.Ordinal);
             })
             .Responds()
