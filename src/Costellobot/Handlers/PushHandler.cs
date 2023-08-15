@@ -9,7 +9,9 @@ namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class PushHandler : IHandler
 {
-    private const string DefaultBranch = "refs/heads/main";
+    private const string PrefixForBranchName = "refs/heads/";
+    private const string DefaultBranch = $"{PrefixForBranchName}main";
+    private const string DotNetNextBranch = $"{PrefixForBranchName}dotnet-vnext";
     private const string DispatchDestination = "martincostello/github-automation";
 
     private readonly IGitHubClient _client;
@@ -30,7 +32,8 @@ public sealed partial class PushHandler : IHandler
             push.Commits is not { } commits ||
             push.Created ||
             push.Deleted ||
-            !string.Equals(push.Ref, DefaultBranch, StringComparison.Ordinal))
+            (!string.Equals(push.Ref, DefaultBranch, StringComparison.Ordinal) &&
+             !string.Equals(push.Ref, DotNetNextBranch, StringComparison.Ordinal)))
         {
             return;
         }
@@ -91,6 +94,7 @@ public sealed partial class PushHandler : IHandler
             {
                 repository,
                 @ref = reference,
+                ref_name = reference[PrefixForBranchName.Length..],
                 sha,
             },
         };
