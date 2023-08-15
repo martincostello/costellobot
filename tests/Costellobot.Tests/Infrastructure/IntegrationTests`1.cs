@@ -18,6 +18,7 @@ namespace MartinCostello.Costellobot.Infrastructure;
 public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
     where T : AppFixture
 {
+    private static readonly JsonSerializerOptions IndentedOptions = new() { WriteIndented = true };
     private readonly IDisposable _scope;
 
     protected IntegrationTests(T fixture, ITestOutputHelper outputHelper)
@@ -175,7 +176,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             webhookSecret = options.WebhookSecret;
         }
 
-        string payload = JsonSerializer.Serialize(value, new JsonSerializerOptions() { WriteIndented = true });
+        string payload = JsonSerializer.Serialize(value, IndentedOptions);
 
         // See https://github.com/terrajobst/Terrajobst.GitHubEvents/blob/cb86100c783373e198cefb1ed7e92526a44833b0/src/Terrajobst.GitHubEvents.AspNetCore/GitHubEventsExtensions.cs#L112-L119
         var encoding = Encoding.UTF8;

@@ -12,6 +12,7 @@ namespace MartinCostello.Costellobot.Pages;
 [CostellobotAdmin]
 public sealed partial class DeliveryModel : PageModel
 {
+    private static readonly JsonSerializerOptions IndentedOptions = new() { WriteIndented = true };
     private readonly IGitHubClient _client;
 
     public DeliveryModel(IGitHubClientForApp client)
@@ -82,7 +83,7 @@ public sealed partial class DeliveryModel : PageModel
 
         RequestPayload = JsonSerializer.Serialize(
             request.GetProperty("payload"),
-            new JsonSerializerOptions() { WriteIndented = true });
+            IndentedOptions);
 
         var response = Delivery.GetProperty("response");
 
