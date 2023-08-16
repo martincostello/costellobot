@@ -1,4 +1,5 @@
 @page "/github-webhook"
+@using WebhookEventType = Octokit.Webhooks.WebhookEventType;
 @model DebugModel
 @{
     ViewData["Title"] = "Debug Webhook";
@@ -8,12 +9,22 @@
     <div class="mb-3">
       <label for="webhook-event" class="form-label">Event</label>
       <select id="webhook-event" class="form-select text-webhook" autofocus="autofocus" aria-label="Event" aria-describedby="webhook-event-help">
-        <option value="check_suite">check_suite</option>
-        <option value="deployment_protection_rule">deployment_protection_rule</option>
-        <option value="deployment_status">deployment_status</option>
-        <option value="installation">installation</option>
-        <option value="pull_request" selected>pull_request</option>
-        <option value="status">status</option>
+        @{
+            var events = new (string Event, bool Selected)[]
+            {
+                (WebhookEventType.CheckSuite, false),
+                (WebhookEventType.DeploymentProtectionRule, false),
+                (WebhookEventType.DeploymentStatus, false),
+                (WebhookEventType.Installation, false),
+                (WebhookEventType.PullRequest, true),
+                (WebhookEventType.Push, false),
+                (WebhookEventType.Status, false),
+            };
+        }
+        @foreach (var item in events)
+        {
+            <option value="@(item.Event)" selected="@(item.Selected)">@(item.Event)</option>
+        }
       </select>
       <div id="webhook-event-help" class="form-text">
         The name of the
