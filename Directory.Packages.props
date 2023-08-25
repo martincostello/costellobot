@@ -23,7 +23,7 @@
     <PackageVersion Include="NSubstitute" Version="5.0.0" />
     <PackageVersion Include="Octokit" Version="7.1.0" />
     <PackageVersion Include="Octokit.GraphQL" Version="0.2.1-beta" />
-    <PackageVersion Include="Octokit.Webhooks.AspNetCore" Version="2.0.2" />
+    <PackageVersion Include="Octokit.Webhooks.AspNetCore" Version="2.0.3" />
     <PackageVersion Include="Polly" Version="7.2.4" />
     <PackageVersion Include="ReportGenerator" Version="5.1.24" />
     <PackageVersion Include="Shouldly" Version="4.2.1" />
