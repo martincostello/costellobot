@@ -7,7 +7,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using NodaTime;
 
 namespace Octokit;
 
@@ -18,17 +17,17 @@ public sealed class AppCredentialStore : ICredentialStore
 
     private readonly IMemoryCache _cache;
     private readonly CryptoProviderFactory _cryptoProviderFactory;
-    private readonly IClock _clock;
+    private readonly TimeProvider _timeProvider;
     private readonly IOptionsMonitor<GitHubOptions> _options;
 
     public AppCredentialStore(
         IMemoryCache cache,
         CryptoProviderFactory cryptoProviderFactory,
-        IClock clock,
+        TimeProvider timeProvider,
         IOptionsMonitor<GitHubOptions> options)
     {
         _cache = cache;
-        _clock = clock;
+        _timeProvider = timeProvider;
         _cryptoProviderFactory = cryptoProviderFactory;
         _options = options;
     }
@@ -48,7 +47,7 @@ public sealed class AppCredentialStore : ICredentialStore
     {
         // See https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
         var options = _options.CurrentValue;
-        var utcNow = _clock.GetCurrentInstant().ToDateTimeUtc();
+        var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
 
         using var algorithm = RSA.Create();
         algorithm.ImportFromPem(options.PrivateKey);

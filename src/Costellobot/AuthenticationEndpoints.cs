@@ -70,9 +70,9 @@ public static class AuthenticationEndpoints
 
                 options.Events.OnTicketReceived = (context) =>
                 {
-                    var clock = context.HttpContext.RequestServices.GetRequiredService<ISystemClock>();
+                    var timeProvider = context.HttpContext.RequestServices.GetRequiredService<TimeProvider>();
 
-                    context.Properties!.ExpiresUtc = clock.UtcNow.AddDays(60);
+                    context.Properties!.ExpiresUtc = timeProvider.GetUtcNow().AddDays(60);
                     context.Properties.IsPersistent = true;
 
                     return Task.CompletedTask;
