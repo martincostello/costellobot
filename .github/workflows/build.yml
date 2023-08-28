@@ -104,7 +104,7 @@ jobs:
       if: runner.os == 'Windows' && success()
       with:
         name: webapp
-        path: ./artifacts/publish
+        path: ./artifacts/publish/Costellobot/release_${{ env.PUBLISH_RUNTIME }}
         if-no-files-found: error
 
     - name: Publish screenshots
@@ -197,7 +197,7 @@ jobs:
 
     - name: Run end-to-end tests
       shell: pwsh
-      run: dotnet test ./tests/Costellobot.EndToEndTests --configuration Release --output ./artifacts --logger "GitHubActions;report-warnings=false"
+      run: dotnet test ./tests/Costellobot.EndToEndTests --configuration Release --logger "GitHubActions;report-warnings=false"
       env:
         APPLICATION_URL: ${{ env.APPLICATION_URL_PROD }}
 
