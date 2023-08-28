@@ -9,7 +9,7 @@ namespace MartinCostello.Costellobot.Infrastructure;
 public class BrowserFixture
 {
     private const string VideosDirectory = "videos";
-    private const string AssetsDirectory = ".";
+    private static readonly string AssetsDirectory = Path.Combine("..", "..", "..");
 
     public BrowserFixture(ITestOutputHelper outputHelper)
         : this(new(), outputHelper)
