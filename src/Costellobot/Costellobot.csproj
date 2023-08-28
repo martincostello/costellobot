@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
+    <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
+    <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
     <IsPackable>false</IsPackable>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <TypeScriptToolsVersion>latest</TypeScriptToolsVersion>
     <UserSecretsId>Costellobot</UserSecretsId>
@@ -19,7 +21,6 @@
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <PackageReference Include="Microsoft.TypeScript.MSBuild" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" />
-    <PackageReference Include="NodaTime" />
     <PackageReference Include="Octokit" />
     <PackageReference Include="Octokit.GraphQL" />
     <PackageReference Include="Octokit.Webhooks.AspNetCore" />
