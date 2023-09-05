@@ -114,6 +114,12 @@
       ]
     }
   },
+  "eslintIgnore": [
+    "bin/",
+    "node_modules/",
+    "obj/",
+    "wwwroot/"
+  ],
   "jest": {
     "clearMocks": true,
     "collectCoverage": true,
