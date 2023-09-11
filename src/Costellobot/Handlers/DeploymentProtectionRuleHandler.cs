@@ -80,6 +80,15 @@ public sealed partial class DeploymentProtectionRuleHandler : IHandler
                     body.Deployment.Id);
             }
         }
+        else
+        {
+            Log.DeploymentProtectionRuleApprovalIsDisabled(
+                _logger,
+                owner,
+                name,
+                body.Environment,
+                body.Deployment.Id);
+        }
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -115,6 +124,17 @@ public sealed partial class DeploymentProtectionRuleHandler : IHandler
         public static partial void FailedToApproveDeployment(
             ILogger logger,
             Exception exception,
+            string? owner,
+            string? repository,
+            string? environmentName,
+            long deploymentId);
+
+        [LoggerMessage(
+           EventId = 4,
+           Level = LogLevel.Information,
+           Message = "Ignoring deployment protection rule check for {Owner}/{Repository} for environment {EnvironmentName} for deployment {DeploymentId} as deployment approval is disabled.")]
+        public static partial void DeploymentProtectionRuleApprovalIsDisabled(
+            ILogger logger,
             string? owner,
             string? repository,
             string? environmentName,
