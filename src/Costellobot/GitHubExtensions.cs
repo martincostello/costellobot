@@ -6,7 +6,6 @@ using MartinCostello.Costellobot.Registries;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using NodaTime;
 using Octokit;
 using Octokit.Internal;
 using Octokit.Webhooks;
@@ -36,7 +35,7 @@ public static class GitHubExtensions
         services.Configure<SiteOptions>(configuration.GetSection("Site"));
         services.Configure<WebhookOptions>(configuration.GetSection("Webhook"));
 
-        services.TryAddSingleton<IClock>(SystemClock.Instance);
+        services.TryAddSingleton(TimeProvider.System);
 
         services.AddSingleton((provider) =>
         {
