@@ -11,13 +11,8 @@ using Microsoft.Extensions.Options;
 namespace MartinCostello.Costellobot;
 
 [Collection(AppCollection.Name)]
-public sealed class ApiTests : IntegrationTests<AppFixture>
+public sealed class ApiTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
-    public ApiTests(AppFixture fixture, ITestOutputHelper outputHelper)
-        : base(fixture, outputHelper)
-    {
-    }
-
     [Fact]
     public async Task Can_Accept_GitHub_Check_Suite_Webhook()
     {

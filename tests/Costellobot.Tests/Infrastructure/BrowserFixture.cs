@@ -6,7 +6,9 @@ using Microsoft.Playwright;
 
 namespace MartinCostello.Costellobot.Infrastructure;
 
-public class BrowserFixture
+public class BrowserFixture(
+    BrowserFixtureOptions options,
+    ITestOutputHelper outputHelper)
 {
     private const string VideosDirectory = "videos";
     private static readonly string AssetsDirectory = Path.Combine("..", "..", "..");
@@ -16,19 +18,9 @@ public class BrowserFixture
     {
     }
 
-    public BrowserFixture(
-        BrowserFixtureOptions options,
-        ITestOutputHelper outputHelper)
-    {
-        Options = options;
-        OutputHelper = outputHelper;
-    }
-
     internal static bool IsRunningInGitHubActions { get; } = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"));
 
-    private BrowserFixtureOptions Options { get; }
-
-    private ITestOutputHelper OutputHelper { get; }
+    private BrowserFixtureOptions Options { get; } = options;
 
     public async Task WithPageAsync(
         Func<IPage, Task> action,
@@ -56,8 +48,8 @@ public class BrowserFixture
 
         var page = await context.NewPageAsync();
 
-        page.Console += (_, e) => OutputHelper.WriteLine(e.Text);
-        page.PageError += (_, e) => OutputHelper.WriteLine(e);
+        page.Console += (_, e) => outputHelper.WriteLine(e.Text);
+        page.PageError += (_, e) => outputHelper.WriteLine(e);
 
         try
         {
@@ -153,11 +145,11 @@ public class BrowserFixture
 
             await page.ScreenshotAsync(new() { Path = path });
 
-            OutputHelper.WriteLine($"Screenshot saved to {path}.");
+            outputHelper.WriteLine($"Screenshot saved to {path}.");
         }
         catch (Exception ex)
         {
-            OutputHelper.WriteLine("Failed to capture screenshot: " + ex);
+            outputHelper.WriteLine("Failed to capture screenshot: " + ex);
         }
     }
 
@@ -176,11 +168,11 @@ public class BrowserFixture
             await page.CloseAsync();
             await page.Video.SaveAsAsync(path);
 
-            OutputHelper.WriteLine($"Video saved to {path}.");
+            outputHelper.WriteLine($"Video saved to {path}.");
         }
         catch (Exception ex)
         {
-            OutputHelper.WriteLine("Failed to capture video: " + ex);
+            outputHelper.WriteLine("Failed to capture video: " + ex);
         }
     }
 }

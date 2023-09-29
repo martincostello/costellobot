@@ -5,15 +5,10 @@ using Octokit;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed class GitSubmodulePackageRegistry : GitHubPackageRegistry
+public sealed class GitSubmodulePackageRegistry(
+    IGitHubClientForInstallation client,
+    Octokit.GraphQL.IConnection connection) : GitHubPackageRegistry(client, connection)
 {
-    public GitSubmodulePackageRegistry(
-        IGitHubClientForInstallation client,
-        Octokit.GraphQL.IConnection connection)
-        : base(client, connection)
-    {
-    }
-
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.Submodules;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(

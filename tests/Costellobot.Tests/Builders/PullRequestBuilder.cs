@@ -3,14 +3,8 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public sealed class PullRequestBuilder : ResponseBuilder
+public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder? user = null) : ResponseBuilder
 {
-    public PullRequestBuilder(RepositoryBuilder repository, UserBuilder? user = null)
-    {
-        Repository = repository;
-        User = user;
-    }
-
     public string AuthorAssociation { get; set; } = "owner";
 
     public bool IsDraft { get; set; }
@@ -23,7 +17,7 @@ public sealed class PullRequestBuilder : ResponseBuilder
 
     public int Number { get; set; } = RandomNumber();
 
-    public RepositoryBuilder Repository { get; set; }
+    public RepositoryBuilder Repository { get; set; } = repository;
 
     public string RefBase { get; set; } = "main";
 
@@ -37,7 +31,7 @@ public sealed class PullRequestBuilder : ResponseBuilder
 
     public string Title { get; set; } = RandomString();
 
-    public UserBuilder? User { get; set; }
+    public UserBuilder? User { get; set; } = user;
 
     public GitHubCommitBuilder CreateCommit()
         => new(Repository) { Sha = ShaHead };

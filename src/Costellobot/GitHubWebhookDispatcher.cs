@@ -6,48 +6,37 @@ using Microsoft.Extensions.Options;
 
 namespace MartinCostello.Costellobot;
 
-public sealed partial class GitHubWebhookDispatcher
+public sealed partial class GitHubWebhookDispatcher(
+    IHandlerFactory handlerFactory,
+    IOptionsMonitor<GitHubOptions> options,
+    ILogger<GitHubWebhookDispatcher> logger)
 {
-    private readonly IHandlerFactory _handlerFactory;
-    private readonly ILogger _logger;
-    private readonly IOptionsMonitor<GitHubOptions> _options;
-
-    public GitHubWebhookDispatcher(
-        IHandlerFactory handlerFactory,
-        IOptionsMonitor<GitHubOptions> options,
-        ILogger<GitHubWebhookDispatcher> logger)
-    {
-        _handlerFactory = handlerFactory;
-        _options = options;
-        _logger = logger;
-    }
-
     public async Task DispatchAsync(GitHubEvent message)
     {
-        Log.ProcessingWebhook(_logger, message.Headers.Delivery);
+        Log.ProcessingWebhook(logger, message.Headers.Delivery);
 
         if (!IsValidInstallation(message))
         {
-            Log.IncorrectInstallationWebhookIgnored(_logger, message.Headers.Delivery, message.Event.Installation?.Id);
+            Log.IncorrectInstallationWebhookIgnored(logger, message.Headers.Delivery, message.Event.Installation?.Id);
             return;
         }
 
         try
         {
-            var handler = _handlerFactory.Create(message.Headers.Event);
+            var handler = handlerFactory.Create(message.Headers.Event);
             await handler.HandleAsync(message.Event);
 
-            Log.ProcessedWebhook(_logger, message.Headers.Delivery);
+            Log.ProcessedWebhook(logger, message.Headers.Delivery);
         }
         catch (Exception ex)
         {
-            Log.WebhookProcessingFailed(_logger, ex, message.Headers.Delivery);
+            Log.WebhookProcessingFailed(logger, ex, message.Headers.Delivery);
             throw;
         }
     }
 
     private bool IsValidInstallation(GitHubEvent message)
-        => message.Event.Installation?.Id == _options.CurrentValue.InstallationId;
+        => message.Event.Installation?.Id == options.CurrentValue.InstallationId;
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     private static partial class Log

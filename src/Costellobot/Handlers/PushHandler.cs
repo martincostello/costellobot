@@ -7,23 +7,14 @@ using Octokit.Webhooks.Events;
 
 namespace MartinCostello.Costellobot.Handlers;
 
-public sealed partial class PushHandler : IHandler
+public sealed partial class PushHandler(
+    IGitHubClientForInstallation client,
+    ILogger<PushHandler> logger) : IHandler
 {
     private const string PrefixForBranchName = "refs/heads/";
     private const string DefaultBranch = $"{PrefixForBranchName}main";
     private const string DotNetNextBranch = $"{PrefixForBranchName}dotnet-vnext";
     private const string DispatchDestination = "martincostello/github-automation";
-
-    private readonly IGitHubClient _client;
-    private readonly ILogger _logger;
-
-    public PushHandler(
-        IGitHubClientForInstallation client,
-        ILogger<PushHandler> logger)
-    {
-        _client = client;
-        _logger = logger;
-    }
 
     public async Task HandleAsync(WebhookEvent message)
     {
@@ -55,7 +46,7 @@ public sealed partial class PushHandler : IHandler
 
         if (DependencyFileChanged(filesChanged))
         {
-            Log.CreatedRepositoryDispatchForPush(_logger, repo.Owner.Login, repo.Name, push.Ref);
+            Log.CreatedRepositoryDispatchForPush(logger, repo.Owner.Login, repo.Name, push.Ref);
             await CreateDispatchAsync(repo.FullName, push.Ref, push.After);
         }
     }
@@ -100,7 +91,7 @@ public sealed partial class PushHandler : IHandler
         };
 
         var uri = new Uri($"repos/{DispatchDestination}/dispatches", UriKind.Relative);
-        var status = await _client.Connection.Post(uri, dispatch, "application/vnd.github+json");
+        var status = await client.Connection.Post(uri, dispatch, "application/vnd.github+json");
 
         if (status is not System.Net.HttpStatusCode.NoContent)
         {

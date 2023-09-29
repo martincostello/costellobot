@@ -9,21 +9,12 @@ using Octokit;
 
 namespace MartinCostello.Costellobot;
 
-public sealed partial class GitCommitAnalyzer
+public sealed partial class GitCommitAnalyzer(
+    IEnumerable<IPackageRegistry> registries,
+    IOptionsMonitor<WebhookOptions> options,
+    ILogger<GitCommitAnalyzer> logger)
 {
-    private readonly IReadOnlyCollection<IPackageRegistry> _registries;
-    private readonly IOptionsMonitor<WebhookOptions> _options;
-    private readonly ILogger _logger;
-
-    public GitCommitAnalyzer(
-        IEnumerable<IPackageRegistry> registries,
-        IOptionsMonitor<WebhookOptions> options,
-        ILogger<GitCommitAnalyzer> logger)
-    {
-        _registries = registries.ToArray();
-        _options = options;
-        _logger = logger;
-    }
+    private readonly IReadOnlyCollection<IPackageRegistry> _registries = registries.ToArray();
 
     public static bool TryParseVersionNumber(
         string commitMessage,
@@ -33,14 +24,14 @@ public sealed partial class GitCommitAnalyzer
         // Extract the version numbers from the commit message.
         // See https://github.com/dependabot/fetch-metadata/blob/d9606730415777cc0dc46d64c4ce0e16624bd714/src/dependabot/update_metadata.ts#L30
         string escapedName = Regex.Escape(dependencyName).Replace("/", @"\/", StringComparison.Ordinal);
-        string[] patterns = new[]
-        {
+        string[] patterns =
+        [
             $@"(Bumps|Updates) {escapedName} from (?<from>\d[^ ]*) to (?<to>\d[^ ]*)\.", // Normal version updates
             $@"(Bumps|Updates) `{escapedName}` from (?<from>\d[^ ]*) to (?<to>\d[^ ]*)\.?$", // Normal version updates with escaped name
             $@"(Bumps|Updates) \[{escapedName}\]\(.*\) from (?<from>\d[^ ]*) to (?<to>\d[^ ]*)\.?$", // Normal version updates with link to repo
             $@"(Bumps|Updates) `?{escapedName}`? from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ ]*)\`\.?$", // Git submodule updates
             $@"(Bumps|Updates) \[{escapedName}\]\(.*\) from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ ]*)\`\.?", // Git submodule updates with link to repo
-        };
+        ];
 
         foreach (var pattern in patterns)
         {
@@ -99,7 +90,7 @@ public sealed partial class GitCommitAnalyzer
         if (isTrusted)
         {
             Log.TrustedDependenciesUpdated(
-                _logger,
+                logger,
                 sha,
                 owner,
                 name,
@@ -186,7 +177,7 @@ public sealed partial class GitCommitAnalyzer
     {
         dependencies = ParseDependencies(commitMessage);
 
-        var trustedDependencies = _options.CurrentValue.TrustedEntities.Dependencies;
+        var trustedDependencies = options.CurrentValue.TrustedEntities.Dependencies;
 
         if (dependencies.Count < 1 || trustedDependencies.Count < 1)
         {
@@ -194,18 +185,18 @@ public sealed partial class GitCommitAnalyzer
         }
 
         Log.CommitUpdatesDependencies(
-            _logger,
+            logger,
             sha,
             owner,
             name,
-            dependencies.ToArray());
+            [.. dependencies]);
 
         foreach (string dependency in dependencies)
         {
             if (!trustedDependencies.Any((p) => Regex.IsMatch(dependency, p)))
             {
                 Log.UntrustedDependencyNameUpdated(
-                    _logger,
+                    logger,
                     sha,
                     owner,
                     name,
@@ -215,7 +206,7 @@ public sealed partial class GitCommitAnalyzer
             }
 
             Log.TrustedDependencyNameUpdated(
-                _logger,
+                logger,
                 sha,
                 owner,
                 name,
@@ -276,7 +267,7 @@ public sealed partial class GitCommitAnalyzer
                 return false;
             }
 
-            if (!_options.CurrentValue.TrustedEntities.Publishers.TryGetValue(ecosystem, out var publishers) ||
+            if (!options.CurrentValue.TrustedEntities.Publishers.TryGetValue(ecosystem, out var publishers) ||
                 publishers.Count < 1)
             {
                 return false;
@@ -302,7 +293,7 @@ public sealed partial class GitCommitAnalyzer
                 if (owners.Any(publishers.Contains))
                 {
                     Log.TrustedDependencyOwnerUpdated(
-                        _logger,
+                        logger,
                         reference,
                         owner,
                         name,
@@ -314,7 +305,7 @@ public sealed partial class GitCommitAnalyzer
                 if (await registry.AreOwnersTrustedAsync(owners))
                 {
                     Log.TrustedDependencyOwnerViaRegistryUpdated(
-                        _logger,
+                        logger,
                         reference,
                         owner,
                         name,
@@ -325,7 +316,7 @@ public sealed partial class GitCommitAnalyzer
                 }
 
                 Log.UntrustedDependencyOwnerUpdated(
-                    _logger,
+                    logger,
                     reference,
                     owner,
                     name,
@@ -333,7 +324,7 @@ public sealed partial class GitCommitAnalyzer
             }
             catch (Exception ex)
             {
-                Log.FailedToQueryPackageRegistry(_logger, dependency, version, ecosystem, ex);
+                Log.FailedToQueryPackageRegistry(logger, dependency, version, ecosystem, ex);
             }
 
             return false;

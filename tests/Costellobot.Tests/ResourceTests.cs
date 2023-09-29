@@ -9,13 +9,8 @@ using MartinCostello.Costellobot.Infrastructure;
 namespace MartinCostello.Costellobot;
 
 [Collection(AppCollection.Name)]
-public sealed class ResourceTests : IntegrationTests<AppFixture>
+public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
-    public ResourceTests(AppFixture fixture, ITestOutputHelper outputHelper)
-        : base(fixture, outputHelper)
-    {
-    }
-
     [Theory]
     [InlineData("/bad-request.html", MediaTypeNames.Text.Html)]
     [InlineData("/error.html", MediaTypeNames.Text.Html)]
@@ -177,7 +172,7 @@ public sealed class ResourceTests : IntegrationTests<AppFixture>
     {
         // Arrange
         string[] expectedHeaders =
-        {
+        [
             "Content-Security-Policy",
             "Expect-CT",
             "Permissions-Policy",
@@ -187,7 +182,7 @@ public sealed class ResourceTests : IntegrationTests<AppFixture>
             "X-Frame-Options",
             "X-Request-Id",
             "X-XSS-Protection",
-        };
+        ];
 
         using var client = Fixture.CreateClient();
 
@@ -206,10 +201,10 @@ public sealed class ResourceTests : IntegrationTests<AppFixture>
     {
         // Arrange
         string[] expectedHeaders =
-        {
+        [
             "Server",
             "X-Powered-By",
-        };
+        ];
 
         using var client = Fixture.CreateClient();
 

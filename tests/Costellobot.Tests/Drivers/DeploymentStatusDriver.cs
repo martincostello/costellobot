@@ -92,7 +92,7 @@ public sealed class DeploymentStatusDriver
     }
 
     public CompareResultBuilder Comparison()
-        => CreateComparison(Commits.ToArray());
+        => CreateComparison([.. Commits]);
 
     public object CreateWebhook(string action)
     {

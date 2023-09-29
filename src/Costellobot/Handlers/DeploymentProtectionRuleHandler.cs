@@ -9,21 +9,12 @@ using Polly;
 
 namespace MartinCostello.Costellobot.Handlers;
 
-public sealed partial class DeploymentProtectionRuleHandler : IHandler
+public sealed partial class DeploymentProtectionRuleHandler(
+    IGitHubClientForInstallation client,
+    IOptionsMonitor<WebhookOptions> options,
+    ILogger<DeploymentProtectionRuleHandler> logger) : IHandler
 {
-    private readonly IGitHubClient _client;
-    private readonly IOptionsMonitor<WebhookOptions> _options;
-    private readonly ILogger _logger;
-
-    public DeploymentProtectionRuleHandler(
-        IGitHubClientForInstallation client,
-        IOptionsMonitor<WebhookOptions> options,
-        ILogger<DeploymentProtectionRuleHandler> logger)
-    {
-        _client = client;
-        _options = options;
-        _logger = logger;
-    }
+    private readonly IOptionsMonitor<WebhookOptions> _options = options;
 
     public async Task HandleAsync(WebhookEvent message)
     {
@@ -37,7 +28,7 @@ public sealed partial class DeploymentProtectionRuleHandler : IHandler
         string name = repo.Name;
 
         Log.DeploymentProtectionRuleRequested(
-            _logger,
+            logger,
             owner,
             name,
             body.Environment,
@@ -58,12 +49,12 @@ public sealed partial class DeploymentProtectionRuleHandler : IHandler
                 await Policy.Handle<Exception>()
                     .WaitAndRetryAsync(3, static (_) => TimeSpan.FromSeconds(1))
                     .ExecuteAsync(
-                        () => _client.WorkflowRuns().ReviewCustomProtectionRuleAsync(
+                        () => client.WorkflowRuns().ReviewCustomProtectionRuleAsync(
                             body.DeploymentCallbackUrl,
                             review));
 
                 Log.ApprovedDeployment(
-                    _logger,
+                    logger,
                     owner,
                     name,
                     body.Environment,
@@ -72,7 +63,7 @@ public sealed partial class DeploymentProtectionRuleHandler : IHandler
             catch (Exception ex)
             {
                 Log.FailedToApproveDeployment(
-                    _logger,
+                    logger,
                     ex,
                     owner,
                     name,
@@ -83,7 +74,7 @@ public sealed partial class DeploymentProtectionRuleHandler : IHandler
         else
         {
             Log.DeploymentProtectionRuleApprovalIsDisabled(
-                _logger,
+                logger,
                 owner,
                 name,
                 body.Environment,

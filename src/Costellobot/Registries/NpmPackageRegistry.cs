@@ -6,14 +6,9 @@ using System.Text.Json.Serialization;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed class NpmPackageRegistry : PackageRegistry
+public sealed class NpmPackageRegistry(HttpClient client) : PackageRegistry(client)
 {
     private static readonly Uri BaseAddress = new("https://registry.npmjs.org");
-
-    public NpmPackageRegistry(HttpClient client)
-        : base(client)
-    {
-    }
 
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.Npm;
 

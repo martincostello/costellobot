@@ -6,18 +6,11 @@ using Microsoft.Extensions.Options;
 
 namespace MartinCostello.Costellobot.Infrastructure;
 
-public sealed class RemoteAuthorizationEventsFilter : IPostConfigureOptions<GitHubAuthenticationOptions>
+public sealed class RemoteAuthorizationEventsFilter(IHttpClientFactory httpClientFactory) : IPostConfigureOptions<GitHubAuthenticationOptions>
 {
-    public RemoteAuthorizationEventsFilter(IHttpClientFactory httpClientFactory)
-    {
-        HttpClientFactory = httpClientFactory;
-    }
-
-    private IHttpClientFactory HttpClientFactory { get; }
-
     public void PostConfigure(string? name, GitHubAuthenticationOptions options)
     {
-        options.Backchannel = HttpClientFactory.CreateClient(name ?? string.Empty);
+        options.Backchannel = httpClientFactory.CreateClient(name ?? string.Empty);
         options.EventsType = typeof(LoopbackOAuthEvents);
     }
 }

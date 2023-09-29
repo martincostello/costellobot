@@ -3,20 +3,12 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public class WebhookDeliveryBuilder : ResponseBuilder
+public class WebhookDeliveryBuilder(
+    string @event,
+    string? action = null,
+    long? installationId = null,
+    long? repositoryId = null) : ResponseBuilder
 {
-    public WebhookDeliveryBuilder(
-        string @event,
-        string? action = null,
-        long? installationId = null,
-        long? repositoryId = null)
-    {
-        Event = @event;
-        Action = action;
-        InstallationId = installationId;
-        RepositoryId = repositoryId;
-    }
-
     public Guid Guid { get; set; } = Guid.NewGuid();
 
     public DateTimeOffset DeliveredAt { get; set; } = DateTimeOffset.UtcNow;
@@ -31,13 +23,13 @@ public class WebhookDeliveryBuilder : ResponseBuilder
 
     public int StatusCode { get; set; } = 200;
 
-    public string Event { get; set; }
+    public string Event { get; set; } = @event;
 
-    public string? Action { get; set; }
+    public string? Action { get; set; } = action;
 
-    public long? InstallationId { get; set; }
+    public long? InstallationId { get; set; } = installationId;
 
-    public long? RepositoryId { get; set; }
+    public long? RepositoryId { get; set; } = repositoryId;
 
     public WebhookPayloadBuilder AsPayload()
     {

@@ -10,13 +10,8 @@ using Microsoft.Playwright;
 namespace MartinCostello.Costellobot;
 
 [Collection(HttpServerCollection.Name)]
-public class HomeTests : UITests
+public class HomeTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : UITests(fixture, outputHelper)
 {
-    public HomeTests(HttpServerFixture fixture, ITestOutputHelper outputHelper)
-        : base(fixture, outputHelper)
-    {
-    }
-
     [Theory]
     [MemberData(nameof(Browsers))]
     public async Task Can_Sign_In_And_Out(string browserType, string? browserChannel)

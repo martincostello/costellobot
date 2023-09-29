@@ -3,14 +3,9 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public sealed class DeploymentStatusBuilder : ResponseBuilder
+public sealed class DeploymentStatusBuilder(string state) : ResponseBuilder
 {
-    public DeploymentStatusBuilder(string state)
-    {
-        State = state;
-    }
-
-    public string State { get; set; }
+    public string State { get; set; } = state;
 
     public override object Build()
     {

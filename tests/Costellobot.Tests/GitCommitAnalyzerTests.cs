@@ -12,13 +12,8 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 namespace MartinCostello.Costellobot;
 
 [Collection(AppCollection.Name)]
-public class GitCommitAnalyzerTests : IntegrationTests<AppFixture>
+public class GitCommitAnalyzerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
-    public GitCommitAnalyzerTests(AppFixture fixture, ITestOutputHelper outputHelper)
-        : base(fixture, outputHelper)
-    {
-    }
-
     [Fact]
     public static void Version_Is_Extracted_From_NuGet_Package_Update_Commit_Message()
     {

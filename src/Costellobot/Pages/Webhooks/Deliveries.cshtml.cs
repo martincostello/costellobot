@@ -10,15 +10,8 @@ using Octokit;
 namespace MartinCostello.Costellobot.Pages;
 
 [CostellobotAdmin]
-public sealed partial class DeliveriesModel : PageModel
+public sealed partial class DeliveriesModel(IGitHubClientForApp client) : PageModel
 {
-    private readonly IGitHubClient _client;
-
-    public DeliveriesModel(IGitHubClientForApp client)
-    {
-        _client = client;
-    }
-
     public IList<WebhookDelivery> Deliveries { get; } = new List<WebhookDelivery>();
 
     [BindProperty]
@@ -102,14 +95,14 @@ public sealed partial class DeliveriesModel : PageModel
             parameters["cursor"] = cursor;
         }
 
-        var response = await _client.Connection.Get<List<WebhookDelivery>>(
+        var response = await client.Connection.Get<List<WebhookDelivery>>(
             uri,
             parameters,
             "application/vnd.github+json");
 
         if (response.HttpResponse.StatusCode is not HttpStatusCode.OK)
         {
-            return (Array.Empty<WebhookDelivery>(), null);
+            return ([], null);
         }
 
         var deliveries = response.Body;

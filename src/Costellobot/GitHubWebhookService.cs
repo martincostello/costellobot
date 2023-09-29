@@ -3,24 +3,13 @@
 
 namespace MartinCostello.Costellobot;
 
-public sealed partial class GitHubWebhookService : IHostedService, IDisposable
+public sealed partial class GitHubWebhookService(
+    GitHubWebhookQueue queue,
+    IServiceProvider serviceProvider,
+    ILogger<GitHubWebhookService> logger) : IHostedService, IDisposable
 {
-    private readonly GitHubWebhookQueue _queue;
-    private readonly ILogger _logger;
-    private readonly IServiceProvider _serviceProvider;
-
     private CancellationTokenSource? _cts;
     private Task? _executeTask;
-
-    public GitHubWebhookService(
-        GitHubWebhookQueue queue,
-        IServiceProvider serviceProvider,
-        ILogger<GitHubWebhookService> logger)
-    {
-        _queue = queue;
-        _logger = logger;
-        _serviceProvider = serviceProvider;
-    }
 
     public void Dispose()
     {
@@ -47,7 +36,7 @@ public sealed partial class GitHubWebhookService : IHostedService, IDisposable
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _queue.SignalCompletion();
+        queue.SignalCompletion();
 
         try
         {
@@ -56,11 +45,11 @@ public sealed partial class GitHubWebhookService : IHostedService, IDisposable
                 await _cts.CancelAsync();
             }
 
-            await _queue.WaitForQueueToDrainAsync().WaitAsync(cancellationToken);
+            await queue.WaitForQueueToDrainAsync().WaitAsync(cancellationToken);
         }
         catch (Exception ex)
         {
-            Log.FailedToDrainQueue(_logger, ex);
+            Log.FailedToDrainQueue(logger, ex);
         }
     }
 
@@ -68,14 +57,14 @@ public sealed partial class GitHubWebhookService : IHostedService, IDisposable
     {
         try
         {
-            await using var scope = _serviceProvider.CreateAsyncScope();
+            await using var scope = serviceProvider.CreateAsyncScope();
 
             var dispatcher = scope.ServiceProvider.GetRequiredService<GitHubWebhookDispatcher>();
             await dispatcher.DispatchAsync(message);
         }
         catch (Exception ex)
         {
-            Log.ProcessingFailed(_logger, ex, message.Headers.Delivery);
+            Log.ProcessingFailed(logger, ex, message.Headers.Delivery);
         }
     }
 
@@ -83,7 +72,7 @@ public sealed partial class GitHubWebhookService : IHostedService, IDisposable
     {
         while (true)
         {
-            var message = await _queue.DequeueAsync(stoppingToken);
+            var message = await queue.DequeueAsync(stoppingToken);
 
             if (message is null)
             {
