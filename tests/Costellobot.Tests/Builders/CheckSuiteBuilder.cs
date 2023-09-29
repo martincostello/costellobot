@@ -3,28 +3,21 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public sealed class CheckSuiteBuilder : ResponseBuilder
+public sealed class CheckSuiteBuilder(RepositoryBuilder repository, string status, string? conclusion) : ResponseBuilder
 {
-    public CheckSuiteBuilder(RepositoryBuilder repository, string status, string? conclusion)
-    {
-        Repository = repository;
-        Status = status;
-        Conclusion = conclusion;
-    }
-
     public string ApplicationName { get; set; } = "GitHub Actions";
 
     public string ApplicationSlug { get; set; } = "github-actions";
 
-    public string? Conclusion { get; set; }
+    public string? Conclusion { get; set; } = conclusion;
 
     public IList<PullRequestBuilder> PullRequests { get; set; } = new List<PullRequestBuilder>();
 
-    public RepositoryBuilder Repository { get; set; }
+    public RepositoryBuilder Repository { get; set; } = repository;
 
     public bool Rerequestable { get; set; }
 
-    public string Status { get; set; }
+    public string Status { get; set; } = status;
 
     public override object Build()
     {

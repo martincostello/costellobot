@@ -5,13 +5,8 @@ using Microsoft.Playwright;
 
 namespace MartinCostello.Costellobot.Pages;
 
-public class HomePage : AppPage
+public class HomePage(IPage page) : AppPage(page)
 {
-    public HomePage(IPage page)
-        : base(page)
-    {
-    }
-
     public async Task WaitForContentAsync()
         => await Page.WaitForSelectorAsync(Selectors.AdminContent);
 

@@ -3,16 +3,11 @@
 
 namespace MartinCostello.Costellobot.Registries;
 
-public abstract class PackageRegistry : IPackageRegistry
+public abstract class PackageRegistry(HttpClient client) : IPackageRegistry
 {
-    protected PackageRegistry(HttpClient client)
-    {
-        Client = client;
-    }
-
     public abstract DependencyEcosystem Ecosystem { get; }
 
-    protected HttpClient Client { get; }
+    protected HttpClient Client { get; } = client;
 
     public virtual Task<bool> AreOwnersTrustedAsync(IReadOnlyList<string> owners)
         => Task.FromResult(false);

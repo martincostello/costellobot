@@ -5,24 +5,17 @@ using Octokit.Webhooks;
 
 namespace MartinCostello.Costellobot.Handlers;
 
-public sealed class HandlerFactory : IHandlerFactory
+public sealed class HandlerFactory(IServiceProvider serviceProvider) : IHandlerFactory
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public HandlerFactory(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
     public IHandler Create(string? eventType)
     {
         return eventType switch
         {
-            WebhookEventType.CheckSuite => _serviceProvider.GetRequiredService<CheckSuiteHandler>(),
-            WebhookEventType.DeploymentProtectionRule => _serviceProvider.GetRequiredService<DeploymentProtectionRuleHandler>(),
-            WebhookEventType.DeploymentStatus => _serviceProvider.GetRequiredService<DeploymentStatusHandler>(),
-            WebhookEventType.PullRequest => _serviceProvider.GetRequiredService<PullRequestHandler>(),
-            WebhookEventType.Push => _serviceProvider.GetRequiredService<PushHandler>(),
+            WebhookEventType.CheckSuite => serviceProvider.GetRequiredService<CheckSuiteHandler>(),
+            WebhookEventType.DeploymentProtectionRule => serviceProvider.GetRequiredService<DeploymentProtectionRuleHandler>(),
+            WebhookEventType.DeploymentStatus => serviceProvider.GetRequiredService<DeploymentStatusHandler>(),
+            WebhookEventType.PullRequest => serviceProvider.GetRequiredService<PullRequestHandler>(),
+            WebhookEventType.Push => serviceProvider.GetRequiredService<PushHandler>(),
             _ => NullHandler.Instance,
         };
     }

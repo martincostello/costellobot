@@ -3,14 +3,9 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public sealed class UserBuilder : ResponseBuilder
+public sealed class UserBuilder(string? login) : ResponseBuilder
 {
-    public UserBuilder(string? login)
-    {
-        Login = login ?? RandomString();
-    }
-
-    public string Login { get; set; }
+    public string Login { get; set; } = login ?? RandomString();
 
     public string UserType { get; set; } = "user";
 

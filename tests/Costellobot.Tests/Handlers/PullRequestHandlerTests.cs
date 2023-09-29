@@ -13,13 +13,8 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 namespace MartinCostello.Costellobot.Handlers;
 
 [Collection(AppCollection.Name)]
-public class PullRequestHandlerTests : IntegrationTests<AppFixture>
+public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
-    public PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper)
-        : base(fixture, outputHelper)
-    {
-    }
-
     [Fact]
     public async Task Pull_Request_Is_Approved_For_Trusted_User_And_Dependency_Name()
     {

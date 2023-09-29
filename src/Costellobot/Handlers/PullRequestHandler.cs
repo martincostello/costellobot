@@ -14,27 +14,14 @@ using PullRequestMergeMethod = Octokit.GraphQL.Model.PullRequestMergeMethod;
 
 namespace MartinCostello.Costellobot.Handlers;
 
-public sealed partial class PullRequestHandler : IHandler
+public sealed partial class PullRequestHandler(
+    IGitHubClientForInstallation client,
+    IConnection connection,
+    GitCommitAnalyzer commitAnalyzer,
+    IOptionsMonitor<WebhookOptions> options,
+    ILogger<PullRequestHandler> logger) : IHandler
 {
-    private readonly IGitHubClient _client;
-    private readonly GitCommitAnalyzer _commitAnalyzer;
-    private readonly IConnection _connection;
-    private readonly IOptionsMonitor<WebhookOptions> _options;
-    private readonly ILogger _logger;
-
-    public PullRequestHandler(
-        IGitHubClientForInstallation client,
-        IConnection connection,
-        GitCommitAnalyzer commitAnalyzer,
-        IOptionsMonitor<WebhookOptions> options,
-        ILogger<PullRequestHandler> logger)
-    {
-        _client = client;
-        _connection = connection;
-        _commitAnalyzer = commitAnalyzer;
-        _options = options;
-        _logger = logger;
-    }
+    private readonly IOptionsMonitor<WebhookOptions> _options = options;
 
     public async Task HandleAsync(WebhookEvent message)
     {
@@ -125,7 +112,7 @@ public sealed partial class PullRequestHandler : IHandler
                 .Append(" of Costellobot -->");
         }
 
-        await _client.PullRequest.Review.Create(
+        await client.PullRequest.Review.Create(
             owner,
             name,
             number,
@@ -135,7 +122,7 @@ public sealed partial class PullRequestHandler : IHandler
                 Event = Octokit.PullRequestReviewEvent.Approve,
             });
 
-        Log.PullRequestApproved(_logger, owner, name, number);
+        Log.PullRequestApproved(logger, owner, name, number);
     }
 
     private async Task EnableAutoMergeAsync(
@@ -158,33 +145,33 @@ public sealed partial class PullRequestHandler : IHandler
 
         try
         {
-            await _connection.Run(mutation);
-            Log.AutoMergeEnabled(_logger, owner, name, number);
+            await connection.Run(mutation);
+            Log.AutoMergeEnabled(logger, owner, name, number);
         }
         catch (Octokit.GraphQL.Core.Deserializers.ResponseDeserializerException ex) when (ex.Message == "[\"Pull request Pull request is in clean status\"]")
         {
             try
             {
                 // If auto-merge failed as the PR is ready to merge, then just merge it
-                var response = await _client.PullRequest.Merge(owner, name, number, new()
+                var response = await client.PullRequest.Merge(owner, name, number, new()
                 {
                     MergeMethod = Enum.Parse<Octokit.PullRequestMergeMethod>(mergeMethod.ToString()),
                 });
 
                 if (response.Merged)
                 {
-                    Log.PullRequestMerged(_logger, owner, name, number);
+                    Log.PullRequestMerged(logger, owner, name, number);
                 }
             }
             catch (Exception ex2)
             {
-                Log.EnableAutoMergeFailed(_logger, ex, owner, name, number, nodeId);
-                Log.MergeFailed(_logger, ex2, owner, name, number);
+                Log.EnableAutoMergeFailed(logger, ex, owner, name, number, nodeId);
+                Log.MergeFailed(logger, ex2, owner, name, number);
             }
         }
         catch (Exception ex)
         {
-            Log.EnableAutoMergeFailed(_logger, ex, owner, name, number, nodeId);
+            Log.EnableAutoMergeFailed(logger, ex, owner, name, number, nodeId);
         }
     }
 
@@ -198,7 +185,7 @@ public sealed partial class PullRequestHandler : IHandler
         {
             if (!string.Equals(message.Action, PullRequestActionValue.Labeled, StringComparison.Ordinal))
             {
-                Log.IgnoringPullRequestAction(_logger, owner, name, number, message.Action);
+                Log.IgnoringPullRequestAction(logger, owner, name, number, message.Action);
             }
 
             return false;
@@ -208,13 +195,13 @@ public sealed partial class PullRequestHandler : IHandler
 
         if (options.IgnoreRepositories.Contains($"{owner}/{name}", StringComparer.OrdinalIgnoreCase))
         {
-            Log.IgnoringPullRequestAsRepositoryIgnored(_logger, owner, name, number);
+            Log.IgnoringPullRequestAsRepositoryIgnored(logger, owner, name, number);
             return false;
         }
 
         if (message.PullRequest is not { } pr || pr.Draft)
         {
-            Log.IgnoringPullRequestDraft(_logger, owner, name, number);
+            Log.IgnoringPullRequestDraft(logger, owner, name, number);
             return false;
         }
 
@@ -224,7 +211,7 @@ public sealed partial class PullRequestHandler : IHandler
 
         if (!isTrusted)
         {
-            Log.IgnoringPullRequestFromUntrustedUser(_logger, owner, name, number, message.PullRequest.User.Login);
+            Log.IgnoringPullRequestFromUntrustedUser(logger, owner, name, number, message.PullRequest.User.Login);
         }
 
         return isTrusted;
@@ -258,7 +245,7 @@ public sealed partial class PullRequestHandler : IHandler
         string name = repository.Name;
         string actor = sender.Login;
 
-        bool isCollaborator = await _client.Repository.Collaborator.IsCollaborator(
+        bool isCollaborator = await client.Repository.Collaborator.IsCollaborator(
             owner,
             name,
             actor);
@@ -266,7 +253,7 @@ public sealed partial class PullRequestHandler : IHandler
         if (isCollaborator)
         {
             Log.PullRequestManuallyApproved(
-                _logger,
+                logger,
                 owner,
                 name,
                 (int)message.PullRequest!.Number,
@@ -281,12 +268,12 @@ public sealed partial class PullRequestHandler : IHandler
         string owner = message.Repository!.Owner.Login;
         string name = message.Repository.Name;
 
-        var commit = await _client.Repository.Commit.Get(
+        var commit = await client.Repository.Commit.Get(
             owner,
             name,
             message.PullRequest.Head.Sha);
 
-        return await _commitAnalyzer.IsTrustedDependencyUpdateAsync(
+        return await commitAnalyzer.IsTrustedDependencyUpdateAsync(
             owner,
             name,
             message.PullRequest.Head.Ref,

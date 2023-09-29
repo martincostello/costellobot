@@ -8,10 +8,13 @@ using Octokit.Webhooks;
 
 namespace MartinCostello.Costellobot;
 
-public sealed partial class GitHubEventProcessor : WebhookEventProcessor
+public sealed partial class GitHubEventProcessor(
+    GitHubWebhookQueue queue,
+    IHubContext<GitHubWebhookHub, IWebhookClient> hub,
+    ILogger<GitHubEventProcessor> logger) : WebhookEventProcessor
 {
     private static readonly string[] HeadersToLog =
-    {
+    [
         "Accept",
         "Content-Type",
         "User-Agent",
@@ -22,21 +25,7 @@ public sealed partial class GitHubEventProcessor : WebhookEventProcessor
         "X-GitHub-Hook-Installation-Target-Type",
         "X-Hub-Signature",
         "X-Hub-Signature-256",
-    };
-
-    private readonly IHubContext<GitHubWebhookHub, IWebhookClient> _hub;
-    private readonly ILogger<GitHubEventProcessor> _logger;
-    private readonly GitHubWebhookQueue _queue;
-
-    public GitHubEventProcessor(
-        GitHubWebhookQueue queue,
-        IHubContext<GitHubWebhookHub, IWebhookClient> hub,
-        ILogger<GitHubEventProcessor> logger)
-    {
-        _queue = queue;
-        _hub = hub;
-        _logger = logger;
-    }
+    ];
 
     public override async Task ProcessWebhookAsync(IDictionary<string, StringValues> headers, string body)
     {
@@ -48,8 +37,8 @@ public sealed partial class GitHubEventProcessor : WebhookEventProcessor
         var webhookHeaders = WebhookHeaders.Parse(headers);
         var webhookEvent = this.DeserializeWebhookEvent(webhookHeaders, body);
 
-        Log.ReceivedWebhook(_logger, webhookHeaders.Delivery);
-        _queue.Enqueue(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload));
+        Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
+        queue.Enqueue(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload));
     }
 
     private async Task<(IDictionary<string, string> Headers, JsonElement Payload)> BroadcastLogAsync(
@@ -73,7 +62,7 @@ public sealed partial class GitHubEventProcessor : WebhookEventProcessor
                 }
             }
 
-            await _hub.Clients.All.WebhookAsync(webhookHeaders, document.RootElement);
+            await hub.Clients.All.WebhookAsync(webhookHeaders, document.RootElement);
 
             return (webhookHeaders, document.RootElement.Clone());
         }

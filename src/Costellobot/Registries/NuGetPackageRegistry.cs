@@ -8,17 +8,9 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed class NuGetPackageRegistry : PackageRegistry
+public sealed class NuGetPackageRegistry(HttpClient client, IMemoryCache cache) : PackageRegistry(client)
 {
     private static readonly Uri ServiceIndexUri = new("https://api.nuget.org/v3/index.json");
-
-    private readonly IMemoryCache _cache;
-
-    public NuGetPackageRegistry(HttpClient client, IMemoryCache cache)
-        : base(client)
-    {
-        _cache = cache;
-    }
 
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.NuGet;
 
@@ -125,7 +117,7 @@ public sealed class NuGetPackageRegistry : PackageRegistry
 
     private async Task<ServiceIndex?> GetServiceIndexAsync()
     {
-        return await _cache.GetOrCreateAsync("nuget-service-index", async (entry) =>
+        return await cache.GetOrCreateAsync("nuget-service-index", async (entry) =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
             return await Client.GetFromJsonAsync<ServiceIndex>(ServiceIndexUri);

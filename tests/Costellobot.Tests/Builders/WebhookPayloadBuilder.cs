@@ -3,17 +3,12 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public class WebhookPayloadBuilder : WebhookDeliveryBuilder
+public class WebhookPayloadBuilder(
+    string @event,
+    string? action = null,
+    long? installationId = null,
+    long? repositoryId = null) : WebhookDeliveryBuilder(@event, action, installationId, repositoryId)
 {
-    public WebhookPayloadBuilder(
-        string @event,
-        string? action = null,
-        long? installationId = null,
-        long? repositoryId = null)
-        : base(@event, action, installationId, repositoryId)
-    {
-    }
-
     public IDictionary<string, string> RequestHeaders { get; set; } = new Dictionary<string, string>();
 
     public object RequestPayload { get; set; } = new { };

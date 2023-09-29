@@ -5,13 +5,8 @@ using Microsoft.Playwright;
 
 namespace MartinCostello.Costellobot.Pages;
 
-public sealed class DeliveryPage : AppPage
+public sealed class DeliveryPage(IPage page) : AppPage(page)
 {
-    public DeliveryPage(IPage page)
-        : base(page)
-    {
-    }
-
     public async Task<string> GuidAsync()
         => await Page.GetAttributeAsync(Selectors.DeliveryContent, "data-delivery-guid") ?? string.Empty;
 

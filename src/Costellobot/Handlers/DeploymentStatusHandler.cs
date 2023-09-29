@@ -10,28 +10,13 @@ using Octokit.Webhooks.Models.DeploymentStatusEvent;
 
 namespace MartinCostello.Costellobot.Handlers;
 
-public sealed partial class DeploymentStatusHandler : IHandler
+public sealed partial class DeploymentStatusHandler(
+    IGitHubClientForInstallation client,
+    GitCommitAnalyzer commitAnalyzer,
+    IOptionsMonitor<GitHubOptions> gitHubOptions,
+    IOptionsMonitor<WebhookOptions> webhookOptions,
+    ILogger<DeploymentStatusHandler> logger) : IHandler
 {
-    private readonly IGitHubClient _client;
-    private readonly GitCommitAnalyzer _commitAnalyzer;
-    private readonly IOptionsMonitor<GitHubOptions> _gitHubOptions;
-    private readonly IOptionsMonitor<WebhookOptions> _webhookOptions;
-    private readonly ILogger _logger;
-
-    public DeploymentStatusHandler(
-        IGitHubClientForInstallation client,
-        GitCommitAnalyzer commitAnalyzer,
-        IOptionsMonitor<GitHubOptions> gitHubOptions,
-        IOptionsMonitor<WebhookOptions> webhookOptions,
-        ILogger<DeploymentStatusHandler> logger)
-    {
-        _client = client;
-        _commitAnalyzer = commitAnalyzer;
-        _gitHubOptions = gitHubOptions;
-        _webhookOptions = webhookOptions;
-        _logger = logger;
-    }
-
     public async Task HandleAsync(WebhookEvent message)
     {
         if (message is not DeploymentStatusEvent body ||
@@ -50,17 +35,17 @@ public sealed partial class DeploymentStatusHandler : IHandler
 
         string owner = repo.Owner.Login;
         string name = repo.Name;
-        var options = _webhookOptions.CurrentValue;
+        var options = webhookOptions.CurrentValue;
 
         if (!options.DeployEnvironments.Contains(deploy.Environment))
         {
-            Log.IgnoringDeploymentStatusAsEnvironmentNotEnabled(_logger, body.DeploymentStatus.Id, owner, name, deploy.Environment);
+            Log.IgnoringDeploymentStatusAsEnvironmentNotEnabled(logger, body.DeploymentStatus.Id, owner, name, deploy.Environment);
             return;
         }
 
         if (!options.Deploy)
         {
-            Log.AutomatedDeploymentApprovalIsDisabled(_logger, body.DeploymentStatus.Id, owner, name);
+            Log.AutomatedDeploymentApprovalIsDisabled(logger, body.DeploymentStatus.Id, owner, name);
             return;
         }
 
@@ -80,7 +65,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
             return;
         }
 
-        var workflowsClient = _client.WorkflowRuns();
+        var workflowsClient = client.WorkflowRuns();
 
         var pendingDeployments = await workflowsClient.GetPendingDeploymentsAsync(
             repo.Owner.Login,
@@ -97,7 +82,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
         if (pendingDeployments.Count != 1)
         {
             Log.NoSinglePendingDeploymentFound(
-                _logger,
+                logger,
                 run.Id,
                 deploy.Environment,
                 owner,
@@ -122,7 +107,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
         {
             // HACK Use OAuth token for user that has permissions to review instead of the app.
             // This can be removed in the future if GitHub Apps can be allowed review deployments.
-            _client.Connection.Credentials = new Credentials(_gitHubOptions.CurrentValue.AccessToken);
+            client.Connection.Credentials = new Credentials(gitHubOptions.CurrentValue.AccessToken);
         }
 
         try
@@ -130,9 +115,9 @@ public sealed partial class DeploymentStatusHandler : IHandler
             var review = new PendingDeploymentReview(
                 new[] { deployment.Environment.Id },
                 PendingDeploymentReviewState.Approved,
-                _webhookOptions.CurrentValue.DeployComment);
+                webhookOptions.CurrentValue.DeployComment);
 
-            await _client.Actions.Workflows.Runs.ReviewPendingDeployments(
+            await client.Actions.Workflows.Runs.ReviewPendingDeployments(
                 owner,
                 name,
                 runId,
@@ -140,7 +125,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
         }
         catch (Exception ex)
         {
-            Log.FailedToApproveDeployment(_logger, ex, runId, owner, name);
+            Log.FailedToApproveDeployment(logger, ex, runId, owner, name);
         }
     }
 
@@ -149,7 +134,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
         if (!string.Equals(message.Action, DeploymentStatusActionValue.Created, StringComparison.Ordinal))
         {
             Log.IgnoringDeploymentStatusAction(
-                _logger,
+                logger,
                 message.DeploymentStatus.Id,
                 message.Repository!.Owner.Login,
                 message.Repository.Name,
@@ -161,7 +146,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
         if (message.DeploymentStatus.State.Value != DeploymentStatusState.Waiting)
         {
             Log.IgnoringDeploymentStatusAsNotWaiting(
-                _logger,
+                logger,
                 message.DeploymentStatus.Id,
                 message.Repository!.Owner.Login,
                 message.Repository.Name,
@@ -184,7 +169,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
             ["environment"] = environment,
         };
 
-        var connection = new ApiConnection(_client.Connection);
+        var connection = new ApiConnection(client.Connection);
         var deployments = await connection.Get<Octokit.Deployment[]>(
             new Uri($"repos/{owner}/{name}/deployments", UriKind.Relative),
             parameters);
@@ -195,20 +180,20 @@ public sealed partial class DeploymentStatusHandler : IHandler
 
         if (previousDeployments.Count < 1)
         {
-            Log.NoPreviousDeploymentsFound(_logger, deploymentId, owner, name);
+            Log.NoPreviousDeploymentsFound(logger, deploymentId, owner, name);
             return null;
         }
 
         var previousDeployment = previousDeployments[0];
 
-        var previousDeploymentStatuses = await _client.Repository.Deployment.Status.GetAll(
+        var previousDeploymentStatuses = await client.Repository.Deployment.Status.GetAll(
             owner,
             name,
             previousDeployment.Id);
 
         if (previousDeploymentStatuses.Count < 1)
         {
-            Log.NoDeploymentStatusesFound(_logger, previousDeployment.Id, owner, name);
+            Log.NoDeploymentStatusesFound(logger, previousDeployment.Id, owner, name);
             return null;
         }
 
@@ -216,25 +201,25 @@ public sealed partial class DeploymentStatusHandler : IHandler
 
         if (isPreviousDeploymentActive)
         {
-            Log.FoundActiveDeployment(_logger, previousDeployment.Id, owner, name);
+            Log.FoundActiveDeployment(logger, previousDeployment.Id, owner, name);
             return previousDeployment;
         }
 
         foreach (var deployment in previousDeployments.Skip(1))
         {
-            previousDeploymentStatuses = await _client.Repository.Deployment.Status.GetAll(
+            previousDeploymentStatuses = await client.Repository.Deployment.Status.GetAll(
                 owner,
                 name,
                 deployment.Id);
 
             if (IsDeploymentActive(previousDeploymentStatuses))
             {
-                Log.FoundActiveDeployment(_logger, deployment.Id, owner, name);
+                Log.FoundActiveDeployment(logger, deployment.Id, owner, name);
                 return deployment;
             }
         }
 
-        Log.NoActiveDeploymentFound(_logger, deploymentId, owner, name);
+        Log.NoActiveDeploymentFound(logger, deploymentId, owner, name);
         return null;
 
         static bool IsDeploymentActive(IReadOnlyList<Octokit.DeploymentStatus> statuses)
@@ -263,7 +248,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
         string sha)
     {
         // See https://docs.github.com/en/rest/commits/commits#list-pull-requests-associated-with-a-commit.
-        var pullRequests = await _client.Connection.GetResponse<PullRequest[]>(
+        var pullRequests = await client.Connection.GetResponse<PullRequest[]>(
             new($"repos/{owner}/{repo}/commits/{sha}/pulls", UriKind.Relative));
 
         if (pullRequests.Body is { Length: 1 } pulls)
@@ -272,7 +257,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
             string reference = pullRequest.Head.Ref;
 
             Log.FoundReferenceForCommitPullRequest(
-                _logger,
+                logger,
                 sha,
                 reference,
                 owner,
@@ -295,7 +280,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
 
         // Diff the active and pending deployment and verify that only trusted dependency
         // changes from trusted users contribute to the changes pending to be deployed.
-        var comparison = await _client.Repository.Commit.Compare(
+        var comparison = await client.Repository.Commit.Compare(
             owner,
             name,
             activeDeployment.Sha,
@@ -303,13 +288,13 @@ public sealed partial class DeploymentStatusHandler : IHandler
 
         if (comparison.Commits.Count < 1)
         {
-            Log.NoCommitsFoundForPendingDeployment(_logger, activeDeployment.Id, pendingDeployment.Id, owner, name);
+            Log.NoCommitsFoundForPendingDeployment(logger, activeDeployment.Id, pendingDeployment.Id, owner, name);
             return false;
         }
 
         if (comparison.Status is not "ahead")
         {
-            Log.PendingDeploymentIsBehindTheActiveDeployment(_logger, pendingDeployment.Id, owner, name, comparison.BehindBy);
+            Log.PendingDeploymentIsBehindTheActiveDeployment(logger, pendingDeployment.Id, owner, name, comparison.BehindBy);
             return false;
         }
 
@@ -321,9 +306,9 @@ public sealed partial class DeploymentStatusHandler : IHandler
                 continue;
             }
 
-            if (!_webhookOptions.CurrentValue.TrustedEntities.Users.Contains(commit.Author.Login))
+            if (!webhookOptions.CurrentValue.TrustedEntities.Users.Contains(commit.Author.Login))
             {
-                Log.UntrustedCommitAuthorFound(_logger, pendingDeployment.Id, owner, name, commit.Sha, commit.Author.Login);
+                Log.UntrustedCommitAuthorFound(logger, pendingDeployment.Id, owner, name, commit.Sha, commit.Author.Login);
                 return false;
             }
 
@@ -332,7 +317,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
                 name,
                 commit.Sha);
 
-            bool isTrustedCommit = await _commitAnalyzer.IsTrustedDependencyUpdateAsync(
+            bool isTrustedCommit = await commitAnalyzer.IsTrustedDependencyUpdateAsync(
                 repository.Owner.Login,
                 repository.Name,
                 reference,
@@ -340,7 +325,7 @@ public sealed partial class DeploymentStatusHandler : IHandler
 
             if (!isTrustedCommit)
             {
-                Log.IgnoringCommitThatIsNotATrustedCommit(_logger, pendingDeployment.Id, owner, name, commit.Sha);
+                Log.IgnoringCommitThatIsNotATrustedCommit(logger, pendingDeployment.Id, owner, name, commit.Sha);
                 return false;
             }
         }

@@ -13,13 +13,8 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 namespace MartinCostello.Costellobot.Handlers;
 
 [Collection(AppCollection.Name)]
-public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
+public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
-    public CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper)
-        : base(fixture, outputHelper)
-    {
-    }
-
     [Fact]
     public async Task Check_Suite_Is_Rerequested_For_Pull_Request_Run_Failure_Associated_With_Workflow_Run()
     {
@@ -473,7 +468,7 @@ public class CheckSuiteHandlerTests : IntegrationTests<AppFixture>
             .ForPath(path)
             .ForQuery("status=completed&filter=all")
             .Responds()
-            .WithJsonContent(CreateCheckRuns(driver.CheckRuns.ToArray()))
+            .WithJsonContent(CreateCheckRuns([.. driver.CheckRuns]))
             .RegisterWith(Fixture.Interceptor);
 
         var latestCheckRuns = allCheckRuns

@@ -6,22 +6,15 @@ using NSubstitute;
 
 namespace MartinCostello.Costellobot;
 
-public class GitHubWebhookDispatcherTests
+public class GitHubWebhookDispatcherTests(ITestOutputHelper outputHelper)
 {
-    public GitHubWebhookDispatcherTests(ITestOutputHelper outputHelper)
-    {
-        OutputHelper = outputHelper;
-    }
-
-    private ITestOutputHelper OutputHelper { get; }
-
     [Fact]
     public async Task Events_With_Incorrect_Installation_Id_Are_Ignored()
     {
         // Arrange
         var handlerFactory = Substitute.For<IHandlerFactory>();
         var options = new GitHubOptions() { InstallationId = 37 }.ToMonitor();
-        var logger = OutputHelper.ToLogger<GitHubWebhookDispatcher>();
+        var logger = outputHelper.ToLogger<GitHubWebhookDispatcher>();
 
         var message = Builders.GitHubFixtures.CreateEvent("pull_request", installationId: 99);
 

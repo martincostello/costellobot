@@ -5,14 +5,9 @@ using Microsoft.Playwright;
 
 namespace MartinCostello.Costellobot.Pages;
 
-public abstract class AppPage
+public abstract class AppPage(IPage page)
 {
-    protected AppPage(IPage page)
-    {
-        Page = page;
-    }
-
-    protected IPage Page { get; }
+    protected IPage Page { get; } = page;
 
     public async Task<DeliveriesPage> DeliveriesAsync()
     {
@@ -42,17 +37,11 @@ public abstract class AppPage
         => await Assertions.Expect(Page.Locator(Selectors.SignIn))
                            .ToBeVisibleAsync();
 
-    public abstract class Item
+    public abstract class Item(IElementHandle handle, IPage page)
     {
-        protected Item(IElementHandle handle, IPage page)
-        {
-            Handle = handle;
-            Page = page;
-        }
+        protected IElementHandle Handle { get; } = handle;
 
-        protected IElementHandle Handle { get; }
-
-        protected IPage Page { get; }
+        protected IPage Page { get; } = page;
     }
 
     private sealed class Selectors

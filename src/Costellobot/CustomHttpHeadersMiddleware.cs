@@ -8,7 +8,7 @@ using Microsoft.Net.Http.Headers;
 
 namespace MartinCostello.Costellobot;
 
-public sealed class CustomHttpHeadersMiddleware
+public sealed class CustomHttpHeadersMiddleware(RequestDelegate next)
 {
     private static readonly CompositeFormat ContentSecurityPolicyTemplate = CompositeFormat.Parse(string.Join(
         ';',
@@ -32,13 +32,6 @@ public sealed class CustomHttpHeadersMiddleware
             "manifest-src 'self'",
             "upgrade-insecure-requests",
         }));
-
-    private readonly RequestDelegate _next;
-
-    public CustomHttpHeadersMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
 
     public Task Invoke(
         HttpContext context,
@@ -76,7 +69,7 @@ public sealed class CustomHttpHeadersMiddleware
             return Task.CompletedTask;
         });
 
-        return _next(context);
+        return next(context);
     }
 
     private static string ContentSecurityPolicy(

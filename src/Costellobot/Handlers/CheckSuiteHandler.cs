@@ -12,21 +12,12 @@ using CheckRunPullRequest = Octokit.Webhooks.Models.CheckRunEvent.CheckRunPullRe
 
 namespace MartinCostello.Costellobot.Handlers;
 
-public sealed partial class CheckSuiteHandler : IHandler
+public sealed partial class CheckSuiteHandler(
+    IGitHubClientForInstallation client,
+    IOptionsMonitor<WebhookOptions> options,
+    ILogger<CheckSuiteHandler> logger) : IHandler
 {
-    private readonly IGitHubClient _client;
-    private readonly IOptionsMonitor<WebhookOptions> _options;
-    private readonly ILogger _logger;
-
-    public CheckSuiteHandler(
-        IGitHubClientForInstallation client,
-        IOptionsMonitor<WebhookOptions> options,
-        ILogger<CheckSuiteHandler> logger)
-    {
-        _client = client;
-        _options = options;
-        _logger = logger;
-    }
+    private readonly IOptionsMonitor<WebhookOptions> _options = options;
 
     public async Task HandleAsync(WebhookEvent message)
     {
@@ -60,7 +51,7 @@ public sealed partial class CheckSuiteHandler : IHandler
         }
 
         // Is the check suite associated with a GitHub Actions workflow?
-        var workflows = await _client.Actions.Workflows.Runs.List(
+        var workflows = await client.Actions.Workflows.Runs.List(
             body.Repository.Owner.Login,
             body.Repository.Name,
             new() { CheckSuiteId = checkSuiteId });
@@ -87,13 +78,13 @@ public sealed partial class CheckSuiteHandler : IHandler
 
         if (!string.Equals(body.Action, CheckSuiteAction.Completed, StringComparison.Ordinal))
         {
-            Log.IgnoringCheckRunAction(_logger, checkSuiteId, owner, name, body.Action);
+            Log.IgnoringCheckRunAction(logger, checkSuiteId, owner, name, body.Action);
             return false;
         }
 
         if (checkSuite.Conclusion?.Value != CheckSuiteConclusion.Failure)
         {
-            Log.IgnoringCheckRunThatDidNotFail(_logger, checkSuiteId, owner, name);
+            Log.IgnoringCheckRunThatDidNotFail(logger, checkSuiteId, owner, name);
             return false;
         }
 
@@ -101,19 +92,19 @@ public sealed partial class CheckSuiteHandler : IHandler
 
         if (options.RerunFailedChecksAttempts < 1)
         {
-            Log.RetriesAreNotEnabled(_logger, checkSuiteId, owner, name);
+            Log.RetriesAreNotEnabled(logger, checkSuiteId, owner, name);
             return false;
         }
 
         if (!checkSuite.Rerequestable)
         {
-            Log.CannotRetryCheckSuite(_logger, checkSuiteId, owner, name);
+            Log.CannotRetryCheckSuite(logger, checkSuiteId, owner, name);
             return false;
         }
 
         if (options.RerunFailedChecks.Count < 1)
         {
-            Log.NoChecksConfiguredForRetry(_logger, checkSuiteId, owner, name);
+            Log.NoChecksConfiguredForRetry(logger, checkSuiteId, owner, name);
             return false;
         }
 
@@ -122,7 +113,7 @@ public sealed partial class CheckSuiteHandler : IHandler
 
     private async Task<bool> CanRerunCheckSuiteAsync(string owner, string name, long checkSuiteId)
     {
-        var checkRuns = await _client.Check.Run.GetAllForCheckSuite(
+        var checkRuns = await client.Check.Run.GetAllForCheckSuite(
             owner,
             name,
             checkSuiteId,
@@ -139,12 +130,12 @@ public sealed partial class CheckSuiteHandler : IHandler
 
         if (failedRuns.Count < 1)
         {
-            Log.NoFailedCheckRunsFound(_logger, checkSuiteId, owner, name);
+            Log.NoFailedCheckRunsFound(logger, checkSuiteId, owner, name);
             return false;
         }
 
         Log.FailedCheckRunsFound(
-            _logger,
+            logger,
             failedRuns.Count,
             checkSuiteId,
             owner,
@@ -160,7 +151,7 @@ public sealed partial class CheckSuiteHandler : IHandler
 
         if (retryEligibleRuns.Count < 1)
         {
-            Log.NoEligibleFailedCheckRunsFound(_logger, checkSuiteId, owner, name);
+            Log.NoEligibleFailedCheckRunsFound(logger, checkSuiteId, owner, name);
             return false;
         }
 
@@ -174,7 +165,7 @@ public sealed partial class CheckSuiteHandler : IHandler
         // In this scenario without this check, it would be seen that the check suite failed and
         // that build only failed once, so the build would be retried even though the check run that
         // is causing the check suite to fail is the "publish" check run.
-        var latestCheckSuites = await _client.Check.Run.GetAllForCheckSuite(owner, name, checkSuiteId);
+        var latestCheckSuites = await client.Check.Run.GetAllForCheckSuite(owner, name, checkSuiteId);
 
         var latestFailingCheckRuns = latestCheckSuites.CheckRuns
             .Where((p) => retryEligibleRuns.Any((group) => group.Key == p.Name))
@@ -184,12 +175,12 @@ public sealed partial class CheckSuiteHandler : IHandler
 
         if (latestFailingCheckRuns.Count < 1)
         {
-            Log.NoEligibleFailedCheckRunsFound(_logger, checkSuiteId, owner, name);
+            Log.NoEligibleFailedCheckRunsFound(logger, checkSuiteId, owner, name);
             return false;
         }
 
         Log.EligibileFailedCheckRunsFound(
-            _logger,
+            logger,
             retryEligibleRuns.Count,
             checkSuiteId,
             owner,
@@ -198,7 +189,7 @@ public sealed partial class CheckSuiteHandler : IHandler
 
         if (retryEligibleRuns.Any((p) => p.Count() > options.RerunFailedChecksAttempts))
         {
-            Log.TooManyRetries(_logger, checkSuiteId, owner, name, options.RerunFailedChecksAttempts);
+            Log.TooManyRetries(logger, checkSuiteId, owner, name, options.RerunFailedChecksAttempts);
             return false;
         }
 
@@ -211,7 +202,7 @@ public sealed partial class CheckSuiteHandler : IHandler
         long checkSuiteId,
         CheckRunPullRequest pull)
     {
-        var connection = new ApiConnection(_client.Connection);
+        var connection = new ApiConnection(client.Connection);
 
         var author = await connection.Get<PullRequestAuthorAssociation>(new Uri(pull.Url));
 
@@ -231,7 +222,7 @@ public sealed partial class CheckSuiteHandler : IHandler
 
         if (!isTrusted)
         {
-            Log.IgnoringUntrustedUser(_logger, checkSuiteId, owner, name, author.User.Login);
+            Log.IgnoringUntrustedUser(logger, checkSuiteId, owner, name, author.User.Login);
         }
 
         return isTrusted;
@@ -241,12 +232,12 @@ public sealed partial class CheckSuiteHandler : IHandler
     {
         try
         {
-            await _client.Check.Suite.Rerequest(owner, name, checkSuiteId);
-            Log.RerequestedCheckSuite(_logger, checkSuiteId, owner, name);
+            _ = await client.Check.Suite.Rerequest(owner, name, checkSuiteId);
+            Log.RerequestedCheckSuite(logger, checkSuiteId, owner, name);
         }
         catch (Exception ex)
         {
-            Log.FailedToRerequestCheckSuite(_logger, ex, checkSuiteId, owner, name);
+            Log.FailedToRerequestCheckSuite(logger, ex, checkSuiteId, owner, name);
         }
     }
 
@@ -257,13 +248,13 @@ public sealed partial class CheckSuiteHandler : IHandler
     {
         try
         {
-            await _client.Actions.Workflows.Runs.RerunFailedJobs(owner, name, run.Id);
+            await client.Actions.Workflows.Runs.RerunFailedJobs(owner, name, run.Id);
 
-            Log.RerunningFailedJobs(_logger, run.Name, run.Id, owner, name);
+            Log.RerunningFailedJobs(logger, run.Name, run.Id, owner, name);
         }
         catch (Exception ex)
         {
-            Log.FailedToRerunFailedJobs(_logger, ex, run.Name, run.Id, owner, name);
+            Log.FailedToRerunFailedJobs(logger, ex, run.Name, run.Id, owner, name);
         }
     }
 

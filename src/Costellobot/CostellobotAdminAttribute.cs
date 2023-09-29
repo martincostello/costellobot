@@ -6,10 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 namespace MartinCostello.Costellobot;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-public sealed class CostellobotAdminAttribute : AuthorizeAttribute
+public sealed class CostellobotAdminAttribute() : AuthorizeAttribute(AuthenticationEndpoints.AdminPolicyName)
 {
-    public CostellobotAdminAttribute()
-        : base(AuthenticationEndpoints.AdminPolicyName)
-    {
-    }
 }

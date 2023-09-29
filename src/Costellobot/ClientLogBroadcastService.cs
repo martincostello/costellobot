@@ -5,30 +5,20 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace MartinCostello.Costellobot;
 
-public sealed class ClientLogBroadcastService : BackgroundService
+public sealed class ClientLogBroadcastService(ClientLogQueue queue, IHubContext<GitHubWebhookHub, IWebhookClient> context) : BackgroundService()
 {
-    private readonly ClientLogQueue _queue;
-    private readonly IHubContext<GitHubWebhookHub, IWebhookClient> _context;
-
-    public ClientLogBroadcastService(ClientLogQueue queue, IHubContext<GitHubWebhookHub, IWebhookClient> context)
-        : base()
-    {
-        _queue = queue;
-        _context = context;
-    }
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            var logEntry = await _queue.DequeueAsync(stoppingToken);
+            var logEntry = await queue.DequeueAsync(stoppingToken);
 
             if (logEntry is null)
             {
                 break;
             }
 
-            await _context.Clients.All.LogAsync(logEntry);
+            await context.Clients.All.LogAsync(logEntry);
         }
     }
 }

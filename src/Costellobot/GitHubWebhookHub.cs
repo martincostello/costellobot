@@ -6,25 +6,16 @@ using Microsoft.AspNetCore.SignalR;
 namespace MartinCostello.Costellobot;
 
 [CostellobotAdmin]
-public class GitHubWebhookHub : Hub<IWebhookClient>
+public class GitHubWebhookHub(ClientLogQueue logs, GitHubWebhookQueue webhooks) : Hub<IWebhookClient>
 {
-    private readonly ClientLogQueue _logs;
-    private readonly GitHubWebhookQueue _webhooks;
-
-    public GitHubWebhookHub(ClientLogQueue logs, GitHubWebhookQueue webhooks)
-    {
-        _logs = logs;
-        _webhooks = webhooks;
-    }
-
     public override async Task OnConnectedAsync()
     {
-        foreach (var logEntry in _logs.History())
+        foreach (var logEntry in logs.History())
         {
             await Clients.Caller.LogAsync(logEntry);
         }
 
-        foreach (var @event in _webhooks.History())
+        foreach (var @event in webhooks.History())
         {
             await Clients.Caller.WebhookAsync(@event.RawHeaders, @event.RawPayload);
         }

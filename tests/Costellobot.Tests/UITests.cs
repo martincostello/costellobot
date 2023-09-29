@@ -10,13 +10,8 @@ using Microsoft.Playwright;
 namespace MartinCostello.Costellobot;
 
 [Collection(HttpServerCollection.Name)]
-public abstract class UITests : IntegrationTests<HttpServerFixture>
+public abstract class UITests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<HttpServerFixture>(fixture, outputHelper)
 {
-    protected UITests(HttpServerFixture fixture, ITestOutputHelper outputHelper)
-        : base(fixture, outputHelper)
-    {
-    }
-
     public static IEnumerable<object?[]> Browsers()
     {
         yield return new[] { BrowserType.Chromium, null };

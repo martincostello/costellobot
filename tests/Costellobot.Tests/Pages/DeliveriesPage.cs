@@ -5,13 +5,8 @@ using Microsoft.Playwright;
 
 namespace MartinCostello.Costellobot.Pages;
 
-public sealed class DeliveriesPage : AppPage
+public sealed class DeliveriesPage(IPage page) : AppPage(page)
 {
-    public DeliveriesPage(IPage page)
-        : base(page)
-    {
-    }
-
     public async Task<IReadOnlyList<DeliveryItem>> GetDeliveriesAsync()
     {
         var elements = await Page.QuerySelectorAllAsync(Selectors.DeliveryItem);
