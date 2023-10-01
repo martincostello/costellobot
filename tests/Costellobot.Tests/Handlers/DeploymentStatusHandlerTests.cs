@@ -557,9 +557,7 @@ public sealed class DeploymentStatusHandlerTests(AppFixture fixture, ITestOutput
             pendingDeployments.Add(deployment);
         }
 
-#pragma warning disable SA1010
         RegisterGetPendingDeployments(driver.Repository, driver.WorkflowRun.Id, [.. pendingDeployments]);
-#pragma warning restore SA1010
 
         // Act
         using var response = await PostWebhookAsync(driver);
