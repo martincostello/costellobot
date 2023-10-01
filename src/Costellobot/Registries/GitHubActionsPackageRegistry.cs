@@ -5,8 +5,6 @@ using Octokit;
 
 namespace MartinCostello.Costellobot.Registries;
 
-#pragma warning disable SA1010
-
 public sealed class GitHubActionsPackageRegistry(
     IGitHubClientForInstallation client,
     Octokit.GraphQL.IConnection connection) : GitHubPackageRegistry(client, connection)
