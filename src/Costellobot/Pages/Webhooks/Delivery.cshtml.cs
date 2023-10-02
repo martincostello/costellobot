@@ -57,11 +57,11 @@ public sealed partial class DeliveryModel(IGitHubClientForApp client) : PageMode
         // See https://docs.github.com/en/rest/apps/webhooks#get-a-delivery-for-an-app-webhook
         var uri = new Uri($"app/hook/deliveries/{id}", UriKind.Relative);
 
-        IApiResponse<byte[]> apiResponse;
+        IApiResponse<Stream> apiResponse;
 
         try
         {
-            apiResponse = await client.Connection.GetRaw(uri, null);
+            apiResponse = await client.Connection.GetRawStream(uri, null);
         }
         catch (NotFoundException)
         {
@@ -69,6 +69,10 @@ public sealed partial class DeliveryModel(IGitHubClientForApp client) : PageMode
         }
 
         Delivery = JsonDocument.Parse(apiResponse.HttpResponse!.Body!.ToString()!).RootElement;
+
+        // TODO Use Body directly when https://github.com/octokit/octokit.net/pull/2791 available
+        ////Delivery = (await JsonDocument.ParseAsync(apiResponse.Body)).RootElement;
+
         Id = Delivery.GetProperty("id").GetInt64();
 
         var request = Delivery.GetProperty("request");
