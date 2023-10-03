@@ -3,13 +3,8 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public sealed class GitHubCommitBuilder : ResponseBuilder
+public sealed class GitHubCommitBuilder(RepositoryBuilder repository) : ResponseBuilder
 {
-    public GitHubCommitBuilder(RepositoryBuilder repository)
-    {
-        Repository = repository;
-    }
-
     public UserBuilder? Author { get; set; }
 
     public UserBuilder? Committer { get; set; }
@@ -18,7 +13,7 @@ public sealed class GitHubCommitBuilder : ResponseBuilder
 
     public IList<string> Parents { get; set; } = new List<string>();
 
-    public RepositoryBuilder Repository { get; set; }
+    public RepositoryBuilder Repository { get; set; } = repository;
 
     public string Sha { get; set; } = RandomString();
 

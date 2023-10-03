@@ -15,12 +15,12 @@ public static class PollyServiceCollectionExtensions
     {
         return services.AddPolicyRegistry((_, registry) =>
         {
-            var sleepDurations = new[]
-            {
+            TimeSpan[] sleepDurations =
+            [
                 TimeSpan.FromSeconds(0.1),
                 TimeSpan.FromSeconds(0.2),
                 TimeSpan.FromSeconds(0.5),
-            };
+            ];
 
             var readPolicy = HttpPolicyExtensions.HandleTransientHttpError()
                 .WaitAndRetryAsync(sleepDurations)

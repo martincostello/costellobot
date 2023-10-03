@@ -3,16 +3,11 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public sealed class GitCommitBuilder : ResponseBuilder
+public sealed class GitCommitBuilder(UserBuilder author) : ResponseBuilder
 {
-    public GitCommitBuilder(UserBuilder author)
-    {
-        Author = author;
-    }
-
     public IList<string> Added { get; set; } = new List<string>();
 
-    public UserBuilder Author { get; set; }
+    public UserBuilder Author { get; set; } = author;
 
     public UserBuilder? Committer { get; set; }
 

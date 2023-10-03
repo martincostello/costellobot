@@ -5,15 +5,10 @@ using Octokit;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed class GitHubActionsPackageRegistry : GitHubPackageRegistry
+public sealed class GitHubActionsPackageRegistry(
+    IGitHubClientForInstallation client,
+    Octokit.GraphQL.IConnection connection) : GitHubPackageRegistry(client, connection)
 {
-    public GitHubActionsPackageRegistry(
-        IGitHubClientForInstallation client,
-        Octokit.GraphQL.IConnection connection)
-        : base(client, connection)
-    {
-    }
-
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.GitHubActions;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
@@ -39,11 +34,11 @@ public sealed class GitHubActionsPackageRegistry : GitHubPackageRegistry
 
             if (hasVersionPrefix)
             {
-                refs = new[] { version, version[1..] };
+                refs = [version, version[1..]];
             }
             else
             {
-                refs = new[] { $"v{version}", version };
+                refs = [$"v{version}", version];
             }
 
             foreach (var reference in refs)

@@ -3,25 +3,17 @@
 
 namespace MartinCostello.Costellobot;
 
-public sealed partial class GitHubWebhookQueue : ChannelQueue<GitHubEvent>
+public sealed partial class GitHubWebhookQueue(ILogger<GitHubWebhookQueue> logger) : ChannelQueue<GitHubEvent>()
 {
-    private readonly ILogger _logger;
-
-    public GitHubWebhookQueue(ILogger<GitHubWebhookQueue> logger)
-        : base()
-    {
-        _logger = logger;
-    }
-
     public override async Task<GitHubEvent?> DequeueAsync(CancellationToken cancellationToken)
     {
-        Log.WaitingForWebhook(_logger);
+        Log.WaitingForWebhook(logger);
 
         GitHubEvent? message = await base.DequeueAsync(cancellationToken);
 
         if (message is not null)
         {
-            Log.DequeuedWebhook(_logger, message.Headers.Delivery);
+            Log.DequeuedWebhook(logger, message.Headers.Delivery);
         }
 
         return message;
@@ -33,11 +25,11 @@ public sealed partial class GitHubWebhookQueue : ChannelQueue<GitHubEvent>
 
         if (success)
         {
-            Log.QueuedWebhook(_logger, item.Headers.Delivery);
+            Log.QueuedWebhook(logger, item.Headers.Delivery);
         }
         else
         {
-            Log.WebhookQueueFailed(_logger, item.Headers.Delivery);
+            Log.WebhookQueueFailed(logger, item.Headers.Delivery);
         }
 
         return success;
@@ -47,17 +39,17 @@ public sealed partial class GitHubWebhookQueue : ChannelQueue<GitHubEvent>
     {
         if (Queue.Writer.TryComplete())
         {
-            Log.QueueCompleted(_logger);
+            Log.QueueCompleted(logger);
         }
     }
 
     public async Task WaitForQueueToDrainAsync()
     {
-        Log.WaitingForQueueToDrain(_logger);
+        Log.WaitingForQueueToDrain(logger);
 
         await Queue.Reader.Completion;
 
-        Log.QueueDrained(_logger);
+        Log.QueueDrained(logger);
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]

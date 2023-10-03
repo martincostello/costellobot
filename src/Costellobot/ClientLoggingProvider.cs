@@ -5,24 +5,15 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MartinCostello.Costellobot;
 
-public sealed class ClientLoggingProvider : ILoggerProvider
+public sealed class ClientLoggingProvider(ClientLogQueue queue, TimeProvider timeProvider) : ILoggerProvider
 {
     internal const string CategoryPrefix = "MartinCostello.Costellobot";
-
-    private readonly TimeProvider _timeProvider;
-    private readonly ClientLogQueue _queue;
-
-    public ClientLoggingProvider(ClientLogQueue queue, TimeProvider timeProvider)
-    {
-        _queue = queue;
-        _timeProvider = timeProvider;
-    }
 
     public ILogger CreateLogger(string categoryName)
     {
         return
             categoryName.StartsWith(CategoryPrefix, StringComparison.Ordinal) ?
-            new ClientLogger(categoryName, _queue, _timeProvider) :
+            new ClientLogger(categoryName, queue, timeProvider) :
             NullLoggerFactory.Instance.CreateLogger(categoryName);
     }
 

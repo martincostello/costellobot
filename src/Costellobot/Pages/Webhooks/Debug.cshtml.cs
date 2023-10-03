@@ -7,17 +7,11 @@ using Microsoft.Extensions.Options;
 namespace MartinCostello.Costellobot.Pages;
 
 [CostellobotAdmin]
-public sealed partial class DebugModel : PageModel
+public sealed partial class DebugModel(IOptions<GitHubOptions> options) : PageModel
 {
-    public DebugModel(IOptions<GitHubOptions> options)
-    {
-        AppId = options.Value.AppId;
-        RequireSignature = !string.IsNullOrWhiteSpace(options.Value.WebhookSecret);
-    }
+    public string AppId { get; } = options.Value.AppId;
 
-    public string AppId { get; }
-
-    public bool RequireSignature { get; }
+    public bool RequireSignature { get; } = !string.IsNullOrWhiteSpace(options.Value.WebhookSecret);
 
     public void OnGet()
     {

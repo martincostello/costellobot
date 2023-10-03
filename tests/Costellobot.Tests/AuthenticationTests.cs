@@ -10,13 +10,8 @@ using Octokit;
 namespace MartinCostello.Costellobot;
 
 [Collection(AppCollection.Name)]
-public sealed class AuthenticationTests : IntegrationTests<AppFixture>
+public sealed class AuthenticationTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
-    public AuthenticationTests(AppFixture fixture, ITestOutputHelper outputHelper)
-        : base(fixture, outputHelper)
-    {
-    }
-
     [Fact]
     public async Task Can_Create_Authenticated_GitHub_Client_For_App()
     {

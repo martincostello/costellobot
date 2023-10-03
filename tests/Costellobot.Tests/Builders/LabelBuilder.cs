@@ -3,14 +3,9 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public sealed class LabelBuilder : ResponseBuilder
+public sealed class LabelBuilder(string? name = null) : ResponseBuilder
 {
-    public LabelBuilder(string? name = null)
-    {
-        Name = name ?? RandomString();
-    }
-
-    public string Name { get; set; }
+    public string Name { get; set; } = name ?? RandomString();
 
     public override object Build()
     {

@@ -12,13 +12,8 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 namespace MartinCostello.Costellobot.Handlers;
 
 [Collection(AppCollection.Name)]
-public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
+public sealed class DeploymentStatusHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
-    public DeploymentStatusHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper)
-        : base(fixture, outputHelper)
-    {
-    }
-
     [Fact]
     public async Task Deployment_Is_Approved_For_Trusted_User_And_Dependency()
     {
@@ -562,7 +557,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             pendingDeployments.Add(deployment);
         }
 
-        RegisterGetPendingDeployments(driver.Repository, driver.WorkflowRun.Id, pendingDeployments.ToArray());
+        RegisterGetPendingDeployments(driver.Repository, driver.WorkflowRun.Id, [.. pendingDeployments]);
 
         // Act
         using var response = await PostWebhookAsync(driver);

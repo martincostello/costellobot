@@ -10,15 +10,9 @@ using Octokit;
 namespace MartinCostello.Costellobot.Pages;
 
 [CostellobotAdmin]
-public sealed partial class DeliveryModel : PageModel
+public sealed partial class DeliveryModel(IGitHubClientForApp client) : PageModel
 {
     private static readonly JsonSerializerOptions IndentedOptions = new() { WriteIndented = true };
-    private readonly IGitHubClient _client;
-
-    public DeliveryModel(IGitHubClientForApp client)
-    {
-        _client = client;
-    }
 
     [BindProperty]
     public long Id { get; set; }
@@ -63,11 +57,11 @@ public sealed partial class DeliveryModel : PageModel
         // See https://docs.github.com/en/rest/apps/webhooks#get-a-delivery-for-an-app-webhook
         var uri = new Uri($"app/hook/deliveries/{id}", UriKind.Relative);
 
-        IApiResponse<byte[]> apiResponse;
+        IApiResponse<Stream> apiResponse;
 
         try
         {
-            apiResponse = await _client.Connection.GetRaw(uri, null);
+            apiResponse = await client.Connection.GetRawStream(uri, null);
         }
         catch (NotFoundException)
         {
@@ -75,6 +69,10 @@ public sealed partial class DeliveryModel : PageModel
         }
 
         Delivery = JsonDocument.Parse(apiResponse.HttpResponse!.Body!.ToString()!).RootElement;
+
+        // TODO Use Body directly when https://github.com/octokit/octokit.net/pull/2791 available
+        ////Delivery = (await JsonDocument.ParseAsync(apiResponse.Body)).RootElement;
+
         Id = Delivery.GetProperty("id").GetInt64();
 
         var request = Delivery.GetProperty("request");
@@ -117,7 +115,7 @@ public sealed partial class DeliveryModel : PageModel
         // See https://docs.github.com/en/rest/apps/webhooks#redeliver-a-delivery-for-an-app-webhook
         var uri = new Uri($"app/hook/deliveries/{Id}/attempts", UriKind.Relative);
 
-        await _client.Connection.Post(uri);
+        await client.Connection.Post(uri);
 
         return RedirectToPage("Deliveries");
     }

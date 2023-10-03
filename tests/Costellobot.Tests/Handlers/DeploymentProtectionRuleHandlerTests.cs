@@ -11,13 +11,8 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 namespace MartinCostello.Costellobot.Handlers;
 
 [Collection(AppCollection.Name)]
-public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppFixture>
+public sealed class DeploymentProtectionRuleHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
-    public DeploymentProtectionRuleHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper)
-        : base(fixture, outputHelper)
-    {
-    }
-
     [Fact]
     public async Task Deployment_Is_Approved()
     {

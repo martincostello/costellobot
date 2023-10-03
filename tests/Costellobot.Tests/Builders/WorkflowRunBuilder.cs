@@ -3,16 +3,11 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public sealed class WorkflowRunBuilder : ResponseBuilder
+public sealed class WorkflowRunBuilder(RepositoryBuilder repository) : ResponseBuilder
 {
-    public WorkflowRunBuilder(RepositoryBuilder repository)
-    {
-        Repository = repository;
-    }
-
     public string Name { get; set; } = RandomString();
 
-    public RepositoryBuilder Repository { get; set; }
+    public RepositoryBuilder Repository { get; set; } = repository;
 
     public override object Build()
     {

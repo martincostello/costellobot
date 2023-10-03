@@ -9,28 +9,21 @@ using Octokit.Webhooks;
 
 namespace MartinCostello.Costellobot;
 
-public class GitHubWebhookServiceTests
+public class GitHubWebhookServiceTests(ITestOutputHelper outputHelper)
 {
-    public GitHubWebhookServiceTests(ITestOutputHelper outputHelper)
-    {
-        OutputHelper = outputHelper;
-    }
-
-    private ITestOutputHelper OutputHelper { get; }
-
     [Fact]
     public async Task ProcessAsync_Handles_Exception()
     {
         // Arrange
         long installationId = 23;
 
-        var queue = new GitHubWebhookQueue(OutputHelper.ToLogger<GitHubWebhookQueue>());
+        var queue = new GitHubWebhookQueue(outputHelper.ToLogger<GitHubWebhookQueue>());
         var serviceProvider = CreateServiceProvider(installationId);
 
         var target = new GitHubWebhookService(
             queue,
             serviceProvider,
-            OutputHelper.ToLogger<GitHubWebhookService>());
+            outputHelper.ToLogger<GitHubWebhookService>());
 
         var message = new GitHubEvent(
             new(),
@@ -74,7 +67,7 @@ public class GitHubWebhookServiceTests
         var dispatcher = new GitHubWebhookDispatcher(
             handlerFactory,
             options,
-            OutputHelper.ToLogger<GitHubWebhookDispatcher>());
+            outputHelper.ToLogger<GitHubWebhookDispatcher>());
 
         var serviceProvider = Substitute.For<IServiceProvider>();
         var serviceScope = Substitute.For<IServiceScope>();

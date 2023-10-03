@@ -9,13 +9,8 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 namespace MartinCostello.Costellobot;
 
 [Collection(HttpServerCollection.Name)]
-public class WebhookTests : UITests
+public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : UITests(fixture, outputHelper)
 {
-    public WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHelper)
-        : base(fixture, outputHelper)
-    {
-    }
-
     [Fact]
     public async Task Can_View_Webhook_Deliveries()
     {

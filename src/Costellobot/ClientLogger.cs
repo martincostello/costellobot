@@ -3,19 +3,9 @@
 
 namespace MartinCostello.Costellobot;
 
-public sealed class ClientLogger : ILogger
+public sealed class ClientLogger(string categoryName, ClientLogQueue queue, TimeProvider timeProvider) : ILogger
 {
-    private readonly TimeProvider _timeProvider;
-    private readonly ClientLogQueue _queue;
-
-    public ClientLogger(string categoryName, ClientLogQueue queue, TimeProvider timeProvider)
-    {
-        CategoryName = categoryName[ClientLoggingProvider.CategoryPrefix.Length..].TrimStart('.');
-        _queue = queue;
-        _timeProvider = timeProvider;
-    }
-
-    public string CategoryName { get; }
+    public string CategoryName { get; } = categoryName[ClientLoggingProvider.CategoryPrefix.Length..].TrimStart('.');
 
     public IDisposable? BeginScope<TState>(TState state)
         where TState : notnull
@@ -60,10 +50,10 @@ public sealed class ClientLogger : ILogger
             EventName = eventId.Name,
             Exception = exception?.ToString().ReplaceLineEndings("\n") ?? string.Empty,
             Message = formatter(state, exception),
-            Timestamp = _timeProvider.GetUtcNow(),
+            Timestamp = timeProvider.GetUtcNow(),
         };
 
-        _queue.Enqueue(payload);
+        queue.Enqueue(payload);
     }
 
     private sealed class NullDisposable : IDisposable

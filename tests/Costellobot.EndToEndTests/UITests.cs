@@ -5,13 +5,8 @@ using Microsoft.Playwright;
 
 namespace MartinCostello.Costellobot;
 
-public class UITests : EndToEndTest, IAsyncLifetime
+public class UITests(AppFixture fixture, ITestOutputHelper outputHelper) : EndToEndTest(fixture, outputHelper), IAsyncLifetime
 {
-    public UITests(AppFixture fixture, ITestOutputHelper outputHelper)
-        : base(fixture, outputHelper)
-    {
-    }
-
     [SkippableFact]
     public async Task Can_Load_Homepage()
     {

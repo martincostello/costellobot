@@ -3,18 +3,11 @@
 
 namespace Octokit;
 
-public sealed class ReviewDeploymentProtectionRule
+public sealed class ReviewDeploymentProtectionRule(string environmentName, PendingDeploymentReviewState? state, string? comment)
 {
-    public ReviewDeploymentProtectionRule(string environmentName, PendingDeploymentReviewState? state, string? comment)
-    {
-        EnvironmentName = environmentName;
-        State = state;
-        Comment = comment;
-    }
+    public string EnvironmentName { get; } = environmentName;
 
-    public string EnvironmentName { get; }
+    public StringEnum<PendingDeploymentReviewState>? State { get; } = state;
 
-    public StringEnum<PendingDeploymentReviewState>? State { get; }
-
-    public string? Comment { get; }
+    public string? Comment { get; } = comment;
 }

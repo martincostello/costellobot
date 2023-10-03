@@ -11,13 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace MartinCostello.Costellobot.Handlers;
 
 [Collection(AppCollection.Name)]
-public class PushHandlerTests : IntegrationTests<AppFixture>
+public class PushHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
-    public PushHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper)
-        : base(fixture, outputHelper)
-    {
-    }
-
     [Theory]
     [InlineData("main", "refs/heads/main", new string[0], new[] { "Directory.Packages.props" })]
     [InlineData("main", "refs/heads/main", new[] { "Directory.Packages.props" }, new string[0])]

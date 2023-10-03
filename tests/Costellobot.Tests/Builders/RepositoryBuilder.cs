@@ -3,14 +3,8 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public sealed class RepositoryBuilder : ResponseBuilder
+public sealed class RepositoryBuilder(UserBuilder owner, string? name = null) : ResponseBuilder
 {
-    public RepositoryBuilder(UserBuilder owner, string? name = null)
-    {
-        Name = name ?? RandomString();
-        Owner = owner;
-    }
-
     public bool? AllowMergeCommit { get; set; } = true;
 
     public bool? AllowRebaseMerge { get; set; } = true;
@@ -23,9 +17,9 @@ public sealed class RepositoryBuilder : ResponseBuilder
 
     public string Language { get; set; } = "C#";
 
-    public string Name { get; set; }
+    public string Name { get; set; } = name ?? RandomString();
 
-    public UserBuilder Owner { get; set; }
+    public UserBuilder Owner { get; set; } = owner;
 
     public GitHubCommitBuilder CreateCommit(UserBuilder? author = null)
         => new(this) { Author = author };
