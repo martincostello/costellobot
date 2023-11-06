@@ -14,6 +14,7 @@ public sealed partial class DeploymentProtectionRuleHandler(
     IOptionsMonitor<WebhookOptions> options,
     ILogger<DeploymentProtectionRuleHandler> logger) : IHandler
 {
+    private static readonly ResiliencePipeline Pipeline = CreateResiliencePipeline();
     private readonly IOptionsMonitor<WebhookOptions> _options = options;
 
     public async Task HandleAsync(WebhookEvent message)
@@ -39,6 +40,9 @@ public sealed partial class DeploymentProtectionRuleHandler(
 
         if (options.Deploy)
         {
+            var pool = ResilienceContextPool.Shared;
+            var context = pool.Get();
+
             try
             {
                 var review = new ReviewDeploymentProtectionRule(
@@ -46,12 +50,10 @@ public sealed partial class DeploymentProtectionRuleHandler(
                     PendingDeploymentReviewState.Approved,
                     options.DeployComment);
 
-                await Policy.Handle<Exception>()
-                    .WaitAndRetryAsync(3, static (_) => TimeSpan.FromSeconds(1))
-                    .ExecuteAsync(
-                        () => client.WorkflowRuns().ReviewCustomProtectionRuleAsync(
-                            body.DeploymentCallbackUrl,
-                            review));
+                await Pipeline.ExecuteAsync(
+                    static async (_, state) => await state.client.WorkflowRuns().ReviewCustomProtectionRuleAsync(state.DeploymentCallbackUrl, state.review),
+                    context,
+                    (client, body.DeploymentCallbackUrl, review));
 
                 Log.ApprovedDeployment(
                     logger,
@@ -70,6 +72,10 @@ public sealed partial class DeploymentProtectionRuleHandler(
                     body.Environment,
                     body.Deployment.Id);
             }
+            finally
+            {
+                pool.Return(context);
+            }
         }
         else
         {
@@ -80,6 +86,13 @@ public sealed partial class DeploymentProtectionRuleHandler(
                 body.Environment,
                 body.Deployment.Id);
         }
+    }
+
+    private static ResiliencePipeline CreateResiliencePipeline()
+    {
+        return new ResiliencePipelineBuilder()
+            .AddRetry(new() { Delay = TimeSpan.FromSeconds(1) })
+            .Build();
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]

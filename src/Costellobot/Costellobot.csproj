@@ -17,14 +17,16 @@
     <PackageReference Include="Azure.Identity" />
     <PackageReference Include="Humanizer" />
     <PackageReference Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" />
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <PackageReference Include="Microsoft.TypeScript.MSBuild" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="Octokit" />
     <PackageReference Include="Octokit.GraphQL" />
     <PackageReference Include="Octokit.Webhooks.AspNetCore" />
-    <PackageReference Include="Polly" />
+    <PackageReference Include="Polly.Core" />
+    <PackageReference Include="Polly.Extensions" />
+    <PackageReference Include="Polly.RateLimiting" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="coverage\**;package.json;package-lock.json;tsconfig.json" CopyToPublishDirectory="Never" />
