@@ -22,6 +22,7 @@
     <LangVersion>latest</LangVersion>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <NeutralLanguage>en-US</NeutralLanguage>
+    <NoWarn>$(NoWarn);EXTEXP0003;SA1010</NoWarn>
     <!-- HACK Workaround for https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/3687 -->
     <NoWarn>$(NoWarn);SA1010</NoWarn>
     <NoWarn Condition=" '$(GenerateDocumentationFile)' != 'true' ">$(NoWarn);SA0001</NoWarn>
