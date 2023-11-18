@@ -40,9 +40,6 @@ public sealed partial class DeploymentProtectionRuleHandler(
 
         if (options.Deploy)
         {
-            var pool = ResilienceContextPool.Shared;
-            var context = pool.Get();
-
             try
             {
                 var review = new ReviewDeploymentProtectionRule(
@@ -51,9 +48,9 @@ public sealed partial class DeploymentProtectionRuleHandler(
                     options.DeployComment);
 
                 await Pipeline.ExecuteAsync(
-                    static async (_, state) => await state.client.WorkflowRuns().ReviewCustomProtectionRuleAsync(state.DeploymentCallbackUrl, state.review),
-                    context,
-                    (client, body.DeploymentCallbackUrl, review));
+                    static async (state, _) => await state.client.WorkflowRuns().ReviewCustomProtectionRuleAsync(state.DeploymentCallbackUrl, state.review),
+                    (client, body.DeploymentCallbackUrl, review),
+                    CancellationToken.None);
 
                 Log.ApprovedDeployment(
                     logger,
@@ -71,10 +68,6 @@ public sealed partial class DeploymentProtectionRuleHandler(
                     name,
                     body.Environment,
                     body.Deployment.Id);
-            }
-            finally
-            {
-                pool.Return(context);
             }
         }
         else
