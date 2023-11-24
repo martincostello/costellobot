@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -79,9 +80,7 @@ public sealed partial class DeliveryModel(IGitHubClientForApp client) : PageMode
 
         TryPopulateHeaders(request.GetProperty("headers"), RequestHeaders);
 
-        RequestPayload = JsonSerializer.Serialize(
-            request.GetProperty("payload"),
-            IndentedOptions);
+        RequestPayload = JsonObject.Create(request.GetProperty("payload"))!.ToJsonString(IndentedOptions);
 
         var response = Delivery.GetProperty("response");
 

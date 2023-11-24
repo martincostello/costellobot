@@ -1,12 +1,13 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text.Json.Serialization;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed class NpmPackageRegistry(HttpClient client) : PackageRegistry(client)
+public sealed partial class NpmPackageRegistry(HttpClient client) : PackageRegistry(client)
 {
     private static readonly Uri BaseAddress = new("https://registry.npmjs.org");
 
@@ -28,7 +29,7 @@ public sealed class NpmPackageRegistry(HttpClient client) : PackageRegistry(clie
 
         try
         {
-            package = await Client.GetFromJsonAsync<Package>(uri);
+            package = await Client.GetFromJsonAsync(uri, NpmJsonSerializerContext.Default.Package);
         }
         catch (HttpRequestException ex) when (IsNotFound(ex))
         {
@@ -70,5 +71,11 @@ public sealed class NpmPackageRegistry(HttpClient client) : PackageRegistry(clie
     {
         [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
+    }
+
+    [ExcludeFromCodeCoverage]
+    [JsonSerializable(typeof(Package))]
+    private sealed partial class NpmJsonSerializerContext : JsonSerializerContext
+    {
     }
 }
