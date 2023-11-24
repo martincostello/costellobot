@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.WebUtilities;
@@ -8,7 +9,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed class NuGetPackageRegistry(HttpClient client, IMemoryCache cache) : PackageRegistry(client)
+public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache cache) : PackageRegistry(client)
 {
     private static readonly Uri ServiceIndexUri = new("https://api.nuget.org/v3/index.json");
 
@@ -38,7 +39,7 @@ public sealed class NuGetPackageRegistry(HttpClient client, IMemoryCache cache) 
         };
 
         var uri = QueryHelpers.AddQueryString(baseAddress, query);
-        var response = await Client.GetFromJsonAsync<SearchResponse>(uri);
+        var response = await Client.GetFromJsonAsync(uri, NuGetJsonSerializerContext.Default.SearchResponse);
 
         if (response is null || response.Data is not { Count: > 0 } data)
         {
@@ -120,7 +121,7 @@ public sealed class NuGetPackageRegistry(HttpClient client, IMemoryCache cache) 
         return await cache.GetOrCreateAsync("nuget-service-index", async (entry) =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
-            return await Client.GetFromJsonAsync<ServiceIndex>(ServiceIndexUri);
+            return await Client.GetFromJsonAsync(ServiceIndexUri, NuGetJsonSerializerContext.Default.ServiceIndex);
         });
     }
 
@@ -167,5 +168,12 @@ public sealed class NuGetPackageRegistry(HttpClient client, IMemoryCache cache) 
 
         [JsonPropertyName("resources")]
         public IList<Resource> Resources { get; set; } = new List<Resource>();
+    }
+
+    [ExcludeFromCodeCoverage]
+    [JsonSerializable(typeof(SearchResponse))]
+    [JsonSerializable(typeof(ServiceIndex))]
+    private sealed partial class NuGetJsonSerializerContext : JsonSerializerContext
+    {
     }
 }
