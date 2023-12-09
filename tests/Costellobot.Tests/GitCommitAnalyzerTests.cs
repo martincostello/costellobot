@@ -485,7 +485,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                             Bump the xunit group with 1 update
                             Bumps the xunit group with 1 update: [xunit](https://github.com/xunit/xunit).
 
-                            - [Commits](xunit/xunit@2.6.2...2.6.3)
+                            - [Commits](https://github.com/xunit/xunit/compare/2.6.2...2.6.3)
 
                             ---
                             updated-dependencies:
