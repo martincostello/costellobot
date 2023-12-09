@@ -31,6 +31,7 @@ public sealed partial class GitCommitAnalyzer(
             $@"(Bumps|Updates) \[{escapedName}\]\(.*\) from (?<from>\d[^ ]*) to (?<to>\d[^ ]*)\.?$", // Normal version updates with link to repo
             $@"(Bumps|Updates) `?{escapedName}`? from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ ]*)\`\.?$", // Git submodule updates
             $@"(Bumps|Updates) \[{escapedName}\]\(.*\) from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ ]*)\`\.?", // Git submodule updates with link to repo
+            $@"\[{escapedName}\]\(.*\)\.\s+\- \[Commits\]\(.*\@(?<from>\d[^ ]*)\.\.\.(?<to>\d[^ ]*)\)", // Grouped version update that updates one package
         ];
 
         foreach (var pattern in patterns)

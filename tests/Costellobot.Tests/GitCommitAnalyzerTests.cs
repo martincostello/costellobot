@@ -453,6 +453,136 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     }
 
     [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Grouped_Package_Update_For_One_Package()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+
+        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "xunit", "2.6.3")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "dotnetfoundation", "xunit" }));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = new[] { "dotnetfoundation", "xunit" },
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
+
+        var sha = "62bf0f9046a782d0233aed41e9fe466aa6751f95";
+        var commitMessage = """
+                            Bump the xunit group with 1 update
+                            Bumps the xunit group with 1 update: [xunit](https://github.com/xunit/xunit).
+
+                            - [Commits](xunit/xunit@2.6.2...2.6.3)
+
+                            ---
+                            updated-dependencies:
+                            - dependency-name: xunit
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: xunit
+                            ...
+
+                            Signed-off-by: dependabot[bot] <support@github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            owner.Login,
+            repo.Name,
+            "dependabot/nuget/xunit-beb0c94413",
+            sha,
+            commitMessage);
+
+        // Assert
+        actual.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Grouped_Package_Update_For_Two_Packages()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+
+        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "xunit", "2.6.3")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "dotnetfoundation", "xunit" }));
+
+        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "xunit.runner.visualstudio", "2.5.5")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "dotnetfoundation", "xunit" }));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = new[] { "dotnetfoundation", "xunit" },
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
+
+        var sha = "dd1180fe710bc24ef13403f2b9dec6e069cb607c";
+        var commitMessage = """
+                            Bump the xunit group with 2 updates (#315)
+                            Bumps the xunit group with 2 updates: [xunit](https://github.com/xunit/xunit) and [xunit.runner.visualstudio](https://github.com/xunit/visualstudio.xunit).
+
+
+                            Updates `xunit` from 2.6.2 to 2.6.3
+                            - [Commits](xunit/xunit@2.6.2...2.6.3)
+
+                            Updates `xunit.runner.visualstudio` from 2.5.4 to 2.5.5
+                            - [Release notes](https://github.com/xunit/visualstudio.xunit/releases)
+                            - [Commits](xunit/visualstudio.xunit@2.5.4...2.5.5)
+
+                            ---
+                            updated-dependencies:
+                            - dependency-name: xunit
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: xunit
+                            - dependency-name: xunit.runner.visualstudio
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: xunit
+                            ...
+
+                            Signed-off-by: dependabot[bot] <support@github.com>
+                            Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            owner.Login,
+            repo.Name,
+            "dependabot/nuget/xunit-9380cae661",
+            sha,
+            commitMessage);
+
+        // Assert
+        actual.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Single_Package_Update()
     {
         // Arrange
