@@ -24,7 +24,7 @@
     <PackageVersion Include="NSubstitute" Version="5.1.0" />
     <PackageVersion Include="Octokit" Version="9.0.0" />
     <PackageVersion Include="Octokit.GraphQL" Version="0.3.0-beta" />
-    <PackageVersion Include="Octokit.Webhooks.AspNetCore" Version="2.0.6" />
+    <PackageVersion Include="Octokit.Webhooks.AspNetCore" Version="2.1.0" />
     <PackageVersion Include="Polly.Core" Version="$(PollyVersion)" />
     <PackageVersion Include="Polly.Extensions" Version="$(PollyVersion)" />
     <PackageVersion Include="Polly.RateLimiting" Version="$(PollyVersion)" />
