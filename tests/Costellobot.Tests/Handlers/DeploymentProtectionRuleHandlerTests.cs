@@ -11,8 +11,14 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 namespace MartinCostello.Costellobot.Handlers;
 
 [Collection(AppCollection.Name)]
-public sealed class DeploymentProtectionRuleHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
+public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppFixture>
 {
+    public DeploymentProtectionRuleHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper)
+        : base(fixture, outputHelper)
+    {
+        Fixture.ChangeClock(new(2023, 09, 01, 12, 34, 56, TimeSpan.Zero));
+    }
+
     [Fact]
     public async Task Deployment_Is_Approved()
     {
@@ -55,6 +61,28 @@ public sealed class DeploymentProtectionRuleHandlerTests(AppFixture fixture, ITe
     }
 
     [Fact]
+    public async Task Deployment_Is_Not_Approved_On_Public_Holiday()
+    {
+        // Arrange
+        Fixture.ChangeClock(new(2023, 12, 25, 12, 00, 00, TimeSpan.Zero));
+        Fixture.ApproveDeployments();
+
+        var deployment = CreateDeployment("production");
+        var driver = new DeploymentProtectionRuleDriver(deployment);
+
+        RegisterGetAccessToken();
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Fact]
     public async Task Handler_Ignores_Events_That_Are_Not_Deployment_Statuses()
     {
         // Arrange
@@ -63,6 +91,12 @@ public sealed class DeploymentProtectionRuleHandlerTests(AppFixture fixture, ITe
 
         // Act
         await Should.NotThrowAsync(() => target.HandleAsync(message));
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        Fixture?.UseSystemClock();
     }
 
     private async Task<HttpResponseMessage> PostWebhookAsync(DeploymentProtectionRuleDriver driver, string action = "requested")

@@ -34,6 +34,10 @@ public static class HandlerFactoryTests
             webhookOptions,
             NullLoggerFactory.Instance.CreateLogger<GitCommitAnalyzer>());
 
+        var publicHolidayProvider = new PublicHolidayProvider(
+            TimeProvider.System,
+            NullLoggerFactory.Instance.CreateLogger<PublicHolidayProvider>());
+
         var serviceProvider = Substitute.For<IServiceProvider>();
 
         serviceProvider.GetService(typeof(CheckSuiteHandler))
@@ -50,6 +54,7 @@ public static class HandlerFactoryTests
             {
                 return new DeploymentProtectionRuleHandler(
                     gitHubClient,
+                    publicHolidayProvider,
                     webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<DeploymentProtectionRuleHandler>());
             });
@@ -60,6 +65,7 @@ public static class HandlerFactoryTests
                 return new DeploymentStatusHandler(
                     gitHubClient,
                     commitAnalyzer,
+                    publicHolidayProvider,
                     gitHubOptions,
                     webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<DeploymentStatusHandler>());
