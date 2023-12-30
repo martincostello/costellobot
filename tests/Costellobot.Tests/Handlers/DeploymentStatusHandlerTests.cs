@@ -12,8 +12,14 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 namespace MartinCostello.Costellobot.Handlers;
 
 [Collection(AppCollection.Name)]
-public sealed class DeploymentStatusHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
+public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 {
+    public DeploymentStatusHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper)
+        : base(fixture, outputHelper)
+    {
+        Fixture.ChangeClock(new(2023, 09, 01, 12, 34, 56, TimeSpan.Zero));
+    }
+
     [Fact]
     public async Task Deployment_Is_Approved_For_Trusted_User_And_Dependency()
     {
@@ -576,6 +582,39 @@ public sealed class DeploymentStatusHandlerTests(AppFixture fixture, ITestOutput
     }
 
     [Fact]
+    public async Task Deployment_Is_Not_Approved_On_Public_Holiday()
+    {
+        // Arrange
+        Fixture.ChangeClock(new(2023, 12, 25, 12, 00, 00, TimeSpan.Zero));
+        Fixture.ApproveDeployments();
+
+        var driver = new DeploymentStatusDriver(
+            (repo) => repo.CreateCommit(),
+            CreateTrustedCommit);
+
+        driver.WithPendingDeployment(CreateDeployment);
+
+        driver.WithActiveDeployment();
+        driver.WithInactiveDeployment();
+
+        RegisterGetAccessToken();
+
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
+        RegisterPullRequestForCommit(driver.HeadCommit);
+
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Fact]
     public async Task Handler_Ignores_Events_That_Are_Not_Deployment_Statuses()
     {
         // Arrange
@@ -584,6 +623,12 @@ public sealed class DeploymentStatusHandlerTests(AppFixture fixture, ITestOutput
 
         // Act
         await Should.NotThrowAsync(() => target.HandleAsync(message));
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        Fixture?.UseSystemClock();
     }
 
     private static PullRequestBuilder CreatePullRequestForCommit(GitHubCommitBuilder commit)

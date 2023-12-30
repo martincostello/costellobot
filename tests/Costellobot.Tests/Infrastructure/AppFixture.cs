@@ -23,6 +23,8 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
 {
     private readonly Dictionary<string, string?> _configOverrides = new(StringComparer.OrdinalIgnoreCase);
 
+    private DateTimeOffset? _utcNow;
+
     public AppFixture()
     {
         ClientOptions.AllowAutoRedirect = false;
@@ -87,10 +89,14 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
         return tokens!;
     }
 
+    public void ChangeClock(DateTimeOffset utcNow)
+        => _utcNow = utcNow;
+
+    public void UseSystemClock()
+        => _utcNow = null;
+
     protected override void ConfigureClient(HttpClient client)
-    {
-        client.BaseAddress = ServerUri;
-    }
+        => client.BaseAddress = ServerUri;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -135,6 +141,8 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
         {
             services.AddHttpClient();
 
+            services.AddSingleton<TimeProvider>((_) => new AppFixtureTimeProvider(this));
+
             services.AddSingleton<IHttpMessageHandlerBuilderFilter, HttpRequestInterceptionFilter>(
                 (_) => new HttpRequestInterceptionFilter(Interceptor));
 
@@ -147,9 +155,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
 
     private void ReloadConfiguration()
     {
-        var config = Services.GetRequiredService<IConfiguration>();
-
-        if (config is IConfigurationRoot root)
+        if (Services.GetRequiredService<IConfiguration>() is IConfigurationRoot root)
         {
             root.Reload();
         }
@@ -163,16 +169,15 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
         }
     }
 
-    private sealed class AppFixtureConfigurationSource : IConfigurationSource
+    private sealed class AppFixtureConfigurationSource(AppFixture fixture) : IConfigurationSource
     {
-        internal AppFixtureConfigurationSource(AppFixture fixture)
-        {
-            Fixture = fixture;
-        }
-
-        internal AppFixture Fixture { get; }
-
         public IConfigurationProvider Build(IConfigurationBuilder builder)
-            => new AppFixtureConfigurationProvider(Fixture);
+            => new AppFixtureConfigurationProvider(fixture);
+    }
+
+    private sealed class AppFixtureTimeProvider(AppFixture fixture) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow()
+            => fixture._utcNow ?? base.GetUtcNow();
     }
 }

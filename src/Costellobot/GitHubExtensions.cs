@@ -80,6 +80,8 @@ public static class GitHubExtensions
         services.AddTransient<IPackageRegistry, NpmPackageRegistry>();
         services.AddTransient<IPackageRegistry, NuGetPackageRegistry>();
 
+        services.AddSingleton<PublicHolidayProvider>();
+
         services.AddSingleton<IHandlerFactory, HandlerFactory>();
         services.AddTransient<CheckSuiteHandler>();
         services.AddTransient<DeploymentProtectionRuleHandler>();

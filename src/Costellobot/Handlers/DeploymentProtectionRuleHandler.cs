@@ -11,6 +11,7 @@ namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class DeploymentProtectionRuleHandler(
     IGitHubClientForInstallation client,
+    PublicHolidayProvider publicHolidayProvider,
     IOptionsMonitor<WebhookOptions> options,
     ILogger<DeploymentProtectionRuleHandler> logger) : IHandler
 {
@@ -38,42 +39,54 @@ public sealed partial class DeploymentProtectionRuleHandler(
 
         var options = _options.CurrentValue;
 
-        if (options.Deploy)
-        {
-            try
-            {
-                var review = new ReviewDeploymentProtectionRule(
-                    body.Environment,
-                    PendingDeploymentReviewState.Approved,
-                    options.DeployComment);
-
-                await Pipeline.ExecuteAsync(
-                    static async (state, _) => await state.client.WorkflowRuns().ReviewCustomProtectionRuleAsync(state.DeploymentCallbackUrl, state.review),
-                    (client, body.DeploymentCallbackUrl, review),
-                    CancellationToken.None);
-
-                Log.ApprovedDeployment(
-                    logger,
-                    owner,
-                    name,
-                    body.Environment,
-                    body.Deployment.Id);
-            }
-            catch (Exception ex)
-            {
-                Log.FailedToApproveDeployment(
-                    logger,
-                    ex,
-                    owner,
-                    name,
-                    body.Environment,
-                    body.Deployment.Id);
-            }
-        }
-        else
+        if (!options.Deploy)
         {
             Log.DeploymentProtectionRuleApprovalIsDisabled(
                 logger,
+                owner,
+                name,
+                body.Environment,
+                body.Deployment.Id);
+
+            return;
+        }
+
+        if (publicHolidayProvider.IsPublicHoliday())
+        {
+            Log.TodayIsAPublicHoliday(
+                logger,
+                owner,
+                name,
+                body.Environment,
+                body.Deployment.Id);
+
+            return;
+        }
+
+        try
+        {
+            var review = new ReviewDeploymentProtectionRule(
+                body.Environment,
+                PendingDeploymentReviewState.Approved,
+                options.DeployComment);
+
+            await Pipeline.ExecuteAsync(
+                static async (state, _) => await state.client.WorkflowRuns().ReviewCustomProtectionRuleAsync(state.DeploymentCallbackUrl, state.review),
+                (client, body.DeploymentCallbackUrl, review),
+                CancellationToken.None);
+
+            Log.ApprovedDeployment(
+                logger,
+                owner,
+                name,
+                body.Environment,
+                body.Deployment.Id);
+        }
+        catch (Exception ex)
+        {
+            Log.FailedToApproveDeployment(
+                logger,
+                ex,
                 owner,
                 name,
                 body.Environment,
@@ -131,6 +144,17 @@ public sealed partial class DeploymentProtectionRuleHandler(
            Level = LogLevel.Information,
            Message = "Ignoring deployment protection rule check for {Owner}/{Repository} for environment {EnvironmentName} for deployment {DeploymentId} as deployment approval is disabled.")]
         public static partial void DeploymentProtectionRuleApprovalIsDisabled(
+            ILogger logger,
+            string? owner,
+            string? repository,
+            string? environmentName,
+            long deploymentId);
+
+        [LoggerMessage(
+           EventId = 5,
+           Level = LogLevel.Information,
+           Message = "Ignoring deployment protection rule check for {Owner}/{Repository} for environment {EnvironmentName} for deployment {DeploymentId} as it is a public holiday.")]
+        public static partial void TodayIsAPublicHoliday(
             ILogger logger,
             string? owner,
             string? repository,

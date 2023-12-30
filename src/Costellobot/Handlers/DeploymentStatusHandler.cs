@@ -13,6 +13,7 @@ namespace MartinCostello.Costellobot.Handlers;
 public sealed partial class DeploymentStatusHandler(
     IGitHubClientForInstallation client,
     GitCommitAnalyzer commitAnalyzer,
+    PublicHolidayProvider publicHolidayProvider,
     IOptionsMonitor<GitHubOptions> gitHubOptions,
     IOptionsMonitor<WebhookOptions> webhookOptions,
     ILogger<DeploymentStatusHandler> logger) : IHandler
@@ -46,6 +47,12 @@ public sealed partial class DeploymentStatusHandler(
         if (!options.Deploy)
         {
             Log.AutomatedDeploymentApprovalIsDisabled(logger, body.DeploymentStatus.Id, owner, name);
+            return;
+        }
+
+        if (publicHolidayProvider.IsPublicHoliday())
+        {
+            Log.TodayIsAPublicHoliday(logger, body.DeploymentStatus.Id, owner, name);
             return;
         }
 
@@ -498,5 +505,15 @@ public sealed partial class DeploymentStatusHandler(
             string owner,
             string repository,
             int count);
+
+        [LoggerMessage(
+           EventId = 16,
+           Level = LogLevel.Information,
+           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Owner}/{Repository} as it is a public holiday.")]
+        public static partial void TodayIsAPublicHoliday(
+            ILogger logger,
+            long deploymentStatusId,
+            string owner,
+            string repository);
     }
 }
