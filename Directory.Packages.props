@@ -23,7 +23,7 @@
     <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="5.3.3" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="NSubstitute" Version="5.1.0" />
-    <PackageVersion Include="Octokit" Version="9.0.0" />
+    <PackageVersion Include="Octokit" Version="9.1.0" />
     <PackageVersion Include="Octokit.GraphQL" Version="0.3.0-beta" />
     <PackageVersion Include="Octokit.Webhooks.AspNetCore" Version="2.1.0" />
     <PackageVersion Include="Polly.Core" Version="$(PollyVersion)" />
