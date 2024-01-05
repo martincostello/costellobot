@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <PollyVersion>8.2.0</PollyVersion>
+    <PollyVersion>8.2.1</PollyVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="8.0.0" />
