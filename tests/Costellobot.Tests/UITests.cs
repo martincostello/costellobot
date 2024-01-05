@@ -12,22 +12,26 @@ namespace MartinCostello.Costellobot;
 [Collection(HttpServerCollection.Name)]
 public abstract class UITests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<HttpServerFixture>(fixture, outputHelper)
 {
-    public static IEnumerable<object?[]> Browsers()
+    public static TheoryData<string, string?> Browsers()
     {
-        yield return new[] { BrowserType.Chromium, null };
-        yield return new[] { BrowserType.Chromium, "chrome" };
+        var browsers = new TheoryData<string, string?>()
+        {
+            { BrowserType.Chromium, null },
+            { BrowserType.Chromium, "chrome" },
+            { BrowserType.Firefox, null },
+        };
 
         if (!OperatingSystem.IsLinux())
         {
-            yield return new[] { BrowserType.Chromium, "msedge" };
+            browsers.Add(BrowserType.Chromium, "msedge");
         }
-
-        yield return new[] { BrowserType.Firefox, null };
 
         if (OperatingSystem.IsMacOS())
         {
-            yield return new[] { BrowserType.Webkit, null };
+            browsers.Add(BrowserType.Webkit, null);
         }
+
+        return browsers;
     }
 
     public override async Task InitializeAsync()
@@ -68,7 +72,7 @@ public abstract class UITests(HttpServerFixture fixture, ITestOutputHelper outpu
 
     private static void InstallPlaywright()
     {
-        int exitCode = Microsoft.Playwright.Program.Main(new[] { "install" });
+        int exitCode = Microsoft.Playwright.Program.Main(["install"]);
 
         if (exitCode != 0)
         {
