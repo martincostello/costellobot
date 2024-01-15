@@ -13,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureApplication();
 
 builder.Services.AddGitHub(builder.Configuration, builder.Environment);
+builder.Services.AddHsts((options) => options.MaxAge = TimeSpan.FromDays(180));
 builder.Services.AddRazorPages();
 builder.Services.AddResponseCaching();
 
