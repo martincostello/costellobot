@@ -24,7 +24,6 @@
     <PackageReference Include="Octokit" />
     <PackageReference Include="Octokit.GraphQL" />
     <PackageReference Include="Octokit.Webhooks.AspNetCore" />
-    <PackageReference Include="Polly.Core" />
     <PackageReference Include="Polly.Extensions" />
     <PackageReference Include="Polly.RateLimiting" />
   </ItemGroup>
