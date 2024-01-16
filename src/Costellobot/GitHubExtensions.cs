@@ -4,8 +4,6 @@
 using MartinCostello.Costellobot.Handlers;
 using MartinCostello.Costellobot.Registries;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Http.Resilience;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Octokit;
 using Octokit.Internal;
@@ -25,8 +23,7 @@ public static class GitHubExtensions
         services.AddGitHubAuthentication(configuration, environment);
 
         services.AddHttpClient()
-                .AddHttpClient(Options.DefaultName)
-                .AddStandardResilienceHandler();
+                .ConfigureHttpClientDefaults((p) => p.AddStandardResilienceHandler());
 
         services.AddMemoryCache();
         services.AddOptions();
