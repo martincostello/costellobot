@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using MartinCostello.Costellobot.Registries;
@@ -14,7 +15,7 @@ public sealed partial class GitCommitAnalyzer(
     IOptionsMonitor<WebhookOptions> options,
     ILogger<GitCommitAnalyzer> logger)
 {
-    private readonly IReadOnlyCollection<IPackageRegistry> _registries = registries.ToArray();
+    private readonly ImmutableList<IPackageRegistry> _registries = registries.ToImmutableList();
 
     public static bool TryParseVersionNumber(
         string commitMessage,
