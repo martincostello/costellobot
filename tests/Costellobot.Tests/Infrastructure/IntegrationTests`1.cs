@@ -201,7 +201,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         byte[] data = encoding.GetBytes(payload);
 
         byte[] hash = HMACSHA256.HashData(key, data);
-        string hashString = Convert.ToHexString(hash).ToLowerInvariant();
+        string hashString = Convert.ToHexStringLower(hash);
 
         return (payload, $"sha256={hashString}");
     }
