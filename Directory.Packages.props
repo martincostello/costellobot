@@ -29,7 +29,7 @@
     <PackageVersion Include="Polly.Core" Version="$(PollyVersion)" />
     <PackageVersion Include="Polly.Extensions" Version="$(PollyVersion)" />
     <PackageVersion Include="Polly.RateLimiting" Version="$(PollyVersion)" />
-    <PackageVersion Include="ReportGenerator" Version="5.2.1" />
+    <PackageVersion Include="ReportGenerator" Version="5.2.2" />
     <PackageVersion Include="Shouldly" Version="4.2.1" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
     <PackageVersion Include="xunit" Version="2.7.0" />
