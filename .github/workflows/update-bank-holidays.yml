@@ -46,8 +46,7 @@ jobs:
 
         git config user.email "${env:GIT_COMMIT_USER_EMAIL}" | Out-Null
         git config user.name "${env:GIT_COMMIT_USER_NAME}" | Out-Null
-        git remote set-url "${env:GITHUB_SERVER_URL}/${env:GITHUB_REPOSITORY}.git" | Out-Null
-        git fetch origin | Out-Null
+        git fetch origin --no-tags | Out-Null
         git rev-parse --verify --quiet "remotes/origin/${BranchName}" | Out-Null
 
         if ($LASTEXITCODE -eq 0) {
