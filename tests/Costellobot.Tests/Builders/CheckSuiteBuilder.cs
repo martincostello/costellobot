@@ -11,7 +11,7 @@ public sealed class CheckSuiteBuilder(RepositoryBuilder repository, string statu
 
     public string? Conclusion { get; set; } = conclusion;
 
-    public IList<PullRequestBuilder> PullRequests { get; set; } = new List<PullRequestBuilder>();
+    public IList<PullRequestBuilder> PullRequests { get; set; } = [];
 
     public RepositoryBuilder Repository { get; set; } = repository;
 

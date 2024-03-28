@@ -18,7 +18,7 @@ public sealed class CheckSuiteDriver
         CheckSuite = CreateCheckSuite(conclusion);
     }
 
-    public IList<CheckRunBuilder> CheckRuns { get; set; } = new List<CheckRunBuilder>();
+    public IList<CheckRunBuilder> CheckRuns { get; set; } = [];
 
     public CheckSuiteBuilder CheckSuite { get; set; }
 

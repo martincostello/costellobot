@@ -5,7 +5,7 @@ namespace MartinCostello.Costellobot.Builders;
 
 public sealed class GitCommitBuilder(UserBuilder author) : ResponseBuilder
 {
-    public IList<string> Added { get; set; } = new List<string>();
+    public IList<string> Added { get; set; } = [];
 
     public UserBuilder Author { get; set; } = author;
 
@@ -15,9 +15,9 @@ public sealed class GitCommitBuilder(UserBuilder author) : ResponseBuilder
 
     public string Message { get; set; } = RandomString();
 
-    public IList<string> Modified { get; set; } = new List<string>();
+    public IList<string> Modified { get; set; } = [];
 
-    public IList<string> Removed { get; set; } = new List<string>();
+    public IList<string> Removed { get; set; } = [];
 
     public override object Build()
     {

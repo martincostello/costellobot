@@ -9,21 +9,21 @@ public sealed class WebhookOptions
 
     public string ApproveComment { get; set; } = string.Empty;
 
-    public IList<string> ApproveLabels { get; set; } = new List<string>();
+    public IList<string> ApproveLabels { get; set; } = [];
 
     public bool Automerge { get; set; }
 
-    public IList<string> AutomergeLabels { get; set; } = new List<string>();
+    public IList<string> AutomergeLabels { get; set; } = [];
 
     public bool Deploy { get; set; }
 
     public string DeployComment { get; set; } = string.Empty;
 
-    public IList<string> DeployEnvironments { get; set; } = new List<string>();
+    public IList<string> DeployEnvironments { get; set; } = [];
 
-    public IList<string> IgnoreRepositories { get; set; } = new List<string>();
+    public IList<string> IgnoreRepositories { get; set; } = [];
 
-    public IList<string> RerunFailedChecks { get; set; } = new List<string>();
+    public IList<string> RerunFailedChecks { get; set; } = [];
 
     public int RerunFailedChecksAttempts { get; set; }
 

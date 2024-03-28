@@ -45,18 +45,18 @@ public sealed class GitHubActionsPackageRegistry(
             {
                 if (await ExistsAsync(() => RestClient.Git.Reference.Get(actionOwner, actionName, $"tags/{reference}")))
                 {
-                    return new[] { actionOwner };
+                    return [actionOwner];
                 }
             }
 
             // If we didn't find the tag(s), maybe it's a sha to a specific commit
             if (await ExistsAsync(() => RestClient.Git.Commit.Get(actionOwner, actionName, version)))
             {
-                return new[] { actionOwner };
+                return [actionOwner];
             }
         }
 
-        return Array.Empty<string>();
+        return [];
 
         static async Task<bool> ExistsAsync<T>(Func<Task<T>> resource)
         {

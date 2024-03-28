@@ -12,7 +12,7 @@ namespace MartinCostello.Costellobot.Pages;
 [CostellobotAdmin]
 public sealed partial class DeliveriesModel(IGitHubClientForApp client) : PageModel
 {
-    public IList<WebhookDelivery> Deliveries { get; } = new List<WebhookDelivery>();
+    public IList<WebhookDelivery> Deliveries { get; } = [];
 
     [BindProperty]
     public Guid? DeliveryId { get; set; }

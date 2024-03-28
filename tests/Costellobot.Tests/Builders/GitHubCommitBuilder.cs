@@ -11,7 +11,7 @@ public sealed class GitHubCommitBuilder(RepositoryBuilder repository) : Response
 
     public string Message { get; set; } = RandomString();
 
-    public IList<string> Parents { get; set; } = new List<string>();
+    public IList<string> Parents { get; set; } = [];
 
     public RepositoryBuilder Repository { get; set; } = repository;
 

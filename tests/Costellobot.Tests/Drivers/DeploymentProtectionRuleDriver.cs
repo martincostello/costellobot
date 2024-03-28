@@ -26,7 +26,7 @@ public sealed class DeploymentProtectionRuleDriver
 
     public UserBuilder Owner { get; set; }
 
-    public IList<PullRequestBuilder> PullRequests { get; set; } = new List<PullRequestBuilder>();
+    public IList<PullRequestBuilder> PullRequests { get; set; } = [];
 
     public RepositoryBuilder Repository { get; set; }
 

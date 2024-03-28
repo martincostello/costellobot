@@ -113,7 +113,7 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
     {
         // Arrange
         using var client = await CreateAuthenticatedClientAsync(setAntiforgeryTokenHeader: false);
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>());
+        using var content = new FormUrlEncodedContent([]);
 
         // Act
         using var response = await client.PostAsync(requestUri, content);

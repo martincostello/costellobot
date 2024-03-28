@@ -5,7 +5,7 @@ namespace MartinCostello.Costellobot.Builders;
 
 public sealed class CompareResultBuilder : ResponseBuilder
 {
-    public IList<GitHubCommitBuilder> Commits { get; set; } = new List<GitHubCommitBuilder>();
+    public IList<GitHubCommitBuilder> Commits { get; set; } = [];
 
     public string Status { get; set; } = "ahead";
 

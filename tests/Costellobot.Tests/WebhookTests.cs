@@ -78,8 +78,8 @@ public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHel
             var wanted = new WebhookDeliveryBuilder("pull_request", "opened", 123, 456);
             var payload = wanted.AsPayload();
 
-            RegisterWebhookDeliveriesForApp(new[] { item }, null, "v1_abc123");
-            RegisterWebhookDeliveriesForApp(new[] { wanted }, "v1_abc123", null);
+            RegisterWebhookDeliveriesForApp([item], null, "v1_abc123");
+            RegisterWebhookDeliveriesForApp([wanted], "v1_abc123", null);
             RegisterWebhookDeliveryForApp(payload);
 
             var delivery = await deliveries.FindDeliveryAsync(wanted.Guid.ToString());

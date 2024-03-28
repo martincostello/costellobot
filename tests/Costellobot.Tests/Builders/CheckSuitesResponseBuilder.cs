@@ -5,7 +5,7 @@ namespace MartinCostello.Costellobot.Builders;
 
 public sealed class CheckSuitesResponseBuilder : ResponseBuilder
 {
-    public IList<CheckSuiteBuilder> CheckSuites { get; } = new List<CheckSuiteBuilder>();
+    public IList<CheckSuiteBuilder> CheckSuites { get; } = [];
 
     public override object Build()
     {
