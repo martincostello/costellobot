@@ -5,7 +5,7 @@ namespace MartinCostello.Costellobot.Builders;
 
 public sealed class WorkflowRunsResponseBuilder : ResponseBuilder
 {
-    public IList<WorkflowRunBuilder> WorkflowRuns { get; } = new List<WorkflowRunBuilder>();
+    public IList<WorkflowRunBuilder> WorkflowRuns { get; } = [];
 
     public override object Build()
     {

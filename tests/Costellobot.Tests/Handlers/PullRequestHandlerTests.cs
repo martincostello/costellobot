@@ -191,10 +191,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
              .WithStatus(HttpStatusCode.OK)
              .WithJsonContent(new
              {
-                 data = new
-                 {
-                    enablePullRequestAutoMerge = null as object,
-                 },
+                 data = new { enablePullRequestAutoMerge = null as object },
                  errors = new[]
                  {
                      new

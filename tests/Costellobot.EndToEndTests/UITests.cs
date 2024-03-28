@@ -30,7 +30,7 @@ public class UITests(AppFixture fixture, ITestOutputHelper outputHelper) : EndTo
 
     public Task InitializeAsync()
     {
-        int exitCode = Program.Main(new[] { "install" });
+        int exitCode = Program.Main(["install"]);
 
         if (exitCode != 0)
         {

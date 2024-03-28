@@ -5,7 +5,7 @@ namespace MartinCostello.Costellobot.Builders;
 
 public sealed class CheckRunsResponseBuilder : ResponseBuilder
 {
-    public IList<CheckRunBuilder> CheckRuns { get; } = new List<CheckRunBuilder>();
+    public IList<CheckRunBuilder> CheckRuns { get; } = [];
 
     public override object Build()
     {

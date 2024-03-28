@@ -26,11 +26,11 @@ public sealed class DeploymentStatusDriver
 
     public GitHubCommitBuilder HeadCommit { get; set; }
 
-    public IList<GitHubCommitBuilder> Commits { get; } = new List<GitHubCommitBuilder>();
+    public IList<GitHubCommitBuilder> Commits { get; } = [];
 
     public DeploymentBuilder? ActiveDeployment { get; set; }
 
-    public IList<DeploymentBuilder> InactiveDeployments { get; } = new List<DeploymentBuilder>();
+    public IList<DeploymentBuilder> InactiveDeployments { get; } = [];
 
     public DeploymentBuilder? PendingDeployment { get; set; }
 

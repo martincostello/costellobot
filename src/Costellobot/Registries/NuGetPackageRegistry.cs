@@ -26,7 +26,7 @@ public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache
 
         if (baseAddress is null)
         {
-            return Array.Empty<string>();
+            return [];
         }
 
         // https://docs.microsoft.com/en-us/nuget/api/search-query-service-resource#search-for-packages
@@ -43,17 +43,15 @@ public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache
 
         if (response is null || response.Data is not { Count: > 0 } data)
         {
-            return Array.Empty<string>();
+            return [];
         }
 
-        var package = response.Data
-            .Where((p) => string.Equals(p.Id, id, StringComparison.OrdinalIgnoreCase))
-            .FirstOrDefault();
+        var package = response.Data.FirstOrDefault((p) => string.Equals(p.Id, id, StringComparison.OrdinalIgnoreCase));
 
         if (package is null ||
             !string.Equals(package.Id, id, StringComparison.OrdinalIgnoreCase))
         {
-            return Array.Empty<string>();
+            return [];
         }
 
         var versionFound = package.Versions
@@ -71,7 +69,7 @@ public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache
 
         if (!string.Equals(versionFound, version, StringComparison.OrdinalIgnoreCase))
         {
-            return Array.Empty<string>();
+            return [];
         }
 
         // https://docs.microsoft.com/en-us/nuget/api/search-query-service-resource#search-result
@@ -79,23 +77,17 @@ public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache
         {
             JsonValueKind.Array => GetPackageOwners(package.Owners),
             JsonValueKind.String => GetPackageOwner(package.Owners),
-            _ => Array.Empty<string>(),
+            _ => [],
         };
 
         static IReadOnlyList<string> GetPackageOwner(JsonElement owner)
         {
             var name = owner.GetString();
-            return new[] { name! };
+            return [name!];
         }
 
         static IReadOnlyList<string> GetPackageOwners(JsonElement owners)
-        {
-            return owners
-                .EnumerateArray()
-                .Select((p) => p.GetString()!)
-                .Order()
-                .ToArray();
-        }
+            => [.. owners.EnumerateArray().Select((p) => p.GetString()!).Order()];
     }
 
     private async Task<string?> GetBaseAddressAsync(string type)
@@ -143,7 +135,7 @@ public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache
     private sealed class SearchResponse
     {
         [JsonPropertyName("data")]
-        public IList<SearchResult> Data { get; set; } = new List<SearchResult>();
+        public IList<SearchResult> Data { get; set; } = [];
     }
 
     private sealed class SearchResult
@@ -158,7 +150,7 @@ public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache
         public string Version { get; set; } = string.Empty;
 
         [JsonPropertyName("versions")]
-        public IList<PackageVersion> Versions { get; set; } = new List<PackageVersion>();
+        public IList<PackageVersion> Versions { get; set; } = [];
     }
 
     private sealed class ServiceIndex
@@ -167,7 +159,7 @@ public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache
         public string Version { get; set; } = string.Empty;
 
         [JsonPropertyName("resources")]
-        public IList<Resource> Resources { get; set; } = new List<Resource>();
+        public IList<Resource> Resources { get; set; } = [];
     }
 
     [ExcludeFromCodeCoverage]

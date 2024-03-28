@@ -25,7 +25,7 @@ public sealed class GitSubmodulePackageRegistry(
         }
         catch (NotFoundException)
         {
-            items = Array.Empty<RepositoryContent>();
+            items = [];
         }
 
         if (items.Count is 1 &&
@@ -34,9 +34,9 @@ public sealed class GitSubmodulePackageRegistry(
             string url = item.SubmoduleGitUrl;
             string urlWithoutRepoName = string.Join('/', url.Split('/').SkipLast(1));
 
-            return new[] { urlWithoutRepoName };
+            return [urlWithoutRepoName];
         }
 
-        return Array.Empty<string>();
+        return [];
     }
 }

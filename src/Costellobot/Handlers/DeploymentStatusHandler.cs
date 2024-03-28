@@ -120,7 +120,7 @@ public sealed partial class DeploymentStatusHandler(
         try
         {
             var review = new PendingDeploymentReview(
-                new[] { deployment.Environment.Id },
+                [deployment.Environment.Id],
                 PendingDeploymentReviewState.Approved,
                 webhookOptions.CurrentValue.DeployComment);
 

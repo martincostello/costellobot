@@ -20,7 +20,7 @@ public sealed class PushDriver
 
     public bool Created { get; set; }
 
-    public IList<GitCommitBuilder> Commits { get; set; } = new List<GitCommitBuilder>();
+    public IList<GitCommitBuilder> Commits { get; set; } = [];
 
     public bool Deleted { get; set; }
 

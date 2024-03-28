@@ -41,10 +41,10 @@ public sealed partial class NpmPackageRegistry(HttpClient client) : PackageRegis
             string.Equals(package.Name, id, StringComparison.Ordinal) &&
             string.Equals(package.Version, version, StringComparison.Ordinal))
         {
-            return new[] { name };
+            return [name];
         }
 
-        return Array.Empty<string>();
+        return [];
 
         static bool IsNotFound(HttpRequestException exception) =>
             exception.StatusCode switch

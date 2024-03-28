@@ -5,17 +5,11 @@ namespace MartinCostello.Costellobot;
 
 [Collection(AppCollection.Name)]
 [Trait("Category", "EndToEnd")]
-public abstract class EndToEndTest
+public abstract class EndToEndTest(AppFixture fixture, ITestOutputHelper outputHelper)
 {
-    protected EndToEndTest(AppFixture fixture, ITestOutputHelper outputHelper)
-    {
-        Fixture = fixture;
-        OutputHelper = outputHelper;
-    }
+    protected AppFixture Fixture { get; } = fixture;
 
-    protected AppFixture Fixture { get; }
-
-    protected ITestOutputHelper OutputHelper { get; }
+    protected ITestOutputHelper OutputHelper { get; } = outputHelper;
 
     protected Uri ServerAddress => Fixture.ServerAddress!;
 }

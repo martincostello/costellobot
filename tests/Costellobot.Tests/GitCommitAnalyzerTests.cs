@@ -102,8 +102,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies = new[]
-                {
+                Dependencies =
+                [
                     @"^@actions\/.*$",
                     @"^@microsoft\/signalr$",
                     @"^@octokit\/types$",
@@ -139,7 +139,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     @"^typescript$",
                     @"^xunit$",
                     @"^xunit.runner.visualstudio$",
-                },
+                ],
             },
         };
 
@@ -199,16 +199,16 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.GitHubActions] = new[] { "actions" },
-                    [DependencyEcosystem.Npm] = new[] { "types", "typescript-bot" },
-                    [DependencyEcosystem.NuGet] = new[] { "aspnet", "Microsoft" },
-                    [DependencyEcosystem.Submodules] = new[] { "https://github.com/martincostello" },
+                    [DependencyEcosystem.GitHubActions] = ["actions"],
+                    [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
+                    [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
+                    [DependencyEcosystem.Submodules] = ["https://github.com/martincostello"],
                 },
             },
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage(dependency, version);
@@ -235,16 +235,16 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.GitHubActions] = new[] { "actions" },
-                    [DependencyEcosystem.Npm] = new[] { "types", "typescript-bot" },
-                    [DependencyEcosystem.NuGet] = new[] { "aspnet", "Microsoft" },
-                    [DependencyEcosystem.Submodules] = new[] { "https://github.com/martincostello" },
+                    [DependencyEcosystem.GitHubActions] = ["actions"],
+                    [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
+                    [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
+                    [DependencyEcosystem.Submodules] = ["https://github.com/martincostello"],
                 },
             },
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { Substitute.For<IPackageRegistry>() });
+        var target = CreateTarget(scope.ServiceProvider, options, [Substitute.For<IPackageRegistry>()]);
 
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = @"""
@@ -283,7 +283,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { Substitute.For<IPackageRegistry>() });
+        var target = CreateTarget(scope.ServiceProvider, options, [Substitute.For<IPackageRegistry>()]);
 
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage();
@@ -310,13 +310,13 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = Array.Empty<string>(),
+                    [DependencyEcosystem.NuGet] = [],
                 },
             },
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { Substitute.For<IPackageRegistry>() });
+        var target = CreateTarget(scope.ServiceProvider, options, [Substitute.For<IPackageRegistry>()]);
 
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage();
@@ -354,16 +354,16 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.GitHubActions] = new[] { "actions" },
-                    [DependencyEcosystem.Npm] = new[] { "types", "typescript-bot" },
-                    [DependencyEcosystem.NuGet] = new[] { "aspnet", "Microsoft" },
-                    [DependencyEcosystem.Submodules] = new[] { "https://github.com/martincostello" },
+                    [DependencyEcosystem.GitHubActions] = ["actions"],
+                    [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
+                    [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
+                    [DependencyEcosystem.Submodules] = ["https://github.com/martincostello"],
                 },
             },
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage("actions/checkout", "3");
@@ -392,10 +392,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
         registry.GetPackageOwnersAsync(owner.Login, repo.Name, "OpenTelemetry.Instrumentation.AspNetCore", "1.0.0-rc9.12")
-                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "OpenTelemetry" }));
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["OpenTelemetry"]));
 
         registry.GetPackageOwnersAsync(owner.Login, repo.Name, "OpenTelemetry.Instrumentation.Http", "1.0.0-rc9.12")
-                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "OpenTelemetry" }));
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["OpenTelemetry"]));
 
         var options = new WebhookOptions()
         {
@@ -403,16 +403,16 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.GitHubActions] = new[] { "actions" },
-                    [DependencyEcosystem.Npm] = new[] { "types", "typescript-bot" },
-                    [DependencyEcosystem.NuGet] = new[] { "aspnet", "Microsoft", "OpenTelemetry" },
-                    [DependencyEcosystem.Submodules] = new[] { "https://github.com/martincostello" },
+                    [DependencyEcosystem.GitHubActions] = ["actions"],
+                    [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
+                    [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft", "OpenTelemetry"],
+                    [DependencyEcosystem.Submodules] = ["https://github.com/martincostello"],
                 },
             },
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
         var sha = "987879d752236a5a574000f40da7630be061faca";
         var commitMessage = """
@@ -464,7 +464,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
         registry.GetPackageOwnersAsync(owner.Login, repo.Name, "xunit", "2.6.3")
-                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "dotnetfoundation", "xunit" }));
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
 
         var options = new WebhookOptions()
         {
@@ -472,13 +472,13 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = new[] { "dotnetfoundation", "xunit" },
+                    [DependencyEcosystem.NuGet] = ["dotnetfoundation", "xunit"],
                 },
             },
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
         var sha = "62bf0f9046a782d0233aed41e9fe466aa6751f95";
         var commitMessage = """
@@ -522,10 +522,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
         registry.GetPackageOwnersAsync(owner.Login, repo.Name, "xunit", "2.6.3")
-                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "dotnetfoundation", "xunit" }));
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
 
         registry.GetPackageOwnersAsync(owner.Login, repo.Name, "xunit.runner.visualstudio", "2.5.5")
-                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "dotnetfoundation", "xunit" }));
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
 
         var options = new WebhookOptions()
         {
@@ -533,13 +533,13 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = new[] { "dotnetfoundation", "xunit" },
+                    [DependencyEcosystem.NuGet] = ["dotnetfoundation", "xunit"],
                 },
             },
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
         var sha = "dd1180fe710bc24ef13403f2b9dec6e069cb607c";
         var commitMessage = """
@@ -595,7 +595,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             .Returns(DependencyEcosystem.NuGet);
 
         registry.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.TypeScript.MSBuild", "4.9.5")
-                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "Microsoft", "TypeScriptTeam" }));
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "TypeScriptTeam"]));
 
         var options = new WebhookOptions()
         {
@@ -603,16 +603,16 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.GitHubActions] = new[] { "actions" },
-                    [DependencyEcosystem.Npm] = new[] { "types", "typescript-bot" },
-                    [DependencyEcosystem.NuGet] = new[] { "aspnet", "Microsoft" },
-                    [DependencyEcosystem.Submodules] = new[] { "https://github.com/martincostello" },
+                    [DependencyEcosystem.GitHubActions] = ["actions"],
+                    [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
+                    [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
+                    [DependencyEcosystem.Submodules] = ["https://github.com/martincostello"],
                 },
             },
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
         var sha = "552aae859c24f0ed63bcc1f82ef96dd83040762f";
         var commitMessage = """
@@ -651,16 +651,16 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
         registry.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.Extensions.Configuration.Binder", "7.0.4")
-                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "Microsoft", "aspnet" }));
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "aspnet"]));
 
         registry.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.Extensions.Http.Polly", "7.0.5")
-                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "Microsoft", "aspnet" }));
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "aspnet"]));
 
         registry.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.NET.Test.Sdk", "17.5.0")
-                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "Microsoft", "aspnet" }));
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "aspnet"]));
 
         registry.GetPackageOwnersAsync(owner.Login, repo.Name, "System.Text.Json", "7.0.2")
-                .Returns(Task.FromResult<IReadOnlyList<string>>(new[] { "Microsoft", "dotnetframework" }));
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "dotnetframework"]));
 
         var options = new WebhookOptions()
         {
@@ -668,13 +668,13 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = new[] { "aspnet", "dotnetframework", "Microsoft" },
+                    [DependencyEcosystem.NuGet] = ["aspnet", "dotnetframework", "Microsoft"],
                 },
             },
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, new[] { registry });
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
         var sha = "4f01e284f9bfac38bcf14f7595b1258fc5b1b542";
         var commitMessage = """

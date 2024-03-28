@@ -263,8 +263,7 @@ public sealed partial class GitCommitAnalyzer(
 
             var ecosystem = ParseEcosystem(reference);
 
-            if (ecosystem == DependencyEcosystem.Unknown ||
-                ecosystem == DependencyEcosystem.Unsupported)
+            if (ecosystem is DependencyEcosystem.Unknown or DependencyEcosystem.Unsupported)
             {
                 return false;
             }
@@ -275,9 +274,7 @@ public sealed partial class GitCommitAnalyzer(
                 return false;
             }
 
-            var registry = _registries
-                .Where((p) => p.Ecosystem == ecosystem)
-                .FirstOrDefault();
+            var registry = _registries.FirstOrDefault((p) => p.Ecosystem == ecosystem);
 
             if (registry is null)
             {

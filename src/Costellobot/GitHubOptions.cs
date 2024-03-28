@@ -19,7 +19,7 @@ public sealed class GitHubOptions
 
     public string PrivateKey { get; set; } = string.Empty;
 
-    public IList<string> Scopes { get; set; } = new List<string>();
+    public IList<string> Scopes { get; set; } = [];
 
     public string WebhookSecret { get; set; } = string.Empty;
 }

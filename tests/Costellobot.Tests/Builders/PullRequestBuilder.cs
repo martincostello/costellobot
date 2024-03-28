@@ -11,7 +11,7 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
 
     public bool? IsMergeable { get; set; }
 
-    public IList<LabelBuilder> Labels { get; set; } = new List<LabelBuilder>();
+    public IList<LabelBuilder> Labels { get; set; } = [];
 
     public string NodeId { get; set; } = RandomString();
 

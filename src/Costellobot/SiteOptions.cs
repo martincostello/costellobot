@@ -5,7 +5,7 @@ namespace MartinCostello.Costellobot;
 
 public sealed class SiteOptions
 {
-    public IList<string> AdminRoles { get; set; } = new List<string>();
+    public IList<string> AdminRoles { get; set; } = [];
 
-    public IList<string> AdminUsers { get; set; } = new List<string>();
+    public IList<string> AdminUsers { get; set; } = [];
 }

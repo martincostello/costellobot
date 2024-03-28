@@ -11,7 +11,7 @@ public sealed class CheckRunBuilder(string status, string? conclusion) : Respons
 
     public string? Conclusion { get; set; } = conclusion;
 
-    public IList<PullRequestBuilder> PullRequests { get; set; } = new List<PullRequestBuilder>();
+    public IList<PullRequestBuilder> PullRequests { get; set; } = [];
 
     public string Status { get; set; } = status;
 
