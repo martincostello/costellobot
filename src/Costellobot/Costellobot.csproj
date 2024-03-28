@@ -4,7 +4,7 @@
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
     <IsPackable>false</IsPackable>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <TypeScriptToolsVersion>latest</TypeScriptToolsVersion>
     <UserSecretsId>Costellobot</UserSecretsId>
