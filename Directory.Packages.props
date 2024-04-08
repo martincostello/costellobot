@@ -1,7 +1,4 @@
 <Project>
-  <PropertyGroup>
-    <PollyVersion>8.3.1</PollyVersion>
-  </PropertyGroup>
   <ItemGroup>
     <GlobalPackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="All" />
     <GlobalPackageReference Include="ReferenceTrimmer" Version="3.3.6" />
@@ -30,9 +27,9 @@
     <PackageVersion Include="Octokit" Version="10.0.0" />
     <PackageVersion Include="Octokit.GraphQL" Version="0.3.0-beta" />
     <PackageVersion Include="Octokit.Webhooks.AspNetCore" Version="2.1.1" />
-    <PackageVersion Include="Polly.Core" Version="$(PollyVersion)" />
-    <PackageVersion Include="Polly.Extensions" Version="$(PollyVersion)" />
-    <PackageVersion Include="Polly.RateLimiting" Version="$(PollyVersion)" />
+    <PackageVersion Include="Polly.Core" Version="8.3.1" />
+    <PackageVersion Include="Polly.Extensions" Version="8.3.1" />
+    <PackageVersion Include="Polly.RateLimiting" Version="8.3.1" />
     <PackageVersion Include="ReportGenerator" Version="5.2.4" />
     <PackageVersion Include="Shouldly" Version="4.2.1" />
     <PackageVersion Include="xunit" Version="2.7.0" />
