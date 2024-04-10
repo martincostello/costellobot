@@ -20,7 +20,7 @@
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="8.3.0" />
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.5.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
-    <PackageVersion Include="Microsoft.Playwright" Version="1.42.0" />
+    <PackageVersion Include="Microsoft.Playwright" Version="1.43.0" />
     <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="5.4.4" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="NSubstitute" Version="5.1.0" />
