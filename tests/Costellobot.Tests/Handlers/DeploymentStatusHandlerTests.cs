@@ -498,7 +498,8 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
 
-        var dependabot = CreateUserForDependabot();
+        CreateUserForDependabot();
+
         var additional = CreateUntrustedCommit(driver.Repository);
         driver.WithPendingCommit(additional);
 

@@ -73,8 +73,6 @@ public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHel
             await deliveries.WaitForContentAsync();
             await deliveries.WaitForWebhookCountAsync(1);
 
-            var items = await deliveries.GetDeliveriesAsync();
-
             var wanted = new WebhookDeliveryBuilder("pull_request", "opened", 123, 456);
             var payload = wanted.AsPayload();
 

@@ -22,7 +22,7 @@ public static class GitSubmodulePackageRegistryTests
             .ThrowsOnMissingRegistration()
             .RegisterBundleAsync(Path.Combine("Bundles", "github-submodules.json"));
 
-        var adapter = new Octokit.Internal.HttpClientAdapter(options.CreateHttpMessageHandler);
+        using var adapter = new Octokit.Internal.HttpClientAdapter(options.CreateHttpMessageHandler);
         var connection = new Connection(new("costellobot", "1.0.0"), adapter);
         var client = new GitHubClientAdapter(connection);
         var graphConnection = Substitute.For<Octokit.GraphQL.IConnection>();

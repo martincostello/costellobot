@@ -91,9 +91,9 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
     {
         AntiforgeryTokens anonymousTokens = await Fixture.GetAntiforgeryTokensAsync();
 
-        var redirectHandler = new RedirectHandler(Fixture.ClientOptions.MaxAutomaticRedirections);
+        using var redirectHandler = new RedirectHandler(Fixture.ClientOptions.MaxAutomaticRedirections);
 
-        var anonymousCookieHandler = new CookieContainerHandler();
+        using var anonymousCookieHandler = new CookieContainerHandler();
         anonymousCookieHandler.Container.Add(
             Fixture.Server.BaseAddress,
             new Cookie(anonymousTokens.CookieName, anonymousTokens.CookieValue));
@@ -111,14 +111,30 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
 
         var authenticatedCookieHandler = new CookieContainerHandler(anonymousCookieHandler.Container);
 
-        var authenticatedClient = Fixture.CreateDefaultClient(authenticatedCookieHandler);
-
-        if (setAntiforgeryTokenHeader)
+        try
         {
-            authenticatedClient.DefaultRequestHeaders.Add(authenticatedTokens.HeaderName, authenticatedTokens.RequestToken);
-        }
+            var authenticatedClient = Fixture.CreateDefaultClient(authenticatedCookieHandler);
 
-        return authenticatedClient;
+            try
+            {
+                if (setAntiforgeryTokenHeader)
+                {
+                    authenticatedClient.DefaultRequestHeaders.Add(authenticatedTokens.HeaderName, authenticatedTokens.RequestToken);
+                }
+
+                return authenticatedClient;
+            }
+            catch (Exception)
+            {
+                authenticatedClient.Dispose();
+                throw;
+            }
+        }
+        catch (Exception)
+        {
+            authenticatedCookieHandler.Dispose();
+            throw;
+        }
     }
 
     protected void RegisterGetAccessToken(AccessTokenBuilder? accessToken = null)
