@@ -26,7 +26,7 @@ public static class GitHubActionsPackageRegistryTests
             .ThrowsOnMissingRegistration()
             .RegisterBundleAsync(Path.Combine("Bundles", "github-refs.json"));
 
-        var httpClient = new HttpClientAdapter(options.CreateHttpMessageHandler);
+        using var httpClient = new HttpClientAdapter(options.CreateHttpMessageHandler);
         var connection = new Connection(new("costellobot", "1.0.0"), httpClient);
         var client = new GitHubClientAdapter(connection);
         var graphConnection = Substitute.For<Octokit.GraphQL.IConnection>();
