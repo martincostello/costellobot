@@ -28,6 +28,8 @@ public static class NuGetPackageRegistryTests
             .RegisterBundleAsync(Path.Combine("Bundles", "nuget-search.json"));
 
         using var client = options.CreateHttpClient();
+        client.BaseAddress = new Uri("https://api.nuget.org");
+
         using var cache = new MemoryCache(new MemoryCacheOptions());
 
         var target = new NuGetPackageRegistry(client, cache);

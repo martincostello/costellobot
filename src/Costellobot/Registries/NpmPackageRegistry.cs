@@ -9,8 +9,6 @@ namespace MartinCostello.Costellobot.Registries;
 
 public sealed partial class NpmPackageRegistry(HttpClient client) : PackageRegistry(client)
 {
-    private static readonly Uri BaseAddress = new("https://registry.npmjs.org");
-
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.Npm;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
@@ -23,7 +21,7 @@ public sealed partial class NpmPackageRegistry(HttpClient client) : PackageRegis
         var escapedVersion = Uri.EscapeDataString(version);
 
         // https://github.com/npm/registry/blob/master/docs/responses/package-metadata.md#package-metadata
-        var uri = new Uri(BaseAddress, $"{escapedId}/{escapedVersion}");
+        var uri = new Uri($"{escapedId}/{escapedVersion}", UriKind.Relative);
 
         Package? package;
 

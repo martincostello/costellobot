@@ -11,8 +11,6 @@ namespace MartinCostello.Costellobot.Registries;
 
 public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache cache) : PackageRegistry(client)
 {
-    private static readonly Uri ServiceIndexUri = new("https://api.nuget.org/v3/index.json");
-
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.NuGet;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
@@ -113,7 +111,7 @@ public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache
         return await cache.GetOrCreateAsync("nuget-service-index", async (entry) =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
-            return await Client.GetFromJsonAsync(ServiceIndexUri, NuGetJsonSerializerContext.Default.ServiceIndex);
+            return await Client.GetFromJsonAsync("/v3/index.json", NuGetJsonSerializerContext.Default.ServiceIndex);
         });
     }
 
