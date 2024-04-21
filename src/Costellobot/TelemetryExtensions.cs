@@ -65,7 +65,7 @@ public static class TelemetryExtensions
 
         if (IsAzureMonitorConfigured())
         {
-            telemetry.UseAzureMonitor((p) => p.Credential = new DefaultAzureCredential());
+            telemetry.UseAzureMonitor();
         }
 
         services.AddOptions<HttpClientTraceInstrumentationOptions>()
