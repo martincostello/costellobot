@@ -66,6 +66,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Costellobot.Tests", "tests\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Costellobot.EndToEndTests", "tests\Costellobot.EndToEndTests\Costellobot.EndToEndTests.csproj", "{4195D1F1-C9CC-45E2-8401-DE2E6B6747E3}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Costellobot.AppHost", "src\Costellobot.AppHost\Costellobot.AppHost.csproj", "{D35AB20F-6BE9-42AD-8B87-067794F24827}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,6 +86,10 @@ Global
 		{4195D1F1-C9CC-45E2-8401-DE2E6B6747E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4195D1F1-C9CC-45E2-8401-DE2E6B6747E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4195D1F1-C9CC-45E2-8401-DE2E6B6747E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D35AB20F-6BE9-42AD-8B87-067794F24827}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D35AB20F-6BE9-42AD-8B87-067794F24827}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D35AB20F-6BE9-42AD-8B87-067794F24827}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D35AB20F-6BE9-42AD-8B87-067794F24827}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -96,6 +102,7 @@ Global
 		{A6846A80-457A-40A0-AA48-2DAD55F194AD} = {03DB7DB6-48FD-48EC-A5F4-6BC668B804F4}
 		{DABA5554-941C-479B-A3BC-E6EA60AF94A3} = {712BC61D-F6BE-4D1A-80A4-E88B69262999}
 		{4195D1F1-C9CC-45E2-8401-DE2E6B6747E3} = {712BC61D-F6BE-4D1A-80A4-E88B69262999}
+		{D35AB20F-6BE9-42AD-8B87-067794F24827} = {03DB7DB6-48FD-48EC-A5F4-6BC668B804F4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F668B0C-5D69-41B4-A2D2-38B58A8FF46C}

@@ -23,6 +23,11 @@ following set of commands:
 ```powershell
 git clone https://github.com/martincostello/costellobot.git
 cd costellobot
+
+# Restore Aspire workload on first usage (requires elevation on Windows if not installed)
+dotnet workload restore
+
+# Build and test the application
 ./build.ps1
 ```
 
