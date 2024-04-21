@@ -23,6 +23,8 @@ public sealed class WebhookOptions
 
     public IList<string> IgnoreRepositories { get; set; } = [];
 
+    public IDictionary<string, RegistryOptions> Registries { get; set; } = new Dictionary<string, RegistryOptions>();
+
     public IList<string> RerunFailedChecks { get; set; } = [];
 
     public int RerunFailedChecksAttempts { get; set; }

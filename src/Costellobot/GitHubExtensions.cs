@@ -4,6 +4,7 @@
 using MartinCostello.Costellobot.Handlers;
 using MartinCostello.Costellobot.Registries;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Octokit;
 using Octokit.Internal;
@@ -72,10 +73,10 @@ public static class GitHubExtensions
         services.AddTransient<GitCommitAnalyzer>();
         services.AddTransient<GitHubWebhookDispatcher>();
 
-        services.AddTransient<IPackageRegistry, GitHubActionsPackageRegistry>();
-        services.AddTransient<IPackageRegistry, GitSubmodulePackageRegistry>();
-        services.AddTransient<IPackageRegistry, NpmPackageRegistry>();
-        services.AddTransient<IPackageRegistry, NuGetPackageRegistry>();
+        services.AddPackageRegistry<GitHubActionsPackageRegistry>();
+        services.AddPackageRegistry<GitSubmodulePackageRegistry>();
+        services.AddPackageRegistry<NpmPackageRegistry>("Npm");
+        services.AddPackageRegistry<NuGetPackageRegistry>("NuGet");
 
         services.AddSingleton<PublicHolidayProvider>();
 
@@ -89,6 +90,29 @@ public static class GitHubExtensions
         services.AddHostedService<GitHubWebhookService>();
 
         return services;
+    }
+
+    private static void AddPackageRegistry<T>(this IServiceCollection services, string? httpClientName = null)
+        where T : class, IPackageRegistry
+    {
+        if (httpClientName is { } name)
+        {
+            services.AddHttpClient<IPackageRegistry, T>(name, (provider, client) => ConfigureRegistry(name, provider, client));
+        }
+        else
+        {
+            services.AddScoped<IPackageRegistry, T>();
+        }
+
+        static void ConfigureRegistry(string name, IServiceProvider provider, HttpClient client)
+        {
+            var options = provider.GetRequiredService<IOptions<WebhookOptions>>().Value;
+            if (options.Registries.TryGetValue(name, out var endpoint))
+            {
+                client.BaseAddress = endpoint.BaseAddress;
+                client.Timeout = endpoint.Timeout;
+            }
+        }
     }
 
     private static Connection CreateConnection<T>(this IServiceProvider provider)

@@ -16,6 +16,7 @@ builder.Services.AddGitHub(builder.Configuration, builder.Environment);
 builder.Services.AddHsts((options) => options.MaxAge = TimeSpan.FromDays(180));
 builder.Services.AddRazorPages();
 builder.Services.AddResponseCaching();
+builder.Services.AddTelemetry(builder.Environment);
 
 builder.Services.AddResponseCompression((options) =>
 {
@@ -27,6 +28,7 @@ builder.Services.AddSignalR();
 builder.Services.AddSingleton<ClientLogQueue>();
 builder.Services.AddHostedService<ClientLogBroadcastService>();
 
+builder.Logging.AddTelemetry();
 builder.Logging.AddSignalR();
 
 builder.Services.ConfigureHttpJsonOptions((options) =>

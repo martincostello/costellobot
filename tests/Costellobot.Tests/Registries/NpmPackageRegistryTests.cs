@@ -23,6 +23,7 @@ public static class NpmPackageRegistryTests
             .RegisterBundleAsync(Path.Combine("Bundles", "npm-registry.json"));
 
         using var client = options.CreateHttpClient();
+        client.BaseAddress = new Uri("https://registry.npmjs.org");
 
         var target = new NpmPackageRegistry(client);
 
