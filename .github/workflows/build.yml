@@ -105,7 +105,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
 
     - name: Publish artifacts
-      uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
+      uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
       if: runner.os == 'Windows' && success()
       with:
         name: webapp
@@ -113,7 +113,7 @@ jobs:
         if-no-files-found: error
 
     - name: Publish screenshots
-      uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
+      uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
       if: ${{ !cancelled() }}
       with:
         name: screenshots-${{ matrix.os-name }}
@@ -121,7 +121,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Publish traces
-      uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
+      uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
       if: ${{ !cancelled() }}
       with:
         name: traces-${{ matrix.os-name }}
@@ -129,7 +129,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Publish videos
-      uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
+      uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
       if: ${{ !cancelled() }}
       with:
         name: videos-${{ matrix.os-name }}
@@ -232,7 +232,7 @@ jobs:
         APPLICATION_URL: ${{ env.APPLICATION_URL_PROD }}
 
     - name: Publish screenshots
-      uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
+      uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
       if: ${{ !cancelled() }}
       with:
         name: screenshots-e2e
@@ -240,7 +240,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Publish traces
-      uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
+      uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
       if: ${{ !cancelled() }}
       with:
         name: traces-e2e
@@ -248,7 +248,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Publish videos
-      uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
+      uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
       if: ${{ !cancelled() }}
       with:
         name: videos-e2e
