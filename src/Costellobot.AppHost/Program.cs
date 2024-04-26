@@ -3,7 +3,7 @@
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-//builder.AddProject<Projects.Costellobot>("Costellobot");
+////builder.AddProject<Projects.Costellobot>("Costellobot");
 
 var app = builder.Build();
 
