@@ -70,16 +70,23 @@ public sealed partial class GitHubWebhookService(
 
     private async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (true)
+        while (!stoppingToken.IsCancellationRequested)
         {
-            var message = await queue.DequeueAsync(stoppingToken);
+            try
+            {
+                var message = await queue.DequeueAsync(stoppingToken);
 
-            if (message is null)
+                if (message is null)
+                {
+                    break;
+                }
+
+                await ProcessAsync(message);
+            }
+            catch (OperationCanceledException ex) when (ex.CancellationToken == stoppingToken)
             {
                 break;
             }
-
-            await ProcessAsync(message);
         }
     }
 
