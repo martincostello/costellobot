@@ -36,7 +36,7 @@
     <PackageReference Include="Polly.RateLimiting" />
   </ItemGroup>
   <ItemGroup>
-    <Content Update="coverage\**;package.json;package-lock.json;tsconfig.json" CopyToPublishDirectory="Never" />
+    <Content Update=".prettierignore;coverage\**;package.json;package-lock.json;tsconfig.json" CopyToPublishDirectory="Never" />
     <Content Remove="bank-holidays.json" />
     <EmbeddedResource Include="bank-holidays.json" />
     <None Remove="scripts\ts\**\*.ts" />
