@@ -109,6 +109,7 @@ public sealed class ApiTests(AppFixture fixture, ITestOutputHelper outputHelper)
         var actual = await client.GetFromJsonAsync<JsonElement>("/version");
 
         // Assert
-        actual.TryGetProperty("version", out _).ShouldBeTrue();
+        actual.TryGetProperty("application", out var application).ShouldBeTrue();
+        application.TryGetProperty("version", out _).ShouldBeTrue();
     }
 }
