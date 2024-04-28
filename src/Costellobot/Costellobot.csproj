@@ -2,7 +2,7 @@
   <PropertyGroup>
     <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <InvariantGlobalization>false</InvariantGlobalization>
     <IsPackable>false</IsPackable>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
     <TargetFramework>net8.0</TargetFramework>
@@ -12,8 +12,8 @@
   </PropertyGroup>
   <PropertyGroup>
     <!-- TODO Remove if https://github.com/dotnet/sdk/issues/40500 implemented or when no longer only in nightly -->
-    <ContainerBaseImage>mcr.microsoft.com/dotnet/nightly/runtime-deps:8.0-noble-chiseled</ContainerBaseImage>
-    <ContainerFamily>noble-chiseled</ContainerFamily>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/nightly/runtime-deps:8.0-noble-chiseled-extra</ContainerBaseImage>
+    <ContainerFamily>noble-chiseled-extra</ContainerFamily>
     <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
     <PublishSelfContained>true</PublishSelfContained>
   </PropertyGroup>
