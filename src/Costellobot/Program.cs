@@ -2,6 +2,9 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.IO.Compression;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text.Json.Nodes;
 using MartinCostello.Costellobot;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -104,10 +107,33 @@ app.MapGitHubWebhooks("/github-webhook", app.Configuration["GitHub:WebhookSecret
 
 app.MapGet("/version", () => new JsonObject()
 {
-    ["branch"] = GitMetadata.Branch,
-    ["build"] = GitMetadata.BuildId,
-    ["commit"] = GitMetadata.Commit,
-    ["version"] = GitMetadata.Version,
+    ["application"] = new JsonObject()
+    {
+        ["branch"] = GitMetadata.Branch,
+        ["build"] = GitMetadata.BuildId,
+        ["commit"] = GitMetadata.Commit,
+        ["version"] = GitMetadata.Version,
+    },
+    ["frameworkDescription"] = RuntimeInformation.FrameworkDescription,
+    ["operatingSystem"] = new JsonObject()
+    {
+        ["description"] = RuntimeInformation.OSDescription,
+        ["architecture"] = RuntimeInformation.OSArchitecture.ToString(),
+        ["version"] = Environment.OSVersion.VersionString,
+        ["is64Bit"] = Environment.Is64BitOperatingSystem,
+    },
+    ["process"] = new JsonObject()
+    {
+        ["architecture"] = RuntimeInformation.ProcessArchitecture.ToString(),
+        ["is64BitProcess"] = Environment.Is64BitProcess,
+        ["isNativeAoT"] = !RuntimeFeature.IsDynamicCodeSupported,
+        ["isPrivilegedProcess"] = Environment.IsPrivilegedProcess,
+    },
+    ["dotnetVersions"] = new JsonObject()
+    {
+        ["runtime"] = typeof(object).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion,
+        ["aspNetCore"] = typeof(HttpContext).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion,
+    },
     ["_links"] = new JsonObject()
     {
         ["self"] = new JsonObject() { ["href"] = "https://costellobot.martincostello.com" },
