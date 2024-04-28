@@ -17,6 +17,7 @@ public class ResourceTests(AppFixture fixture, ITestOutputHelper outputHelper) :
     [InlineData("/manifest.webmanifest", "application/manifest+json")]
     [InlineData("/not-found.html", MediaTypeNames.Text.Html)]
     [InlineData("/robots.txt", MediaTypeNames.Text.Plain)]
+    [InlineData("/robots933456.txt", MediaTypeNames.Text.Plain)]
     [InlineData("/sign-in", MediaTypeNames.Text.Html)]
     [InlineData("/static/css/main.css", "text/css")]
     [InlineData("/static/css/main.css.map", MediaTypeNames.Text.Plain)]
