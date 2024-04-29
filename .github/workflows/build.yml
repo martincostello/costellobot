@@ -16,7 +16,7 @@ on:
 
 env:
   APPLICATION_URL_PROD: https://costellobot.martincostello.com
-  AZURE_WEBAPP_NAME: costellobotmartincostello
+  AZURE_WEBAPP_NAME: costellobot-martincostello
   CONTAINER_REGISTRY: '${{ github.repository_owner }}.azurecr.io'
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_GENERATE_ASPNET_CERTIFICATE: false
@@ -26,7 +26,6 @@ env:
   DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTION: 1
   FORCE_COLOR: 1
   NUGET_XMLDOC_MODE: skip
-  PUBLISH_RUNTIME: win-x64
   TERM: xterm
 
 permissions:
@@ -102,7 +101,7 @@ jobs:
 
     - name: Build, Test and Publish
       shell: pwsh
-      run: ./build.ps1 -Runtime ${env:PUBLISH_RUNTIME}
+      run: ./build.ps1
 
     - uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed # v4.3.0
       name: Upload coverage to Codecov
@@ -110,14 +109,6 @@ jobs:
         files: ./artifacts/coverage/coverage.cobertura.xml,./src/Costellobot/coverage/lcov.info
         flags: ${{ matrix.os-name }}
         token: ${{ secrets.CODECOV_TOKEN }}
-
-    - name: Publish artifacts
-      uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
-      if: runner.os == 'Windows' && success()
-      with:
-        name: webapp
-        path: ./artifacts/publish/Costellobot/release_${{ env.PUBLISH_RUNTIME }}
-        if-no-files-found: error
 
     - name: Publish screenshots
       uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
@@ -168,7 +159,7 @@ jobs:
     if: github.event.repository.fork == false && github.ref_name == github.event.repository.default_branch
     name: deploy-production
     needs: build
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     concurrency: production_environment
 
     environment:
@@ -180,11 +171,6 @@ jobs:
 
     steps:
 
-    - name: Download artifacts
-      uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
-      with:
-        name: webapp
-
     - name: Azure log in
       uses: azure/login@6b2456866fc08b011acb422a92a4aa20e2c4de32 # v2.1.0
       with:
@@ -192,15 +178,10 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Deploy application to Azure App Service
-      uses: azure/webapps-deploy@de617f46172a906d0617bb0e50d81e9e3aec24c8 # v3.0.1
-      with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-
     - name: Deploy container to Azure App Service
       uses: azure/webapps-deploy@de617f46172a906d0617bb0e50d81e9e3aec24c8 # v3.0.1
       with:
-        app-name: costellobot-martincostello
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
         images: ${{ needs.build.outputs.container-tag }}
 
     - name: Check application health
