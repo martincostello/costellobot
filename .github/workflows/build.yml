@@ -192,11 +192,16 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Deploy to Azure App Service
+    - name: Deploy application to Azure App Service
       uses: azure/webapps-deploy@de617f46172a906d0617bb0e50d81e9e3aec24c8 # v3.0.1
-      id: deploy_production
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
+
+    - name: Deploy container to Azure App Service
+      uses: azure/webapps-deploy@de617f46172a906d0617bb0e50d81e9e3aec24c8 # v3.0.1
+      with:
+        app-name: costellobot-martincostello
+        images: ${{ needs.build.outputs.container-tag }}
 
     - name: Check application health
       shell: pwsh
