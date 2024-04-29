@@ -12,8 +12,8 @@
     <UserSecretsId>Costellobot</UserSecretsId>
   </PropertyGroup>
   <PropertyGroup>
-    <!-- TODO Switch to noble once available for .NET 9 -->
-    <ContainerFamily>jammy-chiseled-extra</ContainerFamily>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/nightly/runtime-deps:9.0-preview-noble-chiseled-extra</ContainerBaseImage>
+    <ContainerFamily>noble-chiseled-extra</ContainerFamily>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AspNet.Security.OAuth.GitHub" />
