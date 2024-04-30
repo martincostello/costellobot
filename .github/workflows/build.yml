@@ -97,7 +97,7 @@ jobs:
 
     - name: Install .NET Workloads
       shell: pwsh
-      run: dotnet workload restore
+      run: dotnet workload restore --skip-manifest-update
 
     - name: Build, Test and Publish
       shell: pwsh
