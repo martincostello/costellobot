@@ -92,7 +92,11 @@ app.UseStatusCodePagesWithReExecute("/error", "?id={0}");
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
-    app.UseHttpsRedirection();
+
+    if (!string.Equals(app.Configuration["ForwardedHeaders_Enabled"], bool.TrueString, StringComparison.OrdinalIgnoreCase))
+    {
+        app.UseHttpsRedirection();
+    }
 }
 
 app.UseResponseCompression();
