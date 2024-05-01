@@ -3,7 +3,9 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using AspNet.Security.OAuth.GitHub;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Instrumentation.Http;
 using OpenTelemetry.Metrics;
@@ -106,17 +108,29 @@ public static class TelemetryExtensions
 
     private static void AddServiceMappings(ConcurrentDictionary<string, string> mappings, IServiceProvider serviceProvider)
     {
-        var github = serviceProvider.GetRequiredService<IOptions<GitHubOptions>>().Value;
         var webhook = serviceProvider.GetRequiredService<IOptions<WebhookOptions>>().Value;
-
-        if (github.EnterpriseDomain is { Length: > 0 } ghes)
-        {
-            mappings[ghes] = "GitHub Enterprise";
-        }
 
         foreach ((string registry, var endpoint) in webhook.Registries)
         {
             mappings[endpoint.BaseAddress.Host] = registry;
+        }
+
+        var github = serviceProvider.GetRequiredService<IOptions<GitHubOptions>>().Value;
+        var oauth = serviceProvider.GetRequiredService<IOptions<GitHubAuthenticationOptions>>().Value;
+
+        AddMapping("GitHub", github.EnterpriseDomain);
+        AddMapping("GitHub", oauth.AuthorizationEndpoint);
+        AddMapping("GitHub", oauth.TokenEndpoint);
+        AddMapping("GitHub", oauth.UserInformationEndpoint);
+
+        void AddMapping(string name, string? host)
+        {
+            if (host is { Length: > 0 } url &&
+                Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
+                !mappings.ContainsKey(uri.Host))
+            {
+                mappings[uri.Host] = name;
+            }
         }
     }
 }
