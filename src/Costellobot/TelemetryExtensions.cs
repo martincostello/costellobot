@@ -5,7 +5,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using AspNet.Security.OAuth.GitHub;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
-using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Instrumentation.Http;
 using OpenTelemetry.Metrics;
