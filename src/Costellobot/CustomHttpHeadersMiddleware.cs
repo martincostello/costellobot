@@ -10,27 +10,7 @@ namespace MartinCostello.Costellobot;
 
 public sealed class CustomHttpHeadersMiddleware(RequestDelegate next)
 {
-    private static readonly CompositeFormat ContentSecurityPolicyTemplate = CompositeFormat.Parse(string.Join(
-        ';',
-        [
-            "default-src 'self'",
-            "script-src 'self' cdnjs.cloudflare.com",
-            "script-src-elem 'self' cdnjs.cloudflare.com",
-            "style-src 'self' cdnjs.cloudflare.com use.fontawesome.com",
-            "style-src-elem 'self' cdnjs.cloudflare.com use.fontawesome.com",
-            "img-src 'self' data: avatars.githubusercontent.com",
-            "font-src 'self' cdnjs.cloudflare.com use.fontawesome.com",
-            "connect-src 'self'",
-            "media-src 'none'",
-            "object-src 'none'",
-            "child-src 'none'",
-            "frame-ancestors 'none'",
-            "form-action 'self' {0}",
-            "block-all-mixed-content",
-            "base-uri 'self'",
-            "manifest-src 'self'",
-            "upgrade-insecure-requests",
-        ]));
+    private static readonly CompositeFormat ContentSecurityPolicyTemplate = CreateContentSecurityPolicyTemplate();
 
     public Task Invoke(
         HttpContext context,
@@ -78,6 +58,32 @@ public sealed class CustomHttpHeadersMiddleware(RequestDelegate next)
             CultureInfo.InvariantCulture,
             ContentSecurityPolicyTemplate,
             ParseGitHubHost(gitHubAuthorizationEndpoint));
+    }
+
+    private static CompositeFormat CreateContentSecurityPolicyTemplate()
+    {
+        ReadOnlySpan<string?> policies =
+        [
+            "default-src 'self'",
+            "script-src 'self' cdnjs.cloudflare.com",
+            "script-src-elem 'self' cdnjs.cloudflare.com",
+            "style-src 'self' cdnjs.cloudflare.com use.fontawesome.com",
+            "style-src-elem 'self' cdnjs.cloudflare.com use.fontawesome.com",
+            "img-src 'self' data: avatars.githubusercontent.com",
+            "font-src 'self' cdnjs.cloudflare.com use.fontawesome.com",
+            "connect-src 'self'",
+            "media-src 'none'",
+            "object-src 'none'",
+            "child-src 'none'",
+            "frame-ancestors 'none'",
+            "form-action 'self' {0}",
+            "block-all-mixed-content",
+            "base-uri 'self'",
+            "manifest-src 'self'",
+            "upgrade-insecure-requests",
+        ];
+
+        return CompositeFormat.Parse(string.Join(';', policies));
     }
 
     private static string ParseGitHubHost(string gitHubAuthorizationEndpoint)
