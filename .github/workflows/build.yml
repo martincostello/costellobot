@@ -27,8 +27,6 @@ env:
   FORCE_COLOR: 1
   NUGET_XMLDOC_MODE: skip
   TERM: xterm
-  # HACK Disable to see why dotnet test seems to be crashing on macOS arm64
-  MSBUILDTERMINALLOGGER: "off"
 
 permissions:
   contents: read
