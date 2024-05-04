@@ -72,7 +72,10 @@ if ($installDotNetSdk -eq $true) {
 function DotNetTest {
     param([string]$Project)
 
-    $additionalArgs = @()
+    $additionalArgs = @(
+        "--blame-crash",
+        "--blame-crash-collect-always"
+    )
 
     if (![string]::IsNullOrEmpty($TestFilter)) {
         $additionalArgs += "--filter"
