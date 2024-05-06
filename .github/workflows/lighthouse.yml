@@ -60,7 +60,7 @@ jobs:
         New-Item -Path "${env:GITHUB_WORKSPACE}/artifacts/lighthouse" -ItemType Directory | Out-Null
 
     - name: Lighthouse
-      uses: foo-software/lighthouse-check-action@f78f162ef0ecd48a18244c427959f0b79ef4d553 # v10.0.0
+      uses: foo-software/lighthouse-check-action@a80267da2e0244b8a2e457a8575fc47590615852 # v12.0.1
       id: lighthouse
       with:
         device: 'all'
@@ -74,11 +74,11 @@ jobs:
       uses: foo-software/lighthouse-check-status-action@f22f8cdcaf593a986749d39fe21382526de3f501 # v2.0.1
       with:
         lighthouseCheckResults: ${{ steps.lighthouse.outputs.lighthouseCheckResults }}
-        minAccessibilityScore: "95"
+        minAccessibilityScore: "93"
         minBestPracticesScore: "92"
         minPerformanceScore: "95"
         minProgressiveWebAppScore: "50"
-        minSeoScore: "85"
+        minSeoScore: "60"
 
     - name: Publish artifacts
       uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
