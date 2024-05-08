@@ -7,6 +7,7 @@ using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.DeploymentStatus;
 using Octokit.Webhooks.Models.DeploymentStatusEvent;
+using Polly;
 
 namespace MartinCostello.Costellobot.Handlers;
 
@@ -18,6 +19,8 @@ public sealed partial class DeploymentStatusHandler(
     IOptionsMonitor<WebhookOptions> webhookOptions,
     ILogger<DeploymentStatusHandler> logger) : IHandler
 {
+    private static readonly ResiliencePipeline Pipeline = CreateResiliencePipeline();
+
     public async Task HandleAsync(WebhookEvent message)
     {
         if (message is not DeploymentStatusEvent body ||
@@ -104,6 +107,17 @@ public sealed partial class DeploymentStatusHandler(
         await ApproveDeploymentAsync(owner, name, run.Id, deployment);
     }
 
+    private static ResiliencePipeline CreateResiliencePipeline()
+    {
+        return new ResiliencePipelineBuilder()
+            .AddRetry(new()
+            {
+                Delay = TimeSpan.FromSeconds(1),
+                ShouldHandle = new PredicateBuilder().Handle<ApiValidationException>(),
+            })
+            .Build();
+    }
+
     private async Task ApproveDeploymentAsync(
         string owner,
         string name,
@@ -124,11 +138,10 @@ public sealed partial class DeploymentStatusHandler(
                 PendingDeploymentReviewState.Approved,
                 webhookOptions.CurrentValue.DeployComment);
 
-            await client.Actions.Workflows.Runs.ReviewPendingDeployments(
-                owner,
-                name,
-                runId,
-                review);
+            await Pipeline.ExecuteAsync(
+                static async (state, _) => await state.client.Actions.Workflows.Runs.ReviewPendingDeployments(state.owner, state.name, state.runId, state.review),
+                (client, owner, name, runId, review),
+                CancellationToken.None);
         }
         catch (Exception ex)
         {
