@@ -24,6 +24,9 @@ public sealed class RepositoryBuilder(UserBuilder owner, string? name = null) : 
     public GitHubCommitBuilder CreateCommit(UserBuilder? author = null)
         => new(this) { Author = author };
 
+    public IssueBuilder CreateIssue(UserBuilder? user = null)
+        => new(this, user);
+
     public PullRequestBuilder CreatePullRequest(UserBuilder? user = null)
         => new(this, user);
 

@@ -18,6 +18,7 @@ public static class HandlerFactoryTests
     [InlineData("deployment_protection_rule", typeof(DeploymentProtectionRuleHandler))]
     [InlineData("deployment_status", typeof(DeploymentStatusHandler))]
     [InlineData("issues", typeof(NullHandler))]
+    [InlineData("issue_comment", typeof(IssueCommentHandler))]
     [InlineData("ping", typeof(NullHandler))]
     [InlineData("pull_request", typeof(PullRequestHandler))]
     [InlineData("push", typeof(PushHandler))]
@@ -69,6 +70,14 @@ public static class HandlerFactoryTests
                     gitHubOptions,
                     webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<DeploymentStatusHandler>());
+            });
+
+        serviceProvider.GetService(typeof(IssueCommentHandler))
+            .Returns((_) =>
+            {
+                return new IssueCommentHandler(
+                    gitHubClient,
+                    NullLoggerFactory.Instance.CreateLogger<IssueCommentHandler>());
             });
 
         serviceProvider.GetService(typeof(PullRequestHandler))
