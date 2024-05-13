@@ -84,6 +84,7 @@ public static class GitHubExtensions
         services.AddTransient<CheckSuiteHandler>();
         services.AddTransient<DeploymentProtectionRuleHandler>();
         services.AddTransient<DeploymentStatusHandler>();
+        services.AddTransient<IssueCommentHandler>();
         services.AddTransient<PullRequestHandler>();
         services.AddTransient<PushHandler>();
 

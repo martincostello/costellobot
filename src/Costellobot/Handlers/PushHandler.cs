@@ -14,7 +14,6 @@ public sealed partial class PushHandler(
     private const string PrefixForBranchName = "refs/heads/";
     private const string DefaultBranch = $"{PrefixForBranchName}main";
     private const string DotNetNextBranch = $"{PrefixForBranchName}dotnet-vnext";
-    private const string DispatchDestination = "martincostello/github-automation";
 
     public async Task HandleAsync(WebhookEvent message)
     {
@@ -77,7 +76,7 @@ public sealed partial class PushHandler(
 
     private async Task CreateDispatchAsync(string repository, string reference, string sha)
     {
-        // See https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-dispatch-event
+        // See https://github.com/martincostello/github-automation/blob/main/.github/workflows/dotnet-dependencies-updated.yml
         var dispatch = new
         {
             event_type = "dotnet_dependencies_updated",
@@ -90,13 +89,7 @@ public sealed partial class PushHandler(
             },
         };
 
-        var uri = new Uri($"repos/{DispatchDestination}/dispatches", UriKind.Relative);
-        var status = await client.Connection.Post(uri, dispatch, "application/vnd.github+json");
-
-        if (status is not System.Net.HttpStatusCode.NoContent)
-        {
-            throw new ApiException($"Failed to create repository dispatch event for push to {repository}.", status);
-        }
+        await client.RepositoryDispatchAsync("martincostello", "github-automation", dispatch);
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
