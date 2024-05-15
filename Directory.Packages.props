@@ -20,7 +20,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.5" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="8.4.0" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="8.4.0" />
-    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.5.1" />
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.5.2" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.43.0" />
     <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="5.4.4" />
