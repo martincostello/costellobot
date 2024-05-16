@@ -104,9 +104,22 @@ jobs:
       shell: pwsh
       run: dotnet workload restore --skip-manifest-update --skip-sign-check
 
+    - name: Install dotnet-trace
+      if: runner.os == 'macOS'
+      shell: pwsh
+      run: dotnet tool install --global dotnet-trace
+
     - name: Build, Test and Publish
       shell: pwsh
       run: ./build.ps1
+
+    - name: Upload traces
+      uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+      if: ${{ !cancelled() && runner.os == 'macOS' }}
+      with:
+        name: traces
+        path: ./**/*.nettrace
+        if-no-files-found: ignore
 
     - uses: codecov/codecov-action@5ecb98a3c6b747ed38dc09f787459979aebb39be # v4.3.1
       name: Upload coverage to Codecov
