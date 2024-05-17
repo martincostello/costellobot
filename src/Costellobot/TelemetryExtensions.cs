@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using OpenTelemetry.Instrumentation.Http;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.ResourceDetectors.Azure;
+using OpenTelemetry.ResourceDetectors.Container;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -29,7 +30,8 @@ public static class TelemetryExtensions
 
         var resourceBuilder = ResourceBuilder.CreateDefault()
             .AddService(ApplicationTelemetry.ServiceName, serviceVersion: ApplicationTelemetry.ServiceVersion)
-            .AddDetector(new AppServiceResourceDetector());
+            .AddDetector(new AppServiceResourceDetector())
+            .AddDetector(new ContainerResourceDetector());
 
         if (IsAzureMonitorConfigured())
         {
