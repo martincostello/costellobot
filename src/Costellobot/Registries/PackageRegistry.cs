@@ -9,9 +9,6 @@ public abstract class PackageRegistry(HttpClient client) : IPackageRegistry
 
     protected HttpClient Client { get; } = client;
 
-    public virtual Task<bool> AreOwnersTrustedAsync(IReadOnlyList<string> owners)
-        => Task.FromResult(false);
-
     public abstract Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         string owner,
         string repository,
