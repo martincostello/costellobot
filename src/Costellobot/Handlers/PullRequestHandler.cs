@@ -148,7 +148,7 @@ public sealed partial class PullRequestHandler(
             await connection.Run(mutation);
             Log.AutoMergeEnabled(logger, owner, name, number);
         }
-        catch (Octokit.GraphQL.Core.Deserializers.ResponseDeserializerException ex) when (ex.Message == "[\"Pull request Pull request is in clean status\"]")
+        catch (Octokit.GraphQL.Core.Deserializers.ResponseDeserializerException ex) when (ex.Message.Contains("Pull request Pull request is in clean status", StringComparison.OrdinalIgnoreCase))
         {
             try
             {
