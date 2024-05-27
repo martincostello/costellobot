@@ -56,17 +56,6 @@ jobs:
         with:
           sarif_file: 'trivy.sarif'
 
-      - name: Run Trivy (Table)
-        uses: aquasecurity/trivy-action@fd25fed6972e341ff0007ddb61f77e88103953c2 # 0.21.0
-        env:
-          TRIVY_USERNAME: ${{ secrets.TRIVY_USERNAME }}
-          TRIVY_PASSWORD: ${{ secrets.TRIVY_PASSWORD }}
-        with:
-          image-ref: ${{ steps.configure.outputs.container-image }}
-          format: 'table'
-          ignore-unfixed: true
-          severity: 'CRITICAL,HIGH'
-
       - name: Run Trivy (JSON)
         uses: aquasecurity/trivy-action@fd25fed6972e341ff0007ddb61f77e88103953c2 # 0.21.0
         env:
