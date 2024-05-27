@@ -82,8 +82,11 @@ jobs:
           $report = Get-Content ./trivy.json | Out-String | ConvertFrom-Json
           $vulnerabilities = @()
           foreach ($target in $report.Results) {
+            if ($target.Type -eq "dotnet-core") {
+              # Ignore vulnerabilities in the .NET application itself as a rebuild of the container won't fix these
+              continue
+            }
             foreach ($vulnerability in $target.Vulnerabilities) {
-                # TODO Filter out any vulnerabilities that are related to .NET itself (i.e. just in the container itself)
                 $vulnerabilities += $vulnerability
             }
           }
