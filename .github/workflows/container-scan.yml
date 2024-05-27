@@ -16,6 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.repository.fork == false
 
+    concurrency:
+      group: ${{ github.workflow }}
+      cancel-in-progress: false
+
     permissions:
       contents: read
       security-events: write
