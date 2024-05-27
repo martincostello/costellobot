@@ -96,13 +96,16 @@ jobs:
           }
           "has-vulnerabilities=$(($vulnerabilities.Length -ne 0))".ToLowerInvariant() >> ${env:GITHUB_OUTPUT}
 
-          if ($vulnerabilities.Length -gt 0) {
-            $report = @(
-              "# Container Image Vulnerability Report",
-              "",
-              "| Library | Vulnerability | Severity | Status | Installed Version | Fixed Version | Title |",
-              "|:--------|:--------------|:---------|:-------|:------------------|:--------------|:------|"
-            )
+          $report = @(
+            "# Container Image Vulnerability Report",
+            ""
+          )
+
+          if ($vulnerabilities.Length -eq 0) {
+            $report += ":closed_lock_with_key: No vulnerabilities found."
+          } else {
+            $report += "| Library | Vulnerability | Severity | Status | Installed Version | Fixed Version | Title |"
+            $report += "|:--------|:--------------|:---------|:-------|:------------------|:--------------|:------|"
 
             foreach ($vulnerability in $vulnerabilities) {
               $title = $vulnerability.Title
@@ -117,12 +120,12 @@ jobs:
 
               $report += "| $($vulnerability.PkgName) | $($vulnerability.VulnerabilityID) | $($vulnerability.Severity) | $($vulnerability.Status) | $($vulnerability.InstalledVersion) | ${fixedVersion} | [${title}]($($vulnerability.PrimaryURL)) |"
             }
-
-            $report += ""
-            $report += ""
-
-            ($report -Join "`n") >> ${env:GITHUB_STEP_SUMMARY}
           }
+
+          $report += ""
+          $report += ""
+
+          ($report -Join "`n") >> ${env:GITHUB_STEP_SUMMARY}
 
       - name: Rebuild if any vulnerabilities found
         if: |
