@@ -62,3 +62,37 @@ jobs:
           format: 'table'
           ignore-unfixed: true
           severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy (JSON)
+        uses: aquasecurity/trivy-action@fd25fed6972e341ff0007ddb61f77e88103953c2 # 0.21.0
+        env:
+          TRIVY_USERNAME: ${{ secrets.TRIVY_USERNAME }}
+          TRIVY_PASSWORD: ${{ secrets.TRIVY_PASSWORD }}
+        with:
+          image-ref: ${{ steps.configure.outputs.container-image }}
+          format: 'json'
+          ignore-unfixed: true
+          output: 'trivy.json'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Check for vulnerabilities
+        id: check-for-vulnerabilities
+        shell: pwsh
+        run: |
+          $report = Get-Content ./trivy.json | Out-String | ConvertFrom-Json
+          $vulnerabilities = @()
+          foreach ($target in $report.Results) {
+            foreach ($vulnerability in $target.Vulnerabilities) {
+                # TODO Filter out any vulnerabilities that are related to .NET itself (i.e. just in the container itself)
+                $vulnerabilities += $vulnerability
+            }
+          }
+          "has-vulnerabilities=$(($vulnerabilities.Length -ne 0))".ToLowerInvariant() >> ${env:GITHUB_OUTPUT}
+
+      - name: Rebuild if any vulnerabilities found
+        if: |
+          github.event_name == 'schedule' &&
+          steps.check-for-vulnerabilities.outputs.has-vulnerabilities == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.COSTELLOBOT_TOKEN }}
+        run: gh workflow run build.yml
