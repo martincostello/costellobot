@@ -28,11 +28,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{26D87401-BDF9-4D61-BE3C-A0A21FDC5877}"
 	ProjectSection(SolutionItems) = preProject
+		.github\actionlint-matcher.json = .github\actionlint-matcher.json
+		.github\CODEOWNERS = .github\CODEOWNERS
 		.github\CONTRIBUTING.md = .github\CONTRIBUTING.md
 		.github\dependabot.yml = .github\dependabot.yml
 		.github\FUNDING.yml = .github\FUNDING.yml
 		.github\ISSUE_TEMPLATE.md = .github\ISSUE_TEMPLATE.md
 		.github\PULL_REQUEST_TEMPLATE.md = .github\PULL_REQUEST_TEMPLATE.md
+		.github\update-dotnet-sdk.json = .github\update-dotnet-sdk.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{DEECF28F-D75D-4DBB-B304-214339FC75AB}"
