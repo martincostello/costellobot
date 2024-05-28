@@ -20,7 +20,7 @@ public sealed partial class NpmPackageRegistry(HttpClient client) : PackageRegis
         var escapedId = Uri.EscapeDataString(id);
         var escapedVersion = Uri.EscapeDataString(version);
 
-        // https://github.com/npm/registry/blob/master/docs/responses/package-metadata.md#package-metadata
+        // https://github.com/npm/registry/blob/main/docs/responses/package-metadata.md#package-metadata
         var uri = new Uri($"{escapedId}/{escapedVersion}", UriKind.Relative);
 
         Package? package;
