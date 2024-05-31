@@ -113,6 +113,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 KeyValuePair.Create<string, string?>("ConnectionStrings:AzureStorage", string.Empty),
                 KeyValuePair.Create<string, string?>("GitHub:AccessToken", "gho_github-access-token"),
                 KeyValuePair.Create<string, string?>("GitHub:AppId", "123"),
+                KeyValuePair.Create<string, string?>("GitHub:BadgesKey", "badges-key"),
                 KeyValuePair.Create<string, string?>("GitHub:ClientId", "github-id"),
                 KeyValuePair.Create<string, string?>("GitHub:ClientSecret", "github-secret"),
                 KeyValuePair.Create<string, string?>("GitHub:EnterpriseDomain", string.Empty),

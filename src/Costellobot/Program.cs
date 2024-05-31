@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json.Nodes;
 using MartinCostello.Costellobot;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Octokit.Webhooks.AspNetCore;
 
@@ -108,6 +109,16 @@ app.UseAuthorization();
 
 app.MapAuthenticationRoutes();
 app.MapGitHubWebhooks("/github-webhook", app.Configuration["GitHub:WebhookSecret"] ?? string.Empty);
+
+app.MapGet("/badge/{type}/{owner}/{repo}", async (string type, string owner, string repo, [FromQuery(Name = "s")] string? signature, BadgeService service) =>
+{
+    if (await service.GetBadgeAsync(type, owner, repo, signature) is { } url)
+    {
+        return Results.Redirect(url);
+    }
+
+    return Results.NotFound();
+}).AllowAnonymous();
 
 app.MapGet("/version", () => new JsonObject()
 {
