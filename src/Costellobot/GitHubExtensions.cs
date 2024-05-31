@@ -78,6 +78,7 @@ public static class GitHubExtensions
         services.AddPackageRegistry<NpmPackageRegistry>("Npm");
         services.AddPackageRegistry<NuGetPackageRegistry>("NuGet");
 
+        services.AddSingleton<BadgeService>();
         services.AddSingleton<PublicHolidayProvider>();
 
         services.AddSingleton<IHandlerFactory, HandlerFactory>();
