@@ -74,7 +74,7 @@ public sealed partial class BadgeService(
 
         if (release is null)
         {
-            var releases = await client.Repository.Release.GetAll(owner, name, new() { PageSize = 1 });
+            var releases = await client.Repository.Release.GetAll(owner, name, new() { PageCount = 1, PageSize = 1 });
 
             if (releases.Count < 1)
             {
