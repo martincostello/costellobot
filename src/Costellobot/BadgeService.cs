@@ -1,4 +1,4 @@
-﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
+// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Security.Cryptography;
@@ -50,13 +50,10 @@ public sealed partial class BadgeService(
             return false;
         }
 
-        var data = GetBytes($"badge-{type}-{owner}-{repo}");
+        var data = Encoding.UTF8.GetBytes($"badge-{type}-{owner}-{repo}");
         var actual = HMACSHA256.HashData(_key, data);
 
         return CryptographicOperations.FixedTimeEquals(expected, actual);
-
-        static ReadOnlySpan<byte> GetBytes(string value)
-            => Encoding.UTF8.GetBytes(value);
     }
 
     private async Task<string?> LatestReleaseBadgeAsync(string owner, string name)
