@@ -12,6 +12,7 @@ export class App {
 
     private logsAutoscroll: HTMLInputElement;
     private logsContainer: HTMLInputElement;
+    private webhooksCountContainer: HTMLElement;
     private webhooksIndexContainer: HTMLElement;
     private webhooksContentContainer: HTMLElement;
 
@@ -50,6 +51,7 @@ export class App {
 
     private async initializeLogs(logsContainer: HTMLInputElement): Promise<void> {
         this.logsContainer = logsContainer;
+        this.webhooksCountContainer = document.getElementById('webhooks-count');
         this.webhooksIndexContainer = document.getElementById('webhooks-index');
         this.logsAutoscroll = <HTMLInputElement>document.getElementById('logs-auto-scroll');
         this.webhooksContentContainer = document.getElementById('webhooks-content');
@@ -203,6 +205,7 @@ export class App {
         }
 
         this.webhooksContentContainer.appendChild(contentItem);
+        this.webhooksCountContainer.innerText = `(${this.webhooksContentContainer.children.length.toLocaleString()})`;
     }
 
     private addLog(logEntry: LogEntry) {
