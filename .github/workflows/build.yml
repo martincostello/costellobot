@@ -181,7 +181,9 @@ jobs:
               --name $_.Name `
               --metadata "GITHUB_WORKFLOW=${env:GITHUB_SERVER_URL}/${env:GITHUB_REPOSITORY}/actions/runs/${env:GITHUB_RUN_ID} RUNNER_OS=${RUNNER_OS}" `
               --overwrite true
-              Write-Output "::notice::Uploaded crash dump $($_.Name) to Azure Storage."
+              if ($LASTEXITCODE -eq 0) {
+                Write-Output "::notice::Uploaded crash dump $($_.Name) to Azure Storage."
+              }
           }
         }
 
