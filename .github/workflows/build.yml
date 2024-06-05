@@ -168,6 +168,7 @@ jobs:
     - name: Upload any crash dumps
       shell: pwsh
       if: |
+        !cancelled() &&
         steps.build.outcome == 'failure' &&
         github.event.repository.fork == false &&
         github.event.sender.login != 'dependabot[bot]'
