@@ -182,13 +182,16 @@ jobs:
             $zipPath = $_.FullName + ".zip"
             $zipName = $_.Name + ".zip"
 
+            Write-Output "Compressing crash dump $($_.Name)..."
             Compress-ZipArchive -Path $_.FullName -Destination $zipPath
 
             az storage blob upload `
               --container-name $container `
               --file $zipPath `
               --name $zipName `
-              --metadata "GITHUB_RUN_ATTEMPT=${env:GITHUB_RUN_ATTEMPT} GITHUB_WORKFLOW=${env:GITHUB_SERVER_URL}/${env:GITHUB_REPOSITORY}/actions/runs/${env:GITHUB_RUN_ID} RUNNER_OS=${RUNNER_OS}" `
+              --metadata "GITHUB_RUN_ATTEMPT=${env:GITHUB_RUN_ATTEMPT}" `
+              --metadata "GITHUB_WORKFLOW=${env:GITHUB_SERVER_URL}/${env:GITHUB_REPOSITORY}/actions/runs/${env:GITHUB_RUN_ID}" `
+              --metadata "RUNNER_OS=${RUNNER_OS}" `
               --overwrite true
 
             if ($LASTEXITCODE -eq 0) {
