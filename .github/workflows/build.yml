@@ -164,6 +164,25 @@ jobs:
         path: ./artifacts/videos/*
         if-no-files-found: ignore
 
+    - name: Upload crash dumps
+      shell: pwsh
+      if: ${{ !cancelled() }}
+      env:
+        AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.CRASH_DUMPS_STORAGE_CONNECTION_STRING }}
+      run: |
+        $dumps = Get-ChildItem -Path ${env:GITHUB_WORKSPACE} -Filter "*.dmp" -Recurse
+        if ($null -ne $dumps) {
+          $dumps | ForEach-Object {
+            az storage blob upload `
+              --container-name ${env:GITHUB_REPOSITORY} `
+              --file $_.FullName `
+              --name $_.Name `
+              --metadata "GITHUB_WORKFLOW=${env:GITHUB_SERVER_URL}/${env:GITHUB_REPOSITORY}/actions/runs/${env:GITHUB_RUN_ID} RUNNER_OS=${RUNNER_OS}" `
+              --overwrite true
+              Write-Output "::notice::Uploaded crash dump $($_.Name) to Azure Storage."
+          }
+        }
+
   deploy:
     if: github.event.repository.fork == false && github.ref_name == github.event.repository.default_branch
     name: deploy-production
