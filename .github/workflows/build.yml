@@ -105,6 +105,7 @@ jobs:
       run: dotnet workload restore
 
     - name: Build, Test and Publish
+      id: build
       shell: pwsh
       run: ./build.ps1
 
@@ -164,9 +165,9 @@ jobs:
         path: ./artifacts/videos/*
         if-no-files-found: ignore
 
-    - name: Upload crash dumps
+    - name: Upload any crash dumps
       shell: pwsh
-      if: ${{ !cancelled() }}
+      if: steps.build.outcome == 'failure'
       env:
         AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.CRASH_DUMPS_STORAGE_CONNECTION_STRING }}
       run: |
