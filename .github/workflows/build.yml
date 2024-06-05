@@ -167,7 +167,10 @@ jobs:
 
     - name: Upload any crash dumps
       shell: pwsh
-      if: steps.build.outcome == 'failure'
+      if: |
+        steps.build.outcome == 'failure' &&
+        github.event.repository.fork == false &&
+        github.event.sender.login != 'dependabot[bot]'
       env:
         AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.CRASH_DUMPS_STORAGE_CONNECTION_STRING }}
       run: |
