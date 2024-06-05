@@ -174,13 +174,15 @@ jobs:
         if ($null -ne $dumps) {
 
           $container = ${env:GITHUB_REPOSITORY}.Replace("/", "-")
-          az storage container create --name $container --public-access off
+          az storage container create --name $container --public-access off | Out-Null
+
+          Install-Module PSCompression -Scope CurrentUser -RequiredVersion 2.0.5 -AcceptLicense -Force
 
           $dumps | ForEach-Object {
             $zipPath = $_.FullName + ".zip"
             $zipName = $_.Name + ".zip"
 
-            Compress-Archive -Path $_.FullName -DestinationPath $zipPath
+            Compress-ZipArchive -Path $_.FullName -Destination $zipPath
 
             az storage blob upload `
               --container-name $container `
