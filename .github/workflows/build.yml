@@ -172,18 +172,26 @@ jobs:
       run: |
         $dumps = Get-ChildItem -Path ${env:GITHUB_WORKSPACE} -Filter "*.dmp" -Recurse
         if ($null -ne $dumps) {
+
           $container = ${env:GITHUB_REPOSITORY}.Replace("/", "-")
           az storage container create --name $container --public-access off
+
           $dumps | ForEach-Object {
+            $zipPath = $_.FullName + ".zip"
+            $zipName = $_.Name + ".zip"
+
+            Compress-Archive -Path $_.FullName -DestinationPath $zipPath
+
             az storage blob upload `
               --container-name $container `
-              --file $_.FullName `
-              --name $_.Name `
-              --metadata "GITHUB_WORKFLOW=${env:GITHUB_SERVER_URL}/${env:GITHUB_REPOSITORY}/actions/runs/${env:GITHUB_RUN_ID} RUNNER_OS=${RUNNER_OS}" `
+              --file $zipPath `
+              --name $zipName `
+              --metadata "GITHUB_RUN_ATTEMPT=${env:GITHUB_RUN_ATTEMPT} GITHUB_WORKFLOW=${env:GITHUB_SERVER_URL}/${env:GITHUB_REPOSITORY}/actions/runs/${env:GITHUB_RUN_ID} RUNNER_OS=${RUNNER_OS}" `
               --overwrite true
-              if ($LASTEXITCODE -eq 0) {
-                Write-Output "::notice::Uploaded crash dump $($_.Name) to Azure Storage."
-              }
+
+            if ($LASTEXITCODE -eq 0) {
+              Write-Output "::notice::Uploaded crash dump $($_.Name) to Azure Storage."
+            }
           }
         }
 
