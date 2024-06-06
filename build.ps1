@@ -73,7 +73,8 @@ function DotNetTest {
     param([string]$Project)
 
     $additionalArgs = @(
-        "--blame-crash"
+        "--blame-crash",
+        "--blame-crash-collect-always"
     )
 
     if (![string]::IsNullOrEmpty($TestFilter)) {
