@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using MartinCostello.Costellobot.Handlers;
 using MartinCostello.Costellobot.Registries;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -94,7 +95,7 @@ public static class GitHubExtensions
         return services;
     }
 
-    private static void AddPackageRegistry<T>(this IServiceCollection services, string? httpClientName = null)
+    private static void AddPackageRegistry<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IServiceCollection services, string? httpClientName = null)
         where T : class, IPackageRegistry
     {
         if (httpClientName is { } name)
