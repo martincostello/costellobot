@@ -1,8 +1,5 @@
-@page "/"
-@model IndexModel
-@{
-    ViewData["Title"] = "Administration";
-}
+@implements IUsesLayout<_Layout, LayoutModel>
+
 <div id="admin-content">
   <div class="container-fluid">
     <h3>
@@ -38,3 +35,7 @@
     </div>
   </div>
 </div>
+
+@functions {
+    public LayoutModel LayoutModel { get; } = new("Administration");
+}

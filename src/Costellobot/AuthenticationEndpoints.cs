@@ -145,6 +145,18 @@ public static class AuthenticationEndpoints
 
         builder.MapGet(SignOutPath, () => Results.Redirect(RootPath));
 
+        builder.MapGet(SignInPath, (HttpContext context, IAntiforgery antiforgery) =>
+        {
+            if (context.User.Identity?.IsAuthenticated == true)
+            {
+                return Results.Redirect(RootPath);
+            }
+
+            var tokens = antiforgery.GetAndStoreTokens(context);
+
+            return Results.Extensions.RazorSlice<Slices.SignIn, AntiforgeryTokenSet>(tokens);
+        });
+
         builder.MapPost(SignInPath, async (HttpContext context, IAntiforgery antiforgery) =>
         {
             if (!await antiforgery.IsRequestValidAsync(context))

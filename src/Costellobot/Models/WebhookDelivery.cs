@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace MartinCostello.Costellobot.Pages;
+namespace MartinCostello.Costellobot.Models;
 
 public sealed class WebhookDelivery
 {

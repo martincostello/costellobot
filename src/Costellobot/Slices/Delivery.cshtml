@@ -1,13 +1,10 @@
-@page "/delivery/{id}"
-@using Humanizer
-@model DeliveryModel
-@{
-    ViewData["Title"] = Model.DeliveryId;
-}
+@inherits RazorSliceHttpResult<DeliveryModel>
+@implements IUsesLayout<_Layout, LayoutModel>
+
 <div id="delivery-content" data-delivery-id="@(Model.Id)" data-delivery-guid="@(Model.DeliveryId)">
   <h1>
     <span class="fa-solid fa-box-open" aria-hidden="true"></span>
-    @(ViewData["Title"])
+    @(LayoutModel.Title)
   </h1>
   <table class="table table-sm">
     <caption class="caption-top">
@@ -97,11 +94,15 @@
         </div>
         <div class="btn-group" role="group">
           <form method="post">
-            <input asp-for="Id" type="hidden" value="@Model.Id">
+            <input type="hidden" value="@(Model.Id)" id="id" name="id">
             <button id="redeliver-payload" class="btn btn-outline-danger" title="Redeliver the webhook payload" type="submit">
               Redeliver
               <span class="fa-solid fa-rocket" aria-hidden="true"></span>
             </button>
+            @{
+              var tokens = Antiforgery.GetTokens(HttpContext!);
+            }
+            <input name="@(tokens.FormFieldName)" type="hidden" value="@(tokens.RequestToken)" />
           </form>
         </div>
       </div>
@@ -121,6 +122,17 @@
     </div>
   </div>
 </div>
-@section scripts {
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js" integrity="sha512-7O5pXpc0oCRrxk8RUfDYFgn0nO1t+jLuIOQdOMRp4APB7uZ4vSjspzp5y6YDtDs4VzUSTbWzBFZ/LKJhnyFOKw==" crossorigin="anonymous" defer></script>
+
+@functions {
+    public LayoutModel LayoutModel => new(Model.DeliveryId);
+
+    protected override Task ExecuteSectionAsync(string name)
+    {
+        if (name is "scripts")
+        {
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js" integrity="sha512-7O5pXpc0oCRrxk8RUfDYFgn0nO1t+jLuIOQdOMRp4APB7uZ4vSjspzp5y6YDtDs4VzUSTbWzBFZ/LKJhnyFOKw==" crossorigin="anonymous" defer></script>
+        }
+
+        return Task.CompletedTask;
+    }
 }

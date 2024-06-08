@@ -1,21 +1,22 @@
-@page "/deliveries"
-@using Humanizer
-@model DeliveriesModel
-@{
-    ViewData["Title"] = "Deliveries";
-}
+@inherits RazorSliceHttpResult<IReadOnlyList<WebhookDelivery>>
+@implements IUsesLayout<_Layout, LayoutModel>
+
 <div id="deliveries-content">
   <h1>
     <span class="fa-solid fa-truck-ramp-box" aria-hidden="true"></span>
-    @(ViewData["Title"])
+    @(LayoutModel.Title)
   </h1>
   <form method="post">
+    @{
+        var tokens = Antiforgery.GetTokens(HttpContext!);
+    }
+    <input name="@(tokens.FormFieldName)" type="hidden" value="@(tokens.RequestToken)">
     <div class="mb-3">
       <div id="delivery-id-help" class="form-text">
         The ID of the delivery to find.
       </div>
       <div class="input-group">
-        <input asp-for="DeliveryId" id="delivery-id" class="form-control" type="text" autocomplete="off" placeholder="2f5f9aed-819e-451f-8573-3e83b2ab2454" spellcheck="false" aria-describedby="delivery-id-help">
+        <input id="delivery-id" class="form-control" type="text" autocomplete="off" placeholder="2f5f9aed-819e-451f-8573-3e83b2ab2454" spellcheck="false" aria-describedby="delivery-id-help" name="id" value="">
         <input class="btn btn-primary" type="submit" id="find-delivery" value="Find" />
       </div>
     </div>
@@ -23,7 +24,7 @@
   <hr />
   <table class="table">
     <caption class="caption-top">
-      The last @(Model.Deliveries.Count) webhook deliveries.
+      The last @(Model.Count) webhook deliveries.
     </caption>
     <thead>
       <tr>
@@ -36,7 +37,7 @@
       </tr>
     </thead>
     <tbody>
-      @foreach (var delivery in Model.Deliveries)
+      @foreach (var delivery in Model)
       {
         <tr class="webhook-delivery">
           <td>
@@ -48,7 +49,7 @@
                   "fa-triangle-exclamation text-danger";
               }
               <span class="fa-solid @(classes)" title="@(delivery.StatusCode) - @(delivery.Status)"></span>
-              <a asp-page="Delivery" asp-route-id="@(delivery.Id)" class="delivery-id">@(delivery.Id)</a>
+              <a href="@(this.RouteUrl($"~/delivery/{delivery.Id}"))" class="delivery-id">@(delivery.Id)</a>
             </code>
           </td>
           <td>
@@ -73,3 +74,7 @@
     </tbody>
   </table>
 </div>
+
+@functions {
+    public LayoutModel LayoutModel { get; } = new("Deliveries");
+}

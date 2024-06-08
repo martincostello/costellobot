@@ -1,0 +1,16 @@
+@inherits RazorSliceHttpResult
+
+@using System.Globalization
+@using Microsoft.AspNetCore.Razor
+@using Microsoft.AspNetCore.Http.HttpResults
+@using Microsoft.Extensions.Options
+@using Humanizer
+@using MartinCostello.Costellobot
+@using MartinCostello.Costellobot.Models
+@using MartinCostello.Costellobot.Slices
+@using RazorSlices
+
+@tagHelperPrefix __disable_tagHelpers__:
+@removeTagHelper *, Microsoft.AspNetCore.Mvc.Razor
+
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
