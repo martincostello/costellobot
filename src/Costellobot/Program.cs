@@ -65,7 +65,7 @@ builder.Services.Configure<GzipCompressionProviderOptions>((p) => p.Level = Comp
 if (string.Equals(builder.Configuration["CODESPACES"], bool.TrueString, StringComparison.OrdinalIgnoreCase))
 {
     builder.Services.Configure<ForwardedHeadersOptions>(
-        options => options.ForwardedHeaders |= ForwardedHeaders.XForwardedHost);
+        (options) => options.ForwardedHeaders |= ForwardedHeaders.XForwardedHost);
 }
 
 builder.WebHost.ConfigureKestrel((p) => p.AddServerHeader = false);

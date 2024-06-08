@@ -119,12 +119,16 @@ public static class AdminEndpoints
 
                     if (item is not null)
                     {
-                        return Results.RedirectToRoute(DeliveryRoute, new { id = item.Id });
+                        var routeValues = new RouteValueDictionary()
+                        {
+                            ["id"] = item.Id,
+                        };
+                        return Results.RedirectToRoute(DeliveryRoute, routeValues);
                     }
                 }
             }
 
-            return Results.RedirectToRoute(DeliveriesRoute);
+            return Results.RedirectToRoute(DeliveriesRoute, []);
         }).WithMetadata(admin);
 
         builder
@@ -193,7 +197,7 @@ public static class AdminEndpoints
 
             await client.Connection.Post(uri);
 
-            return Results.RedirectToRoute(DeliveriesRoute);
+            return Results.RedirectToRoute(DeliveriesRoute, []);
         }).WithMetadata(admin);
 
         builder.MapGet("/github-webhook", (IOptions<GitHubOptions> options) => Results.Extensions.RazorSlice<Debug, GitHubOptions>(options.Value))
