@@ -23,7 +23,7 @@
         }
         @foreach (var item in events)
         {
-            <option value="@(item.Event)" selected="@(item.Selected)">@(item.Event)</option>
+            <option value="@(item.Event)" @(item.Selected ? "selected" : null)>@(item.Event)</option>
         }
       </select>
       <div id="webhook-event-help" class="form-text">
