@@ -2,23 +2,17 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.IO.Compression;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text.Json.Nodes;
 using MartinCostello.Costellobot;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
-using Octokit.Webhooks.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.ConfigureApplication();
 
+builder.Services.AddAntiforgery();
 builder.Services.AddGitHub(builder.Configuration, builder.Environment);
 builder.Services.AddHsts((options) => options.MaxAge = TimeSpan.FromDays(180));
-builder.Services.AddRazorPages();
 builder.Services.AddResponseCaching();
 builder.Services.AddTelemetry(builder.Environment);
 
@@ -107,61 +101,11 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseAntiforgery();
+
 app.MapAuthenticationRoutes();
-app.MapGitHubWebhooks("/github-webhook", app.Configuration["GitHub:WebhookSecret"] ?? string.Empty);
-
-app.MapGet("/badge/{type}/{owner}/{repo}", async (string type, string owner, string repo, [FromQuery(Name = "s")] string? signature, BadgeService service) =>
-{
-    if (await service.GetBadgeAsync(type, owner, repo, signature) is { } url)
-    {
-        return Results.Redirect(url);
-    }
-
-    return Results.NotFound();
-}).AllowAnonymous();
-
-app.MapGet("/version", () => new JsonObject()
-{
-    ["application"] = new JsonObject()
-    {
-        ["branch"] = GitMetadata.Branch,
-        ["build"] = GitMetadata.BuildId,
-        ["commit"] = GitMetadata.Commit,
-        ["version"] = GitMetadata.Version,
-    },
-    ["frameworkDescription"] = RuntimeInformation.FrameworkDescription,
-    ["operatingSystem"] = new JsonObject()
-    {
-        ["description"] = RuntimeInformation.OSDescription,
-        ["architecture"] = RuntimeInformation.OSArchitecture.ToString(),
-        ["version"] = Environment.OSVersion.VersionString,
-        ["is64Bit"] = Environment.Is64BitOperatingSystem,
-    },
-    ["process"] = new JsonObject()
-    {
-        ["architecture"] = RuntimeInformation.ProcessArchitecture.ToString(),
-        ["is64BitProcess"] = Environment.Is64BitProcess,
-        ["isNativeAoT"] = !RuntimeFeature.IsDynamicCodeSupported,
-        ["isPrivilegedProcess"] = Environment.IsPrivilegedProcess,
-    },
-    ["dotnetVersions"] = new JsonObject()
-    {
-        ["runtime"] = typeof(object).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion,
-        ["aspNetCore"] = typeof(HttpContext).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion,
-    },
-    ["_links"] = new JsonObject()
-    {
-        ["self"] = new JsonObject() { ["href"] = "https://costellobot.martincostello.com" },
-        ["repo"] = new JsonObject() { ["href"] = "https://github.com/martincostello/costellobot" },
-        ["branch"] = new JsonObject() { ["href"] = $"https://github.com/martincostello/costellobot/tree/{GitMetadata.Branch}" },
-        ["commit"] = new JsonObject() { ["href"] = $"https://github.com/martincostello/costellobot/commit/{GitMetadata.Commit}" },
-        ["deploy"] = new JsonObject() { ["href"] = $"https://github.com/martincostello/costellobot/actions/runs/{GitMetadata.BuildId}" },
-    },
-}).AllowAnonymous();
-
-app.MapRazorPages();
-
-app.MapHub<GitHubWebhookHub>("/admin/git-hub");
+app.MapApiRoutes(app.Configuration);
+app.MapAdminRoutes();
 
 app.Run();
 

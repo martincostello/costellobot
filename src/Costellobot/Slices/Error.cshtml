@@ -1,0 +1,20 @@
+@inherits RazorSlice<ErrorModel>
+@implements IUsesLayout<_Layout, LayoutModel>
+
+@{
+    string modifier = Model.IsClientError ? "secondary" : "danger";
+}
+
+<h1 class="text-@modifier">@(Model.Subtitle)</h1>
+<h2 class="text-@modifier">@(Model.Message)</h2>
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>Request ID:</strong> <code>@(Model.RequestId)</code>
+    </p>
+}
+
+@functions {
+    public LayoutModel LayoutModel => new(Model.Title);
+}

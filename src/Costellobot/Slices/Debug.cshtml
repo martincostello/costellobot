@@ -1,9 +1,8 @@
-@page "/github-webhook"
+@inherits RazorSliceHttpResult<GitHubOptions>
+@implements IUsesLayout<_Layout, LayoutModel>
+
 @using WebhookEventType = Octokit.Webhooks.WebhookEventType;
-@model DebugModel
-@{
-    ViewData["Title"] = "Debug Webhook";
-}
+
 <div id="debug-content" app-id="@(Model.AppId)">
   <form action="#">
     <div class="mb-3">
@@ -33,7 +32,7 @@
         associated with the webhook payload.
       </div>
     </div>
-    @if (Model.RequireSignature)
+    @if (!string.IsNullOrWhiteSpace(Model.WebhookSecret))
     {
       <div class="mb-3">
         <label for="webhook-signature">Signature</label>
@@ -69,3 +68,7 @@
     <span class="badge webhook-status d-none"></span>
   </form>
 </div>
+
+@functions {
+    public LayoutModel LayoutModel { get; } = new("Debug Webhook");
+}
