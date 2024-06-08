@@ -75,6 +75,9 @@ public static class AuthenticationEndpoints
                     context.Properties!.ExpiresUtc = timeProvider.GetUtcNow().AddDays(60);
                     context.Properties.IsPersistent = true;
 
+                    var antiforgery = context.HttpContext.RequestServices.GetRequiredService<IAntiforgery>();
+                    antiforgery.SetCookieTokenAndHeader(context.HttpContext);
+
                     return Task.CompletedTask;
                 };
             })
@@ -161,6 +164,7 @@ public static class AuthenticationEndpoints
         {
             if (!await antiforgery.IsRequestValidAsync(context))
             {
+                antiforgery.SetCookieTokenAndHeader(context);
                 return Results.Redirect(RootPath);
             }
 
