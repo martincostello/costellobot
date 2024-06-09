@@ -1,4 +1,4 @@
-﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
+// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Net;
@@ -148,10 +148,7 @@ public static class AdminEndpoints
                     return Results.NotFound();
                 }
 
-                var delivery = JsonDocument.Parse(apiResponse.HttpResponse!.Body!.ToString()!).RootElement;
-
-                // TODO Use Body directly when https://github.com/octokit/octokit.net/pull/2791 available
-                ////Delivery = (await JsonDocument.ParseAsync(apiResponse.Body)).RootElement;
+                var delivery = (await JsonDocument.ParseAsync(apiResponse.Body)).RootElement;
 
                 var model = new DeliveryModel(delivery);
 
