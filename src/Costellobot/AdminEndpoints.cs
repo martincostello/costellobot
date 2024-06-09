@@ -90,7 +90,7 @@ public static class AdminEndpoints
 
         var admin = new CostellobotAdminAttribute();
 
-        builder.MapGet("/", () => Results.Extensions.RazorSlice<Home>())
+        builder.MapMethods("/", [HttpMethod.Get.Method, HttpMethod.Head.Method], () => Results.Extensions.RazorSlice<Home>())
                .WithMetadata(admin);
 
         builder
