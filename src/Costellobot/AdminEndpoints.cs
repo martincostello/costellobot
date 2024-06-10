@@ -148,12 +148,15 @@ public static class AdminEndpoints
                     return Results.NotFound();
                 }
 
-                var delivery = JsonDocument.Parse(apiResponse.HttpResponse!.Body!.ToString()!).RootElement;
+                using var document = apiResponse switch
+                {
+                    { Body: Stream stream } => await JsonDocument.ParseAsync(stream),
+                    { HttpResponse: Stream stream } => await JsonDocument.ParseAsync(stream),
+                    _ => JsonDocument.Parse(apiResponse.HttpResponse.Body.ToString()!),
+                };
 
-                // TODO Use Body directly when https://github.com/octokit/octokit.net/pull/2791 available
-                ////Delivery = (await JsonDocument.ParseAsync(apiResponse.Body)).RootElement;
-
-                var model = new DeliveryModel(delivery);
+                var delivery = document.RootElement;
+                var model = new DeliveryModel(delivery.Clone());
 
                 var request = delivery.GetProperty("request");
 
