@@ -13,11 +13,11 @@ public sealed partial class GitHubWebhookDispatcher(
 {
     public async Task DispatchAsync(GitHubEvent message)
     {
-        Log.ProcessingWebhook(logger, message.Headers.Delivery);
+        Log.ProcessingWebhook(logger, message.Headers.Delivery, message.Headers.Event);
 
         if (!IsValidInstallation(message))
         {
-            Log.IncorrectInstallationWebhookIgnored(logger, message.Headers.Delivery, message.Event.Installation?.Id);
+            Log.IncorrectInstallationWebhookIgnored(logger, message.Headers.Delivery, message.Headers.Event, message.Event.Installation?.Id);
             return;
         }
 
@@ -26,11 +26,11 @@ public sealed partial class GitHubWebhookDispatcher(
             var handler = handlerFactory.Create(message.Headers.Event);
             await handler.HandleAsync(message.Event);
 
-            Log.ProcessedWebhook(logger, message.Headers.Delivery);
+            Log.ProcessedWebhook(logger, message.Headers.Delivery, message.Headers.Event);
         }
         catch (Exception ex)
         {
-            Log.WebhookProcessingFailed(logger, ex, message.Headers.Delivery);
+            Log.WebhookProcessingFailed(logger, ex, message.Headers.Delivery, message.Headers.Event);
             throw;
         }
     }
@@ -44,25 +44,25 @@ public sealed partial class GitHubWebhookDispatcher(
         [LoggerMessage(
            EventId = 1,
            Level = LogLevel.Debug,
-           Message = "Processing webhook with ID {HookId}.")]
-        public static partial void ProcessingWebhook(ILogger logger, string? hookId);
+           Message = "Processing webhook with ID {HookId} for event {EventName}.")]
+        public static partial void ProcessingWebhook(ILogger logger, string? hookId, string? eventName);
 
         [LoggerMessage(
            EventId = 2,
            Level = LogLevel.Information,
-           Message = "Processed webhook with ID {HookId}.")]
-        public static partial void ProcessedWebhook(ILogger logger, string? hookId);
+           Message = "Processed webhook with ID {HookId} for event {EventName}.")]
+        public static partial void ProcessedWebhook(ILogger logger, string? hookId, string? eventName);
 
         [LoggerMessage(
            EventId = 3,
            Level = LogLevel.Warning,
-           Message = "Ignored webhook with ID {HookId} as the installation ID {InstallationId} is incorrect.")]
-        public static partial void IncorrectInstallationWebhookIgnored(ILogger logger, string? hookId, long? installationId);
+           Message = "Ignored webhook with ID {HookId} for event {EventName} as the installation ID {InstallationId} is incorrect.")]
+        public static partial void IncorrectInstallationWebhookIgnored(ILogger logger, string? hookId, string? eventName, long? installationId);
 
         [LoggerMessage(
            EventId = 4,
            Level = LogLevel.Error,
-           Message = "Failed to process webhook with ID {HookId}.")]
-        public static partial void WebhookProcessingFailed(ILogger logger, Exception exception, string? hookId);
+           Message = "Failed to process webhook with ID {HookId} for event {EventName}.")]
+        public static partial void WebhookProcessingFailed(ILogger logger, Exception exception, string? hookId, string? eventName);
     }
 }
