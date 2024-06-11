@@ -346,7 +346,7 @@ public sealed partial class GitCommitAnalyzer(
 
         [LoggerMessage(
            EventId = 2,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Commit {Sha} for {Owner}/{Repository} updates dependency {Dependency} which is not trusted by its name.")]
         public static partial void UntrustedDependencyNameUpdated(
             ILogger logger,
@@ -379,7 +379,7 @@ public sealed partial class GitCommitAnalyzer(
 
         [LoggerMessage(
            EventId = 5,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Reference {Reference} for {Owner}/{Repository} updates dependency {Dependency} which is not trusted by its owner.")]
         public static partial void UntrustedDependencyOwnerUpdated(
             ILogger logger,

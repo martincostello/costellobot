@@ -285,7 +285,7 @@ public sealed partial class PullRequestHandler(
     {
         [LoggerMessage(
            EventId = 1,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring pull request {Owner}/{Repository}#{Number} for action {Action}.")]
         public static partial void IgnoringPullRequestAction(
             ILogger logger,
@@ -296,7 +296,7 @@ public sealed partial class PullRequestHandler(
 
         [LoggerMessage(
            EventId = 2,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring pull request {Owner}/{Repository}#{Number} as it is a draft.")]
         public static partial void IgnoringPullRequestDraft(
             ILogger logger,
@@ -306,7 +306,7 @@ public sealed partial class PullRequestHandler(
 
         [LoggerMessage(
            EventId = 3,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring pull request {Owner}/{Repository}#{Number} from {Login} as it is not from a trusted user.")]
         public static partial void IgnoringPullRequestFromUntrustedUser(
             ILogger logger,
@@ -349,7 +349,7 @@ public sealed partial class PullRequestHandler(
 
         [LoggerMessage(
            EventId = 7,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring pull request {Owner}/{Repository}#{Number} as the repository is configured to be ignored.")]
         public static partial void IgnoringPullRequestAsRepositoryIgnored(
             ILogger logger,

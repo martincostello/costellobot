@@ -93,7 +93,7 @@ public sealed partial class IssueCommentHandler(
     {
         [LoggerMessage(
            EventId = 1,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring comment on issue {Owner}/{Repository}#{Number} for action {Action}.")]
         public static partial void IgnoringCommentAction(
             ILogger logger,
@@ -104,7 +104,7 @@ public sealed partial class IssueCommentHandler(
 
         [LoggerMessage(
            EventId = 2,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Received comment on issue {Owner}/{Repository}#{Number}: {Content}.")]
         public static partial void ReceivedComment(
             ILogger logger,
