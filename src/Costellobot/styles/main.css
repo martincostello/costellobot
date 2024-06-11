@@ -64,11 +64,54 @@ textarea.form-payload {
 .log-console[disabled],
 .log-console[readonly] {
     background-color: #000;
+    border-radius: .375rem;
     color: #fff;
     font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
     max-height: 20rem;
     min-height: 20rem;
+    overflow-y: auto;
+    padding: .375rem .75rem;
     resize: none;
+}
+
+.log-entry .log-link {
+    color: #b0b0b0;
+}
+
+.log-entry > .log-exception {
+    color: #d29922;
+    padding-left: 0.75rem;
+}
+
+.log-entry > .log-level::after {
+    content: ']';
+}
+
+.log-entry > .log-level::before {
+    content: '[';
+}
+
+.log-entry > .log-level-critical,
+.log-entry > .log-level-error {
+    color: #f85149;
+}
+
+.log-entry > .log-level-warn,
+.log-entry > .log-level-warning{
+    color: #d29922;
+}
+
+.log-entry > .log-level-info,
+.log-entry > .log-level-information {
+    color: #3fb950;
+}
+
+.log-entry > .log-level-debug {
+    color: #76e3ea;
+}
+
+.log-entry > .log-level-trace {
+    color: #b0b0b0;
 }
 
 .text-webhook {

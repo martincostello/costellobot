@@ -209,21 +209,62 @@ export class App {
     }
 
     private addLog(logEntry: LogEntry) {
+        if (this.logsContainer.children.length === 0) {
+            this.logsContainer.textContent = '';
+        }
+
         const event = logEntry.eventName ?? logEntry.eventId;
         const timestamp = moment(logEntry.timestamp);
 
-        if (this.logsContainer.textContent) {
-            this.logsContainer.textContent += '\n';
-        }
+        const element = document.createElement('div');
+        element.classList.add('log-entry');
 
-        const timestampString = timestamp.toISOString();
-        this.logsContainer.textContent += `${timestampString} [${logEntry.level}] ${logEntry.category}[${event}]: ${logEntry.message}`;
+        const timestampElement = document.createElement('span');
+        timestampElement.classList.add('log-timestamp');
+        timestampElement.innerText = timestamp.toISOString();
+        timestampElement.title = logEntry.timestamp;
+
+        const levelElement = document.createElement('span');
+        levelElement.classList.add('log-level', `log-level-${logEntry.level.toLowerCase()}`);
+        levelElement.innerText = logEntry.level;
+
+        element.append(timestampElement, ' ', levelElement, ` ${logEntry.category}[${event}]: `);
+
+        const message = logEntry.message;
+        const match = message.match(/( )(([a-zA-Z0-9-]+)\/([a-zA-Z0-9-]+)#([0-9]+))( |.)/);
+
+        if (match) {
+            const whole = match[0];
+            const leading = match[1];
+            const text = match[2];
+            const owner = match[3];
+            const repo = match[4];
+            const issue = match[5];
+            const trailing = match[6];
+            const url = `https://github.com/${owner}/${repo}/issues/${issue}`;
+
+            const prefix = message.substring(0, match.index);
+            const suffix = message.substring(match.index + whole.length);
+
+            const link = document.createElement('a');
+            link.classList.add('log-link');
+            link.href = url;
+            link.innerText = text;
+            link.target = '_blank';
+
+            element.append(prefix, leading, link, trailing, suffix);
+        } else {
+            element.append(message);
+        }
 
         if (logEntry.exception !== '') {
-            this.logsContainer.textContent += '\n';
-            this.logsContainer.textContent += logEntry.exception;
-            this.logsContainer.textContent += '\n';
+            const exception = document.createElement('div');
+            exception.classList.add('log-exception');
+            exception.innerText = logEntry.exception;
+            element.append(exception);
         }
+
+        this.logsContainer.appendChild(element);
 
         if (this.logsAutoscroll.checked) {
             this.logsContainer.scrollTop = this.logsContainer.scrollHeight;
