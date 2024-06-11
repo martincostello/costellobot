@@ -121,12 +121,13 @@ public class HomeTests(HttpServerFixture fixture, ITestOutputHelper outputHelper
             };
 
             string delivery = RandomNumberGenerator.GetInt32(int.MaxValue).ToString(CultureInfo.InvariantCulture);
+            string eventName = "ping";
 
-            using var response = await PostWebhookAsync("ping", value, delivery: delivery);
+            using var response = await PostWebhookAsync(eventName, value, delivery: delivery);
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
             // Assert - Verify log entries were written
-            await app.WaitForLogsTextAsync($"Processed webhook with ID {delivery}.");
+            await app.WaitForLogsTextAsync($"Processed webhook with ID {delivery} for event {eventName}.");
 
             // Act - Get the log entry for the webhook
             var item = await app.WaitForWebhookAsync(delivery);
@@ -142,7 +143,7 @@ public class HomeTests(HttpServerFixture fixture, ITestOutputHelper outputHelper
             string payload = await content.ContentAsync();
 
             payload.ShouldContain($@"""X-GitHub-Delivery"": ""{delivery}"",");
-            payload.ShouldContain(@"""X-GitHub-Event"": ""ping"",");
+            payload.ShouldContain($@"""X-GitHub-Event"": ""{eventName}"",");
             payload.ShouldContain(@"""hook_id"": 109948940,");
         });
     }
