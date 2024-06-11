@@ -358,7 +358,7 @@ public sealed partial class DeploymentStatusHandler(
     {
         [LoggerMessage(
            EventId = 1,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring deployment status ID {DeploymentStatusId} for {Owner}/{Repository} for action {Action}.")]
         public static partial void IgnoringDeploymentStatusAction(
             ILogger logger,
@@ -369,7 +369,7 @@ public sealed partial class DeploymentStatusHandler(
 
         [LoggerMessage(
            EventId = 2,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring deployment status ID {DeploymentStatusId} for {Owner}/{Repository} with state {State}.")]
         public static partial void IgnoringDeploymentStatusAsNotWaiting(
             ILogger logger,
@@ -380,7 +380,7 @@ public sealed partial class DeploymentStatusHandler(
 
         [LoggerMessage(
            EventId = 3,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring deployment status ID {DeploymentStatusId} for {Owner}/{Repository} as auto-deploy is not enabled for the {Environment} environment.")]
         public static partial void IgnoringDeploymentStatusAsEnvironmentNotEnabled(
             ILogger logger,
@@ -391,7 +391,7 @@ public sealed partial class DeploymentStatusHandler(
 
         [LoggerMessage(
            EventId = 4,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring deployment status ID {DeploymentStatusId} for {Owner}/{Repository} as deployment approval is disabled.")]
         public static partial void AutomatedDeploymentApprovalIsDisabled(
             ILogger logger,
@@ -452,7 +452,7 @@ public sealed partial class DeploymentStatusHandler(
 
         [LoggerMessage(
            EventId = 10,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Deployment ID {DeploymentId} for {Owner}/{Repository} cannot be auto-deployed as it contains commit {Sha} from untrusted author {Login}.")]
         public static partial void UntrustedCommitAuthorFound(
             ILogger logger,
@@ -464,7 +464,7 @@ public sealed partial class DeploymentStatusHandler(
 
         [LoggerMessage(
            EventId = 11,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Deployment ID {DeploymentId} for {Owner}/{Repository} cannot be auto-deployed as it contains commit {Sha} that is not a trusted dependency update.")]
         public static partial void IgnoringCommitThatIsNotATrustedCommit(
             ILogger logger,
@@ -510,7 +510,7 @@ public sealed partial class DeploymentStatusHandler(
 
         [LoggerMessage(
            EventId = 15,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "The pending deployment ID {PendingDeploymentId} for {Owner}/{Repository} is {Count} commits behind.")]
         public static partial void PendingDeploymentIsBehindTheActiveDeployment(
             ILogger logger,

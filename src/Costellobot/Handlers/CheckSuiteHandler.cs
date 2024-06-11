@@ -263,7 +263,7 @@ public sealed partial class CheckSuiteHandler(
     {
         [LoggerMessage(
            EventId = 1,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring check suite ID {CheckSuiteId} for {Owner}/{Repository} for action {Action}.")]
         public static partial void IgnoringCheckRunAction(
             ILogger logger,
@@ -274,7 +274,7 @@ public sealed partial class CheckSuiteHandler(
 
         [LoggerMessage(
            EventId = 2,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring check suite ID {CheckSuiteId} for {Owner}/{Repository} which did not fail.")]
         public static partial void IgnoringCheckRunThatDidNotFail(
             ILogger logger,
@@ -284,7 +284,7 @@ public sealed partial class CheckSuiteHandler(
 
         [LoggerMessage(
            EventId = 3,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring check suite ID {CheckSuiteId} for {Owner}/{Repository} as retries are not enabled.")]
         public static partial void RetriesAreNotEnabled(
             ILogger logger,
@@ -294,7 +294,7 @@ public sealed partial class CheckSuiteHandler(
 
         [LoggerMessage(
            EventId = 4,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring check suite ID {CheckSuiteId} for {Owner}/{Repository} as it cannot be retried.")]
         public static partial void CannotRetryCheckSuite(
             ILogger logger,
@@ -304,7 +304,7 @@ public sealed partial class CheckSuiteHandler(
 
         [LoggerMessage(
            EventId = 5,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring check suite ID {CheckSuiteId} for {Owner}/{Repository} as no check runs are configured to be retried.")]
         public static partial void NoChecksConfiguredForRetry(
             ILogger logger,
@@ -314,7 +314,7 @@ public sealed partial class CheckSuiteHandler(
 
         [LoggerMessage(
            EventId = 6,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "No failed runs found for check suite ID {CheckSuiteId} in {Owner}/{Repository}.")]
         public static partial void NoFailedCheckRunsFound(
             ILogger logger,
@@ -336,7 +336,7 @@ public sealed partial class CheckSuiteHandler(
 
         [LoggerMessage(
            EventId = 8,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "No failed runs found for check suite ID {CheckSuiteId} in {Owner}/{Repository} that are eligible to be retried.")]
         public static partial void NoEligibleFailedCheckRunsFound(
             ILogger logger,
@@ -413,7 +413,7 @@ public sealed partial class CheckSuiteHandler(
 
         [LoggerMessage(
            EventId = 15,
-           Level = LogLevel.Information,
+           Level = LogLevel.Debug,
            Message = "Ignoring check suite ID {CheckSuiteId} for {Owner}/{Repository} as it is associated with a pull request from untrusted user {Login}.")]
         public static partial void IgnoringUntrustedUser(
             ILogger logger,
