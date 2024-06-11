@@ -76,6 +76,7 @@ textarea.form-payload {
 
 .log-entry .log-link {
     color: #b0b0b0;
+    text-decoration: underline;
 }
 
 .log-entry > .log-exception {
