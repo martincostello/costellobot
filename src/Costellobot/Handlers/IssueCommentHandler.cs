@@ -52,7 +52,7 @@ public sealed partial class IssueCommentHandler(
         {
             try
             {
-                await RebaseAsync(owner, name, number);
+                await RebaseAsync(owner, name, number, comment.Id);
             }
             catch (Exception ex)
             {
@@ -61,7 +61,7 @@ public sealed partial class IssueCommentHandler(
         }
     }
 
-    private async Task RebaseAsync(string owner, string name, int number)
+    private async Task RebaseAsync(string owner, string name, int number, long commentId)
     {
         var pull = await client.PullRequest.Get(owner, name, number);
 
@@ -86,6 +86,15 @@ public sealed partial class IssueCommentHandler(
         await client.RepositoryDispatchAsync("martincostello", "github-automation", dispatch);
 
         Log.RebaseRequested(logger, owner, name, number);
+
+        try
+        {
+            await client.Reaction.IssueComment.Create(owner, name, commentId, new NewReaction(ReactionType.Plus1));
+        }
+        catch (Exception ex)
+        {
+            Log.ReactionFailed(logger, ex, commentId, owner, name, number);
+        }
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -130,6 +139,18 @@ public sealed partial class IssueCommentHandler(
         public static partial void RebaseFailed(
             ILogger logger,
             Exception exception,
+            string owner,
+            string repository,
+            long number);
+
+        [LoggerMessage(
+           EventId = 5,
+           Level = LogLevel.Warning,
+           Message = "Failed to react to comment {CommentId} in pull request {Owner}/{Repository}#{Number}.")]
+        public static partial void ReactionFailed(
+            ILogger logger,
+            Exception exception,
+            long commentId,
             string owner,
             string repository,
             long number);

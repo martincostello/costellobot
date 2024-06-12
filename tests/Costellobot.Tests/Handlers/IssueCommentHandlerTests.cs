@@ -24,6 +24,7 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
         RegisterPullRequest(driver);
 
         var dispatched = RegisterDispatch(driver);
+        var reacted = RegisterReaction(driver, "+1");
 
         // Act
         using var response = await PostWebhookAsync("created", driver);
@@ -31,7 +32,10 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await dispatched.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        var timeout = TimeSpan.FromSeconds(1);
+
+        await dispatched.Task.WaitAsync(timeout);
+        await reacted.Task.WaitAsync(timeout);
     }
 
     [Theory]
@@ -108,7 +112,7 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
         CreateDefaultBuilder()
             .Requests()
             .ForPost()
-            .ForPath($"/repos/martincostello/github-automation/dispatches")
+            .ForPath("/repos/martincostello/github-automation/dispatches")
             .ForContent(async (request) =>
             {
                 request.ShouldNotBeNull();
@@ -140,6 +144,33 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
                     string.Equals(baseRef, driver.Issue.PullRequest?.RefBase, StringComparison.Ordinal) &&
                     string.Equals(headRef, driver.Issue.PullRequest?.RefHead, StringComparison.Ordinal) &&
                     number == driver.Issue.Number;
+            })
+            .Responds()
+            .WithStatus(HttpStatusCode.NoContent)
+            .WithInterceptionCallback((_) => dispatched.SetResult())
+            .RegisterWith(Fixture.Interceptor);
+
+        return dispatched;
+    }
+
+    private TaskCompletionSource RegisterReaction(IssueCommentDriver driver, string reaction)
+    {
+        var dispatched = new TaskCompletionSource();
+
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath($"/repos/{driver.Issue.Repository.Owner.Login}/{driver.Issue.Repository.Name}/issues/comments/{driver.Comment.Id}/reactions")
+            .ForContent(async (request) =>
+            {
+                request.ShouldNotBeNull();
+
+                byte[] body = await request.ReadAsByteArrayAsync();
+                using var document = JsonDocument.Parse(body);
+
+                var content = document.RootElement.GetProperty("content").GetString();
+
+                return content == reaction;
             })
             .Responds()
             .WithStatus(HttpStatusCode.NoContent)
