@@ -25,7 +25,6 @@ public sealed partial class IssueCommentHandler(
         string owner = repo.Owner.Login;
         string name = repo.Name;
         int number = (int)issue.Number;
-        long commentId = comment.Id;
 
         bool ignore = true;
 
@@ -53,7 +52,7 @@ public sealed partial class IssueCommentHandler(
         {
             try
             {
-                await RebaseAsync(owner, name, number, commentId);
+                await RebaseAsync(owner, name, number, comment.Id);
             }
             catch (Exception ex)
             {
