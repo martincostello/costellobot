@@ -241,14 +241,13 @@ export class App {
             const repo = match[4];
             const issue = match[5];
             const trailing = match[6];
-            const url = `https://github.com/${owner}/${repo}/issues/${issue}`;
 
             const prefix = message.substring(0, match.index);
             const suffix = message.substring(match.index + whole.length);
 
             const link = document.createElement('a');
             link.classList.add('log-link');
-            link.href = url;
+            link.href = `https://github.com/${owner}/${repo}/issues/${issue}`;
             link.innerText = text;
             link.target = '_blank';
 
