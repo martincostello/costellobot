@@ -148,14 +148,14 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var owner = CreateUser();
         var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
 
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage(dependency);
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
-            owner.Login,
-            repo.Name,
+            repository,
             reference,
             sha,
             commitMessage);
@@ -185,12 +185,13 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Arrange
         var owner = CreateUser();
         var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
 
         var registry = Substitute.For<IPackageRegistry>();
 
         registry.Ecosystem.Returns(ecosystem);
 
-        registry.GetPackageOwnersAsync(owner.Login, repo.Name, dependency, version)
+        registry.GetPackageOwnersAsync(repository, dependency, version)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(owners));
 
         var options = new WebhookOptions()
@@ -215,8 +216,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
-            owner.Login,
-            repo.Name,
+            repository,
             reference,
             sha,
             commitMessage);
@@ -263,8 +263,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
-            "someone",
-            "something",
+            new("someone", "something"),
             "blah-blah",
             sha,
             commitMessage);
@@ -290,8 +289,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
-            "someone",
-            "something",
+            new("someone", "something"),
             "dependabot/nuget/NodaTimeVersion-3.1.0",
             sha,
             commitMessage);
@@ -323,8 +321,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
-            "someone",
-            "something",
+            new("someone", "something"),
             "dependabot/nuget/NodaTimeVersion-3.1.0",
             sha,
             commitMessage);
@@ -339,13 +336,14 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Arrange
         var owner = CreateUser();
         var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
 
         var registry = Substitute.For<IPackageRegistry>();
 
         registry.Ecosystem
                 .Returns(DependencyEcosystem.GitHubActions);
 
-        registry.When((p) => p.GetPackageOwnersAsync(owner.Login, repo.Name, "actions/checkout", "3"))
+        registry.When((p) => p.GetPackageOwnersAsync(repository, "actions/checkout", "3"))
                 .Throw(new InvalidOperationException());
 
         var options = new WebhookOptions()
@@ -370,8 +368,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
-            owner.Login,
-            repo.Name,
+            repository,
             "dependabot/github_actions/actions/checkout-3",
             sha,
             commitMessage);
@@ -386,15 +383,16 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Arrange
         var owner = CreateUser();
         var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
 
         var registry = Substitute.For<IPackageRegistry>();
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "OpenTelemetry.Instrumentation.AspNetCore", "1.0.0-rc9.12")
+        registry.GetPackageOwnersAsync(repository, "OpenTelemetry.Instrumentation.AspNetCore", "1.0.0-rc9.12")
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["OpenTelemetry"]));
 
-        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "OpenTelemetry.Instrumentation.Http", "1.0.0-rc9.12")
+        registry.GetPackageOwnersAsync(repository, "OpenTelemetry.Instrumentation.Http", "1.0.0-rc9.12")
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["OpenTelemetry"]));
 
         var options = new WebhookOptions()
@@ -442,8 +440,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
-            owner.Login,
-            repo.Name,
+            repository,
             "dependabot/nuget/OpenTelemetryInstrumentationVersion-1.0.0-rc9.12",
             sha,
             commitMessage);
@@ -458,12 +455,13 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Arrange
         var owner = CreateUser();
         var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
 
         var registry = Substitute.For<IPackageRegistry>();
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "xunit", "2.6.3")
+        registry.GetPackageOwnersAsync(repository, "xunit", "2.6.3")
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
 
         var options = new WebhookOptions()
@@ -500,8 +498,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
-            owner.Login,
-            repo.Name,
+            repository,
             "dependabot/nuget/xunit-beb0c94413",
             sha,
             commitMessage);
@@ -516,15 +513,16 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Arrange
         var owner = CreateUser();
         var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
 
         var registry = Substitute.For<IPackageRegistry>();
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "xunit", "2.6.3")
+        registry.GetPackageOwnersAsync(repository, "xunit", "2.6.3")
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
 
-        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "xunit.runner.visualstudio", "2.5.5")
+        registry.GetPackageOwnersAsync(repository, "xunit.runner.visualstudio", "2.5.5")
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
 
         var options = new WebhookOptions()
@@ -572,8 +570,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
-            owner.Login,
-            repo.Name,
+            repository,
             "dependabot/nuget/xunit-9380cae661",
             sha,
             commitMessage);
@@ -588,13 +585,14 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Arrange
         var owner = CreateUser();
         var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
 
         var registry = Substitute.For<IPackageRegistry>();
 
         registry.Ecosystem
             .Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.TypeScript.MSBuild", "4.9.5")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.TypeScript.MSBuild", "4.9.5")
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "TypeScriptTeam"]));
 
         var options = new WebhookOptions()
@@ -629,8 +627,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
-            owner.Login,
-            repo.Name,
+            repository,
             "dependabot/nuget/Microsoft.TypeScript.MSBuild-4.9.5",
             sha,
             commitMessage);
@@ -645,21 +642,22 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Arrange
         var owner = CreateUser();
         var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
 
         var registry = Substitute.For<IPackageRegistry>();
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.Extensions.Configuration.Binder", "7.0.4")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.Extensions.Configuration.Binder", "7.0.4")
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "aspnet"]));
 
-        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.Extensions.Http.Polly", "7.0.5")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.Extensions.Http.Polly", "7.0.5")
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "aspnet"]));
 
-        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "Microsoft.NET.Test.Sdk", "17.5.0")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.NET.Test.Sdk", "17.5.0")
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "aspnet"]));
 
-        registry.GetPackageOwnersAsync(owner.Login, repo.Name, "System.Text.Json", "7.0.2")
+        registry.GetPackageOwnersAsync(repository, "System.Text.Json", "7.0.2")
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "dotnetframework"]));
 
         var options = new WebhookOptions()
@@ -703,8 +701,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
-            owner.Login,
-            repo.Name,
+            repository,
             "update-dotnet-sdk-7.0.203",
             sha,
             commitMessage);

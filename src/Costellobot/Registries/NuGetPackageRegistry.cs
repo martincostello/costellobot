@@ -14,8 +14,7 @@ public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.NuGet;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
-        string owner,
-        string repository,
+        RepositoryId repository,
         string id,
         string version)
     {

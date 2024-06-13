@@ -1,6 +1,7 @@
-// Copyright (c) Martin Costello, 2022. All rights reserved.
+﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
@@ -19,7 +20,7 @@ public sealed partial class BadgeService(
 
     public async Task<string?> GetBadgeAsync(string type, string owner, string repo, string? signature)
     {
-        if (!VerifySignature(type, owner, repo, signature))
+        if (!VerifySignature(type, owner, repo, signature, out var repository))
         {
             return null;
         }
@@ -28,41 +29,49 @@ public sealed partial class BadgeService(
         {
             return type.ToUpperInvariant() switch
             {
-                "RELEASE" => await LatestReleaseBadgeAsync(owner, repo),
-                "SECURITY" => await SecurityAlertsAsync(owner, repo),
+                "RELEASE" => await LatestReleaseBadgeAsync(repository),
+                "SECURITY" => await SecurityAlertsAsync(repository),
                 _ => null,
             };
         }
         catch (Exception ex)
         {
-            Log.FailedToGenerateBadge(logger, ex, type, owner, repo);
+            Log.FailedToGenerateBadge(logger, ex, type, repository);
             return null;
         }
     }
 
-    private bool VerifySignature(string type, string owner, string repo, string? signature)
+    private bool VerifySignature(
+        string type,
+        string owner,
+        string repo,
+        string? signature,
+        [NotNullWhen(true)] out RepositoryId? repository)
     {
         const int Length = 256 / 8;
         Span<byte> expected = stackalloc byte[Length];
 
         if (string.IsNullOrEmpty(signature) || !Convert.TryFromBase64String(signature, expected, out var written) || written != Length)
         {
+            repository = null;
             return false;
         }
 
         var data = Encoding.UTF8.GetBytes($"badge-{type}-{owner}-{repo}");
         var actual = HMACSHA256.HashData(_key, data);
 
+        repository = new RepositoryId(owner, repo);
+
         return CryptographicOperations.FixedTimeEquals(expected, actual);
     }
 
-    private async Task<string?> LatestReleaseBadgeAsync(string owner, string name)
+    private async Task<string?> LatestReleaseBadgeAsync(RepositoryId repository)
     {
         Release? release = null;
 
         try
         {
-            release = await client.Repository.Release.GetLatest(owner, name);
+            release = await client.Repository.Release.GetLatest(repository.Owner, repository.Name);
         }
         catch (NotFoundException)
         {
@@ -71,7 +80,7 @@ public sealed partial class BadgeService(
 
         if (release is null)
         {
-            var releases = await client.Repository.Release.GetAll(owner, name, new() { PageCount = 1, PageSize = 1 });
+            var releases = await client.Repository.Release.GetAll(repository.Owner, repository.Name, new() { PageCount = 1, PageSize = 1 });
 
             if (releases.Count < 1)
             {
@@ -93,20 +102,20 @@ public sealed partial class BadgeService(
         return $"https://img.shields.io/badge/release-{releaseName}-blue?logo=github";
     }
 
-    private async Task<string?> SecurityAlertsAsync(string owner, string name)
+    private async Task<string?> SecurityAlertsAsync(RepositoryId repository)
     {
         int count = 0;
 
         foreach (var type in AlertTypes)
         {
-            count += await GetAlertsAsync(client, owner, name, type);
+            count += await GetAlertsAsync(client, repository, type);
         }
 
         string color = count is 0 ? "brightgreen" : "red";
 
         return $"https://img.shields.io/badge/security-{count}-{color}?logo=github";
 
-        static async Task<int> GetAlertsAsync(IGitHubClient client, string owner, string name, string type)
+        static async Task<int> GetAlertsAsync(IGitHubClient client, RepositoryId repository, string type)
         {
             var parameters = new Dictionary<string, string>(1)
             {
@@ -115,7 +124,7 @@ public sealed partial class BadgeService(
 
             try
             {
-                if (await client.Connection.Get<object[]>(new($"/repos/{owner}/{name}/{type}/alerts", UriKind.Relative), parameters) is { Body.Length: > 0 } alerts)
+                if (await client.Connection.Get<object[]>(new($"/repos/{repository.FullName}/{type}/alerts", UriKind.Relative), parameters) is { Body.Length: > 0 } alerts)
                 {
                     return alerts.Body.Length;
                 }
@@ -135,12 +144,11 @@ public sealed partial class BadgeService(
         [LoggerMessage(
            EventId = 1,
            Level = LogLevel.Warning,
-           Message = "Failed to generate badge of type {BadgeType} for {Owner}/{Repository}.")]
+           Message = "Failed to generate badge of type {BadgeType} for {Repository}.")]
         public static partial void FailedToGenerateBadge(
             ILogger logger,
             Exception exception,
             string badgeType,
-            string owner,
-            string repository);
+            RepositoryId repository);
     }
 }

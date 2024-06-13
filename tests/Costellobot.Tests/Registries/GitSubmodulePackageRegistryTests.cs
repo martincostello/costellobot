@@ -15,8 +15,7 @@ public static class GitSubmodulePackageRegistryTests
     public static async Task Can_Get_Package_Owners(string id, string version, string[] expected)
     {
         // Arrange
-        string owner = "dotnet";
-        string repository = "aspnetcore";
+        var repository = new RepositoryId("dotnet", "aspnetcore");
 
         var options = await new HttpClientInterceptorOptions()
             .ThrowsOnMissingRegistration()
@@ -31,7 +30,6 @@ public static class GitSubmodulePackageRegistryTests
 
         // Act
         var actual = await target.GetPackageOwnersAsync(
-            owner,
             repository,
             id,
             version);

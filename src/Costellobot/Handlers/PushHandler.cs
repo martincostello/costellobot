@@ -28,6 +28,7 @@ public sealed partial class PushHandler(
             return;
         }
 
+        var repository = RepositoryId.Create(repo);
         var filesChanged = new HashSet<string>();
 
         foreach (var commit in commits)
@@ -45,8 +46,8 @@ public sealed partial class PushHandler(
 
         if (DependencyFileChanged(filesChanged))
         {
-            Log.CreatedRepositoryDispatchForPush(logger, repo.Owner.Login, repo.Name, push.Ref);
-            await CreateDispatchAsync(repo.FullName, push.Ref, push.After);
+            Log.CreatedRepositoryDispatchForPush(logger, repository, push.Ref);
+            await CreateDispatchAsync(repository, push.Ref, push.After);
         }
     }
 
@@ -74,7 +75,7 @@ public sealed partial class PushHandler(
         }
     }
 
-    private async Task CreateDispatchAsync(string repository, string reference, string sha)
+    private async Task CreateDispatchAsync(RepositoryId repository, string reference, string sha)
     {
         // See https://github.com/martincostello/github-automation/blob/main/.github/workflows/dotnet-dependencies-updated.yml
         var dispatch = new
@@ -82,7 +83,7 @@ public sealed partial class PushHandler(
             event_type = "dotnet_dependencies_updated",
             client_payload = new
             {
-                repository,
+                repository = repository.FullName,
                 @ref = reference,
                 ref_name = reference[PrefixForBranchName.Length..],
                 sha,
@@ -98,11 +99,10 @@ public sealed partial class PushHandler(
         [LoggerMessage(
            EventId = 1,
            Level = LogLevel.Information,
-           Message = "Creating repository dispatch for push to {Owner}/{Repository} for ref {Reference}.")]
+           Message = "Creating repository dispatch for push to {Repository} for ref {Reference}.")]
         public static partial void CreatedRepositoryDispatchForPush(
             ILogger logger,
-            string? owner,
-            string? repository,
+            RepositoryId repository,
             string? reference);
     }
 }

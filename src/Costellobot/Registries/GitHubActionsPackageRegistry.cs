@@ -12,8 +12,7 @@ public sealed class GitHubActionsPackageRegistry(
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.GitHubActions;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
-        string owner,
-        string repository,
+        RepositoryId repository,
         string id,
         string version)
     {

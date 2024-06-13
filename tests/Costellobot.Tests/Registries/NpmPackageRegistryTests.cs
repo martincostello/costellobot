@@ -15,8 +15,7 @@ public static class NpmPackageRegistryTests
     public static async Task Can_Get_Package_Owners(string id, string version, string[] expected)
     {
         // Arrange
-        string owner = "some-org";
-        string repository = "some-repo";
+        var repository = new RepositoryId("some-org", "some-repo");
 
         var options = await new HttpClientInterceptorOptions()
             .ThrowsOnMissingRegistration()
@@ -29,7 +28,6 @@ public static class NpmPackageRegistryTests
 
         // Act
         var actual = await target.GetPackageOwnersAsync(
-            owner,
             repository,
             id,
             version);
