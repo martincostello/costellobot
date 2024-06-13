@@ -8,7 +8,7 @@ namespace MartinCostello.Costellobot;
 
 public abstract class ChannelQueue<T>
 {
-    private const int HistoryCapacity = 5;
+    private const int HistoryCapacity = 20;
     private const int QueueCapacity = 1000;
 
     private readonly ConcurrentQueue<T> _history;
