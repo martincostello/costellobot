@@ -52,29 +52,25 @@ public sealed partial class GitCommitAnalyzer(
     }
 
     public async Task<bool> IsTrustedDependencyUpdateAsync(
-        string owner,
-        string name,
+        RepositoryId repository,
         string? reference,
         GitHubCommit commit)
     {
         return await IsTrustedDependencyUpdateAsync(
-            owner,
-            name,
+            repository,
             reference,
             commit.Sha,
             commit.Commit.Message);
     }
 
     public async Task<bool> IsTrustedDependencyUpdateAsync(
-        string owner,
-        string name,
+        RepositoryId repository,
         string? reference,
         string sha,
         string commitMessage)
     {
         bool isTrusted = IsTrustedDependencyName(
-            owner,
-            name,
+            repository,
             sha,
             commitMessage,
             out var dependencies);
@@ -82,8 +78,7 @@ public sealed partial class GitCommitAnalyzer(
         if (!isTrusted)
         {
             isTrusted = await IsTrustedDependencyOwnerAsync(
-                owner,
-                name,
+                repository,
                 reference,
                 commitMessage,
                 dependencies);
@@ -94,8 +89,7 @@ public sealed partial class GitCommitAnalyzer(
             Log.TrustedDependenciesUpdated(
                 logger,
                 sha,
-                owner,
-                name,
+                repository,
                 dependencies.Count);
         }
 
@@ -171,8 +165,7 @@ public sealed partial class GitCommitAnalyzer(
     }
 
     private bool IsTrustedDependencyName(
-        string owner,
-        string name,
+        RepositoryId repository,
         string sha,
         string commitMessage,
         out IReadOnlyList<string> dependencies)
@@ -189,8 +182,7 @@ public sealed partial class GitCommitAnalyzer(
         Log.CommitUpdatesDependencies(
             logger,
             sha,
-            owner,
-            name,
+            repository,
             [.. dependencies]);
 
         foreach (string dependency in dependencies)
@@ -200,8 +192,7 @@ public sealed partial class GitCommitAnalyzer(
                 Log.UntrustedDependencyNameUpdated(
                     logger,
                     sha,
-                    owner,
-                    name,
+                    repository,
                     dependency);
 
                 return false;
@@ -210,8 +201,7 @@ public sealed partial class GitCommitAnalyzer(
             Log.TrustedDependencyNameUpdated(
                 logger,
                 sha,
-                owner,
-                name,
+                repository,
                 dependency);
         }
 
@@ -219,8 +209,7 @@ public sealed partial class GitCommitAnalyzer(
     }
 
     private async Task<bool> IsTrustedDependencyOwnerAsync(
-        string owner,
-        string name,
+        RepositoryId repository,
         string? reference,
         string commitMessage,
         IReadOnlyList<string> dependencies)
@@ -234,8 +223,7 @@ public sealed partial class GitCommitAnalyzer(
         foreach (string dependency in dependencies)
         {
             if (!await IsTrustedDependencyOwnerAsync(
-                    owner,
-                    name,
+                    repository,
                     dependency,
                     reference,
                     commitMessage))
@@ -249,8 +237,7 @@ public sealed partial class GitCommitAnalyzer(
         // If only one dependency was found, we can attempt to extract the version
         // from the commit message to see if the package was from a trusted publisher.
         async Task<bool> IsTrustedDependencyOwnerAsync(
-            string owner,
-            string name,
+            RepositoryId repository,
             string dependency,
             string? reference,
             string commitMessage)
@@ -284,8 +271,7 @@ public sealed partial class GitCommitAnalyzer(
             try
             {
                 var owners = await registry.GetPackageOwnersAsync(
-                    owner,
-                    name,
+                    repository,
                     dependency,
                     version);
 
@@ -294,8 +280,7 @@ public sealed partial class GitCommitAnalyzer(
                     Log.TrustedDependencyOwnerUpdated(
                         logger,
                         reference,
-                        owner,
-                        name,
+                        repository,
                         dependency);
 
                     return true;
@@ -306,8 +291,7 @@ public sealed partial class GitCommitAnalyzer(
                     Log.TrustedDependencyOwnerViaRegistryUpdated(
                         logger,
                         reference,
-                        owner,
-                        name,
+                        repository,
                         dependency,
                         registry.Ecosystem.ToString());
 
@@ -317,8 +301,7 @@ public sealed partial class GitCommitAnalyzer(
                 Log.UntrustedDependencyOwnerUpdated(
                     logger,
                     reference,
-                    owner,
-                    name,
+                    repository,
                     dependency);
             }
             catch (Exception ex)
@@ -336,34 +319,31 @@ public sealed partial class GitCommitAnalyzer(
         [LoggerMessage(
            EventId = 1,
            Level = LogLevel.Information,
-           Message = "Commit {Sha} for {Owner}/{Repository} updates the following dependencies: {Dependencies}.")]
+           Message = "Commit {Sha} for {Repository} updates the following dependencies: {Dependencies}.")]
         public static partial void CommitUpdatesDependencies(
             ILogger logger,
             string sha,
-            string owner,
-            string repository,
+            RepositoryId repository,
             string[] dependencies);
 
         [LoggerMessage(
            EventId = 2,
            Level = LogLevel.Debug,
-           Message = "Commit {Sha} for {Owner}/{Repository} updates dependency {Dependency} which is not trusted by its name.")]
+           Message = "Commit {Sha} for {Repository} updates dependency {Dependency} which is not trusted by its name.")]
         public static partial void UntrustedDependencyNameUpdated(
             ILogger logger,
             string sha,
-            string owner,
-            string repository,
+            RepositoryId repository,
             string dependency);
 
         [LoggerMessage(
            EventId = 3,
            Level = LogLevel.Information,
-           Message = "Commit {Sha} for {Owner}/{Repository} updates {Count} trusted dependencies.")]
+           Message = "Commit {Sha} for {Repository} updates {Count} trusted dependencies.")]
         public static partial void TrustedDependenciesUpdated(
             ILogger logger,
             string sha,
-            string owner,
-            string repository,
+            RepositoryId repository,
             int count);
 
         [LoggerMessage(
@@ -380,45 +360,41 @@ public sealed partial class GitCommitAnalyzer(
         [LoggerMessage(
            EventId = 5,
            Level = LogLevel.Debug,
-           Message = "Reference {Reference} for {Owner}/{Repository} updates dependency {Dependency} which is not trusted by its owner.")]
+           Message = "Reference {Reference} for {Repository} updates dependency {Dependency} which is not trusted by its owner.")]
         public static partial void UntrustedDependencyOwnerUpdated(
             ILogger logger,
             string? reference,
-            string owner,
-            string repository,
+            RepositoryId repository,
             string dependency);
 
         [LoggerMessage(
            EventId = 6,
            Level = LogLevel.Information,
-           Message = "Commit {Sha} for {Owner}/{Repository} updates dependency {Dependency} which is trusted by its name.")]
+           Message = "Commit {Sha} for {Repository} updates dependency {Dependency} which is trusted by its name.")]
         public static partial void TrustedDependencyNameUpdated(
             ILogger logger,
             string sha,
-            string owner,
-            string repository,
+            RepositoryId repository,
             string dependency);
 
         [LoggerMessage(
            EventId = 7,
            Level = LogLevel.Information,
-           Message = "Reference {Reference} for {Owner}/{Repository} updates dependency {Dependency} which is trusted through its owner.")]
+           Message = "Reference {Reference} for {Repository} updates dependency {Dependency} which is trusted through its owner.")]
         public static partial void TrustedDependencyOwnerUpdated(
             ILogger logger,
             string? reference,
-            string owner,
-            string repository,
+            RepositoryId repository,
             string dependency);
 
         [LoggerMessage(
            EventId = 8,
            Level = LogLevel.Information,
-           Message = "Reference {Reference} for {Owner}/{Repository} updates dependency {Dependency} whose owner is trusted by its registry {Registry}.")]
+           Message = "Reference {Reference} for {Repository} updates dependency {Dependency} whose owner is trusted by its registry {Registry}.")]
         public static partial void TrustedDependencyOwnerViaRegistryUpdated(
             ILogger logger,
             string? reference,
-            string owner,
-            string repository,
+            RepositoryId repository,
             string dependency,
             string registry);
     }

@@ -26,13 +26,11 @@ public sealed partial class DeploymentProtectionRuleHandler(
             return;
         }
 
-        string owner = repo.Owner.Login;
-        string name = repo.Name;
+        var repository = RepositoryId.Create(repo);
 
         Log.DeploymentProtectionRuleRequested(
             logger,
-            owner,
-            name,
+            repository,
             body.Environment,
             body.Deployment.Id,
             body.DeploymentCallbackUrl);
@@ -43,8 +41,7 @@ public sealed partial class DeploymentProtectionRuleHandler(
         {
             Log.DeploymentProtectionRuleApprovalIsDisabled(
                 logger,
-                owner,
-                name,
+                repository,
                 body.Environment,
                 body.Deployment.Id);
 
@@ -55,8 +52,7 @@ public sealed partial class DeploymentProtectionRuleHandler(
         {
             Log.TodayIsAPublicHoliday(
                 logger,
-                owner,
-                name,
+                repository,
                 body.Environment,
                 body.Deployment.Id);
 
@@ -77,8 +73,7 @@ public sealed partial class DeploymentProtectionRuleHandler(
 
             Log.ApprovedDeployment(
                 logger,
-                owner,
-                name,
+                repository,
                 body.Environment,
                 body.Deployment.Id);
         }
@@ -87,8 +82,7 @@ public sealed partial class DeploymentProtectionRuleHandler(
             Log.FailedToApproveDeployment(
                 logger,
                 ex,
-                owner,
-                name,
+                repository,
                 body.Environment,
                 body.Deployment.Id);
         }
@@ -107,11 +101,10 @@ public sealed partial class DeploymentProtectionRuleHandler(
         [LoggerMessage(
            EventId = 1,
            Level = LogLevel.Information,
-           Message = "Received deployment protection rule check for {Owner}/{Repository} for environment {EnvironmentName} for deployment {DeploymentId} with deployment callback {DeploymentCallbackUrl}.")]
+           Message = "Received deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId} with deployment callback {DeploymentCallbackUrl}.")]
         public static partial void DeploymentProtectionRuleRequested(
             ILogger logger,
-            string? owner,
-            string? repository,
+            RepositoryId repository,
             string? environmentName,
             long deploymentId,
             string? deploymentCallbackUrl);
@@ -119,45 +112,41 @@ public sealed partial class DeploymentProtectionRuleHandler(
         [LoggerMessage(
            EventId = 2,
            Level = LogLevel.Information,
-           Message = "Approved deployment protection rule check for {Owner}/{Repository} for environment {EnvironmentName} for deployment {DeploymentId}.")]
+           Message = "Approved deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId}.")]
         public static partial void ApprovedDeployment(
             ILogger logger,
-            string? owner,
-            string? repository,
+            RepositoryId repository,
             string? environmentName,
             long deploymentId);
 
         [LoggerMessage(
            EventId = 3,
            Level = LogLevel.Warning,
-           Message = "Failed to approve deployment protection rule check for {Owner}/{Repository} for environment {EnvironmentName} for deployment {DeploymentId}.")]
+           Message = "Failed to approve deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId}.")]
         public static partial void FailedToApproveDeployment(
             ILogger logger,
             Exception exception,
-            string? owner,
-            string? repository,
+            RepositoryId repository,
             string? environmentName,
             long deploymentId);
 
         [LoggerMessage(
            EventId = 4,
            Level = LogLevel.Information,
-           Message = "Ignoring deployment protection rule check for {Owner}/{Repository} for environment {EnvironmentName} for deployment {DeploymentId} as deployment approval is disabled.")]
+           Message = "Ignoring deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId} as deployment approval is disabled.")]
         public static partial void DeploymentProtectionRuleApprovalIsDisabled(
             ILogger logger,
-            string? owner,
-            string? repository,
+            RepositoryId repository,
             string? environmentName,
             long deploymentId);
 
         [LoggerMessage(
            EventId = 5,
            Level = LogLevel.Information,
-           Message = "Ignoring deployment protection rule check for {Owner}/{Repository} for environment {EnvironmentName} for deployment {DeploymentId} as it is a public holiday.")]
+           Message = "Ignoring deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId} as it is a public holiday.")]
         public static partial void TodayIsAPublicHoliday(
             ILogger logger,
-            string? owner,
-            string? repository,
+            RepositoryId repository,
             string? environmentName,
             long deploymentId);
     }

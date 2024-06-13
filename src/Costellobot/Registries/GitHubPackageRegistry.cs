@@ -26,8 +26,7 @@ public abstract class GitHubPackageRegistry(IGitHubClientForInstallation client,
     }
 
     public abstract Task<IReadOnlyList<string>> GetPackageOwnersAsync(
-        string owner,
-        string repository,
+        RepositoryId repository,
         string id,
         string version);
 

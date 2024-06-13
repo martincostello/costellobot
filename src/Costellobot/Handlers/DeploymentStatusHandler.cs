@@ -32,36 +32,33 @@ public sealed partial class DeploymentStatusHandler(
             return;
         }
 
-        if (!IsDeploymentWaitingForApproval(body))
+        if (!IsDeploymentWaitingForApproval(body, out var repository))
         {
             return;
         }
 
-        string owner = repo.Owner.Login;
-        string name = repo.Name;
         var options = webhookOptions.CurrentValue;
 
         if (!options.DeployEnvironments.Contains(deploy.Environment))
         {
-            Log.IgnoringDeploymentStatusAsEnvironmentNotEnabled(logger, body.DeploymentStatus.Id, owner, name, deploy.Environment);
+            Log.IgnoringDeploymentStatusAsEnvironmentNotEnabled(logger, body.DeploymentStatus.Id, repository, deploy.Environment);
             return;
         }
 
         if (!options.Deploy)
         {
-            Log.AutomatedDeploymentApprovalIsDisabled(logger, body.DeploymentStatus.Id, owner, name);
+            Log.AutomatedDeploymentApprovalIsDisabled(logger, body.DeploymentStatus.Id, repository);
             return;
         }
 
         if (publicHolidayProvider.IsPublicHoliday())
         {
-            Log.TodayIsAPublicHoliday(logger, body.DeploymentStatus.Id, owner, name);
+            Log.TodayIsAPublicHoliday(logger, body.DeploymentStatus.Id, repository);
             return;
         }
 
         var activeDeployment = await GetActiveDeploymentAsync(
-            owner,
-            name,
+            repository,
             deploy.Id,
             deploy.Environment);
 
@@ -70,7 +67,7 @@ public sealed partial class DeploymentStatusHandler(
             return;
         }
 
-        if (!await CanDeployChangesAsync(repo, deploy, activeDeployment))
+        if (!await CanDeployChangesAsync(repository, deploy, activeDeployment))
         {
             return;
         }
@@ -95,8 +92,7 @@ public sealed partial class DeploymentStatusHandler(
                 logger,
                 run.Id,
                 deploy.Environment,
-                owner,
-                name,
+                repository,
                 pendingDeployments.Count);
 
             return;
@@ -104,7 +100,7 @@ public sealed partial class DeploymentStatusHandler(
 
         var deployment = pendingDeployments[0];
 
-        await ApproveDeploymentAsync(owner, name, run.Id, deployment);
+        await ApproveDeploymentAsync(repository, run.Id, deployment);
     }
 
     private static ResiliencePipeline CreateResiliencePipeline()
@@ -119,8 +115,7 @@ public sealed partial class DeploymentStatusHandler(
     }
 
     private async Task ApproveDeploymentAsync(
-        string owner,
-        string name,
+        RepositoryId repository,
         long runId,
         PendingDeployment deployment)
     {
@@ -139,25 +134,26 @@ public sealed partial class DeploymentStatusHandler(
                 webhookOptions.CurrentValue.DeployComment);
 
             await Pipeline.ExecuteAsync(
-                static async (state, _) => await state.client.Actions.Workflows.Runs.ReviewPendingDeployments(state.owner, state.name, state.runId, state.review),
-                (client, owner, name, runId, review),
+                static async (state, _) => await state.client.Actions.Workflows.Runs.ReviewPendingDeployments(state.repository.Owner, state.repository.Name, state.runId, state.review),
+                (client, repository, runId, review),
                 CancellationToken.None);
         }
         catch (Exception ex)
         {
-            Log.FailedToApproveDeployment(logger, ex, runId, owner, name);
+            Log.FailedToApproveDeployment(logger, ex, runId, repository);
         }
     }
 
-    private bool IsDeploymentWaitingForApproval(DeploymentStatusEvent message)
+    private bool IsDeploymentWaitingForApproval(DeploymentStatusEvent message, out RepositoryId repository)
     {
+        repository = RepositoryId.Create(message.Repository!);
+
         if (!string.Equals(message.Action, DeploymentStatusActionValue.Created, StringComparison.Ordinal))
         {
             Log.IgnoringDeploymentStatusAction(
                 logger,
                 message.DeploymentStatus.Id,
-                message.Repository!.Owner.Login,
-                message.Repository.Name,
+                repository,
                 message.Action);
 
             return false;
@@ -168,8 +164,7 @@ public sealed partial class DeploymentStatusHandler(
             Log.IgnoringDeploymentStatusAsNotWaiting(
                 logger,
                 message.DeploymentStatus.Id,
-                message.Repository!.Owner.Login,
-                message.Repository.Name,
+                repository,
                 message.DeploymentStatus.State.Value);
 
             return false;
@@ -179,8 +174,7 @@ public sealed partial class DeploymentStatusHandler(
     }
 
     private async Task<Octokit.Deployment?> GetActiveDeploymentAsync(
-        string owner,
-        string name,
+        RepositoryId repository,
         long deploymentId,
         string environment)
     {
@@ -191,7 +185,7 @@ public sealed partial class DeploymentStatusHandler(
 
         var connection = new ApiConnection(client.Connection);
         var deployments = await connection.Get<Octokit.Deployment[]>(
-            new Uri($"repos/{owner}/{name}/deployments", UriKind.Relative),
+            new Uri($"repos/{repository.FullName}/deployments", UriKind.Relative),
             parameters);
 
         var previousDeployments = deployments
@@ -200,20 +194,20 @@ public sealed partial class DeploymentStatusHandler(
 
         if (previousDeployments.Count < 1)
         {
-            Log.NoPreviousDeploymentsFound(logger, deploymentId, owner, name);
+            Log.NoPreviousDeploymentsFound(logger, deploymentId, repository);
             return null;
         }
 
         var previousDeployment = previousDeployments[0];
 
         var previousDeploymentStatuses = await client.Repository.Deployment.Status.GetAll(
-            owner,
-            name,
+            repository.Owner,
+            repository.Name,
             previousDeployment.Id);
 
         if (previousDeploymentStatuses.Count < 1)
         {
-            Log.NoDeploymentStatusesFound(logger, previousDeployment.Id, owner, name);
+            Log.NoDeploymentStatusesFound(logger, previousDeployment.Id, repository);
             return null;
         }
 
@@ -221,25 +215,25 @@ public sealed partial class DeploymentStatusHandler(
 
         if (isPreviousDeploymentActive)
         {
-            Log.FoundActiveDeployment(logger, previousDeployment.Id, owner, name);
+            Log.FoundActiveDeployment(logger, previousDeployment.Id, repository);
             return previousDeployment;
         }
 
         foreach (var deployment in previousDeployments.Skip(1))
         {
             previousDeploymentStatuses = await client.Repository.Deployment.Status.GetAll(
-                owner,
-                name,
+                repository.Owner,
+                repository.Name,
                 deployment.Id);
 
             if (IsDeploymentActive(previousDeploymentStatuses))
             {
-                Log.FoundActiveDeployment(logger, deployment.Id, owner, name);
+                Log.FoundActiveDeployment(logger, deployment.Id, repository);
                 return deployment;
             }
         }
 
-        Log.NoActiveDeploymentFound(logger, deploymentId, owner, name);
+        Log.NoActiveDeploymentFound(logger, deploymentId, repository);
         return null;
 
         static bool IsDeploymentActive(IReadOnlyList<Octokit.DeploymentStatus> statuses)
@@ -263,13 +257,12 @@ public sealed partial class DeploymentStatusHandler(
     }
 
     private async Task<string?> GetRefForCommitFromPullRequestAsync(
-        string owner,
-        string repo,
+        RepositoryId repository,
         string sha)
     {
         // See https://docs.github.com/en/rest/commits/commits#list-pull-requests-associated-with-a-commit.
         var pullRequests = await client.Connection.GetResponse<PullRequest[]>(
-            new($"repos/{owner}/{repo}/commits/{sha}/pulls", UriKind.Relative));
+            new($"repos/{repository.FullName}/commits/{sha}/pulls", UriKind.Relative));
 
         if (pullRequests.Body is { Length: 1 } pulls)
         {
@@ -280,9 +273,7 @@ public sealed partial class DeploymentStatusHandler(
                 logger,
                 sha,
                 reference,
-                owner,
-                repo,
-                pullRequest.Number);
+                new IssueId(repository, pullRequest.Number));
 
             return reference;
         }
@@ -291,30 +282,27 @@ public sealed partial class DeploymentStatusHandler(
     }
 
     private async Task<bool> CanDeployChangesAsync(
-        Octokit.Webhooks.Models.Repository repository,
+        RepositoryId repository,
         Octokit.Webhooks.Models.DeploymentStatusEvent.Deployment pendingDeployment,
         Octokit.Deployment activeDeployment)
     {
-        string owner = repository.Owner.Login;
-        string name = repository.Name;
-
         // Diff the active and pending deployment and verify that only trusted dependency
         // changes from trusted users contribute to the changes pending to be deployed.
         var comparison = await client.Repository.Commit.Compare(
-            owner,
-            name,
+            repository.Owner,
+            repository.Name,
             activeDeployment.Sha,
             pendingDeployment.Sha);
 
         if (comparison.Commits.Count < 1)
         {
-            Log.NoCommitsFoundForPendingDeployment(logger, activeDeployment.Id, pendingDeployment.Id, owner, name);
+            Log.NoCommitsFoundForPendingDeployment(logger, activeDeployment.Id, pendingDeployment.Id, repository);
             return false;
         }
 
         if (comparison.Status is not "ahead")
         {
-            Log.PendingDeploymentIsBehindTheActiveDeployment(logger, pendingDeployment.Id, owner, name, comparison.BehindBy);
+            Log.PendingDeploymentIsBehindTheActiveDeployment(logger, pendingDeployment.Id, repository, comparison.BehindBy);
             return false;
         }
 
@@ -328,24 +316,22 @@ public sealed partial class DeploymentStatusHandler(
 
             if (!webhookOptions.CurrentValue.TrustedEntities.Users.Contains(commit.Author.Login))
             {
-                Log.UntrustedCommitAuthorFound(logger, pendingDeployment.Id, owner, name, commit.Sha, commit.Author.Login);
+                Log.UntrustedCommitAuthorFound(logger, pendingDeployment.Id, repository, commit.Sha, commit.Author.Login);
                 return false;
             }
 
             string? reference = await GetRefForCommitFromPullRequestAsync(
-                owner,
-                name,
+                repository,
                 commit.Sha);
 
             bool isTrustedCommit = await commitAnalyzer.IsTrustedDependencyUpdateAsync(
-                repository.Owner.Login,
-                repository.Name,
+                repository,
                 reference,
                 commit);
 
             if (!isTrustedCommit)
             {
-                Log.IgnoringCommitThatIsNotATrustedCommit(logger, pendingDeployment.Id, owner, name, commit.Sha);
+                Log.IgnoringCommitThatIsNotATrustedCommit(logger, pendingDeployment.Id, repository, commit.Sha);
                 return false;
             }
         }
@@ -359,174 +345,157 @@ public sealed partial class DeploymentStatusHandler(
         [LoggerMessage(
            EventId = 1,
            Level = LogLevel.Debug,
-           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Owner}/{Repository} for action {Action}.")]
+           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} for action {Action}.")]
         public static partial void IgnoringDeploymentStatusAction(
             ILogger logger,
             long deploymentStatusId,
-            string owner,
-            string repository,
+            RepositoryId repository,
             string? action);
 
         [LoggerMessage(
            EventId = 2,
            Level = LogLevel.Debug,
-           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Owner}/{Repository} with state {State}.")]
+           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} with state {State}.")]
         public static partial void IgnoringDeploymentStatusAsNotWaiting(
             ILogger logger,
             long deploymentStatusId,
-            string owner,
-            string repository,
+            RepositoryId repository,
             DeploymentStatusState state);
 
         [LoggerMessage(
            EventId = 3,
            Level = LogLevel.Debug,
-           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Owner}/{Repository} as auto-deploy is not enabled for the {Environment} environment.")]
+           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} as auto-deploy is not enabled for the {Environment} environment.")]
         public static partial void IgnoringDeploymentStatusAsEnvironmentNotEnabled(
             ILogger logger,
             long deploymentStatusId,
-            string owner,
-            string repository,
+            RepositoryId repository,
             string environment);
 
         [LoggerMessage(
            EventId = 4,
            Level = LogLevel.Debug,
-           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Owner}/{Repository} as deployment approval is disabled.")]
+           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} as deployment approval is disabled.")]
         public static partial void AutomatedDeploymentApprovalIsDisabled(
             ILogger logger,
             long deploymentStatusId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 5,
            Level = LogLevel.Information,
-           Message = "No previous deployments found for deployment ID {DeploymentId} for {Owner}/{Repository}.")]
+           Message = "No previous deployments found for deployment ID {DeploymentId} for {Repository}.")]
         public static partial void NoPreviousDeploymentsFound(
             ILogger logger,
             long deploymentId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 6,
            Level = LogLevel.Information,
-           Message = "No previous deployment statuses found for deployment ID {DeploymentId} for {Owner}/{Repository}.")]
+           Message = "No previous deployment statuses found for deployment ID {DeploymentId} for {Repository}.")]
         public static partial void NoDeploymentStatusesFound(
             ILogger logger,
             long deploymentId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 7,
            Level = LogLevel.Information,
-           Message = "Deployment ID {DeploymentId} for {Owner}/{Repository} is currently active.")]
+           Message = "Deployment ID {DeploymentId} for {Repository} is currently active.")]
         public static partial void FoundActiveDeployment(
             ILogger logger,
             long deploymentId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 8,
            Level = LogLevel.Information,
-           Message = "No active deployment found for deployment ID {DeploymentId} for {Owner}/{Repository}.")]
+           Message = "No active deployment found for deployment ID {DeploymentId} for {Repository}.")]
         public static partial void NoActiveDeploymentFound(
             ILogger logger,
             long deploymentId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 9,
            Level = LogLevel.Information,
-           Message = "No commits found between active deployment ID {ActiveDeploymentId} and pending deployment ID {PendingDeploymentId} for {Owner}/{Repository}.")]
+           Message = "No commits found between active deployment ID {ActiveDeploymentId} and pending deployment ID {PendingDeploymentId} for {Repository}.")]
         public static partial void NoCommitsFoundForPendingDeployment(
             ILogger logger,
             long activeDeploymentId,
             long pendingDeploymentId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 10,
            Level = LogLevel.Debug,
-           Message = "Deployment ID {DeploymentId} for {Owner}/{Repository} cannot be auto-deployed as it contains commit {Sha} from untrusted author {Login}.")]
+           Message = "Deployment ID {DeploymentId} for {Repository} cannot be auto-deployed as it contains commit {Sha} from untrusted author {Login}.")]
         public static partial void UntrustedCommitAuthorFound(
             ILogger logger,
             long deploymentId,
-            string owner,
-            string repository,
+            RepositoryId repository,
             string sha,
             string login);
 
         [LoggerMessage(
            EventId = 11,
            Level = LogLevel.Debug,
-           Message = "Deployment ID {DeploymentId} for {Owner}/{Repository} cannot be auto-deployed as it contains commit {Sha} that is not a trusted dependency update.")]
+           Message = "Deployment ID {DeploymentId} for {Repository} cannot be auto-deployed as it contains commit {Sha} that is not a trusted dependency update.")]
         public static partial void IgnoringCommitThatIsNotATrustedCommit(
             ILogger logger,
             long deploymentId,
-            string owner,
-            string repository,
+            RepositoryId repository,
             string sha);
 
         [LoggerMessage(
            EventId = 12,
            Level = LogLevel.Information,
-           Message = "Did not find exactly one pending deployment for workflow run ID {RunId} for environment {EnvironmentName} for {Owner}/{Repository}; found {Count}.")]
+           Message = "Did not find exactly one pending deployment for workflow run ID {RunId} for environment {EnvironmentName} for {Repository}; found {Count}.")]
         public static partial void NoSinglePendingDeploymentFound(
             ILogger logger,
             long runId,
             string environmentName,
-            string owner,
-            string repository,
+            RepositoryId repository,
             int count);
 
         [LoggerMessage(
            EventId = 13,
            Level = LogLevel.Warning,
-           Message = "Failed to approve workflow run ID {RunId} for {Owner}/{Repository}.")]
+           Message = "Failed to approve workflow run ID {RunId} for {Repository}.")]
         public static partial void FailedToApproveDeployment(
             ILogger logger,
             Exception exception,
             long runId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 14,
            Level = LogLevel.Debug,
-           Message = "Commit {Sha} is associated with reference {Reference} from pull request {Owner}/{Repository}#{Number}.")]
+           Message = "Commit {Sha} is associated with reference {Reference} from pull request {PullRequest}.")]
         public static partial void FoundReferenceForCommitPullRequest(
             ILogger logger,
             string sha,
             string reference,
-            string owner,
-            string repository,
-            long number);
+            IssueId pullRequest);
 
         [LoggerMessage(
            EventId = 15,
            Level = LogLevel.Debug,
-           Message = "The pending deployment ID {PendingDeploymentId} for {Owner}/{Repository} is {Count} commits behind.")]
+           Message = "The pending deployment ID {PendingDeploymentId} for {Repository} is {Count} commits behind.")]
         public static partial void PendingDeploymentIsBehindTheActiveDeployment(
             ILogger logger,
             long pendingDeploymentId,
-            string owner,
-            string repository,
+            RepositoryId repository,
             int count);
 
         [LoggerMessage(
            EventId = 16,
            Level = LogLevel.Information,
-           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Owner}/{Repository} as it is a public holiday.")]
+           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} as it is a public holiday.")]
         public static partial void TodayIsAPublicHoliday(
             ILogger logger,
             long deploymentStatusId,
-            string owner,
-            string repository);
+            RepositoryId repository);
     }
 }

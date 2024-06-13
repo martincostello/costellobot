@@ -22,10 +22,6 @@ public sealed partial class IssueCommentHandler(
             return;
         }
 
-        string owner = repo.Owner.Login;
-        string name = repo.Name;
-        int number = (int)issue.Number;
-
         bool ignore = true;
 
         const string Prefix = "@costellobot ";
@@ -37,33 +33,35 @@ public sealed partial class IssueCommentHandler(
             ignore = false;
         }
 
+        var issueId = IssueId.Create(repo, issue.Number);
+
         if (ignore)
         {
-            Log.IgnoringCommentAction(logger, owner, name, number, message.Action);
+            Log.IgnoringCommentAction(logger, issueId, message.Action);
             return;
         }
 
         string command = comment.Body![Prefix.Length..].Trim();
 
-        Log.ReceivedComment(logger, owner, name, number, command);
+        Log.ReceivedComment(logger, issueId, command);
 
         if (issue.PullRequest is not null &&
             string.Equals(command, "rebase", StringComparison.OrdinalIgnoreCase))
         {
             try
             {
-                await RebaseAsync(owner, name, number, comment.Id);
+                await RebaseAsync(issueId, comment.Id);
             }
             catch (Exception ex)
             {
-                Log.RebaseFailed(logger, ex, owner, name, number);
+                Log.RebaseFailed(logger, ex, issueId);
             }
         }
     }
 
-    private async Task RebaseAsync(string owner, string name, int number, long commentId)
+    private async Task RebaseAsync(IssueId issue, long commentId)
     {
-        var pull = await client.PullRequest.Get(owner, name, number);
+        var pull = await client.PullRequest.Get(issue.Owner, issue.Name, issue.Number);
 
         if (pull.State.Value is not ItemState.Open)
         {
@@ -76,8 +74,8 @@ public sealed partial class IssueCommentHandler(
             event_type = "rebase_pull_request",
             client_payload = new
             {
-                repository = $"{owner}/{name}",
-                number,
+                repository = issue.Repository.FullName,
+                number = issue.Number,
                 @base = pull.Base.Ref,
                 head = pull.Head.Ref,
             },
@@ -85,15 +83,15 @@ public sealed partial class IssueCommentHandler(
 
         await client.RepositoryDispatchAsync("martincostello", "github-automation", dispatch);
 
-        Log.RebaseRequested(logger, owner, name, number);
+        Log.RebaseRequested(logger, issue);
 
         try
         {
-            await client.Reaction.IssueComment.Create(owner, name, commentId, new NewReaction(ReactionType.Plus1));
+            await client.Reaction.IssueComment.Create(issue.Owner, issue.Name, commentId, new NewReaction(ReactionType.Plus1));
         }
         catch (Exception ex)
         {
-            Log.ReactionFailed(logger, ex, commentId, owner, name, number);
+            Log.ReactionFailed(logger, ex, commentId, issue);
         }
     }
 
@@ -103,56 +101,31 @@ public sealed partial class IssueCommentHandler(
         [LoggerMessage(
            EventId = 1,
            Level = LogLevel.Debug,
-           Message = "Ignoring comment on issue {Owner}/{Repository}#{Number} for action {Action}.")]
-        public static partial void IgnoringCommentAction(
-            ILogger logger,
-            string? owner,
-            string? repository,
-            long? number,
-            string? action);
+           Message = "Ignoring comment on issue {Issue} for action {Action}.")]
+        public static partial void IgnoringCommentAction(ILogger logger, IssueId issue, string? action);
 
         [LoggerMessage(
            EventId = 2,
            Level = LogLevel.Debug,
-           Message = "Received comment on issue {Owner}/{Repository}#{Number}: {Content}.")]
-        public static partial void ReceivedComment(
-            ILogger logger,
-            string? owner,
-            string? repository,
-            long? number,
-            string? content);
+           Message = "Received comment on issue {Issue}: {Content}.")]
+        public static partial void ReceivedComment(ILogger logger, IssueId issue, string? content);
 
         [LoggerMessage(
            EventId = 3,
            Level = LogLevel.Information,
-           Message = "Requested rebase for pull request {Owner}/{Repository}#{Number}.")]
-        public static partial void RebaseRequested(
-            ILogger logger,
-            string owner,
-            string repository,
-            long number);
+           Message = "Requested rebase for pull request {PullRequest}.")]
+        public static partial void RebaseRequested(ILogger logger, IssueId pullRequest);
 
         [LoggerMessage(
            EventId = 4,
            Level = LogLevel.Warning,
-           Message = "Failed to rebase pull request {Owner}/{Repository}#{Number}.")]
-        public static partial void RebaseFailed(
-            ILogger logger,
-            Exception exception,
-            string owner,
-            string repository,
-            long number);
+           Message = "Failed to rebase pull request {PullRequest}.")]
+        public static partial void RebaseFailed(ILogger logger, Exception exception, IssueId pullRequest);
 
         [LoggerMessage(
            EventId = 5,
            Level = LogLevel.Warning,
-           Message = "Failed to react to comment {CommentId} in pull request {Owner}/{Repository}#{Number}.")]
-        public static partial void ReactionFailed(
-            ILogger logger,
-            Exception exception,
-            long commentId,
-            string owner,
-            string repository,
-            long number);
+           Message = "Failed to react to comment {CommentId} in pull request {PullRequest}.")]
+        public static partial void ReactionFailed(ILogger logger, Exception exception, long commentId, IssueId pullRequest);
     }
 }

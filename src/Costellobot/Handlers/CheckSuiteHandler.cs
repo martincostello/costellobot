@@ -28,24 +28,22 @@ public sealed partial class CheckSuiteHandler(
             return;
         }
 
-        if (!IsCheckSuiteEligibleForRerun(body))
+        if (!IsCheckSuiteEligibleForRerun(body, out var repository))
         {
             return;
         }
 
-        string owner = body.Repository.Owner.Login;
-        string name = body.Repository.Name;
         long checkSuiteId = checkSuite.Id;
 
         var pullRequest = checkSuite.PullRequests.FirstOrDefault();
 
         if (pullRequest is not null &&
-            !await IsPullRequestFromTrustedUserAsync(owner, name, checkSuiteId, pullRequest))
+            !await IsPullRequestFromTrustedUserAsync(repository, checkSuiteId, pullRequest))
         {
             return;
         }
 
-        if (!await CanRerunCheckSuiteAsync(owner, name, checkSuiteId))
+        if (!await CanRerunCheckSuiteAsync(repository, checkSuiteId))
         {
             return;
         }
@@ -58,33 +56,31 @@ public sealed partial class CheckSuiteHandler(
 
         if (workflows.TotalCount < 1)
         {
-            await RerunCheckSuiteAsync(owner, name, checkSuiteId);
+            await RerunCheckSuiteAsync(repository, checkSuiteId);
         }
         else
         {
-            await RerunFailedJobsAsync(
-                owner,
-                name,
-                workflows.WorkflowRuns[0]);
+            await RerunFailedJobsAsync(repository, workflows.WorkflowRuns[0]);
         }
     }
 
-    private bool IsCheckSuiteEligibleForRerun(CheckSuiteEvent body)
+    private bool IsCheckSuiteEligibleForRerun(
+        CheckSuiteEvent body,
+        out RepositoryId repository)
     {
-        string owner = body.Repository!.Owner.Login;
-        string name = body.Repository.Name;
+        repository = RepositoryId.Create(body.Repository!);
         var checkSuite = body.CheckSuite;
         long checkSuiteId = checkSuite.Id;
 
         if (!string.Equals(body.Action, CheckSuiteAction.Completed, StringComparison.Ordinal))
         {
-            Log.IgnoringCheckRunAction(logger, checkSuiteId, owner, name, body.Action);
+            Log.IgnoringCheckRunAction(logger, checkSuiteId, repository, body.Action);
             return false;
         }
 
         if (checkSuite.Conclusion?.Value != CheckSuiteConclusion.Failure)
         {
-            Log.IgnoringCheckRunThatDidNotFail(logger, checkSuiteId, owner, name);
+            Log.IgnoringCheckRunThatDidNotFail(logger, checkSuiteId, repository);
             return false;
         }
 
@@ -92,30 +88,30 @@ public sealed partial class CheckSuiteHandler(
 
         if (options.RerunFailedChecksAttempts < 1)
         {
-            Log.RetriesAreNotEnabled(logger, checkSuiteId, owner, name);
+            Log.RetriesAreNotEnabled(logger, checkSuiteId, repository);
             return false;
         }
 
         if (!checkSuite.Rerequestable)
         {
-            Log.CannotRetryCheckSuite(logger, checkSuiteId, owner, name);
+            Log.CannotRetryCheckSuite(logger, checkSuiteId, repository);
             return false;
         }
 
         if (options.RerunFailedChecks.Count < 1)
         {
-            Log.NoChecksConfiguredForRetry(logger, checkSuiteId, owner, name);
+            Log.NoChecksConfiguredForRetry(logger, checkSuiteId, repository);
             return false;
         }
 
         return true;
     }
 
-    private async Task<bool> CanRerunCheckSuiteAsync(string owner, string name, long checkSuiteId)
+    private async Task<bool> CanRerunCheckSuiteAsync(RepositoryId repository, long checkSuiteId)
     {
         var checkRuns = await client.Check.Run.GetAllForCheckSuite(
-            owner,
-            name,
+            repository.Owner,
+            repository.Name,
             checkSuiteId,
             new()
             {
@@ -130,7 +126,7 @@ public sealed partial class CheckSuiteHandler(
 
         if (failedRuns.Count < 1)
         {
-            Log.NoFailedCheckRunsFound(logger, checkSuiteId, owner, name);
+            Log.NoFailedCheckRunsFound(logger, checkSuiteId, repository);
             return false;
         }
 
@@ -138,8 +134,7 @@ public sealed partial class CheckSuiteHandler(
             logger,
             failedRuns.Count,
             checkSuiteId,
-            owner,
-            name,
+            repository,
             failedRuns.Select((p) => p.Name).Distinct().ToArray());
 
         var options = _options.CurrentValue;
@@ -151,7 +146,7 @@ public sealed partial class CheckSuiteHandler(
 
         if (retryEligibleRuns.Count < 1)
         {
-            Log.NoEligibleFailedCheckRunsFound(logger, checkSuiteId, owner, name);
+            Log.NoEligibleFailedCheckRunsFound(logger, checkSuiteId, repository);
             return false;
         }
 
@@ -165,7 +160,7 @@ public sealed partial class CheckSuiteHandler(
         // In this scenario without this check, it would be seen that the check suite failed and
         // that build only failed once, so the build would be retried even though the check run that
         // is causing the check suite to fail is the "publish" check run.
-        var latestCheckSuites = await client.Check.Run.GetAllForCheckSuite(owner, name, checkSuiteId);
+        var latestCheckSuites = await client.Check.Run.GetAllForCheckSuite(repository.Owner, repository.Name, checkSuiteId);
 
         var latestFailingCheckRuns = latestCheckSuites.CheckRuns
             .Where((p) => retryEligibleRuns.Any((group) => group.Key == p.Name))
@@ -175,7 +170,7 @@ public sealed partial class CheckSuiteHandler(
 
         if (latestFailingCheckRuns.Count < 1)
         {
-            Log.NoEligibleFailedCheckRunsFound(logger, checkSuiteId, owner, name);
+            Log.NoEligibleFailedCheckRunsFound(logger, checkSuiteId, repository);
             return false;
         }
 
@@ -183,13 +178,12 @@ public sealed partial class CheckSuiteHandler(
             logger,
             retryEligibleRuns.Count,
             checkSuiteId,
-            owner,
-            name,
+            repository,
             retryEligibleRuns.Select((p) => p.Key).ToArray());
 
         if (retryEligibleRuns.Any((p) => p.Count() > options.RerunFailedChecksAttempts))
         {
-            Log.TooManyRetries(logger, checkSuiteId, owner, name, options.RerunFailedChecksAttempts);
+            Log.TooManyRetries(logger, checkSuiteId, repository, options.RerunFailedChecksAttempts);
             return false;
         }
 
@@ -197,8 +191,7 @@ public sealed partial class CheckSuiteHandler(
     }
 
     private async Task<bool> IsPullRequestFromTrustedUserAsync(
-        string owner,
-        string name,
+        RepositoryId repository,
         long checkSuiteId,
         CheckRunPullRequest pull)
     {
@@ -222,39 +215,38 @@ public sealed partial class CheckSuiteHandler(
 
         if (!isTrusted)
         {
-            Log.IgnoringUntrustedUser(logger, checkSuiteId, owner, name, author.User.Login);
+            Log.IgnoringUntrustedUser(logger, checkSuiteId, repository, author.User.Login);
         }
 
         return isTrusted;
     }
 
-    private async Task RerunCheckSuiteAsync(string owner, string name, long checkSuiteId)
+    private async Task RerunCheckSuiteAsync(RepositoryId repository, long checkSuiteId)
     {
         try
         {
-            _ = await client.Check.Suite.Rerequest(owner, name, checkSuiteId);
-            Log.RerequestedCheckSuite(logger, checkSuiteId, owner, name);
+            _ = await client.Check.Suite.Rerequest(repository.Owner, repository.Name, checkSuiteId);
+            Log.RerequestedCheckSuite(logger, checkSuiteId, repository);
         }
         catch (Exception ex)
         {
-            Log.FailedToRerequestCheckSuite(logger, ex, checkSuiteId, owner, name);
+            Log.FailedToRerequestCheckSuite(logger, ex, checkSuiteId, repository);
         }
     }
 
     private async Task RerunFailedJobsAsync(
-        string owner,
-        string name,
+        RepositoryId repository,
         WorkflowRun run)
     {
         try
         {
-            await client.Actions.Workflows.Runs.RerunFailedJobs(owner, name, run.Id);
+            await client.Actions.Workflows.Runs.RerunFailedJobs(repository.Owner, repository.Name, run.Id);
 
-            Log.RerunningFailedJobs(logger, run.Name, run.Id, owner, name);
+            Log.RerunningFailedJobs(logger, run.Name, run.Id, repository);
         }
         catch (Exception ex)
         {
-            Log.FailedToRerunFailedJobs(logger, ex, run.Name, run.Id, owner, name);
+            Log.FailedToRerunFailedJobs(logger, ex, run.Name, run.Id, repository);
         }
     }
 
@@ -264,162 +256,147 @@ public sealed partial class CheckSuiteHandler(
         [LoggerMessage(
            EventId = 1,
            Level = LogLevel.Debug,
-           Message = "Ignoring check suite ID {CheckSuiteId} for {Owner}/{Repository} for action {Action}.")]
+           Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} for action {Action}.")]
         public static partial void IgnoringCheckRunAction(
             ILogger logger,
             long? checkSuiteId,
-            string? owner,
-            string? repository,
+            RepositoryId repository,
             string? action);
 
         [LoggerMessage(
            EventId = 2,
            Level = LogLevel.Debug,
-           Message = "Ignoring check suite ID {CheckSuiteId} for {Owner}/{Repository} which did not fail.")]
+           Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} which did not fail.")]
         public static partial void IgnoringCheckRunThatDidNotFail(
             ILogger logger,
             long checkSuiteId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 3,
            Level = LogLevel.Debug,
-           Message = "Ignoring check suite ID {CheckSuiteId} for {Owner}/{Repository} as retries are not enabled.")]
+           Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as retries are not enabled.")]
         public static partial void RetriesAreNotEnabled(
             ILogger logger,
             long checkSuiteId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 4,
            Level = LogLevel.Debug,
-           Message = "Ignoring check suite ID {CheckSuiteId} for {Owner}/{Repository} as it cannot be retried.")]
+           Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as it cannot be retried.")]
         public static partial void CannotRetryCheckSuite(
             ILogger logger,
             long checkSuiteId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 5,
            Level = LogLevel.Debug,
-           Message = "Ignoring check suite ID {CheckSuiteId} for {Owner}/{Repository} as no check runs are configured to be retried.")]
+           Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as no check runs are configured to be retried.")]
         public static partial void NoChecksConfiguredForRetry(
             ILogger logger,
             long checkSuiteId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 6,
            Level = LogLevel.Debug,
-           Message = "No failed runs found for check suite ID {CheckSuiteId} in {Owner}/{Repository}.")]
+           Message = "No failed runs found for check suite ID {CheckSuiteId} in {Repository}.")]
         public static partial void NoFailedCheckRunsFound(
             ILogger logger,
             long checkSuiteId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 7,
            Level = LogLevel.Information,
-           Message = "Found {Count} failed runs for check suite ID {CheckSuiteId} in {Owner}/{Repository}: {FailedCheckRuns}.")]
+           Message = "Found {Count} failed runs for check suite ID {CheckSuiteId} in {Repository}: {FailedCheckRuns}.")]
         public static partial void FailedCheckRunsFound(
             ILogger logger,
             int count,
             long checkSuiteId,
-            string owner,
-            string repository,
+            RepositoryId repository,
             string[] failedCheckRuns);
 
         [LoggerMessage(
            EventId = 8,
            Level = LogLevel.Debug,
-           Message = "No failed runs found for check suite ID {CheckSuiteId} in {Owner}/{Repository} that are eligible to be retried.")]
+           Message = "No failed runs found for check suite ID {CheckSuiteId} in {Repository} that are eligible to be retried.")]
         public static partial void NoEligibleFailedCheckRunsFound(
             ILogger logger,
             long checkSuiteId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 9,
            Level = LogLevel.Information,
-           Message = "Found {Count} total failed runs for check suite ID {CheckSuiteId} in {Owner}/{Repository} that are eligible to be retried: {EligibileCheckRuns}.")]
+           Message = "Found {Count} total failed runs for check suite ID {CheckSuiteId} in {Repository} that are eligible to be retried: {EligibileCheckRuns}.")]
         public static partial void EligibileFailedCheckRunsFound(
             ILogger logger,
             int count,
             long checkSuiteId,
-            string owner,
-            string repository,
+            RepositoryId repository,
             string[] eligibileCheckRuns);
 
         [LoggerMessage(
            EventId = 10,
            Level = LogLevel.Information,
-           Message = "Cannot retry check suite ID {CheckSuiteId} in {Owner}/{Repository} as there is at least one run that has been retried at least {MaximumRetries} times.")]
+           Message = "Cannot retry check suite ID {CheckSuiteId} in {Repository} as there is at least one run that has been retried at least {MaximumRetries} times.")]
         public static partial void TooManyRetries(
             ILogger logger,
             long checkSuiteId,
-            string owner,
-            string repository,
+            RepositoryId repository,
             int maximumRetries);
 
         [LoggerMessage(
            EventId = 11,
            Level = LogLevel.Information,
-           Message = "Check suite ID {CheckSuiteId} in {Owner}/{Repository} has been re-requested.")]
+           Message = "Check suite ID {CheckSuiteId} in {Repository} has been re-requested.")]
         public static partial void RerequestedCheckSuite(
             ILogger logger,
             long checkSuiteId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 12,
            Level = LogLevel.Warning,
-           Message = "Failed to re-request check suite ID {CheckSuiteId} in {Owner}/{Repository}.")]
+           Message = "Failed to re-request check suite ID {CheckSuiteId} in {Repository}.")]
         public static partial void FailedToRerequestCheckSuite(
             ILogger logger,
             Exception exception,
             long checkSuiteId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 13,
            Level = LogLevel.Information,
-           Message = "Re-running failed jobs for workflow {Name} with run ID {RunId} in {Owner}/{Repository}.")]
+           Message = "Re-running failed jobs for workflow {Name} with run ID {RunId} in {Repository}.")]
         public static partial void RerunningFailedJobs(
             ILogger logger,
             string name,
             long runId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 14,
            Level = LogLevel.Error,
-           Message = "Failed to re-run failed jobs for workflow {Name} with run ID {RunId} in {Owner}/{Repository}.")]
+           Message = "Failed to re-run failed jobs for workflow {Name} with run ID {RunId} in {Repository}.")]
         public static partial void FailedToRerunFailedJobs(
             ILogger logger,
             Exception exception,
             string name,
             long runId,
-            string owner,
-            string repository);
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 15,
            Level = LogLevel.Debug,
-           Message = "Ignoring check suite ID {CheckSuiteId} for {Owner}/{Repository} as it is associated with a pull request from untrusted user {Login}.")]
+           Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as it is associated with a pull request from untrusted user {Login}.")]
         public static partial void IgnoringUntrustedUser(
             ILogger logger,
             long checkSuiteId,
-            string owner,
-            string repository,
+            RepositoryId repository,
             string login);
     }
 

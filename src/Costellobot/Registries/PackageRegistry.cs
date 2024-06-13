@@ -10,8 +10,7 @@ public abstract class PackageRegistry(HttpClient client) : IPackageRegistry
     protected HttpClient Client { get; } = client;
 
     public abstract Task<IReadOnlyList<string>> GetPackageOwnersAsync(
-        string owner,
-        string repository,
+        RepositoryId repository,
         string id,
         string version);
 }

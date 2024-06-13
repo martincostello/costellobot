@@ -12,8 +12,7 @@ public sealed partial class NpmPackageRegistry(HttpClient client) : PackageRegis
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.Npm;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
-        string owner,
-        string repository,
+        RepositoryId repository,
         string id,
         string version)
     {

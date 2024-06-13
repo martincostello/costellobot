@@ -12,8 +12,7 @@ public sealed class GitSubmodulePackageRegistry(
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.Submodules;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
-        string owner,
-        string repository,
+        RepositoryId repository,
         string id,
         string version)
     {
@@ -21,7 +20,7 @@ public sealed class GitSubmodulePackageRegistry(
 
         try
         {
-            items = await RestClient.Repository.Content.GetAllContents(owner, repository, id);
+            items = await RestClient.Repository.Content.GetAllContents(repository.Owner, repository.Name, id);
         }
         catch (NotFoundException)
         {

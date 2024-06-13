@@ -26,7 +26,7 @@ public sealed partial class PullRequestHandler(
     public async Task HandleAsync(WebhookEvent message)
     {
         if (message is not PullRequestEvent body ||
-            body.Repository is not { } repo ||
+            body.Repository is null ||
             body.PullRequest is not { } pr)
         {
             return;
@@ -34,9 +34,9 @@ public sealed partial class PullRequestHandler(
 
         bool isManualApproval = false;
 
-        if (!IsNewPullRequestFromTrustedUser(body))
+        if (!IsNewPullRequestFromTrustedUser(body, out var pull))
         {
-            if (!await IsManuallyApprovedAsync(body))
+            if (!await IsManuallyApprovedAsync(pull, body))
             {
                 return;
             }
@@ -44,15 +44,11 @@ public sealed partial class PullRequestHandler(
             isManualApproval = true;
         }
 
-        string owner = repo.Owner.Login;
-        string name = repo.Name;
-        int number = (int)pr.Number;
-
         bool isTrusted = false;
 
         if (!isManualApproval)
         {
-            isTrusted = await IsTrustedDependencyUpdateAsync(body);
+            isTrusted = await IsTrustedDependencyUpdateAsync(pull.Repository, body);
         }
 
         if (isManualApproval || isTrusted)
@@ -61,15 +57,13 @@ public sealed partial class PullRequestHandler(
 
             if (options.Approve)
             {
-                await ApproveAsync(owner, name, number);
+                await ApproveAsync(pull);
             }
 
             if (options.Automerge)
             {
                 await EnableAutoMergeAsync(
-                    owner,
-                    name,
-                    number,
+                    pull,
                     pr.NodeId,
                     GetMergeMethod(pr.Base.Repo));
             }
@@ -96,10 +90,7 @@ public sealed partial class PullRequestHandler(
         }
     }
 
-    private async Task ApproveAsync(
-        string owner,
-        string name,
-        int number)
+    private async Task ApproveAsync(IssueId pull)
     {
         var body = new StringBuilder(_options.CurrentValue.ApproveComment);
 
@@ -113,22 +104,20 @@ public sealed partial class PullRequestHandler(
         }
 
         await client.PullRequest.Review.Create(
-            owner,
-            name,
-            number,
+            pull.Owner,
+            pull.Name,
+            pull.Number,
             new()
             {
                 Body = body.ToString(),
                 Event = Octokit.PullRequestReviewEvent.Approve,
             });
 
-        Log.PullRequestApproved(logger, owner, name, number);
+        Log.PullRequestApproved(logger, pull);
     }
 
     private async Task EnableAutoMergeAsync(
-        string owner,
-        string name,
-        int number,
+        IssueId pull,
         string nodeId,
         PullRequestMergeMethod mergeMethod)
     {
@@ -146,46 +135,44 @@ public sealed partial class PullRequestHandler(
         try
         {
             await connection.Run(mutation);
-            Log.AutoMergeEnabled(logger, owner, name, number);
+            Log.AutoMergeEnabled(logger, pull);
         }
         catch (Octokit.GraphQL.Core.Deserializers.ResponseDeserializerException ex) when (ex.Message.Contains("Pull request Pull request is in clean status", StringComparison.OrdinalIgnoreCase))
         {
             try
             {
                 // If auto-merge failed as the PR is ready to merge, then just merge it
-                var response = await client.PullRequest.Merge(owner, name, number, new()
+                var response = await client.PullRequest.Merge(pull.Owner, pull.Name, pull.Number, new()
                 {
                     MergeMethod = Enum.Parse<Octokit.PullRequestMergeMethod>(mergeMethod.ToString()),
                 });
 
                 if (response.Merged)
                 {
-                    Log.PullRequestMerged(logger, owner, name, number);
+                    Log.PullRequestMerged(logger, pull);
                 }
             }
             catch (Exception ex2)
             {
-                Log.EnableAutoMergeFailed(logger, ex, owner, name, number, nodeId);
-                Log.MergeFailed(logger, ex2, owner, name, number);
+                Log.EnableAutoMergeFailed(logger, ex, pull, nodeId);
+                Log.MergeFailed(logger, ex2, pull);
             }
         }
         catch (Exception ex)
         {
-            Log.EnableAutoMergeFailed(logger, ex, owner, name, number, nodeId);
+            Log.EnableAutoMergeFailed(logger, ex, pull, nodeId);
         }
     }
 
-    private bool IsNewPullRequestFromTrustedUser(PullRequestEvent message)
+    private bool IsNewPullRequestFromTrustedUser(PullRequestEvent message, out IssueId pull)
     {
-        string owner = message.Repository!.Owner.Login;
-        string name = message.Repository.Name;
-        int number = (int)message.PullRequest!.Number;
+        pull = IssueId.Create(message.Repository!, message.PullRequest!.Number);
 
         if (!string.Equals(message.Action, PullRequestActionValue.Opened, StringComparison.Ordinal))
         {
             if (!string.Equals(message.Action, PullRequestActionValue.Labeled, StringComparison.Ordinal))
             {
-                Log.IgnoringPullRequestAction(logger, owner, name, number, message.Action);
+                Log.IgnoringPullRequestAction(logger, pull, message.Action);
             }
 
             return false;
@@ -193,15 +180,15 @@ public sealed partial class PullRequestHandler(
 
         var options = _options.CurrentValue;
 
-        if (options.IgnoreRepositories.Contains($"{owner}/{name}", StringComparer.OrdinalIgnoreCase))
+        if (options.IgnoreRepositories.Contains(pull.Repository.FullName, StringComparer.OrdinalIgnoreCase))
         {
-            Log.IgnoringPullRequestAsRepositoryIgnored(logger, owner, name, number);
+            Log.IgnoringPullRequestAsRepositoryIgnored(logger, pull);
             return false;
         }
 
         if (message.PullRequest is not { } pr || pr.Draft)
         {
-            Log.IgnoringPullRequestDraft(logger, owner, name, number);
+            Log.IgnoringPullRequestDraft(logger, pull);
             return false;
         }
 
@@ -211,16 +198,15 @@ public sealed partial class PullRequestHandler(
 
         if (!isTrusted)
         {
-            Log.IgnoringPullRequestFromUntrustedUser(logger, owner, name, number, message.PullRequest.User.Login);
+            Log.IgnoringPullRequestFromUntrustedUser(logger, pull, message.PullRequest.User.Login);
         }
 
         return isTrusted;
     }
 
-    private async Task<bool> IsManuallyApprovedAsync(PullRequestEvent message)
+    private async Task<bool> IsManuallyApprovedAsync(IssueId pull, PullRequestEvent message)
     {
         if (message is not PullRequestLabeledEvent labelled ||
-            message.Repository is not { } repository ||
             message.Sender is not { } sender ||
             message.PullRequest.State?.Value != Octokit.Webhooks.Models.PullRequestEvent.PullRequestState.Open ||
             message.PullRequest.Draft)
@@ -241,41 +227,33 @@ public sealed partial class PullRequestHandler(
             return false;
         }
 
-        string owner = repository.Owner.Login;
-        string name = repository.Name;
         string actor = sender.Login;
 
         bool isCollaborator = await client.Repository.Collaborator.IsCollaborator(
-            owner,
-            name,
+            pull.Owner,
+            pull.Name,
             actor);
 
         if (isCollaborator)
         {
             Log.PullRequestManuallyApproved(
                 logger,
-                owner,
-                name,
-                (int)message.PullRequest!.Number,
+                pull,
                 actor);
         }
 
         return isCollaborator;
     }
 
-    private async Task<bool> IsTrustedDependencyUpdateAsync(PullRequestEvent message)
+    private async Task<bool> IsTrustedDependencyUpdateAsync(RepositoryId repository, PullRequestEvent message)
     {
-        string owner = message.Repository!.Owner.Login;
-        string name = message.Repository.Name;
-
         var commit = await client.Repository.Commit.Get(
-            owner,
-            name,
+            repository.Owner,
+            repository.Name,
             message.PullRequest.Head.Sha);
 
         return await commitAnalyzer.IsTrustedDependencyUpdateAsync(
-            owner,
-            name,
+            repository,
             message.PullRequest.Head.Ref,
             commit);
     }
@@ -286,107 +264,87 @@ public sealed partial class PullRequestHandler(
         [LoggerMessage(
            EventId = 1,
            Level = LogLevel.Debug,
-           Message = "Ignoring pull request {Owner}/{Repository}#{Number} for action {Action}.")]
+           Message = "Ignoring pull request {PullRequest} for action {Action}.")]
         public static partial void IgnoringPullRequestAction(
             ILogger logger,
-            string? owner,
-            string? repository,
-            long? number,
+            IssueId pullRequest,
             string? action);
 
         [LoggerMessage(
            EventId = 2,
            Level = LogLevel.Debug,
-           Message = "Ignoring pull request {Owner}/{Repository}#{Number} as it is a draft.")]
+           Message = "Ignoring pull request {PullRequest} as it is a draft.")]
         public static partial void IgnoringPullRequestDraft(
             ILogger logger,
-            string? owner,
-            string? repository,
-            long? number);
+            IssueId pullRequest);
 
         [LoggerMessage(
            EventId = 3,
            Level = LogLevel.Debug,
-           Message = "Ignoring pull request {Owner}/{Repository}#{Number} from {Login} as it is not from a trusted user.")]
+           Message = "Ignoring pull request {PullRequest} from {Login} as it is not from a trusted user.")]
         public static partial void IgnoringPullRequestFromUntrustedUser(
             ILogger logger,
-            string? owner,
-            string? repository,
-            long? number,
+            IssueId pullRequest,
             string? login);
 
         [LoggerMessage(
            EventId = 4,
            Level = LogLevel.Information,
-           Message = "Approved pull request {Owner}/{Repository}#{Number}.")]
+           Message = "Approved pull request {PullRequest}.")]
         public static partial void PullRequestApproved(
             ILogger logger,
-            string owner,
-            string repository,
-            long number);
+            IssueId pullRequest);
 
         [LoggerMessage(
            EventId = 5,
            Level = LogLevel.Information,
-           Message = "Enabled auto-merge for pull request {Owner}/{Repository}#{Number}.")]
+           Message = "Enabled auto-merge for pull request {PullRequest}.")]
         public static partial void AutoMergeEnabled(
             ILogger logger,
-            string owner,
-            string repository,
-            long number);
+            IssueId pullRequest);
 
         [LoggerMessage(
            EventId = 6,
            Level = LogLevel.Warning,
-           Message = "Failed to enable auto-merge for pull request {Owner}/{Repository}#{Number} with node ID {NodeId}.")]
+           Message = "Failed to enable auto-merge for pull request {PullRequest} with node ID {NodeId}.")]
         public static partial void EnableAutoMergeFailed(
             ILogger logger,
             Exception exception,
-            string owner,
-            string repository,
-            long number,
+            IssueId pullRequest,
             string nodeId);
 
         [LoggerMessage(
            EventId = 7,
            Level = LogLevel.Debug,
-           Message = "Ignoring pull request {Owner}/{Repository}#{Number} as the repository is configured to be ignored.")]
+           Message = "Ignoring pull request {PullRequest} as the repository is configured to be ignored.")]
         public static partial void IgnoringPullRequestAsRepositoryIgnored(
             ILogger logger,
-            string? owner,
-            string? repository,
-            long? number);
+            IssueId pullRequest);
 
         [LoggerMessage(
            EventId = 8,
            Level = LogLevel.Information,
-           Message = "Pull request {Owner}/{Repository}#{Number} was manually approved by {Actor}.")]
+           Message = "Pull request {PullRequest} was manually approved by {Actor}.")]
         public static partial void PullRequestManuallyApproved(
             ILogger logger,
-            string owner,
-            string repository,
-            long number,
+            IssueId pullRequest,
             string actor);
 
         [LoggerMessage(
            EventId = 9,
            Level = LogLevel.Information,
-           Message = "Pull request {Owner}/{Repository}#{Number} merged.")]
+           Message = "Pull request {PullRequest} merged.")]
         public static partial void PullRequestMerged(
             ILogger logger,
-            string owner,
-            string repository,
-            long number);
+            IssueId pullRequest);
 
         [LoggerMessage(
            EventId = 10,
            Level = LogLevel.Warning,
-           Message = "Failed to merge pull request {Owner}/{Repository}#{Number}.")]
+           Message = "Failed to merge pull request {PullRequest}.")]
         public static partial void MergeFailed(
             ILogger logger,
             Exception exception,
-            string owner,
-            string repository,
-            long number);
+            IssueId pullRequest);
     }
 }
