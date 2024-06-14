@@ -134,7 +134,7 @@ textarea.form-payload {
 
     main.container {
         max-width: unset;
-        width: 75%;
+        width: 80%;
     }
 
     .log-console,
@@ -142,5 +142,9 @@ textarea.form-payload {
     .log-console[readonly] {
         max-height: 23rem;
         min-height: 23rem;
+    }
+
+    main.container:has(div.log-console) {
+        width: 90%;
     }
 }
