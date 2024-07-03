@@ -92,6 +92,9 @@ public static class GitHubExtensions
 
         services.AddHostedService<GitHubWebhookService>();
 
+        services.AddSingleton<GitHubMessageProcessor>();
+        services.AddHostedService<GitHubMessageService>();
+
         return services;
     }
 

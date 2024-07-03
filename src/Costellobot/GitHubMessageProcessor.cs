@@ -8,10 +8,10 @@ using Octokit.Webhooks;
 
 namespace MartinCostello.Costellobot;
 
-public sealed partial class GitHubEventProcessor(
-    GitHubWebhookQueue queue,
+public sealed partial class GitHubMessageProcessor(
     IHubContext<GitHubWebhookHub, IWebhookClient> hub,
-    ILogger<GitHubEventProcessor> logger) : WebhookEventProcessor
+    IServiceProvider serviceProvider,
+    ILogger<GitHubMessageProcessor> logger) : WebhookEventProcessor
 {
     private static readonly string[] HeadersToLog =
     [
@@ -38,7 +38,7 @@ public sealed partial class GitHubEventProcessor(
         var webhookEvent = DeserializeWebhookEvent(webhookHeaders, body);
 
         Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
-        queue.Enqueue(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload));
+        await ProcessAsync(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload));
     }
 
     private async Task<(IDictionary<string, string> Headers, JsonElement Payload)> BroadcastLogAsync(
@@ -73,6 +73,22 @@ public sealed partial class GitHubEventProcessor(
         }
     }
 
+    private async Task ProcessAsync(GitHubEvent message)
+    {
+        try
+        {
+            await using var scope = serviceProvider.CreateAsyncScope();
+
+            var dispatcher = scope.ServiceProvider.GetRequiredService<GitHubWebhookDispatcher>();
+            await dispatcher.DispatchAsync(message);
+        }
+        catch (Exception ex)
+        {
+            Log.ProcessingFailed(logger, ex, message.Headers.Delivery);
+            throw;
+        }
+    }
+
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     private static partial class Log
     {
@@ -81,5 +97,11 @@ public sealed partial class GitHubEventProcessor(
            Level = LogLevel.Debug,
            Message = "Received webhook with ID {HookId}.")]
         public static partial void ReceivedWebhook(ILogger logger, string? hookId);
+
+        [LoggerMessage(
+           EventId = 2,
+           Level = LogLevel.Error,
+           Message = "Failed to process webhook with ID {HookId}.")]
+        public static partial void ProcessingFailed(ILogger logger, Exception exception, string? hookId);
     }
 }

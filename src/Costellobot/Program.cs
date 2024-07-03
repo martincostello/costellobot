@@ -115,22 +115,34 @@ app.MapAdminRoutes();
 
 app.MapPost("send", async (ServiceBusClient client, IOptions<WebhookOptions> options, CancellationToken cancellationToken) =>
 {
+    var payload = new GitHubMessage()
+    {
+        Headers = [],
+        Body =
+            /*lang=json,strict*/
+            """
+            {
+            }
+            """,
+    };
+
     var sender = client.CreateSender(options.Value.QueueName);
 
     using var batch = await sender.CreateMessageBatchAsync(cancellationToken);
 
-    var message = new ServiceBusMessage("{}")
+    var json = JsonSerializer.SerializeToUtf8Bytes(payload, MessagingJsonSerializerContext.Default.GitHubMessage);
+    var message = new ServiceBusMessage(json)
     {
         ApplicationProperties = { ["publisher"] = $"costellobot/{GitMetadata.Version}" },
-        ContentType = "application/json",
+        ContentType = GitHubMessage.ContentType,
         CorrelationId = Activity.Current?.Id,
-        MessageId = "martin",
-        Subject = "github-webhook",
+        MessageId = "57067d40-3924-11ef-8ab8-48a7429f1fa3",
+        Subject = GitHubMessage.Subject,
     };
 
     if (!batch.TryAddMessage(message))
     {
-        // If it's too large for the batch.
+        throw new InvalidOperationException("Payload is too large to send.");
     }
 
     await sender.SendMessagesAsync(batch, cancellationToken);
