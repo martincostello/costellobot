@@ -3,7 +3,12 @@
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-builder.AddProject<Projects.Costellobot>("Costellobot");
+var serviceBus = builder.ExecutionContext.IsPublishMode
+    ? builder.AddAzureServiceBus("AzureServiceBus")
+    : builder.AddConnectionString("AzureServiceBus");
+
+builder.AddProject<Projects.Costellobot>("Costellobot")
+       .WithReference(serviceBus);
 
 var app = builder.Build();
 
