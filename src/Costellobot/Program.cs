@@ -1,20 +1,14 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
 using System.IO.Compression;
-using System.Text.Json;
-using Azure.Messaging.ServiceBus;
 using MartinCostello.Costellobot;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.ConfigureApplication();
-
-builder.AddAzureServiceBusClient("AzureServiceBus");
 
 builder.Services.AddAntiforgery();
 builder.Services.AddGitHub(builder.Configuration, builder.Environment);
@@ -76,6 +70,11 @@ if (string.Equals(builder.Configuration["CODESPACES"], bool.TrueString, StringCo
 
 builder.WebHost.ConfigureKestrel((p) => p.AddServerHeader = false);
 
+if (builder.Configuration["ConnectionStrings:AzureServiceBus"] is { Length: > 0 })
+{
+    builder.AddAzureServiceBusClient("AzureServiceBus");
+}
+
 var app = builder.Build();
 
 // Give the webhook queue a chance to drain before the application stops
@@ -112,69 +111,6 @@ app.UseAntiforgery();
 app.MapAuthenticationRoutes();
 app.MapApiRoutes(app.Configuration);
 app.MapAdminRoutes();
-
-app.MapPost("send", async (ServiceBusClient client, IOptions<WebhookOptions> options, CancellationToken cancellationToken) =>
-{
-    var payload = new GitHubMessage()
-    {
-        Headers = [],
-        Body =
-            /*lang=json,strict*/
-            """
-            {
-            }
-            """,
-    };
-
-    var sender = client.CreateSender(options.Value.QueueName);
-
-    using var batch = await sender.CreateMessageBatchAsync(cancellationToken);
-
-    var json = JsonSerializer.SerializeToUtf8Bytes(payload, MessagingJsonSerializerContext.Default.GitHubMessage);
-    var message = new ServiceBusMessage(json)
-    {
-        ApplicationProperties = { ["publisher"] = $"costellobot/{GitMetadata.Version}" },
-        ContentType = GitHubMessage.ContentType,
-        CorrelationId = Activity.Current?.Id,
-        MessageId = "57067d40-3924-11ef-8ab8-48a7429f1fa3",
-        Subject = GitHubMessage.Subject,
-    };
-
-    if (!batch.TryAddMessage(message))
-    {
-        throw new InvalidOperationException("Payload is too large to send.");
-    }
-
-    await sender.SendMessagesAsync(batch, cancellationToken);
-});
-
-app.MapPost("receive", async (ServiceBusClient client, IOptions<WebhookOptions> options, CancellationToken cancellationToken) =>
-{
-    await using var processor = client.CreateProcessor(options.Value.QueueName);
-
-    processor.ProcessMessageAsync += async (args) =>
-    {
-        if (args.Message.ContentType != "application/json" ||
-            args.Message.Subject != "github-webhook")
-        {
-            throw new InvalidOperationException("Invalid message content type and/or subject.");
-        }
-
-        using var document = args.Message.Body.ToObjectFromJson<JsonDocument>();
-        await args.CompleteMessageAsync(args.Message, cancellationToken);
-    };
-
-    processor.ProcessErrorAsync += async (args) =>
-    {
-        await Task.CompletedTask;
-    };
-
-    await processor.StartProcessingAsync(cancellationToken);
-
-    await Task.Delay(TimeSpan.FromSeconds(5), CancellationToken.None);
-
-    await processor.StopProcessingAsync(CancellationToken.None);
-});
 
 app.Run();
 

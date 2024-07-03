@@ -68,7 +68,6 @@ public static class GitHubExtensions
             return new Octokit.GraphQL.Connection(productInformation, baseAddress, credentialStore, httpClient);
         });
 
-        services.AddSingleton<WebhookEventProcessor, GitHubEventProcessor>();
         services.AddSingleton<GitHubWebhookQueue>();
         services.AddSingleton<GitHubWebhookService>();
         services.AddTransient<GitCommitAnalyzer>();
@@ -90,10 +89,17 @@ public static class GitHubExtensions
         services.AddTransient<PullRequestHandler>();
         services.AddTransient<PushHandler>();
 
-        services.AddHostedService<GitHubWebhookService>();
-
-        services.AddSingleton<GitHubMessageProcessor>();
-        services.AddHostedService<GitHubMessageService>();
+        if (configuration["ConnectionStrings:AzureServiceBus"] is { Length: > 0 })
+        {
+            services.AddSingleton<WebhookEventProcessor, GitHubPublisherProcessor>();
+            services.AddSingleton<GitHubMessageProcessor>();
+            services.AddHostedService<GitHubMessageService>();
+        }
+        else
+        {
+            services.AddSingleton<WebhookEventProcessor, GitHubEventProcessor>();
+            services.AddHostedService<GitHubWebhookService>();
+        }
 
         return services;
     }

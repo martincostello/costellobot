@@ -95,7 +95,7 @@ public sealed partial class GitHubMessageService(
 
         var message = JsonSerializer.Deserialize(args.Message.Body, MessagingJsonSerializerContext.Default.GitHubMessage)!;
 
-        var headers = new Dictionary<string, StringValues>(message.Headers.Count);
+        var headers = new Dictionary<string, StringValues>(message.Headers.Count, StringComparer.OrdinalIgnoreCase);
 
         foreach ((var key, var values) in message.Headers)
         {
