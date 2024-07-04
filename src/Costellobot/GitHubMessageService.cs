@@ -1,10 +1,8 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Primitives;
 
 namespace MartinCostello.Costellobot;
 
@@ -93,16 +91,9 @@ public sealed partial class GitHubMessageService(
             throw new InvalidOperationException($"Message with ID {args.Message.MessageId} has an invalid subject: {args.Message.Subject}.");
         }
 
-        var message = JsonSerializer.Deserialize(args.Message.Body, MessagingJsonSerializerContext.Default.GitHubMessage)!;
+        (var headers, var body) = GitHubMessageSerializer.Deserialize(args.Message);
 
-        var headers = new Dictionary<string, StringValues>(message.Headers.Count, StringComparer.OrdinalIgnoreCase);
-
-        foreach ((var key, var values) in message.Headers)
-        {
-            headers[key] = new(values);
-        }
-
-        await processor.ProcessWebhookAsync(headers, message.Body);
+        await processor.ProcessWebhookAsync(headers, body);
 
         await args.CompleteMessageAsync(args.Message, args.CancellationToken);
     }

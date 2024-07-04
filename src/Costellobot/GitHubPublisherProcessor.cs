@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Microsoft.AspNetCore.SignalR;
@@ -31,6 +30,8 @@ public sealed partial class GitHubPublisherProcessor(
         "X-Hub-Signature-256",
     ];
 
+    private static readonly TimeSpan PublishTimeout = TimeSpan.FromSeconds(5);
+
     public override async Task ProcessWebhookAsync(IDictionary<string, StringValues> headers, string body)
     {
         ArgumentNullException.ThrowIfNull(headers);
@@ -42,43 +43,14 @@ public sealed partial class GitHubPublisherProcessor(
 
         Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
 
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-
-        var messageHeaders = new Dictionary<string, string?[]?>(headers.Count);
-
-        foreach ((var key, var values) in headers)
-        {
-            messageHeaders[key] = [.. values];
-        }
-
-        var payload = new GitHubMessage()
-        {
-            Headers = messageHeaders,
-            Body = body,
-        };
-
-        var sender = client.CreateSender(options.Value.QueueName);
-
-        using var batch = await sender.CreateMessageBatchAsync(cts.Token);
-
-        var json = JsonSerializer.SerializeToUtf8Bytes(payload, MessagingJsonSerializerContext.Default.GitHubMessage);
-        var message = new ServiceBusMessage(json)
-        {
-            ApplicationProperties = { ["publisher"] = $"costellobot/{GitMetadata.Version}" },
-            ContentType = GitHubMessage.ContentType,
-            CorrelationId = Activity.Current?.Id,
-            MessageId = webhookHeaders.Delivery,
-            Subject = GitHubMessage.Subject,
-        };
-
-        if (!batch.TryAddMessage(message))
-        {
-            throw new InvalidOperationException("Payload is too large to send.");
-        }
+        using var cts = new CancellationTokenSource(PublishTimeout);
 
         try
         {
-            await sender.SendMessagesAsync(batch, cts.Token);
+            var message = GitHubMessageSerializer.Serialize(webhookHeaders.Delivery, headers, body);
+
+            var sender = client.CreateSender(options.Value.QueueName);
+            await sender.SendMessageAsync(message, cts.Token);
         }
         catch (Exception ex)
         {
