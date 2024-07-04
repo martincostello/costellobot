@@ -57,7 +57,7 @@ public sealed partial class MessagingGitHubJob(
         }
     }
 
-    private async Task ProcessAsync(ProcessMessageEventArgs args)
+    public async Task ProcessAsync(ProcessMessageEventArgs args)
     {
         Log.ReceivedMessage(logger, args.Message.MessageId);
 
