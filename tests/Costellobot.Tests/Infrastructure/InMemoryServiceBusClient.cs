@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Threading.Channels;
 using Azure.Core.Amqp;
 using Azure.Messaging.ServiceBus;
 
@@ -8,19 +9,28 @@ namespace MartinCostello.Costellobot.Infrastructure;
 
 internal sealed class InMemoryServiceBusClient : ServiceBusClient
 {
-    private readonly MessageQueue _queue = new();
+    private readonly Channel<Payload> _channel;
+
+    public InMemoryServiceBusClient()
+    {
+        _channel = Channel.CreateUnbounded<Payload>(new()
+        {
+            SingleReader = true,
+            SingleWriter = false,
+        });
+    }
 
     public override ServiceBusProcessor CreateProcessor(string queueName)
-        => new InMemoryServiceBusProcessor(_queue);
+        => new InMemoryServiceBusProcessor(_channel.Reader);
 
     public override ServiceBusSender CreateSender(string queueOrTopicName)
-        => new InMemoryServiceBusSender(_queue);
+        => new InMemoryServiceBusSender(_channel.Writer);
 
 #pragma warning disable CA2215
     public override ValueTask DisposeAsync() => ValueTask.CompletedTask;
 #pragma warning restore CA2215
 
-    private sealed class InMemoryServiceBusProcessor(MessageQueue queue) : ServiceBusProcessor(), IDisposable
+    private sealed class InMemoryServiceBusProcessor(ChannelReader<Payload> reader) : ServiceBusProcessor(), IDisposable
     {
         private CancellationTokenSource? _cts;
         private Task? _executeTask;
@@ -63,7 +73,7 @@ internal sealed class InMemoryServiceBusClient : ServiceBusClient
             {
                 try
                 {
-                    var payload = await queue.DequeueAsync(stoppingToken);
+                    var payload = await reader.ReadAsync(stoppingToken);
 
                     if (payload is null)
                     {
@@ -106,16 +116,11 @@ internal sealed class InMemoryServiceBusClient : ServiceBusClient
             => Task.CompletedTask;
     }
 
-    private sealed class InMemoryServiceBusSender(MessageQueue queue) : ServiceBusSender
+    private sealed class InMemoryServiceBusSender(ChannelWriter<Payload> writer) : ServiceBusSender
     {
-        public override Task SendMessageAsync(ServiceBusMessage message, CancellationToken cancellationToken = default)
-        {
-            queue.Enqueue(new(message.MessageId, message.ContentType, message.Subject, message.Body.ToArray()));
-            return Task.CompletedTask;
-        }
+        public override async Task SendMessageAsync(ServiceBusMessage message, CancellationToken cancellationToken = default)
+            => await writer.WriteAsync(new(message.MessageId, message.ContentType, message.Subject, message.Body.ToArray()), cancellationToken);
     }
-
-    private sealed class MessageQueue : ChannelQueue<Payload>;
 
     private sealed record Payload(string MessageId, string ContentType, string Subject, byte[] Body);
 }
