@@ -23,6 +23,10 @@ public sealed class WebhookOptions
 
     public IList<string> IgnoreRepositories { get; set; } = [];
 
+    public TimeSpan PublishTimeout { get; set; } = TimeSpan.FromSeconds(5);
+
+    public string QueueName { get; set; } = string.Empty;
+
     public IDictionary<string, RegistryOptions> Registries { get; set; } = new Dictionary<string, RegistryOptions>();
 
     public IList<string> RerunFailedChecks { get; set; } = [];

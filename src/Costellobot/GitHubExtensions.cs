@@ -92,6 +92,18 @@ public static class GitHubExtensions
 
         services.AddHostedService<GitHubWebhookService>();
 
+        if (configuration["ConnectionStrings:AzureServiceBus"] is { Length: > 0 })
+        {
+            services.AddSingleton<GitHubMessageProcessor>();
+            services.AddSingleton<IGitHubEventHandler, MessagingGitHubEventHandler>();
+            services.AddSingleton<IGitHubJob, MessagingGitHubJob>();
+        }
+        else
+        {
+            services.AddSingleton<IGitHubEventHandler, InMemoryGitHubEventHandler>();
+            services.AddSingleton<IGitHubJob, InMemoryGitHubJob>();
+        }
+
         return services;
     }
 

@@ -49,7 +49,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await deploymentApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await deploymentApproved.Task.WaitAsync(ResultTimeout);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await deploymentApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await deploymentApproved.Task.WaitAsync(ResultTimeout);
     }
 
     [Fact]
@@ -130,7 +130,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await deploymentApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await deploymentApproved.Task.WaitAsync(ResultTimeout);
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await deploymentApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await deploymentApproved.Task.WaitAsync(ResultTimeout);
     }
 
     [Theory]
@@ -574,7 +574,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         if (shouldApprove)
         {
-            await deploymentApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+            await deploymentApproved.Task.WaitAsync(ResultTimeout);
         }
         else
         {

@@ -11,6 +11,9 @@ updates:
 - package-ecosystem: nuget
   directory: "/"
   groups:
+    Aspire:
+      patterns:
+        - Aspire.*
     Microsoft.Extensions:
       patterns:
         - Microsoft.Extensions.*

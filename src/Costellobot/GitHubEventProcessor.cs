@@ -9,7 +9,7 @@ using Octokit.Webhooks;
 namespace MartinCostello.Costellobot;
 
 public sealed partial class GitHubEventProcessor(
-    GitHubWebhookQueue queue,
+    IGitHubEventHandler handler,
     IHubContext<GitHubWebhookHub, IWebhookClient> hub,
     ILogger<GitHubEventProcessor> logger) : WebhookEventProcessor
 {
@@ -35,10 +35,15 @@ public sealed partial class GitHubEventProcessor(
         (var rawHeaders, var rawPayload) = await BroadcastLogAsync(headers, body);
 
         var webhookHeaders = WebhookHeaders.Parse(headers);
-        var webhookEvent = this.DeserializeWebhookEvent(webhookHeaders, body);
+        var webhookEvent = DeserializeWebhookEvent(webhookHeaders, body);
 
         Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
-        queue.Enqueue(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload));
+
+        var payload = new GitHubEvent(webhookHeaders, webhookEvent, rawHeaders, rawPayload);
+
+        await handler.HandleAsync(payload, CancellationToken.None);
+
+        Log.ProcessedWebhook(logger, webhookHeaders.Delivery);
     }
 
     private async Task<(IDictionary<string, string> Headers, JsonElement Payload)> BroadcastLogAsync(
@@ -81,5 +86,11 @@ public sealed partial class GitHubEventProcessor(
            Level = LogLevel.Debug,
            Message = "Received webhook with ID {HookId}.")]
         public static partial void ReceivedWebhook(ILogger logger, string? hookId);
+
+        [LoggerMessage(
+           EventId = 2,
+           Level = LogLevel.Debug,
+           Message = "Processed webhook with ID {HookId}.")]
+        public static partial void ProcessedWebhook(ILogger logger, string? hookId);
     }
 }

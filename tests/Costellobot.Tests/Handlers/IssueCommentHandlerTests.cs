@@ -32,10 +32,8 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var timeout = TimeSpan.FromSeconds(1);
-
-        await dispatched.Task.WaitAsync(timeout);
-        await reacted.Task.WaitAsync(timeout);
+        await dispatched.Task.WaitAsync(ResultTimeout);
+        await reacted.Task.WaitAsync(ResultTimeout);
     }
 
     [Theory]

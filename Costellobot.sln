@@ -41,7 +41,13 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{DEECF28F-D75D-4DBB-B304-214339FC75AB}"
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\build.yml = .github\workflows\build.yml
-		.github\workflows\update-dotnet-sdk.yml = .github\workflows\update-dotnet-sdk.yml
+		.github\workflows\codeql-analysis.yml = .github\workflows\codeql-analysis.yml
+		.github\workflows\container-scan.yml = .github\workflows\container-scan.yml
+		.github\workflows\dependency-review.yml = .github\workflows\dependency-review.yml
+		.github\workflows\lighthouse.yml = .github\workflows\lighthouse.yml
+		.github\workflows\lint.yml = .github\workflows\lint.yml
+		.github\workflows\ossf-scorecard.yml = .github\workflows\ossf-scorecard.yml
+		.github\workflows\update-bank-holidays.yml = .github\workflows\update-bank-holidays.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".vscode", ".vscode", "{4B19CBC0-7588-447F-8D51-2011E60DD660}"

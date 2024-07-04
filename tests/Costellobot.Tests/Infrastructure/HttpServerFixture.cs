@@ -42,6 +42,8 @@ public sealed class HttpServerFixture : AppFixture
         }
     }
 
+    protected override bool UseMessaging => false;
+
     public override HttpClient CreateHttpClientForApp()
     {
         var handler = new HttpClientHandler()

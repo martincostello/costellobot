@@ -41,6 +41,10 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
 
     protected ITestOutputHelper OutputHelper { get; }
 
+    protected virtual TimeSpan ProcessingTimeout { get; } = TimeSpan.FromSeconds(0.5);
+
+    protected virtual TimeSpan ResultTimeout { get; } = TimeSpan.FromSeconds(1);
+
     public virtual Task InitializeAsync() => Task.CompletedTask;
 
     public virtual Task DisposeAsync()
@@ -175,6 +179,9 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         // Act
         return await client.PostAsync("/github-webhook", content);
     }
+
+    protected async Task WaitForProcessingAsync()
+        => await Task.Delay(ProcessingTimeout);
 
     protected virtual void Dispose(bool disposing)
     {

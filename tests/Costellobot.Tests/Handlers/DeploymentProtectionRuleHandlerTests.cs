@@ -37,7 +37,7 @@ public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppF
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await deploymentApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await deploymentApproved.Task.WaitAsync(ResultTimeout);
     }
 
     [Fact]

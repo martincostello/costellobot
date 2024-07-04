@@ -35,7 +35,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await rerequestCheckSuite.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await rerequestCheckSuite.Task.WaitAsync(ResultTimeout);
     }
 
     [Theory]
@@ -65,7 +65,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await rerequestCheckSuite.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await rerequestCheckSuite.Task.WaitAsync(ResultTimeout);
     }
 
     [Theory]
@@ -97,7 +97,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await failedJobsRetried.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await failedJobsRetried.Task.WaitAsync(ResultTimeout);
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await failedJobsRetried.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await failedJobsRetried.Task.WaitAsync(ResultTimeout);
     }
 
     [Fact]
@@ -335,7 +335,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await rerequestCheckSuite.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await rerequestCheckSuite.Task.WaitAsync(ResultTimeout);
     }
 
     [Fact]
@@ -363,7 +363,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await failedJobsRetried.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await failedJobsRetried.Task.WaitAsync(ResultTimeout);
     }
 
     [Theory]
@@ -425,9 +425,6 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Act
         await Should.NotThrowAsync(() => target.HandleAsync(message));
     }
-
-    private static async Task WaitForProcessingAsync()
-        => await Task.Delay(TimeSpan.FromSeconds(0.5));
 
     private async Task<HttpResponseMessage> PostWebhookAsync(CheckSuiteDriver driver, string action = "completed")
     {

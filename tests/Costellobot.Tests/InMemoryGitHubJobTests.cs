@@ -9,7 +9,7 @@ using Octokit.Webhooks;
 
 namespace MartinCostello.Costellobot;
 
-public class GitHubWebhookServiceTests(ITestOutputHelper outputHelper)
+public class InMemoryGitHubJobTests(ITestOutputHelper outputHelper)
 {
     [Fact]
     public async Task ProcessAsync_Handles_Exception()
@@ -20,10 +20,10 @@ public class GitHubWebhookServiceTests(ITestOutputHelper outputHelper)
         var queue = new GitHubWebhookQueue(outputHelper.ToLogger<GitHubWebhookQueue>());
         var serviceProvider = CreateServiceProvider(installationId);
 
-        var target = new GitHubWebhookService(
+        var target = new InMemoryGitHubJob(
             queue,
             serviceProvider,
-            outputHelper.ToLogger<GitHubWebhookService>());
+            outputHelper.ToLogger<InMemoryGitHubJob>());
 
         var message = new GitHubEvent(
             new(),
