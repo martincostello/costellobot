@@ -8,6 +8,7 @@ namespace MartinCostello.Costellobot;
 
 public sealed partial class MessagingGitHubEventHandler(
     ServiceBusClient client,
+    GitHubWebhookQueue queue,
     IOptionsMonitor<WebhookOptions> options,
     ILogger<MessagingGitHubEventHandler> logger) : IGitHubEventHandler
 {
@@ -29,6 +30,8 @@ public sealed partial class MessagingGitHubEventHandler(
             Log.PublishFailed(logger, ex, payload.Headers.Delivery);
             throw;
         }
+
+        queue.Enqueue(payload);
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
