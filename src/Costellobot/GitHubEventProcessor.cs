@@ -42,6 +42,8 @@ public sealed partial class GitHubEventProcessor(
         var payload = new GitHubEvent(webhookHeaders, webhookEvent, rawHeaders, rawPayload);
 
         await handler.HandleAsync(payload, CancellationToken.None);
+
+        Log.ProcessedWebhook(logger, webhookHeaders.Delivery);
     }
 
     private async Task<(IDictionary<string, string> Headers, JsonElement Payload)> BroadcastLogAsync(
@@ -84,5 +86,11 @@ public sealed partial class GitHubEventProcessor(
            Level = LogLevel.Debug,
            Message = "Received webhook with ID {HookId}.")]
         public static partial void ReceivedWebhook(ILogger logger, string? hookId);
+
+        [LoggerMessage(
+           EventId = 2,
+           Level = LogLevel.Debug,
+           Message = "Processed webhook with ID {HookId}.")]
+        public static partial void ProcessedWebhook(ILogger logger, string? hookId);
     }
 }
