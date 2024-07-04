@@ -70,8 +70,7 @@ internal sealed class InMemoryServiceBusClient : ServiceBusClient
                         break;
                     }
 
-                    var data = payload.Body.ToArray();
-                    var body = AmqpMessageBody.FromData([data]);
+                    var body = AmqpMessageBody.FromData([payload.Body]);
                     var amqp = new AmqpAnnotatedMessage(body);
 
                     amqp.Properties.ContentType = payload.ContentType;
@@ -111,12 +110,12 @@ internal sealed class InMemoryServiceBusClient : ServiceBusClient
     {
         public override Task SendMessageAsync(ServiceBusMessage message, CancellationToken cancellationToken = default)
         {
-            queue.Enqueue(new(message.MessageId, message.ContentType, message.Subject, message.Body));
+            queue.Enqueue(new(message.MessageId, message.ContentType, message.Subject, message.Body.ToArray()));
             return Task.CompletedTask;
         }
     }
 
     private sealed class MessageQueue : ChannelQueue<Payload>;
 
-    private sealed record Payload(string MessageId, string ContentType, string Subject, BinaryData Body);
+    private sealed record Payload(string MessageId, string ContentType, string Subject, byte[] Body);
 }
