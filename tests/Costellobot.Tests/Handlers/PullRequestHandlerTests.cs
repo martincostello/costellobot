@@ -35,7 +35,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await pullRequestApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout);
     }
 
     [Fact]
@@ -59,7 +59,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await pullRequestApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout);
     }
 
     [Theory]
@@ -119,7 +119,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await automergeEnabled.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await automergeEnabled.Task.WaitAsync(ResultTimeout);
     }
 
     [Theory]
@@ -155,8 +155,8 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await pullRequestApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
-        await automergeEnabled.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout);
+        await automergeEnabled.Task.WaitAsync(ResultTimeout);
     }
 
     [Theory]
@@ -222,9 +222,9 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await pullRequestApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
-        await automergeEnabled.Task.WaitAsync(TimeSpan.FromSeconds(1));
-        await pullRequestMerged.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout);
+        await automergeEnabled.Task.WaitAsync(ResultTimeout);
+        await pullRequestMerged.Task.WaitAsync(ResultTimeout);
     }
 
     [Fact]
@@ -253,7 +253,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await automergeEnabled.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await automergeEnabled.Task.WaitAsync(ResultTimeout);
     }
 
     [Fact]
@@ -574,9 +574,9 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await pullRequestApproved.Task.WaitAsync(TimeSpan.FromSeconds(1));
-        await automergeEnabled.Task.WaitAsync(TimeSpan.FromSeconds(1));
-        await pullRequestMerged.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout);
+        await automergeEnabled.Task.WaitAsync(ResultTimeout);
+        await pullRequestMerged.Task.WaitAsync(ResultTimeout);
     }
 
     [Fact]
