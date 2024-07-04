@@ -53,7 +53,7 @@ public sealed partial class MessagingGitHubJob(
         }
         catch (Exception ex)
         {
-            Log.FailedToStopProcessor(logger, ex);
+            Log.FailedToStopJob(logger, ex);
         }
     }
 
@@ -101,8 +101,8 @@ public sealed partial class MessagingGitHubJob(
         [LoggerMessage(
            EventId = 1,
            Level = LogLevel.Warning,
-           Message = "Failed to stop message processor.")]
-        public static partial void FailedToStopProcessor(ILogger logger, Exception exception);
+           Message = "Failed to stop messaging job.")]
+        public static partial void FailedToStopJob(ILogger logger, Exception exception);
 
         [LoggerMessage(
            EventId = 2,
