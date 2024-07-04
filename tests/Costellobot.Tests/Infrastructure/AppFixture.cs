@@ -39,6 +39,8 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
 
     public virtual Uri ServerUri => ClientOptions.BaseAddress;
 
+    protected virtual bool UseMessaging => true;
+
     public void ClearOutputHelper()
         => OutputHelper = null;
 
@@ -101,6 +103,12 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        if (UseMessaging)
+        {
+            builder.UseSetting("ConnectionStrings:AzureServiceBus", "costellobot.servicebus.windows.local");
+            builder.UseSetting("Webhook:QueueName", "github-webhooks");
+        }
+
         builder.ConfigureAppConfiguration((configBuilder) =>
         {
             string testKey = File.ReadAllText("costellobot-tests.pem");

@@ -10,8 +10,8 @@ using Microsoft.Extensions.Options;
 
 namespace MartinCostello.Costellobot;
 
-[Collection(AppCollection.Name)]
-public sealed class ApiTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
+[Collection(HttpServerCollection.Name)]
+public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<HttpServerFixture>(fixture, outputHelper)
 {
     [Fact]
     public async Task Can_Accept_GitHub_Check_Suite_Webhook()
