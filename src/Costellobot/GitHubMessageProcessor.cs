@@ -29,27 +29,18 @@ public sealed partial class GitHubMessageProcessor(
         IDictionary<string, StringValues> headers,
         string body)
     {
-        try
+        // HACK Cannot serialize the parsed webhook objects as-is because DateTimeOffset does not support being serialized and throws an exception.
+        // See https://github.com/octokit/webhooks.net/blob/1a6ce29f8312c555227703057ba45723e3c78574/src/Octokit.Webhooks/Converter/DateTimeOffsetConverter.cs#L14.
+        using var document = JsonDocument.Parse(body);
+
+        var webhookHeaders = new Dictionary<string, string>(headers.Count);
+
+        foreach ((var key, var values) in headers)
         {
-            // HACK Cannot serialize the parsed webhook objects as-is because DateTimeOffset does
-            // not support being serialized and throws an exception.
-            // See https://github.com/octokit/webhooks.net/blob/1a6ce29f8312c555227703057ba45723e3c78574/src/Octokit.Webhooks/Converter/DateTimeOffsetConverter.cs#L14.
-            using var document = JsonDocument.Parse(body);
-
-            var webhookHeaders = new Dictionary<string, string>(headers.Count);
-
-            foreach ((var key, var values) in headers)
-            {
-                webhookHeaders[key] = values.ToString();
-            }
-
-            return (webhookHeaders, document.RootElement.Clone());
+            webhookHeaders[key] = values.ToString();
         }
-        catch (Exception)
-        {
-            // Swallow exception
-            return default;
-        }
+
+        return (webhookHeaders, document.RootElement.Clone());
     }
 
     private async Task ProcessAsync(GitHubEvent message)
