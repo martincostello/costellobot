@@ -27,8 +27,8 @@ public static class GitHubMessageSerializerTests
             ["X-Hub-Signature-256"] = "sha256=687f2fd74fc04b0ed1d34477cd4915ced4803b91a22422445c36853f11c5d99b",
         };
 
+        // lang=json,strict
         string body =
-            /*lang=json,strict*/
             """
             {
               "zen": "Responsive is better than fast.",
