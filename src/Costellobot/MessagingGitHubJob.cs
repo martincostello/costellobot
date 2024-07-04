@@ -6,25 +6,16 @@ using Microsoft.Extensions.Options;
 
 namespace MartinCostello.Costellobot;
 
-public sealed partial class GitHubMessageService(
+public sealed partial class MessagingGitHubJob(
     ServiceBusClient client,
     GitHubMessageProcessor processor,
     IOptionsMonitor<WebhookOptions> options,
-    ILogger<GitHubMessageService> logger) : IHostedService, IAsyncDisposable
+    ILogger<MessagingGitHubJob> logger) : IGitHubJob, IAsyncDisposable
 {
-    private CancellationTokenSource? _cts;
-    private Task? _executeTask;
     private ServiceBusProcessor? _processor;
 
     public async ValueTask DisposeAsync()
     {
-        if (_cts is not null)
-        {
-            await _cts.CancelAsync();
-            _cts.Dispose();
-            _cts = null;
-        }
-
         if (_processor is not null)
         {
             await _processor.DisposeAsync();
@@ -32,35 +23,7 @@ public sealed partial class GitHubMessageService(
         }
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        _executeTask = ExecuteAsync(_cts.Token);
-
-        if (_executeTask.IsCompleted)
-        {
-            return _executeTask;
-        }
-
-        return Task.CompletedTask;
-    }
-
-    public async Task StopAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            if (_processor is { } processor)
-            {
-                await processor.StopProcessingAsync(cancellationToken);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.FailedToStopProcessor(logger, ex);
-        }
-    }
-
-    private async Task ExecuteAsync(CancellationToken stoppingToken)
+    public async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try
         {
@@ -76,6 +39,21 @@ public sealed partial class GitHubMessageService(
         catch (OperationCanceledException ex) when (ex.CancellationToken == stoppingToken)
         {
             return;
+        }
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (_processor is { } processor)
+            {
+                await processor.StopProcessingAsync(cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.FailedToStopProcessor(logger, ex);
         }
     }
 

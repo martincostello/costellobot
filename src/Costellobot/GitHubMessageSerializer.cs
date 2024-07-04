@@ -28,6 +28,18 @@ public sealed partial class GitHubMessageSerializer
         return (headers, payload.Body);
     }
 
+    public static ServiceBusMessage Serialize(string? deliveryId, IDictionary<string, string> headers, string body)
+    {
+        var messageHeaders = new Dictionary<string, string?[]?>(headers.Count);
+
+        foreach ((var key, var value) in headers)
+        {
+            messageHeaders[key] = [value];
+        }
+
+        return Serialize(deliveryId, messageHeaders, body);
+    }
+
     public static ServiceBusMessage Serialize(string? deliveryId, IDictionary<string, StringValues> headers, string body)
     {
         var messageHeaders = new Dictionary<string, string?[]?>(headers.Count);
@@ -37,9 +49,14 @@ public sealed partial class GitHubMessageSerializer
             messageHeaders[key] = [.. values];
         }
 
+        return Serialize(deliveryId, messageHeaders, body);
+    }
+
+    private static ServiceBusMessage Serialize(string? deliveryId, Dictionary<string, string?[]?> headers, string body)
+    {
         var payload = new GitHubMessage()
         {
-            Headers = messageHeaders,
+            Headers = headers,
             Body = body,
         };
 

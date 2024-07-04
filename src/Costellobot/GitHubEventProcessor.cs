@@ -9,7 +9,7 @@ using Octokit.Webhooks;
 namespace MartinCostello.Costellobot;
 
 public sealed partial class GitHubEventProcessor(
-    GitHubWebhookQueue queue,
+    IGitHubEventHandler handler,
     IHubContext<GitHubWebhookHub, IWebhookClient> hub,
     ILogger<GitHubEventProcessor> logger) : WebhookEventProcessor
 {
@@ -38,7 +38,10 @@ public sealed partial class GitHubEventProcessor(
         var webhookEvent = DeserializeWebhookEvent(webhookHeaders, body);
 
         Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
-        queue.Enqueue(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload));
+
+        var payload = new GitHubEvent(webhookHeaders, webhookEvent, rawHeaders, rawPayload);
+
+        await handler.HandleAsync(payload, CancellationToken.None);
     }
 
     private async Task<(IDictionary<string, string> Headers, JsonElement Payload)> BroadcastLogAsync(
