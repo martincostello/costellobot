@@ -22,7 +22,7 @@ public static class AdminEndpoints
     {
         builder.MapHub<GitHubWebhookHub>("/admin/git-hub");
 
-        builder.MapMethods("/error", [HttpMethod.Get.Method, HttpMethod.Head.Method], (HttpContext context, int? id = null) =>
+        builder.MapMethods("/error", [HttpMethod.Get.Method, HttpMethod.Head.Method, HttpMethod.Post.Method], (HttpContext context, int? id = null) =>
         {
             int statusCode = id ?? StatusCodes.Status500InternalServerError;
 
