@@ -3,6 +3,7 @@
 
 using System.Net.Http.Json;
 using AspNet.Security.OAuth.GitHub;
+using Azure.Messaging.ServiceBus;
 using JustEat.HttpClientInterception;
 using MartinCostello.Logging.XUnit;
 using Microsoft.AspNetCore.Hosting;
@@ -149,6 +150,8 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
 
             services.AddSingleton<IPostConfigureOptions<GitHubAuthenticationOptions>, RemoteAuthorizationEventsFilter>();
             services.AddScoped<LoopbackOAuthEvents>();
+
+            services.AddSingleton<ServiceBusClient, InMemoryServiceBusClient>();
         });
 
         Interceptor.RegisterBundle(Path.Combine("Bundles", "oauth-http-bundle.json"));
