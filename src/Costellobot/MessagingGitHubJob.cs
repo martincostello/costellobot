@@ -59,6 +59,8 @@ public sealed partial class MessagingGitHubJob(
 
     private async Task ProcessAsync(ProcessMessageEventArgs args)
     {
+        Log.ReceivedMessage(logger, args.Message.MessageId);
+
         if (!string.Equals(args.Message.ContentType, GitHubMessage.ContentType, StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Message with ID {args.Message.MessageId} has an invalid content type: {args.Message.ContentType}.");
@@ -71,9 +73,13 @@ public sealed partial class MessagingGitHubJob(
 
         (var headers, var body) = GitHubMessageSerializer.Deserialize(args.Message);
 
+        Log.ProcessingMessage(logger, args.Message.MessageId);
+
         await processor.ProcessWebhookAsync(headers, body);
 
         await args.CompleteMessageAsync(args.Message, args.CancellationToken);
+
+        Log.CompletedMessage(logger, args.Message.MessageId);
     }
 
     private Task ProcessErrorAsync(ProcessErrorEventArgs args)
@@ -100,6 +106,24 @@ public sealed partial class MessagingGitHubJob(
 
         [LoggerMessage(
            EventId = 2,
+           Level = LogLevel.Debug,
+           Message = "Received message with identifier {Identifier}.")]
+        public static partial void ReceivedMessage(ILogger logger, string identifier);
+
+        [LoggerMessage(
+           EventId = 3,
+           Level = LogLevel.Debug,
+           Message = "Processing message with identifier {Identifier}.")]
+        public static partial void ProcessingMessage(ILogger logger, string identifier);
+
+        [LoggerMessage(
+           EventId = 4,
+           Level = LogLevel.Debug,
+           Message = "Completed message with identifier {Identifier}.")]
+        public static partial void CompletedMessage(ILogger logger, string identifier);
+
+        [LoggerMessage(
+           EventId = 5,
            Level = LogLevel.Error,
            Message = "Failed to process message with identifier {Identifier} from source {ErrorSource} for entity {EntityPath} of namespace {FullyQualifiedNamespace}.")]
         public static partial void ProcessingFailed(
