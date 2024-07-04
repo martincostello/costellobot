@@ -4,15 +4,21 @@
 using System.Threading.Channels;
 using Azure.Core.Amqp;
 using Azure.Messaging.ServiceBus;
+using Microsoft.Extensions.Configuration;
 
 namespace MartinCostello.Costellobot.Infrastructure;
 
 internal sealed class InMemoryServiceBusClient : ServiceBusClient
 {
     private readonly Channel<Payload> _channel;
+    private readonly string _connectionString;
+    private readonly string _queueName;
 
-    public InMemoryServiceBusClient()
+    public InMemoryServiceBusClient(IConfiguration configuration)
     {
+        _connectionString = configuration["ConnectionStrings:AzureServiceBus"] ?? string.Empty;
+        _queueName = configuration["Webhook:QueueName"] ?? string.Empty;
+
         _channel = Channel.CreateUnbounded<Payload>(new()
         {
             SingleReader = true,
@@ -21,7 +27,7 @@ internal sealed class InMemoryServiceBusClient : ServiceBusClient
     }
 
     public override ServiceBusProcessor CreateProcessor(string queueName)
-        => new InMemoryServiceBusProcessor(_channel.Reader);
+        => new InMemoryServiceBusProcessor(_channel.Reader, _connectionString, _queueName);
 
     public override ServiceBusSender CreateSender(string queueOrTopicName)
         => new InMemoryServiceBusSender(_channel.Writer);
@@ -30,7 +36,10 @@ internal sealed class InMemoryServiceBusClient : ServiceBusClient
     public override ValueTask DisposeAsync() => ValueTask.CompletedTask;
 #pragma warning restore CA2215
 
-    private sealed class InMemoryServiceBusProcessor(ChannelReader<Payload> reader) : ServiceBusProcessor(), IDisposable
+    private sealed class InMemoryServiceBusProcessor(
+        ChannelReader<Payload> reader,
+        string connectionString,
+        string queueName) : ServiceBusProcessor(), IDisposable
     {
         private CancellationTokenSource? _cts;
         private Task? _executeTask;
@@ -87,17 +96,34 @@ internal sealed class InMemoryServiceBusClient : ServiceBusClient
                     amqp.Properties.MessageId = new AmqpMessageId(payload.MessageId);
                     amqp.Properties.Subject = payload.Subject;
 
-                    var message = ServiceBusReceivedMessage.FromAmqpMessage(amqp, BinaryData.FromString(string.Empty));
+                    var message = ServiceBusReceivedMessage.FromAmqpMessage(amqp, BinaryData.FromBytes([]));
 
-                    await using var receiver = new InMemoryServiceBusReceiver();
+                    var identifier = nameof(InMemoryServiceBusClient);
 
-                    var args = new ProcessMessageEventArgs(
-                        message,
-                        receiver,
-                        nameof(InMemoryServiceBusClient),
-                        CancellationToken.None);
+                    try
+                    {
+                        await using var receiver = new InMemoryServiceBusReceiver();
 
-                    await OnProcessMessageAsync(args);
+                        var args = new ProcessMessageEventArgs(
+                            message,
+                            receiver,
+                            identifier,
+                            CancellationToken.None);
+
+                        await OnProcessMessageAsync(args);
+                    }
+                    catch (Exception ex)
+                    {
+                        var args = new ProcessErrorEventArgs(
+                            ex,
+                            ServiceBusErrorSource.ProcessMessageCallback,
+                            connectionString,
+                            queueName,
+                            identifier,
+                            stoppingToken);
+
+                        await OnProcessErrorAsync(args);
+                    }
                 }
                 catch (OperationCanceledException ex) when (ex.CancellationToken == stoppingToken)
                 {
