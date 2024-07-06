@@ -33,6 +33,11 @@ public static class AdminEndpoints
                 statusCode = StatusCodes.Status500InternalServerError;
             }
 
+            if (context.Request.IsJson())
+            {
+                return Results.Problem(statusCode: statusCode);
+            }
+
             var model = new ErrorModel(statusCode)
             {
                 RequestId = Activity.Current?.Id ?? context.TraceIdentifier,
