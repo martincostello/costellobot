@@ -20,11 +20,9 @@ public sealed partial class GitHubMessageSerializer
 
     public static (IDictionary<string, StringValues> Headers, string Body) Deserialize(ServiceBusReceivedMessage message)
     {
-        var contentEncoding = GetEncoding(message);
-
         GitHubMessage payload;
 
-        if (contentEncoding is Brotli)
+        if (GetEncoding(message) is Brotli)
         {
             using var compressed = message.Body.ToStream();
             using var utf8Json = Decompress(compressed);
