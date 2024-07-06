@@ -58,13 +58,14 @@ public static class GitHubMessageSerializerTests
         // Assert
         serialized.ShouldNotBeNull();
         serialized.Body.ShouldNotBeNull();
+        serialized.Body.ToArray().Length.ShouldBeLessThanOrEqualTo(256 * 1024);
         serialized.ContentType.ShouldBe("application/json");
         serialized.MessageId.ShouldBe(deliveryId);
         serialized.Subject.ShouldBe("github-webhook");
         serialized.ApplicationProperties.ShouldContainKey("publisher");
-        serialized.GetRawAmqpMessage().Properties.ContentEncoding.ShouldBeNull();
 
         var amqp = serialized.GetRawAmqpMessage();
+        amqp.Properties.ContentEncoding.ShouldBeNull();
 
         var message = ServiceBusReceivedMessage.FromAmqpMessage(amqp, BinaryData.FromBytes([]));
 
