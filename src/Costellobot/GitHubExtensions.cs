@@ -69,8 +69,11 @@ public static class GitHubExtensions
         });
 
         services.AddSingleton<WebhookEventProcessor, GitHubEventProcessor>();
+        services.AddSingleton<GitHubEventHandler>();
+        services.AddSingleton<GitHubMessageProcessor>();
         services.AddSingleton<GitHubWebhookQueue>();
         services.AddSingleton<GitHubWebhookService>();
+
         services.AddTransient<GitCommitAnalyzer>();
         services.AddTransient<GitHubWebhookDispatcher>();
 
@@ -91,10 +94,6 @@ public static class GitHubExtensions
         services.AddTransient<PushHandler>();
 
         services.AddHostedService<GitHubWebhookService>();
-
-        services.AddSingleton<GitHubMessageProcessor>();
-        services.AddSingleton<IGitHubEventHandler, MessagingGitHubEventHandler>();
-        services.AddSingleton<IGitHubJob, MessagingGitHubJob>();
 
         return services;
     }
