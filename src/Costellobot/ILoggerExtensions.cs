@@ -9,10 +9,10 @@ public static class ILoggerExtensions
 {
     public static IDisposable? BeginScope(this ILogger logger, WebhookHeaders headers)
     {
-        var items = new Dictionary<string, object?>(2)
+        var items = new Dictionary<string, object>(2)
         {
-            ["GitHubDelivery"] = headers.Delivery,
-            ["GitHubEvent"] = headers.Event,
+            ["GitHubDelivery"] = headers.Delivery ?? string.Empty,
+            ["GitHubEvent"] = headers.Event ?? string.Empty,
         };
 
         return logger.BeginScope(items);
