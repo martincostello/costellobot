@@ -35,6 +35,9 @@ public sealed partial class GitHubEventProcessor(
         (var rawHeaders, var rawPayload) = await BroadcastLogAsync(headers, body);
 
         var webhookHeaders = WebhookHeaders.Parse(headers);
+
+        using var scope = logger.BeginScope(webhookHeaders);
+
         var webhookEvent = DeserializeWebhookEvent(webhookHeaders, body);
 
         Log.ReceivedWebhook(logger, webhookHeaders.Delivery);

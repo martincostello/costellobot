@@ -19,6 +19,9 @@ public sealed partial class GitHubMessageProcessor(
         (var rawHeaders, var rawPayload) = ParseRaw(headers, body);
 
         var webhookHeaders = WebhookHeaders.Parse(headers);
+
+        using var scope = logger.BeginScope(webhookHeaders);
+
         var webhookEvent = DeserializeWebhookEvent(webhookHeaders, body);
 
         Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
