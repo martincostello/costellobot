@@ -37,6 +37,7 @@ jobs:
       shell: pwsh
       env:
         APPLICATION_URL: ${{ env.APPLICATION_URL }}
+        ConnectionStrings__AzureServiceBus: 'costellobot.servicebus.windows.local'
         GitHub__ClientId: 'github-client-id'
         GitHub__ClientSecret: 'github-client-secret'
       run: |
