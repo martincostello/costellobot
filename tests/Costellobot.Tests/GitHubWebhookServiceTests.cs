@@ -7,7 +7,7 @@ using NSubstitute;
 
 namespace MartinCostello.Costellobot;
 
-public class MessagingGitHubJobTests(ITestOutputHelper outputHelper)
+public class GitHubWebhookServiceTests(ITestOutputHelper outputHelper)
 {
     [Theory]
     [InlineData("", "")]
@@ -34,11 +34,11 @@ public class MessagingGitHubJobTests(ITestOutputHelper outputHelper)
             serviceProvider,
             outputHelper.ToLogger<GitHubMessageProcessor>());
 
-        var target = new MessagingGitHubJob(
+        var target = new GitHubWebhookService(
             client,
             processor,
             options,
-            outputHelper.ToLogger<MessagingGitHubJob>());
+            outputHelper.ToLogger<GitHubWebhookService>());
 
         var args = new ProcessMessageEventArgs(
             message,

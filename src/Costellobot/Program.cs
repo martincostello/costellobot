@@ -70,10 +70,7 @@ if (string.Equals(builder.Configuration["CODESPACES"], bool.TrueString, StringCo
 
 builder.WebHost.ConfigureKestrel((p) => p.AddServerHeader = false);
 
-if (builder.Configuration["ConnectionStrings:AzureServiceBus"] is { Length: > 0 })
-{
-    builder.AddAzureServiceBusClient("AzureServiceBus");
-}
+builder.AddAzureServiceBusClient("AzureServiceBus");
 
 var app = builder.Build();
 

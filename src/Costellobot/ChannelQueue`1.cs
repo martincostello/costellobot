@@ -8,15 +8,14 @@ namespace MartinCostello.Costellobot;
 
 public abstract class ChannelQueue<T>
 {
-    private const int HistoryCapacity = 20;
-    private const int QueueCapacity = 1000;
+    private const int Capacity = 20;
 
     private readonly ConcurrentQueue<T> _history;
     private readonly Channel<T> _queue;
 
     protected ChannelQueue()
     {
-        var channelOptions = new BoundedChannelOptions(QueueCapacity)
+        var channelOptions = new BoundedChannelOptions(Capacity)
         {
             FullMode = BoundedChannelFullMode.DropOldest,
             SingleReader = true,
@@ -26,8 +25,6 @@ public abstract class ChannelQueue<T>
         _queue = Channel.CreateBounded<T>(channelOptions);
         _history = new ConcurrentQueue<T>();
     }
-
-    protected Channel<T> Queue => _queue;
 
     public virtual async Task<T?> DequeueAsync(CancellationToken cancellationToken)
     {
@@ -49,7 +46,7 @@ public abstract class ChannelQueue<T>
         {
             _history.Enqueue(item);
 
-            while (_history.Count > HistoryCapacity)
+            while (_history.Count > Capacity)
             {
                 _ = _history.TryDequeue(out _);
             }

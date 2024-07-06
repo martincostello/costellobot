@@ -6,13 +6,13 @@ using Microsoft.Extensions.Options;
 
 namespace MartinCostello.Costellobot;
 
-public sealed partial class MessagingGitHubEventHandler(
+public sealed partial class GitHubEventHandler(
     ServiceBusClient client,
     GitHubWebhookQueue queue,
     IOptionsMonitor<WebhookOptions> options,
-    ILogger<MessagingGitHubEventHandler> logger) : IGitHubEventHandler
+    ILogger<GitHubEventHandler> logger)
 {
-    public async Task HandleAsync(GitHubEvent payload, CancellationToken cancellationToken)
+    public async Task HandleAsync(GitHubEvent payload)
     {
         var config = options.CurrentValue;
 
