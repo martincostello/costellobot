@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using MartinCostello.Costellobot.Models;
 using MartinCostello.Costellobot.Slices;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
@@ -33,14 +34,20 @@ public static class AdminEndpoints
                 statusCode = StatusCodes.Status500InternalServerError;
             }
 
+            var requestId = Activity.Current?.Id ?? context.TraceIdentifier;
+
             if (context.Request.IsJson())
             {
-                return Results.Problem(statusCode: statusCode);
+                var detail = ReasonPhrases.GetReasonPhrase(statusCode);
+                var instance = context.Features.Get<IStatusCodeReExecuteFeature>()?.OriginalPath ?? context.Request.Path;
+                var extensions = new Dictionary<string, object?>(1) { ["correlation"] = requestId };
+
+                return Results.Problem(detail, instance, statusCode, extensions: extensions);
             }
 
             var model = new ErrorModel(statusCode)
             {
-                RequestId = Activity.Current?.Id ?? context.TraceIdentifier,
+                RequestId = requestId,
                 Subtitle = $"Error (HTTP {statusCode})",
             };
 
