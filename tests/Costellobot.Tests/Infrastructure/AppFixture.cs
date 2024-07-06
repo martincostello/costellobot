@@ -39,8 +39,6 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
 
     public virtual Uri ServerUri => ClientOptions.BaseAddress;
 
-    protected virtual bool UseMessaging => true;
-
     public void ClearOutputHelper()
         => OutputHelper = null;
 
@@ -103,11 +101,9 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        if (UseMessaging)
-        {
-            builder.UseSetting("ConnectionStrings:AzureServiceBus", "costellobot.servicebus.windows.local");
-            builder.UseSetting("Webhook:QueueName", "github-webhooks");
-        }
+        builder.UseSetting(
+            "ConnectionStrings:AzureServiceBus",
+            "costellobot.servicebus.windows.local");
 
         builder.ConfigureAppConfiguration((configBuilder) =>
         {
@@ -132,6 +128,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 KeyValuePair.Create<string, string?>("Site:AdminUsers:0", "john-smith"),
                 KeyValuePair.Create<string, string?>("Webhook:DeployEnvironments:0", "production"),
                 KeyValuePair.Create<string, string?>("Webhook:IgnoreRepositories:0", "ignored-org/ignored-repo"),
+                KeyValuePair.Create<string, string?>("Webhook:QueueName", "github-webhooks"),
             };
 
             configBuilder.AddInMemoryCollection(config);
