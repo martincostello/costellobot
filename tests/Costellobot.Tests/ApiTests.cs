@@ -5,6 +5,8 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using MartinCostello.Costellobot.Infrastructure;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -111,5 +113,42 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         // Assert
         actual.TryGetProperty("application", out var application).ShouldBeTrue();
         application.TryGetProperty("version", out _).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("GET", "application/json", null)]
+    [InlineData("POST", "application/json", null)]
+    [InlineData("POST", null, "application/json")]
+    public async Task Invalid_Request_Responds_With_Json(
+        string method,
+        string? accept,
+        string? contentType)
+    {
+        // Arrange
+        using var client = Fixture.CreateClient();
+        using var request = new HttpRequestMessage(new(method), "/foo");
+
+        if (accept is not null)
+        {
+            request.Headers.Add("Accept", accept);
+        }
+
+        if (contentType is not null)
+        {
+            request.Content = new StringContent("{}", null, contentType);
+        }
+
+        // Act
+        using var actual = await client.SendAsync(request);
+
+        // Assert
+        actual.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        actual.Content.Headers.ContentType.ShouldNotBeNull();
+        actual.Content.Headers.ContentType.MediaType.ShouldBe("application/problem+json");
+
+        var response = await actual.Content.ReadFromJsonAsync<ProblemDetails>();
+        response.ShouldNotBeNull();
+        response.Status.ShouldBe(StatusCodes.Status404NotFound);
     }
 }
