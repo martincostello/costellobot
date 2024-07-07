@@ -6,6 +6,7 @@
   <ItemGroup>
     <PackageVersion Include="Aspire.Azure.Messaging.ServiceBus" Version="8.0.2" />
     <PackageVersion Include="Aspire.Azure.Security.KeyVault" Version="8.0.2" />
+    <PackageVersion Include="Aspire.Azure.Storage.Blobs" Version="8.0.2" />
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="8.0.2" />
     <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="8.0.2" />
     <PackageVersion Include="Aspire.Hosting.Azure.ServiceBus" Version="8.0.2" />

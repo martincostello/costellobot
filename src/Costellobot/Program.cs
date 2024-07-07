@@ -15,8 +15,13 @@ if (builder.Configuration["ConnectionStrings:AzureKeyVault"] is { Length: > 0 })
 
 builder.AddAzureServiceBusClient("AzureServiceBus");
 
+if (builder.Configuration["ConnectionStrings:AzureStorage"] is { Length: > 0 })
+{
+    builder.AddAzureBlobClient("AzureStorage");
+}
+
 builder.Services.AddAntiforgery();
-builder.Services.AddGitHub(builder.Configuration, builder.Environment);
+builder.Services.AddGitHub(builder.Configuration);
 builder.Services.AddHsts((options) => options.MaxAge = TimeSpan.FromDays(180));
 builder.Services.AddResponseCaching();
 builder.Services.AddTelemetry(builder.Environment);

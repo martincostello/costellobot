@@ -19,10 +19,9 @@ public static class GitHubExtensions
 
     public static IServiceCollection AddGitHub(
         this IServiceCollection services,
-        IConfiguration configuration,
-        IHostEnvironment environment)
+        IConfiguration configuration)
     {
-        services.AddGitHubAuthentication(configuration, environment);
+        services.AddGitHubAuthentication(configuration);
 
         services.AddHttpClient()
                 .ConfigureHttpClientDefaults((p) => p.AddStandardResilienceHandler());
