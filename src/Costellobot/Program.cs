@@ -8,7 +8,12 @@ using Microsoft.AspNetCore.ResponseCompression;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.ConfigureApplication();
+if (builder.Configuration["ConnectionStrings:AzureKeyVault"] is { Length: > 0 })
+{
+    builder.Configuration.AddAzureKeyVaultSecrets("AzureKeyVault");
+}
+
+builder.AddAzureServiceBusClient("AzureServiceBus");
 
 builder.Services.AddAntiforgery();
 builder.Services.AddGitHub(builder.Configuration, builder.Environment);
@@ -69,8 +74,6 @@ if (string.Equals(builder.Configuration["CODESPACES"], bool.TrueString, StringCo
 }
 
 builder.WebHost.ConfigureKestrel((p) => p.AddServerHeader = false);
-
-builder.AddAzureServiceBusClient("AzureServiceBus");
 
 var app = builder.Build();
 
