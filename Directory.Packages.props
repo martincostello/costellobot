@@ -10,6 +10,7 @@
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="8.0.2" />
     <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="8.0.2" />
     <PackageVersion Include="Aspire.Hosting.Azure.ServiceBus" Version="8.0.2" />
+    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="8.0.2" />
     <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="8.1.0" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.3.1" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" Version="1.3.4" />

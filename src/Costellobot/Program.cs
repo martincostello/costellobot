@@ -15,9 +15,9 @@ if (builder.Configuration["ConnectionStrings:AzureKeyVault"] is { Length: > 0 })
 
 builder.AddAzureServiceBusClient("AzureServiceBus");
 
-if (builder.Configuration["ConnectionStrings:AzureStorage"] is { Length: > 0 })
+if (builder.Configuration["ConnectionStrings:AzureBlobStorage"] is { Length: > 0 })
 {
-    builder.AddAzureBlobClient("AzureStorage");
+    builder.AddAzureBlobClient("AzureBlobStorage");
 }
 
 builder.Services.AddAntiforgery();

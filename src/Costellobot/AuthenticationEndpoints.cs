@@ -115,7 +115,7 @@ public static class AuthenticationEndpoints
             .AddDataProtection()
             .SetApplicationName(ApplicationName);
 
-        if (configuration["ConnectionStrings:AzureStorage"] is { Length: > 0 } connectionString)
+        if (configuration["ConnectionStrings:AzureBlobStorage"] is { Length: > 0 })
         {
 #pragma warning disable CA1308
             dataProtection.PersistKeysToAzureBlobStorage(static (provider) =>
