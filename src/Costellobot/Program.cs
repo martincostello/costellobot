@@ -8,10 +8,20 @@ using Microsoft.AspNetCore.ResponseCompression;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.ConfigureApplication();
+if (builder.Configuration["ConnectionStrings:AzureKeyVault"] is { Length: > 0 })
+{
+    builder.Configuration.AddAzureKeyVaultSecrets("AzureKeyVault");
+}
+
+builder.AddAzureServiceBusClient("AzureServiceBus");
+
+if (builder.Configuration["ConnectionStrings:AzureBlobStorage"] is { Length: > 0 })
+{
+    builder.AddAzureBlobClient("AzureBlobStorage");
+}
 
 builder.Services.AddAntiforgery();
-builder.Services.AddGitHub(builder.Configuration, builder.Environment);
+builder.Services.AddGitHub(builder.Configuration);
 builder.Services.AddHsts((options) => options.MaxAge = TimeSpan.FromDays(180));
 builder.Services.AddResponseCaching();
 builder.Services.AddTelemetry(builder.Environment);
@@ -69,8 +79,6 @@ if (string.Equals(builder.Configuration["CODESPACES"], bool.TrueString, StringCo
 }
 
 builder.WebHost.ConfigureKestrel((p) => p.AddServerHeader = false);
-
-builder.AddAzureServiceBusClient("AzureServiceBus");
 
 var app = builder.Build();
 

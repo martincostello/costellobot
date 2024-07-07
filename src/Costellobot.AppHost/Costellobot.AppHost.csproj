@@ -7,7 +7,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.Azure.KeyVault" />
     <PackageReference Include="Aspire.Hosting.Azure.ServiceBus" />
+    <PackageReference Include="Aspire.Hosting.Azure.Storage" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Costellobot\Costellobot.csproj" />

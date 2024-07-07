@@ -40,6 +40,7 @@ jobs:
         ConnectionStrings__AzureServiceBus: 'costellobot.servicebus.windows.local'
         GitHub__ClientId: 'github-client-id'
         GitHub__ClientSecret: 'github-client-secret'
+        Logging__LogLevel__Azure: 'None'
       run: |
         Start-Process nohup 'dotnet run --project ./src/Costellobot/Costellobot.csproj --configuration Release /p:EnableNETAnalyzers=false /p:EnforceCodeStyleInBuild=false'
         $StatusCode = 0
