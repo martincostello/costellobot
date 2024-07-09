@@ -35,6 +35,7 @@
     <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="5.5.3" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="NSubstitute" Version="5.1.0" />
+    <PackageVersion Include="NuGet.Versioning" Version="6.10.1" />
     <PackageVersion Include="Octokit" Version="13.0.1" />
     <PackageVersion Include="Octokit.GraphQL" Version="0.4.0-beta" />
     <PackageVersion Include="Octokit.Webhooks.AspNetCore" Version="2.2.2" />

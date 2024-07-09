@@ -84,7 +84,7 @@ public static class GitHubExtensions
         services.AddSingleton<BadgeService>();
         services.AddSingleton<PublicHolidayProvider>();
 
-        services.AddSingleton<IHandlerFactory, HandlerFactory>();
+        services.AddScoped<IHandlerFactory, HandlerFactory>();
         services.AddTransient<CheckSuiteHandler>();
         services.AddTransient<DeploymentProtectionRuleHandler>();
         services.AddTransient<DeploymentStatusHandler>();
