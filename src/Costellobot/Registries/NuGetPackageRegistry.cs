@@ -9,7 +9,10 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache cache) : PackageRegistry(client)
+public sealed partial class NuGetPackageRegistry(
+    HttpClient client,
+    IMemoryCache cache,
+    ILogger<NuGetPackageRegistry> logger) : PackageRegistry(client)
 {
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.NuGet;
 
@@ -18,6 +21,12 @@ public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache
         string id,
         string version)
     {
+        if (!NuGet.Versioning.NuGetVersion.TryParse(version, out var _))
+        {
+            Log.InvalidNuGetPackageVersion(logger, version);
+            return [];
+        }
+
         // https://docs.microsoft.com/en-us/nuget/api/search-query-service-resource#versioning
         var baseAddress = await GetBaseAddressAsync("SearchQueryService/3.5.0");
 
@@ -112,6 +121,16 @@ public sealed partial class NuGetPackageRegistry(HttpClient client, IMemoryCache
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
             return await Client.GetFromJsonAsync("/v3/index.json", NuGetJsonSerializerContext.Default.ServiceIndex);
         });
+    }
+
+    [ExcludeFromCodeCoverage]
+    private static partial class Log
+    {
+        [LoggerMessage(
+           EventId = 1,
+           Level = LogLevel.Warning,
+           Message = "The version string \"{Version}\" is not a valid NuGet package version.")]
+        public static partial void InvalidNuGetPackageVersion(ILogger logger, string version);
     }
 
     private sealed class PackageVersion

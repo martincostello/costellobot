@@ -6,7 +6,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public static class NuGetPackageRegistryTests
+public class NuGetPackageRegistryTests(ITestOutputHelper outputHelper)
 {
     [Theory]
     [InlineData("AWSSDK.S3", "3.7.9.32", new[] { "awsdotnet" })]
@@ -17,7 +17,8 @@ public static class NuGetPackageRegistryTests
     [InlineData("Octokit.GraphQL", "0.1.9-beta", new[] { "GitHub", "grokys", "jcansdale", "nickfloyd", "StanleyGoldman" })]
     [InlineData("Octokit.Webhooks.AspNetCore", "1.4.0", new[] { "GitHub", "kfcampbell" })]
     [InlineData("foo", "1.0.0", new string[0])]
-    public static async Task Can_Get_Package_Owners(string id, string version, string[] expected)
+    [InlineData("System.Text.Json", "malformed", new string[0])]
+    public async Task Can_Get_Package_Owners(string id, string version, string[] expected)
     {
         // Arrange
         var repository = new RepositoryId("some-org", "some-repo");
@@ -31,7 +32,7 @@ public static class NuGetPackageRegistryTests
 
         using var cache = new MemoryCache(new MemoryCacheOptions());
 
-        var target = new NuGetPackageRegistry(client, cache);
+        var target = new NuGetPackageRegistry(client, cache, outputHelper.ToLogger<NuGetPackageRegistry>());
 
         // Act
         var actual = await target.GetPackageOwnersAsync(
