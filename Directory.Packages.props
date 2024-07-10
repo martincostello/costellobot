@@ -29,7 +29,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="8.7.0" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="8.7.0" />
-    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.6.2" />
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.6.3" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.45.0" />
     <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="5.5.3" />
@@ -51,7 +51,7 @@
     <PackageVersion Include="RazorSlices" Version="0.8.1" />
     <PackageVersion Include="ReportGenerator" Version="5.3.7" />
     <PackageVersion Include="Shouldly" Version="4.2.1" />
-    <PackageVersion Include="System.Drawing.Common" Version="8.0.6" />
+    <PackageVersion Include="System.Drawing.Common" Version="8.0.7" />
     <PackageVersion Include="xunit" Version="2.9.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageVersion Include="Xunit.SkippableFact" Version="1.4.13" />
