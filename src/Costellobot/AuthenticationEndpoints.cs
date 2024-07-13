@@ -145,10 +145,10 @@ public static class AuthenticationEndpoints
 
     public static IEndpointRouteBuilder MapAuthenticationRoutes(this IEndpointRouteBuilder builder)
     {
-        builder.MapGet(DeniedPath, () => Results.Redirect(SignInPath + "?denied=true"));
-        builder.MapGet(ForbiddenPath, () => Results.Redirect(ErrorPath + "?id=403"));
+        builder.MapGet(DeniedPath, () => Results.LocalRedirect(SignInPath + "?denied=true"));
+        builder.MapGet(ForbiddenPath, () => Results.LocalRedirect(ErrorPath + "?id=403"));
 
-        builder.MapGet(SignOutPath, () => Results.Redirect(RootPath));
+        builder.MapGet(SignOutPath, () => Results.LocalRedirect(RootPath));
 
         builder.MapGet(SignInPath, (HttpContext context, IAntiforgery antiforgery) =>
         {
@@ -167,7 +167,7 @@ public static class AuthenticationEndpoints
             if (!await antiforgery.IsRequestValidAsync(context))
             {
                 antiforgery.SetCookieTokenAndHeader(context);
-                return Results.Redirect(RootPath);
+                return Results.LocalRedirect(RootPath);
             }
 
             return Results.Challenge(
@@ -179,7 +179,7 @@ public static class AuthenticationEndpoints
         {
             if (!await antiforgery.IsRequestValidAsync(context))
             {
-                return Results.Redirect(RootPath);
+                return Results.LocalRedirect(RootPath);
             }
 
             return Results.SignOut(
