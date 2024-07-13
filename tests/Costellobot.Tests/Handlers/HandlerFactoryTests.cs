@@ -17,6 +17,8 @@ public static class HandlerFactoryTests
     [InlineData("check_suite", typeof(CheckSuiteHandler))]
     [InlineData("deployment_protection_rule", typeof(DeploymentProtectionRuleHandler))]
     [InlineData("deployment_status", typeof(DeploymentStatusHandler))]
+    [InlineData("installation", typeof(NullHandler))]
+    [InlineData("installation_repositories", typeof(NullHandler))]
     [InlineData("issues", typeof(NullHandler))]
     [InlineData("issue_comment", typeof(IssueCommentHandler))]
     [InlineData("ping", typeof(NullHandler))]

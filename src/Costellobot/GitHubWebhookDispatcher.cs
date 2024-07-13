@@ -36,7 +36,16 @@ public sealed partial class GitHubWebhookDispatcher(
     }
 
     private bool IsValidInstallation(GitHubEvent message)
-        => message.Event.Installation?.Id == options.CurrentValue.InstallationId;
+    {
+        long? installationId = message.Event switch
+        {
+            Octokit.Webhooks.Events.InstallationEvent installation => installation.Installation.Id,
+            Octokit.Webhooks.Events.InstallationRepositoriesEvent repos => repos.Installation.Id,
+            _ => message.Event.Installation?.Id,
+        };
+
+        return installationId == options.CurrentValue.InstallationId;
+    }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     private static partial class Log
