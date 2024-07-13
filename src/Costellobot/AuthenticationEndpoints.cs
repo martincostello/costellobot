@@ -206,6 +206,7 @@ public static class AuthenticationEndpoints
         // HACK Use the internal SharedUrlHelper.IsLocalUrl() method to avoid the default behaviour of Results.LocalRedirect() that
         // throws if executed with a non-local URL. Instead we want to just redirect to the root URL and ignore ReturnUrl if it is non-local.
         // See https://github.com/dotnet/aspnetcore/blob/a78ef02aeadf84869a0c35f915a2e46a762b00cd/src/Shared/ResultsHelpers/SharedUrlHelper.cs#L33.
+        // Replace if https://github.com/dotnet/aspnetcore/issues/56770 is ever implemented.
         var sharedUrlHelper = Type.GetType("Microsoft.AspNetCore.Internal.SharedUrlHelper, Microsoft.AspNetCore.Http.Results", throwOnError: true)!;
         var isLocalUrl = sharedUrlHelper.GetMethod(
             "IsLocalUrl",
