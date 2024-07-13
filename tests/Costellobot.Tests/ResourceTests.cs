@@ -108,6 +108,36 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
         response.Headers.Location.OriginalString.ShouldBe("/");
     }
 
+    [Fact]
+    public async Task Sign_In_Redirects_To_Return_Url_If_Authenticated()
+    {
+        // Arrange
+        using var client = await CreateAuthenticatedClientAsync();
+
+        // Act
+        using var response = await client.GetAsync("/sign-in?ReturnUrl=%2Fdebug");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
+        response.Headers.Location.ShouldNotBeNull();
+        response.Headers.Location.OriginalString.ShouldBe("/debug");
+    }
+
+    [Fact]
+    public async Task Sign_In_Does_Not_Open_Redirect()
+    {
+        // Arrange
+        using var client = await CreateAuthenticatedClientAsync();
+
+        // Act
+        using var response = await client.GetAsync("/sign-in?ReturnUrl=http%3A%2F%2Fcostellobot.local%2Fdebug");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
+        response.Headers.Location.ShouldNotBeNull();
+        response.Headers.Location.OriginalString.ShouldBe("/");
+    }
+
     [Theory]
     [InlineData("/sign-in")]
     [InlineData("/sign-out")]

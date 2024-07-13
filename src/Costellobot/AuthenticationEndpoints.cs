@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Reflection;
 using System.Security.Claims;
 using AspNet.Security.OAuth.GitHub;
 using Azure.Storage.Blobs;
@@ -28,6 +29,8 @@ public static class AuthenticationEndpoints
 
     private const string GitHubAvatarClaim = "urn:github:avatar";
     private const string GitHubProfileClaim = "urn:github:profile";
+
+    private static readonly Predicate<string?> IsLocalUrl = GetIsLocalUrl();
 
     public static IServiceCollection AddGitHubAuthentication(
         this IServiceCollection services,
@@ -154,7 +157,15 @@ public static class AuthenticationEndpoints
         {
             if (context.User.Identity?.IsAuthenticated == true)
             {
-                return Results.Redirect(RootPath);
+                string url = RootPath;
+
+                if (context.Request.Query.TryGetValue("ReturnUrl", out var returnUrl) &&
+                    IsLocalUrl(returnUrl))
+                {
+                    url = returnUrl.ToString();
+                }
+
+                return Results.LocalRedirect(url);
             }
 
             var tokens = antiforgery.GetAndStoreTokens(context);
@@ -188,5 +199,21 @@ public static class AuthenticationEndpoints
         });
 
         return builder;
+    }
+
+    private static Predicate<string?> GetIsLocalUrl()
+    {
+        // HACK Use the internal SharedUrlHelper.IsLocalUrl() method to avoid the default behaviour of Results.LocalRedirect() that
+        // throws if executed with a non-local URL. Instead we want to just redirect to the root URL and ignore ReturnUrl if it is non-local.
+        // See https://github.com/dotnet/aspnetcore/blob/a78ef02aeadf84869a0c35f915a2e46a762b00cd/src/Shared/ResultsHelpers/SharedUrlHelper.cs#L33.
+        var sharedUrlHelper = Type.GetType("Microsoft.AspNetCore.Internal.SharedUrlHelper, Microsoft.AspNetCore.Http.Results", throwOnError: true)!;
+        var isLocalUrl = sharedUrlHelper.GetMethod(
+            "IsLocalUrl",
+            BindingFlags.Static | BindingFlags.NonPublic,
+            null,
+            [typeof(string)],
+            null);
+
+        return isLocalUrl!.CreateDelegate<Predicate<string?>>(null);
     }
 }
