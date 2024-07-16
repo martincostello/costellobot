@@ -82,9 +82,6 @@ builder.WebHost.ConfigureKestrel((p) => p.AddServerHeader = false);
 
 var app = builder.Build();
 
-// Give the webhook queue a chance to drain before the application stops
-app.Lifetime.ApplicationStopping.Register(() => Thread.Sleep(TimeSpan.FromSeconds(10)));
-
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/error");
