@@ -99,9 +99,9 @@ if (!app.Environment.IsDevelopment())
     {
         app.UseHttpsRedirection();
     }
-}
 
-app.UseResponseCompression();
+    app.UseResponseCompression();
+}
 
 app.UseStaticFiles();
 
