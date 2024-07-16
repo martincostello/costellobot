@@ -21,6 +21,7 @@ if (builder.Configuration["ConnectionStrings:AzureBlobStorage"] is { Length: > 0
 }
 
 builder.Services.AddAntiforgery();
+builder.Services.AddApplicationHealthChecks();
 builder.Services.AddGitHub(builder.Configuration);
 builder.Services.AddHsts((options) => options.MaxAge = TimeSpan.FromDays(180));
 builder.Services.AddResponseCaching();
@@ -110,6 +111,7 @@ app.UseAuthorization();
 
 app.UseAntiforgery();
 
+app.MapHealthCheckRoutes();
 app.MapAuthenticationRoutes();
 app.MapApiRoutes(app.Configuration);
 app.MapAdminRoutes();
