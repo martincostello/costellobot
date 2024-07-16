@@ -3,6 +3,4 @@
 
 namespace Octokit;
 
-public interface IGitHubClientForApp : IGitHubClient
-{
-}
+public interface IGitHubClientForApp : IGitHubClient;
