@@ -2,22 +2,28 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.IO.Compression;
+using Azure.Identity;
 using MartinCostello.Costellobot;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions()
+{
+    ExcludeVisualStudioCredential = true,
+});
+
 if (builder.Configuration["ConnectionStrings:AzureKeyVault"] is { Length: > 0 })
 {
-    builder.Configuration.AddAzureKeyVaultSecrets("AzureKeyVault");
+    builder.Configuration.AddAzureKeyVaultSecrets("AzureKeyVault", (p) => p.Credential = credential);
 }
 
-builder.AddAzureServiceBusClient("AzureServiceBus");
+builder.AddAzureServiceBusClient("AzureServiceBus", (p) => p.Credential = credential);
 
 if (builder.Configuration["ConnectionStrings:AzureBlobStorage"] is { Length: > 0 })
 {
-    builder.AddAzureBlobClient("AzureBlobStorage");
+    builder.AddAzureBlobClient("AzureBlobStorage", (p) => p.Credential = credential);
 }
 
 builder.Services.AddAntiforgery();
