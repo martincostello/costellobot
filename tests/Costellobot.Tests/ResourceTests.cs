@@ -16,6 +16,9 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
     [InlineData("/error.html", MediaTypeNames.Text.Html)]
     [InlineData("/favicon.png", "image/png")]
     [InlineData("/forbidden.html", MediaTypeNames.Text.Html)]
+    [InlineData("/health/liveness", MediaTypeNames.Application.Json)]
+    [InlineData("/health/readiness", MediaTypeNames.Application.Json)]
+    [InlineData("/health/startup", MediaTypeNames.Application.Json)]
     [InlineData("/humans.txt", MediaTypeNames.Text.Plain)]
     [InlineData("/manifest.webmanifest", "application/manifest+json")]
     [InlineData("/not-found.html", MediaTypeNames.Text.Html)]
@@ -27,6 +30,7 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
     [InlineData("/static/js/main.js", "text/javascript")]
     [InlineData("/static/js/main.js.map", MediaTypeNames.Text.Plain)]
     [InlineData("/unauthorized.html", MediaTypeNames.Text.Html)]
+    [InlineData("/version", MediaTypeNames.Application.Json)]
     public async Task Can_Get_Resource_Unauthenticated(string requestUri, string contentType)
     {
         // Arrange
