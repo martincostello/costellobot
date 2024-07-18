@@ -76,7 +76,7 @@ jobs:
     - name: Build .NET code
       if: matrix.language == 'csharp'
       run: |
-        dotnet workload restore --skip-manifest-update
+        dotnet workload restore
         dotnet build --configuration Release
 
     - name: Perform CodeQL Analysis
