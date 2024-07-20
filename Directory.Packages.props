@@ -26,6 +26,7 @@
     <PackageVersion Include="JustEat.HttpClientInterception" Version="4.3.0" />
     <PackageVersion Include="MartinCostello.Logging.XUnit" Version="0.4.0" />
     <PackageVersion Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="9.0.0-preview.6.24328.4" />
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="9.0.0-preview.6.24328.4" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0-preview.6.24328.4" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0-preview.6.24353.1" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.0.0-preview.6.24353.1" />
@@ -51,7 +52,6 @@
     <PackageVersion Include="RazorSlices" Version="0.8.1" />
     <PackageVersion Include="ReportGenerator" Version="5.3.8" />
     <PackageVersion Include="Shouldly" Version="4.2.1" />
-    <PackageVersion Include="System.Drawing.Common" Version="9.0.0-preview.6.24327.6" />
     <PackageVersion Include="System.Text.Json" Version="9.0.0-preview.6.24327.7" />
     <PackageVersion Include="xunit" Version="2.9.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
