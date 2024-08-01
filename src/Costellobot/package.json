@@ -20,7 +20,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@babel/core": "^7.25.2",
-    "@babel/preset-env": "^7.25.2",
+    "@babel/preset-env": "^7.25.3",
     "@microsoft/signalr": "^8.0.7",
     "@stylistic/eslint-plugin-js": "^2.4.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
