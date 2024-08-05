@@ -1,6 +1,7 @@
 {
   "name": "costellobot",
   "private": true,
+  "type": "module",
   "version": "1.0.0",
   "description": "GitHub automation for martincostello's repositories.",
   "scripts": {
@@ -8,7 +9,7 @@
     "compile": "webpack",
     "format": "prettier --write scripts/**/*.ts && stylelint --fix styles/**/*.css",
     "format-check": "prettier --check scripts/**/*.ts && stylelint --fix styles/**/*.css",
-    "lint": "eslint --ext .ts scripts",
+    "lint": "eslint scripts",
     "test": "jest",
     "watch": "webpack --watch"
   },
@@ -27,9 +28,10 @@
     "@typescript-eslint/parser": "^8.0.0",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.0",
-    "eslint": "^8.46.0",
+    "eslint": "^9.8.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-jest": "^28.7.0",
+    "globals": "^15.9.0",
     "jest": "^29.7.0",
     "mini-css-extract-plugin": "^2.9.0",
     "moment": "^2.30.1",
@@ -45,83 +47,6 @@
     "webpack-cli": "^5.1.4",
     "webpack-remove-empty-scripts": "^1.0.4"
   },
-  "eslintConfig": {
-    "env": {
-      "browser": true,
-      "es6": true,
-      "jest/globals": true,
-      "node": true
-    },
-    "extends": [
-      "prettier"
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "project": "./tsconfig.json",
-      "sourceType": "module"
-    },
-    "plugins": [
-      "@stylistic",
-      "@typescript-eslint",
-      "jest"
-    ],
-    "rules": {
-      "@stylistic/indent": "error",
-      "@stylistic/member-delimiter-style": "error",
-      "@stylistic/quotes": [
-        "error",
-        "single"
-      ],
-      "@stylistic/semi": [
-        "error",
-        "always"
-      ],
-      "@stylistic/type-annotation-spacing": "error",
-      "@typescript-eslint/naming-convention": "error",
-      "@typescript-eslint/prefer-namespace-keyword": "error",
-      "brace-style": [
-        "error",
-        "1tbs"
-      ],
-      "eqeqeq": [
-        "error",
-        "smart"
-      ],
-      "id-blacklist": [
-        "error",
-        "any",
-        "Number",
-        "number",
-        "String",
-        "string",
-        "Boolean",
-        "boolean",
-        "Undefined",
-        "undefined"
-      ],
-      "id-match": "error",
-      "no-eval": "error",
-      "no-redeclare": "error",
-      "no-trailing-spaces": "error",
-      "no-underscore-dangle": "error",
-      "no-var": "error",
-      "spaced-comment": [
-        "error",
-        "always",
-        {
-          "markers": [
-            "/"
-          ]
-        }
-      ]
-    }
-  },
-  "eslintIgnore": [
-    "bin/",
-    "node_modules/",
-    "obj/",
-    "wwwroot/"
-  ],
   "jest": {
     "clearMocks": true,
     "collectCoverage": true,
