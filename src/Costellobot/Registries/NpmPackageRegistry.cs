@@ -72,7 +72,5 @@ public sealed partial class NpmPackageRegistry(HttpClient client) : PackageRegis
 
     [ExcludeFromCodeCoverage]
     [JsonSerializable(typeof(Package))]
-    private sealed partial class NpmJsonSerializerContext : JsonSerializerContext
-    {
-    }
+    private sealed partial class NpmJsonSerializerContext : JsonSerializerContext;
 }

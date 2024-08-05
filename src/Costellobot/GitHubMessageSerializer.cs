@@ -136,7 +136,5 @@ public sealed partial class GitHubMessageSerializer
     [ExcludeFromCodeCoverage]
     [JsonSerializable(typeof(GitHubMessage))]
     [JsonSourceGenerationOptions(WriteIndented = false)]
-    private sealed partial class MessagingJsonSerializerContext : JsonSerializerContext
-    {
-    }
+    private sealed partial class MessagingJsonSerializerContext : JsonSerializerContext;
 }
