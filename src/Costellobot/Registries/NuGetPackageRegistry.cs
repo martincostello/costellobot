@@ -181,7 +181,5 @@ public sealed partial class NuGetPackageRegistry(
     [ExcludeFromCodeCoverage]
     [JsonSerializable(typeof(SearchResponse))]
     [JsonSerializable(typeof(ServiceIndex))]
-    private sealed partial class NuGetJsonSerializerContext : JsonSerializerContext
-    {
-    }
+    private sealed partial class NuGetJsonSerializerContext : JsonSerializerContext;
 }

@@ -53,9 +53,7 @@ public sealed partial class PublicHolidayProvider(
 
     [ExcludeFromCodeCoverage]
     [JsonSerializable(typeof(BankHolidays))]
-    private sealed partial class HolidaysJsonSerializerContext : JsonSerializerContext
-    {
-    }
+    private sealed partial class HolidaysJsonSerializerContext : JsonSerializerContext;
 
     private sealed class BankHolidays
     {
