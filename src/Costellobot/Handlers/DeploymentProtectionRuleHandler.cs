@@ -91,7 +91,7 @@ public sealed partial class DeploymentProtectionRuleHandler(
     private static ResiliencePipeline CreateResiliencePipeline()
     {
         return new ResiliencePipelineBuilder()
-            .AddRetry(new() { Delay = TimeSpan.FromSeconds(1) })
+            .AddRetry(new() { Delay = TimeSpan.FromSeconds(2) })
             .Build();
     }
 

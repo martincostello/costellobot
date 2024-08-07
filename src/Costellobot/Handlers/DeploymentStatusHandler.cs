@@ -108,7 +108,7 @@ public sealed partial class DeploymentStatusHandler(
         return new ResiliencePipelineBuilder()
             .AddRetry(new()
             {
-                Delay = TimeSpan.FromSeconds(1),
+                Delay = TimeSpan.FromSeconds(2),
                 ShouldHandle = new PredicateBuilder().Handle<ApiValidationException>(),
             })
             .Build();
