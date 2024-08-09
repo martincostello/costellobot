@@ -4,7 +4,7 @@
     <IsTestProject>true</IsTestProject>
     <NoWarn>$(NoWarn);CA1054;CA1308;CA1707;CA1711;CA1812;CA1861;CA2007;CA2234;SA1600</NoWarn>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
