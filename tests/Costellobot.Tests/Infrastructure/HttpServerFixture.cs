@@ -62,7 +62,7 @@ public sealed class HttpServerFixture : AppFixture
 
         builder.ConfigureKestrel(
             (serverOptions) => serverOptions.ConfigureHttpsDefaults(
-                (httpsOptions) => httpsOptions.ServerCertificate = new X509Certificate2("localhost-dev.pfx", "Pa55w0rd!")));
+                (httpsOptions) => httpsOptions.ServerCertificate = X509CertificateLoader.LoadPkcs12FromFile("localhost-dev.pfx", "Pa55w0rd!")));
 
         builder.UseUrls("https://127.0.0.1:0");
     }
