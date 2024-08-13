@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Benchmarks for Costellobot.</Description>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>MartinCostello.Costellobot.Benchmarks</RootNamespace>
+    <Summary>$(Description)</Summary>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\tests\Costellobot.Tests\Infrastructure\InMemoryServiceBusClient.cs" Link="InMemoryServiceBusClient.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Costellobot\Costellobot.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+</Project>
