@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Costellobot.Benchmarks": {
+      "commandName": "Project",
+      "commandLineArgs": ""
+    }
+  }
+}
