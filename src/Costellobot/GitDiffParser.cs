@@ -107,6 +107,7 @@ public static class GitDiffParser
 
     private static List<(DiffLineType Type, string Package, NuGetVersion Version)> GetEdits(string diff)
     {
+        // See https://stackoverflow.com/a/2530012/1064169
         using var reader = new StringReader(diff);
         string? line;
 
