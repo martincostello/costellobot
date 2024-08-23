@@ -57,7 +57,7 @@ public static class GitDiffParserTests
     {
         var type = typeof(GitDiffParserTests);
         var assembly = type.Assembly;
-        var resource = assembly.GetManifestResourceStream($"{type.Namespace}.GitDiffParserTests.{name}.diff")!;
+        var resource = assembly.GetManifestResourceStream($"{type.FullName}.{name}.diff")!;
         using var reader = new StreamReader(resource);
         return reader.ReadToEnd();
     }
