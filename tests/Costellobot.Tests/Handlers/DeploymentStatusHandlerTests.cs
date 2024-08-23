@@ -859,5 +859,12 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             .Responds()
             .WithJsonContent(pullRequest)
             .RegisterWith(Fixture.Interceptor);
+
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{pullRequest.Repository.Owner.Login}/{pullRequest.Repository.Name}/pulls/{pullRequest.Number}.diff")
+            .Responds()
+            .WithContent(string.Empty)
+            .RegisterWith(Fixture.Interceptor);
     }
 }

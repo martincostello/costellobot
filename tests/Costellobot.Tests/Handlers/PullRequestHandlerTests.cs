@@ -25,7 +25,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
             .WithCommitMessage(TrustedCommitMessage());
 
         RegisterGetAccessToken();
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
 
         var pullRequestApproved = RegisterReview(driver);
 
@@ -49,7 +49,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
             .WithCommitMessage(TrustedCommitMessage("Newtonsoft.Json", "13.0.1"));
 
         RegisterGetAccessToken();
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
 
         var pullRequestApproved = RegisterReview(driver);
 
@@ -87,7 +87,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         driver.Repository.AllowSquashMerge = allowSquashMerge;
 
         RegisterGetAccessToken();
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
         RegisterReview(driver);
 
         var automergeEnabled = RegisterEnableAutomerge(driver, (p, tcs) => p.WithInterceptionCallback(async (request) =>
@@ -143,7 +143,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
 
         RegisterGetAccessToken();
         RegisterCollaborator(driver, driver.Sender.Login, isCollaborator: true);
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
         RegisterReview(driver);
 
         var pullRequestApproved = RegisterReview(driver);
@@ -180,7 +180,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
 
         RegisterGetAccessToken();
         RegisterCollaborator(driver, driver.Sender.Login, isCollaborator: true);
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
         RegisterReview(driver);
 
         var pullRequestMerged = RegisterPutPullRequestMerge(driver, mergeable: true);
@@ -237,7 +237,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
             .WithCommitMessage(TrustedCommitMessage());
 
         RegisterGetAccessToken();
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
         RegisterReview(driver);
 
         var automergeEnabled = RegisterEnableAutomerge(driver, (p, tcs) =>
@@ -266,7 +266,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
             .WithCommitMessage(UntrustedCommitMessage());
 
         RegisterGetAccessToken();
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
 
         var pullRequestApproved = RegisterReview(driver);
 
@@ -289,7 +289,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
             .WithCommitMessage(TrustedCommitMessage());
 
         RegisterGetAccessToken();
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
 
         var pullRequestApproved = RegisterReview(driver);
 
@@ -312,7 +312,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
             .WithCommitMessage("Fix a typo");
 
         RegisterGetAccessToken();
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
 
         var pullRequestApproved = RegisterReview(driver);
 
@@ -350,7 +350,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
             .WithCommitMessage(TrustedCommitMessage());
 
         RegisterGetAccessToken();
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
 
         var pullRequestApproved = RegisterReview(driver);
 
@@ -375,7 +375,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         driver.PullRequest.IsDraft = true;
 
         RegisterGetAccessToken();
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
 
         var pullRequestApproved = RegisterReview(driver);
 
@@ -401,7 +401,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         driver.Repository.Owner.Login = "ignored-org";
 
         RegisterGetAccessToken();
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
 
         var pullRequestApproved = RegisterReview(driver);
 
@@ -432,7 +432,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
 
         RegisterGetAccessToken();
         RegisterCollaborator(driver, driver.Sender.Login, isCollaborator: false);
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
         RegisterReview(driver);
 
         var pullRequestApproved = RegisterReview(driver);
@@ -464,7 +464,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
 
         RegisterGetAccessToken();
         RegisterCollaborator(driver, driver.Sender.Login, isCollaborator: true);
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
         RegisterReview(driver);
 
         var pullRequestApproved = RegisterReview(driver);
@@ -497,7 +497,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
 
         RegisterGetAccessToken();
         RegisterCollaborator(driver, driver.Sender.Login, isCollaborator: true);
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
         RegisterReview(driver);
 
         var pullRequestApproved = RegisterReview(driver);
@@ -529,7 +529,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
 
         RegisterGetAccessToken();
         RegisterCollaborator(driver, driver.Sender.Login, isCollaborator: true);
-        RegisterCommit(driver);
+        RegisterCommitAndDiff(driver);
         RegisterReview(driver);
 
         var pullRequestMerged = RegisterPutPullRequestMerge(driver, mergeable: false);
@@ -606,13 +606,20 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
             .RegisterWith(Fixture.Interceptor);
     }
 
-    private void RegisterCommit(PullRequestDriver driver)
+    private void RegisterCommitAndDiff(PullRequestDriver driver)
     {
         CreateDefaultBuilder()
             .Requests()
             .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/commits/{driver.Commit.Sha}")
             .Responds()
             .WithJsonContent(driver.Commit)
+            .RegisterWith(Fixture.Interceptor);
+
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/pulls/{driver.PullRequest.Number}.diff")
+            .Responds()
+            .WithContent(string.Empty)
             .RegisterWith(Fixture.Interceptor);
     }
 

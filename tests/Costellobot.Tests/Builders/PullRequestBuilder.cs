@@ -59,6 +59,7 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
                 @ref = RefHead,
                 sha = ShaHead,
             },
+            diff_url = $"https://api.github.com/repos/{Repository.Owner.Login}/{Repository.Name}/pulls/{Number}.diff",
             html_url = $"https://github.com/{Repository.Owner.Login}/{Repository.Name}/pull/{Number}",
             labels = Labels.Build(),
             mergeable = IsMergeable,

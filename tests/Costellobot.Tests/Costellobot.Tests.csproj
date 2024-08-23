@@ -25,6 +25,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Bundles\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="GitDiffParserTests.*.diff" />
     <None Update="costellobot-tests.pem" CopyToOutputDirectory="PreserveNewest" />
     <None Update="localhost-dev.pfx" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

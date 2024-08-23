@@ -256,7 +256,7 @@ public sealed partial class DeploymentStatusHandler(
         }
     }
 
-    private async Task<string?> GetRefForCommitFromPullRequestAsync(
+    private async Task<(string? Ref, string? Diff)> GetRefAndDiffForCommitFromPullRequestAsync(
         RepositoryId repository,
         string sha)
     {
@@ -275,10 +275,25 @@ public sealed partial class DeploymentStatusHandler(
                 reference,
                 new IssueId(repository, pullRequest.Number));
 
-            return reference;
+            var diff = await GetDiffAsync(pullRequest.DiffUrl);
+
+            return (reference, diff);
         }
 
-        return null;
+        return default;
+    }
+
+    private async Task<string?> GetDiffAsync(string diffUrl)
+    {
+        try
+        {
+            return await client.GetDiffAsync(diffUrl);
+        }
+        catch (Exception ex)
+        {
+            Log.GetDiffFailed(logger, ex, diffUrl);
+            return null;
+        }
     }
 
     private async Task<bool> CanDeployChangesAsync(
@@ -320,14 +335,15 @@ public sealed partial class DeploymentStatusHandler(
                 return false;
             }
 
-            string? reference = await GetRefForCommitFromPullRequestAsync(
+            (string? reference, string? diff) = await GetRefAndDiffForCommitFromPullRequestAsync(
                 repository,
                 commit.Sha);
 
             bool isTrustedCommit = await commitAnalyzer.IsTrustedDependencyUpdateAsync(
                 repository,
                 reference,
-                commit);
+                commit,
+                diff);
 
             if (!isTrustedCommit)
             {
@@ -497,5 +513,14 @@ public sealed partial class DeploymentStatusHandler(
             ILogger logger,
             long deploymentStatusId,
             RepositoryId repository);
+
+        [LoggerMessage(
+           EventId = 17,
+           Level = LogLevel.Warning,
+           Message = "Failed to get Git diff from URL {GitDiffUrl}.")]
+        public static partial void GetDiffFailed(
+            ILogger logger,
+            Exception exception,
+            string gitDiffUrl);
     }
 }

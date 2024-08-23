@@ -1,0 +1,208 @@
+diff --git a/.vscode/launch.json b/.vscode/launch.json
+index 154f9ac8..617e9d71 100644
+--- a/.vscode/launch.json
++++ b/.vscode/launch.json
+@@ -6,7 +6,7 @@
+       "type": "coreclr",
+       "request": "launch",
+       "preLaunchTask": "build",
+-      "program": "${workspaceFolder}/src/TodoApp/bin/Debug/net8.0/TodoApp.dll",
++      "program": "${workspaceFolder}/src/TodoApp/bin/Debug/net9.0/TodoApp.dll",
+       "args": [],
+       "cwd": "${workspaceFolder}/src/TodoApp",
+       "stopAtEntry": false,
+diff --git a/.vsconfig b/.vsconfig
+index e47eff05..694c29fc 100644
+--- a/.vsconfig
++++ b/.vsconfig
+@@ -3,7 +3,7 @@
+   "components": [
+     "Microsoft.VisualStudio.Component.CoreEditor",
+     "Microsoft.VisualStudio.Workload.CoreEditor",
+-    "Microsoft.NetCore.Component.Runtime.8.0",
++    "Microsoft.NetCore.Component.Runtime.9.0",
+     "Microsoft.NetCore.Component.SDK",
+     "Microsoft.VisualStudio.Component.Roslyn.Compiler",
+     "Microsoft.VisualStudio.Component.Roslyn.LanguageServices",
+diff --git a/Directory.Build.props b/Directory.Build.props
+index 2dc78d8b..868a8118 100644
+--- a/Directory.Build.props
++++ b/Directory.Build.props
+@@ -8,7 +8,7 @@
+     <EnableNETAnalyzers>true</EnableNETAnalyzers>
+     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+     <ImplicitUsings>enable</ImplicitUsings>
+-    <LangVersion>latest</LangVersion>
++    <LangVersion>preview</LangVersion>
+     <NeutralLanguage>en-US</NeutralLanguage>
+     <Nullable>enable</Nullable>
+     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+diff --git a/README.md b/README.md
+index dd237688..7886a241 100644
+--- a/README.md
++++ b/README.md
+@@ -77,7 +77,7 @@ with [User Secrets] instead.
+ 
+ Compiling the application yourself requires Git and the
+ [.NET SDK](https://www.microsoft.com/net/download/core "Download the .NET SDK")
+-to be installed (version `8.0.100` or later).
++to be installed (version `9.0.100` or later).
+ 
+ To build and test the application locally from a terminal/command-line, run the
+ following set of commands:
+diff --git a/TodoApp.ruleset b/TodoApp.ruleset
+index 26de3827..f87cb2fb 100644
+--- a/TodoApp.ruleset
++++ b/TodoApp.ruleset
+@@ -10,6 +10,7 @@
+     <Rule Id="CA1056" Action="None" />
+     <Rule Id="CA1062" Action="None" />
+     <Rule Id="CA1303" Action="None" />
++    <Rule Id="CA1515" Action="None" />
+     <Rule Id="CA1707" Action="None" />
+     <Rule Id="CA1711" Action="None" />
+     <Rule Id="CA1720" Action="None" />
+diff --git a/build.ps1 b/build.ps1
+index 3ed0048b..7f678744 100755
+--- a/build.ps1
++++ b/build.ps1
+@@ -12,10 +12,6 @@ param(
+ $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true"
+ $env:NUGET_XMLDOC_MODE = "skip"
+ 
+-if ($null -eq $env:MSBUILDTERMINALLOGGER) {
+-    $env:MSBUILDTERMINALLOGGER = "auto"
+-}
+-
+ $Configuration = "Release"
+ $ErrorActionPreference = "Stop"
+ $ProgressPreference = "SilentlyContinue"
+diff --git a/global.json b/global.json
+index 4b4a4454..0ddd1707 100644
+--- a/global.json
++++ b/global.json
+@@ -1,6 +1,6 @@
+ {
+   "sdk": {
+-    "version": "8.0.401",
++    "version": "9.0.100-preview.7.24407.12",
+     "allowPrerelease": false,
+     "rollForward": "latestMajor"
+   }
+diff --git a/src/TodoApp/Program.cs b/src/TodoApp/Program.cs
+index 355b7b72..829502cf 100644
+--- a/src/TodoApp/Program.cs
++++ b/src/TodoApp/Program.cs
+@@ -17,11 +17,14 @@
+ builder.Services.AddRazorPages();
+ 
+ // Configure OpenAPI documentation for the Todo API
+-builder.Services.AddEndpointsApiExplorer();
+-builder.Services.AddOpenApiDocument(options =>
++builder.Services.AddOpenApi(options =>
+ {
+-    options.Title = "Todo API";
+-    options.Version = "v1";
++    options.AddDocumentTransformer((document, _, _) =>
++    {
++        document.Info.Title = "Todo API";
++        document.Info.Version = "v1";
++        return Task.CompletedTask;
++    });
+ });
+ 
+ if (string.Equals(builder.Configuration["CODESPACES"], "true", StringComparison.OrdinalIgnoreCase))
+@@ -57,7 +60,7 @@
+ app.UseAuthorization();
+ 
+ // Add endpoint for OpenAPI
+-app.UseOpenApi();
++app.MapOpenApi();
+ 
+ // Add the HTTP endpoints
+ app.MapAuthenticationRoutes();
+diff --git a/src/TodoApp/TodoApp.csproj b/src/TodoApp/TodoApp.csproj
+index d4f34365..54a63c47 100644
+--- a/src/TodoApp/TodoApp.csproj
++++ b/src/TodoApp/TodoApp.csproj
+@@ -4,16 +4,16 @@
+     <IsPackable>false</IsPackable>
+     <NoWarn>$(NoWarn);CA1050</NoWarn>
+     <RootNamespace>TodoApp</RootNamespace>
+-    <TargetFramework>net8.0</TargetFramework>
++    <TargetFramework>net9.0</TargetFramework>
+     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+     <TypeScriptToolsVersion>latest</TypeScriptToolsVersion>
+     <UserSecretsId>TodoApp</UserSecretsId>
+   </PropertyGroup>
+   <ItemGroup>
+     <PackageReference Include="AspNet.Security.OAuth.GitHub" Version="8.1.0" />
+-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.8" />
++    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0-preview.7.24406.2" />
++    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0-preview.7.24405.3" />
+     <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.5.3" PrivateAssets="all" />
+-    <PackageReference Include="NSwag.AspNetCore" Version="14.1.0" />
+   </ItemGroup>
+   <ItemGroup>
+     <Content Update="package.json;package-lock.json;tsconfig.json" CopyToPublishDirectory="Never" />
+diff --git a/src/TodoApp/wwwroot/swagger-ui/index.html b/src/TodoApp/wwwroot/swagger-ui/index.html
+index eac16920..65b67a7c 100644
+--- a/src/TodoApp/wwwroot/swagger-ui/index.html
++++ b/src/TodoApp/wwwroot/swagger-ui/index.html
+@@ -32,7 +32,7 @@
+     <script>
+         window.onload = function () {
+             window.ui = SwaggerUIBundle({
+-                url: "/swagger/v1/swagger.json",
++                url: "/openapi/v1.json",
+                 dom_id: '#swagger-ui',
+                 deepLinking: true,
+                 presets: [
+diff --git a/startvscode.cmd b/startvscode.cmd
+index abec237b..45ea8f6d 100644
+--- a/startvscode.cmd
++++ b/startvscode.cmd
+@@ -11,7 +11,7 @@ SET DOTNET_ROOT(x86)=%~dp0.dotnetcli\x86
+ SET PATH=%DOTNET_ROOT%;%PATH%
+ 
+ :: Sets the Target Framework for Visual Studio Code.
+-SET TARGET=net8.0
++SET TARGET=net9.0
+ 
+ SET FOLDER=%~1
+ 
+diff --git a/tests/TodoApp.Tests/HttpServerFixture.cs b/tests/TodoApp.Tests/HttpServerFixture.cs
+index 1f9966ef..7abb6f41 100644
+--- a/tests/TodoApp.Tests/HttpServerFixture.cs
++++ b/tests/TodoApp.Tests/HttpServerFixture.cs
+@@ -44,7 +44,7 @@ protected override void ConfigureWebHost(IWebHostBuilder builder)
+         // Configure a self-signed TLS certificate for HTTPS
+         builder.ConfigureKestrel(
+             serverOptions => serverOptions.ConfigureHttpsDefaults(
+-                httpsOptions => httpsOptions.ServerCertificate = new X509Certificate2("localhost-dev.pfx", "Pa55w0rd!")));
++                httpsOptions => httpsOptions.ServerCertificate = X509CertificateLoader.LoadPkcs12FromFile("localhost-dev.pfx", "Pa55w0rd!")));
+ 
+         // Configure the server address for the server to
+         // listen on for HTTPS requests on a dynamic port.
+diff --git a/tests/TodoApp.Tests/TodoApp.Tests.csproj b/tests/TodoApp.Tests/TodoApp.Tests.csproj
+index 28faf134..05ea1420 100644
+--- a/tests/TodoApp.Tests/TodoApp.Tests.csproj
++++ b/tests/TodoApp.Tests/TodoApp.Tests.csproj
+@@ -3,7 +3,7 @@
+     <IsPackable>false</IsPackable>
+     <NoWarn>$(NoWarn);CA1861</NoWarn>
+     <RootNamespace>TodoApp</RootNamespace>
+-    <TargetFramework>net8.0</TargetFramework>
++    <TargetFramework>net9.0</TargetFramework>
+   </PropertyGroup>
+   <ItemGroup>
+     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+@@ -11,7 +11,7 @@
+     <PackageReference Include="GitHubActionsTestLogger" Version="2.4.1" />
+     <PackageReference Include="JustEat.HttpClientInterception" Version="4.3.0" />
+     <PackageReference Include="MartinCostello.Logging.XUnit" Version="0.4.0" />
+-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.8" />
++    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0-preview.7.24406.2" />
+     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
+     <PackageReference Include="Microsoft.Playwright" Version="1.46.0" />
+     <PackageReference Include="ReportGenerator" Version="5.3.8" />

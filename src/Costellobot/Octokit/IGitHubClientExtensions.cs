@@ -8,6 +8,13 @@ public static class IGitHubClientExtensions
     public static IWorkflowRunsClient WorkflowRuns(this IGitHubClient client)
         => new WorkflowRunsClient(new ApiConnection(client.Connection));
 
+    public static async Task<string> GetDiffAsync(this IGitHubClient client, string url)
+    {
+        var parameters = new Dictionary<string, string>(0);
+        var response = await client.Connection.Get<string>(new(url, UriKind.Absolute), parameters);
+        return response.Body;
+    }
+
     public static async Task RepositoryDispatchAsync(this IGitHubClient client, string owner, string name, object body)
     {
         // See https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-dispatch-event
