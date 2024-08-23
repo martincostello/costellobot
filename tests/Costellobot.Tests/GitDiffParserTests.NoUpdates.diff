@@ -1,0 +1,967 @@
+diff --git a/.github/workflows/benchmark.yml b/.github/workflows/benchmark.yml
+new file mode 100644
+index 000000000..2fd462c33
+--- /dev/null
++++ b/.github/workflows/benchmark.yml
+@@ -0,0 +1,70 @@
++name: benchmark
++
++env:
++  DOTNET_CLI_TELEMETRY_OPTOUT: true
++  DOTNET_NOLOGO: true
++  DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTION: 1
++  NUGET_XMLDOC_MODE: skip
++  TERM: xterm
++
++on:
++  push:
++    branches: [ main ]
++    paths-ignore:
++      - '**/*.gitattributes'
++      - '**/*.gitignore'
++      - '**/*.md'
++  workflow_dispatch:
++
++permissions:
++  contents: read
++
++jobs:
++  benchmark:
++    name: benchmark
++    runs-on: ubuntu-latest
++
++    concurrency:
++      group: ${{ github.workflow }}
++      cancel-in-progress: false
++
++    steps:
++
++    - name: Checkout code
++      uses: actions/checkout@v4
++
++    - name: Setup .NET SDK
++      uses: actions/setup-dotnet@v4
++
++    - name: Setup Node
++      uses: actions/setup-node@v4
++      with:
++        node-version: '20'
++
++    - name: Run benchmarks
++      shell: pwsh
++      run: ./benchmark.ps1
++
++    - name: Publish results
++      uses: benchmark-action/github-action-benchmark@v1
++      with:
++        auto-push: true
++        alert-comment-cc-users: '@${{ github.repository_owner }}'
++        benchmark-data-dir-path: 'website'
++        comment-on-alert: true
++        fail-on-alert: true
++        gh-pages-branch: main
++        gh-repository: 'github.com/${{ github.repository_owner }}/benchmarks'
++        github-token: ${{ secrets.BENCHMARKS_TOKEN }}
++        name: API
++        output-file-path: BenchmarkDotNet.Artifacts/results/MartinCostello.Website.Benchmarks.WebsiteBenchmarks-report-full-compressed.json
++        tool: 'benchmarkdotnet'
++
++    - name: Output summary
++      shell: pwsh
++      run: |
++        $repoName = ${env:GITHUB_REPOSITORY}.Split("/")[-1]
++        $summary = Get-Content -Path (Join-Path ${env:GITHUB_WORKSPACE} "BenchmarkDotNet.Artifacts" "results" "MartinCostello.Website.Benchmarks.WebsiteBenchmarks-report-github.md") -Raw
++        $summary += "`n`n"
++        $summary += "View benchmark results history [here](https://benchmarks.martincostello.com/${repoName})."
++        $summary >> ${env:GITHUB_STEP_SUMMARY}
+diff --git a/.gitignore b/.gitignore
+index 8a0f6c99a..970127d63 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -9,6 +9,7 @@ _reports
+ _UpgradeReport_Files/
+ artifacts/
+ Backup*/
++BenchmarkDotNet.Artifacts/
+ bin
+ Bin
+ BuildOutput
+diff --git a/Directory.Packages.props b/Directory.Packages.props
+index d42c772d9..1a76f4bb9 100644
+--- a/Directory.Packages.props
++++ b/Directory.Packages.props
+@@ -5,6 +5,7 @@
+   </ItemGroup>
+   <ItemGroup>
+     <PackageVersion Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.3.0" />
++    <PackageVersion Include="BenchmarkDotNet" Version="0.14.0" />
+     <PackageVersion Include="coverlet.msbuild" Version="6.0.2" />
+     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
+     <PackageVersion Include="MartinCostello.Logging.XUnit" Version="0.4.0" />
+diff --git a/Website.sln b/Website.sln
+index 6d2e45b35..7d62b3f90 100644
+--- a/Website.sln
++++ b/Website.sln
+@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution
+ 		.gitattributes = .gitattributes
+ 		.gitignore = .gitignore
+ 		.vsconfig = .vsconfig
++		benchmark.ps1 = benchmark.ps1
+ 		build.ps1 = build.ps1
+ 		Directory.Build.props = Directory.Build.props
+ 		Directory.Build.targets = Directory.Build.targets
+@@ -38,8 +39,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{FBD3
+ EndProject
+ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{5B31CD2E-3F11-4609-88E8-117EF1389235}"
+ 	ProjectSection(SolutionItems) = preProject
++		.github\workflows\benchmark.yml = .github\workflows\benchmark.yml
+ 		.github\workflows\build.yml = .github\workflows\build.yml
+ 		.github\workflows\codeql-analysis.yml = .github\workflows\codeql-analysis.yml
++		.github\workflows\container-scan.yml = .github\workflows\container-scan.yml
+ 		.github\workflows\dependency-review.yml = .github\workflows\dependency-review.yml
+ 		.github\workflows\deploy.yml = .github\workflows\deploy.yml
+ 		.github\workflows\lighthouse.yml = .github\workflows\lighthouse.yml
+@@ -57,6 +60,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".vscode", ".vscode", "{DF79
+ 		.vscode\tasks.json = .vscode\tasks.json
+ 	EndProjectSection
+ EndProject
++Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "perf", "perf", "{A1F57AE9-C5B7-4503-8095-2C9376BAF873}"
++EndProject
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Website.Benchmarks", "perf\Website.Benchmarks\Website.Benchmarks.csproj", "{3548588A-27A1-47A7-BFB2-8D67D18EB81A}"
++EndProject
+ Global
+ 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+ 		Debug|Any CPU = Debug|Any CPU
+@@ -79,6 +86,10 @@ Global
+ 		{26DB8EDD-BC86-428F-86A9-1C55711ABD0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+ 		{26DB8EDD-BC86-428F-86A9-1C55711ABD0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+ 		{26DB8EDD-BC86-428F-86A9-1C55711ABD0F}.Release|Any CPU.Build.0 = Release|Any CPU
++		{3548588A-27A1-47A7-BFB2-8D67D18EB81A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{3548588A-27A1-47A7-BFB2-8D67D18EB81A}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{3548588A-27A1-47A7-BFB2-8D67D18EB81A}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{3548588A-27A1-47A7-BFB2-8D67D18EB81A}.Release|Any CPU.Build.0 = Release|Any CPU
+ 	EndGlobalSection
+ 	GlobalSection(SolutionProperties) = preSolution
+ 		HideSolutionNode = FALSE
+@@ -91,6 +102,7 @@ Global
+ 		{E1197F63-A671-4484-B5BE-36C3561F4CBF} = {668E07A5-C40F-4694-9D3C-EBC1180656CF}
+ 		{26DB8EDD-BC86-428F-86A9-1C55711ABD0F} = {668E07A5-C40F-4694-9D3C-EBC1180656CF}
+ 		{DF799E65-EEEC-47DA-90E1-47A2965F132F} = {DD7EA67A-4FE1-4D4F-825E-51FF842107AB}
++		{3548588A-27A1-47A7-BFB2-8D67D18EB81A} = {A1F57AE9-C5B7-4503-8095-2C9376BAF873}
+ 	EndGlobalSection
+ 	GlobalSection(ExtensibilityGlobals) = postSolution
+ 		SolutionGuid = {15DDCA85-B2C3-4172-8203-DB0967289CA4}
+diff --git a/benchmark.ps1 b/benchmark.ps1
+new file mode 100644
+index 000000000..a65623c42
+--- /dev/null
++++ b/benchmark.ps1
+@@ -0,0 +1,88 @@
++#! /usr/bin/env pwsh
++
++#Requires -PSEdition Core
++#Requires -Version 7
++
++param(
++    [Parameter(Mandatory = $false)][string] $Filter = "",
++    [Parameter(Mandatory = $false)][string] $Job = ""
++)
++
++$ErrorActionPreference = "Stop"
++$ProgressPreference = "SilentlyContinue"
++
++if ($null -eq ${env:MSBUILDTERMINALLOGGER}) {
++    ${env:MSBUILDTERMINALLOGGER} = "auto"
++}
++
++$solutionPath = $PSScriptRoot
++$sdkFile = Join-Path $solutionPath "global.json"
++
++$dotnetVersion = (Get-Content $sdkFile | Out-String | ConvertFrom-Json).sdk.version
++
++$installDotNetSdk = $false
++
++if (($null -eq (Get-Command "dotnet" -ErrorAction SilentlyContinue)) -and ($null -eq (Get-Command "dotnet.exe" -ErrorAction SilentlyContinue))) {
++    Write-Host "The .NET SDK is not installed."
++    $installDotNetSdk = $true
++}
++else {
++    Try {
++        $installedDotNetVersion = (dotnet --version 2>&1 | Out-String).Trim()
++    }
++    Catch {
++        $installedDotNetVersion = "?"
++    }
++
++    if ($installedDotNetVersion -ne $dotnetVersion) {
++        Write-Host "The required version of the .NET SDK is not installed. Expected $dotnetVersion."
++        $installDotNetSdk = $true
++    }
++}
++
++if ($installDotNetSdk -eq $true) {
++    ${env:DOTNET_INSTALL_DIR} = Join-Path $PSScriptRoot ".dotnet"
++    $sdkPath = Join-Path ${env:DOTNET_INSTALL_DIR} "sdk" $dotnetVersion
++
++    if (!(Test-Path $sdkPath)) {
++        if (!(Test-Path ${env:DOTNET_INSTALL_DIR})) {
++            mkdir ${env:DOTNET_INSTALL_DIR} | Out-Null
++        }
++        $installScript = Join-Path ${env:DOTNET_INSTALL_DIR} "install.ps1"
++        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor "Tls12"
++        Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile $installScript -UseBasicParsing
++        & $installScript -JsonFile $sdkFile -InstallDir ${env:DOTNET_INSTALL_DIR} -NoPath
++    }
++
++    ${env:PATH} = "${env:DOTNET_INSTALL_DIR};${env:PATH}"
++    $dotnet = Join-Path ${env:DOTNET_INSTALL_DIR} "dotnet"
++}
++else {
++    $dotnet = "dotnet"
++}
++
++$benchmarks = (Join-Path $solutionPath "perf" "Website.Benchmarks" "Website.Benchmarks.csproj")
++
++Write-Host "Running benchmarks..." -ForegroundColor Green
++
++$additionalArgs = @(
++    "--artifacts",
++    (Join-Path $solutionPath "BenchmarkDotNet.Artifacts")
++)
++
++if (-Not [string]::IsNullOrEmpty($Filter)) {
++    $additionalArgs += "--filter"
++    $additionalArgs += $Filter
++}
++
++if (-Not [string]::IsNullOrEmpty($Job)) {
++    $additionalArgs += "--job"
++    $additionalArgs += $Job
++}
++
++if (-Not [string]::IsNullOrEmpty(${env:GITHUB_SHA})) {
++    $additionalArgs += "--exporters"
++    $additionalArgs += "json"
++}
++
++& $dotnet run --project $benchmarks --configuration "Release" -- $additionalArgs
+diff --git a/perf/Website.Benchmarks/Program.cs b/perf/Website.Benchmarks/Program.cs
+new file mode 100644
+index 000000000..3a4e382ff
+--- /dev/null
++++ b/perf/Website.Benchmarks/Program.cs
+@@ -0,0 +1,25 @@
++// Copyright (c) Martin Costello, 2016. All rights reserved.
++// Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
++
++using BenchmarkDotNet.Running;
++using MartinCostello.Website.Benchmarks;
++
++if (args.SequenceEqual(["--test"]))
++{
++    await using var benchmark = new WebsiteBenchmarks();
++    await benchmark.StartServer();
++
++    try
++    {
++        _ = await benchmark.Root();
++        _ = await benchmark.Version();
++    }
++    finally
++    {
++        await benchmark.StopServer();
++    }
++}
++else
++{
++    BenchmarkRunner.Run<WebsiteBenchmarks>(args: args);
++}
+diff --git a/perf/Website.Benchmarks/Properties/launchSettings.json b/perf/Website.Benchmarks/Properties/launchSettings.json
+new file mode 100644
+index 000000000..db615cf0d
+--- /dev/null
++++ b/perf/Website.Benchmarks/Properties/launchSettings.json
+@@ -0,0 +1,8 @@
++{
++  "profiles": {
++    "Website.Benchmarks": {
++      "commandName": "Project",
++      "commandLineArgs": ""
++    }
++  }
++}
+diff --git a/perf/Website.Benchmarks/Website.Benchmarks.csproj b/perf/Website.Benchmarks/Website.Benchmarks.csproj
+new file mode 100644
+index 000000000..21ba63b65
+--- /dev/null
++++ b/perf/Website.Benchmarks/Website.Benchmarks.csproj
+@@ -0,0 +1,17 @@
++<Project Sdk="Microsoft.NET.Sdk">
++  <PropertyGroup>
++    <Description>Benchmarks for the website.</Description>
++    <NoWarn>$(NoWarn);SA1600</NoWarn>
++    <OutputType>Exe</OutputType>
++    <RootNamespace>MartinCostello.Website.Benchmarks</RootNamespace>
++    <Summary>$(Description)</Summary>
++    <TargetFramework>net8.0</TargetFramework>
++  </PropertyGroup>
++  <ItemGroup>
++    <ProjectReference Include="..\..\src\Website\Website.csproj" />
++  </ItemGroup>
++  <ItemGroup>
++    <FrameworkReference Include="Microsoft.AspNetCore.App" />
++    <PackageReference Include="BenchmarkDotNet" />
++  </ItemGroup>
++</Project>
+diff --git a/perf/Website.Benchmarks/WebsiteBenchmarks.cs b/perf/Website.Benchmarks/WebsiteBenchmarks.cs
+new file mode 100644
+index 000000000..8a73bd541
+--- /dev/null
++++ b/perf/Website.Benchmarks/WebsiteBenchmarks.cs
+@@ -0,0 +1,75 @@
++﻿// Copyright (c) Martin Costello, 2016. All rights reserved.
++// Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
++
++using BenchmarkDotNet.Attributes;
++using BenchmarkDotNet.Diagnosers;
++
++namespace MartinCostello.Website.Benchmarks;
++
++[EventPipeProfiler(EventPipeProfile.CpuSampling)]
++[MemoryDiagnoser]
++public class WebsiteBenchmarks : IAsyncDisposable
++{
++    private WebsiteServer? _app = new();
++    private HttpClient? _client;
++    private bool _disposed;
++
++    [GlobalSetup]
++    public async Task StartServer()
++    {
++        if (_app is { } app)
++        {
++            await app.StartAsync();
++            _client = app.CreateHttpClient();
++        }
++    }
++
++    [GlobalCleanup]
++    public async Task StopServer()
++    {
++        if (_app is { } app)
++        {
++            await app.StopAsync();
++            _app = null;
++        }
++    }
++
++    [Benchmark]
++    public async Task<byte[]> Root()
++        => await _client!.GetByteArrayAsync("/");
++
++    [Benchmark]
++    public async Task<byte[]> About()
++        => await _client!.GetByteArrayAsync("/home/about");
++
++    [Benchmark]
++    public async Task<byte[]> Projects()
++        => await _client!.GetByteArrayAsync("/projects");
++
++    [Benchmark]
++    public async Task<byte[]> Tools()
++        => await _client!.GetByteArrayAsync("/tools");
++
++    [Benchmark]
++    public async Task<byte[]> Version()
++        => await _client!.GetByteArrayAsync("/version");
++
++    public async ValueTask DisposeAsync()
++    {
++        GC.SuppressFinalize(this);
++
++        if (!_disposed)
++        {
++            _client?.Dispose();
++            _client = null;
++
++            if (_app is not null)
++            {
++                await _app.DisposeAsync();
++                _app = null;
++            }
++        }
++
++        _disposed = true;
++    }
++}
+diff --git a/perf/Website.Benchmarks/WebsiteServer.cs b/perf/Website.Benchmarks/WebsiteServer.cs
+new file mode 100644
+index 000000000..5538c773a
+--- /dev/null
++++ b/perf/Website.Benchmarks/WebsiteServer.cs
+@@ -0,0 +1,103 @@
++﻿// Copyright (c) Martin Costello, 2016. All rights reserved.
++// Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
++
++using Microsoft.AspNetCore.Builder;
++using Microsoft.AspNetCore.Hosting;
++using Microsoft.AspNetCore.Hosting.Server;
++using Microsoft.AspNetCore.Hosting.Server.Features;
++using Microsoft.Extensions.DependencyInjection;
++using Microsoft.Extensions.Logging;
++
++namespace MartinCostello.Website.Benchmarks;
++
++internal sealed class WebsiteServer : IAsyncDisposable
++{
++    private WebApplication? _app;
++    private Uri? _baseAddress;
++    private bool _disposed;
++
++    public WebsiteServer()
++    {
++        var builder = WebApplication.CreateBuilder([$"--contentRoot={GetContentRoot()}"]);
++
++        builder.Logging.ClearProviders();
++        builder.WebHost.UseUrls("https://127.0.0.1:0");
++
++        builder.AddWebsite();
++
++        _app = builder.Build();
++        _app.UseWebsite();
++    }
++
++    public HttpClient CreateHttpClient()
++    {
++#pragma warning disable CA2000
++        var handler = new HttpClientHandler()
++        {
++            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
++        };
++#pragma warning restore CA2000
++
++#pragma warning disable CA5400
++        return new(handler, disposeHandler: true) { BaseAddress = _baseAddress };
++#pragma warning restore CA5400
++    }
++
++    public async Task StartAsync()
++    {
++        if (_app is { } app)
++        {
++            await app.StartAsync();
++
++            var server = app.Services.GetRequiredService<IServer>();
++            var addresses = server.Features.Get<IServerAddressesFeature>();
++
++            _baseAddress = addresses!.Addresses
++                .Select((p) => new Uri(p))
++                .Last();
++        }
++    }
++
++    public async Task StopAsync()
++    {
++        if (_app is { } app)
++        {
++            await app.StopAsync();
++            _app = null;
++        }
++    }
++
++    public async ValueTask DisposeAsync()
++    {
++        GC.SuppressFinalize(this);
++
++        if (!_disposed && _app is not null)
++        {
++            await _app.DisposeAsync();
++        }
++
++        _disposed = true;
++    }
++
++    private static string GetContentRoot()
++    {
++        string contentRoot = string.Empty;
++        var directoryInfo = new DirectoryInfo(Path.GetDirectoryName(typeof(WebsiteBenchmarks).Assembly.Location)!);
++
++        do
++        {
++            string? solutionPath = Directory.EnumerateFiles(directoryInfo.FullName, "Website.sln").FirstOrDefault();
++
++            if (solutionPath is not null)
++            {
++                contentRoot = Path.GetFullPath(Path.Combine(directoryInfo.FullName, "src", "Website"));
++                break;
++            }
++
++            directoryInfo = directoryInfo.Parent;
++        }
++        while (directoryInfo is not null);
++
++        return contentRoot;
++    }
++}
+diff --git a/src/Website/Program.cs b/src/Website/Program.cs
+index 460159666..a771f656a 100644
+--- a/src/Website/Program.cs
++++ b/src/Website/Program.cs
+@@ -1,211 +1,14 @@
+ ﻿// Copyright (c) Martin Costello, 2016. All rights reserved.
+ // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
+ 
+-using System.IO.Compression;
+-using System.Reflection;
+-using System.Runtime.CompilerServices;
+-using System.Runtime.InteropServices;
+-using System.Text.Json.Nodes;
+ using MartinCostello.Website;
+-using MartinCostello.Website.Middleware;
+-using MartinCostello.Website.Models;
+-using MartinCostello.Website.Options;
+-using MartinCostello.Website.Slices;
+-using Microsoft.AspNetCore.CookiePolicy;
+-using Microsoft.AspNetCore.ResponseCompression;
+-using Microsoft.AspNetCore.Rewrite;
+-using Microsoft.AspNetCore.StaticFiles;
+ 
+ var builder = WebApplication.CreateBuilder(args);
+ 
+-builder.Services.AddOptions();
+-
+-builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection("Site"));
+-builder.Services.ConfigureHttpJsonOptions((options) =>
+-{
+-    options.SerializerOptions.PropertyNameCaseInsensitive = false;
+-    options.SerializerOptions.WriteIndented = true;
+-    options.SerializerOptions.TypeInfoResolverChain.Add(ApplicationJsonSerializerContext.Default);
+-});
+-
+-builder.Services.Configure<StaticFileOptions>((options) =>
+-{
+-    var provider = new FileExtensionContentTypeProvider();
+-    provider.Mappings[".webmanifest"] = "application/manifest+json";
+-
+-    options.ContentTypeProvider = provider;
+-    options.DefaultContentType = "application/json";
+-    options.ServeUnknownFileTypes = true;
+-
+-    options.OnPrepareResponse = (context) =>
+-    {
+-        var maxAge = TimeSpan.FromDays(7);
+-
+-        if (context.File.Exists && builder.Environment.IsProduction())
+-        {
+-            string? extension = Path.GetExtension(context.File.PhysicalPath);
+-
+-            // These files are served with a content hash in the URL so can be cached for longer
+-            bool isScriptOrStyle =
+-                string.Equals(extension, ".css", StringComparison.OrdinalIgnoreCase) ||
+-                string.Equals(extension, ".js", StringComparison.OrdinalIgnoreCase);
+-
+-            if (isScriptOrStyle)
+-            {
+-                maxAge = TimeSpan.FromDays(365);
+-            }
+-        }
+-
+-        var headers = context.Context.Response.GetTypedHeaders();
+-        headers.CacheControl = new() { MaxAge = maxAge };
+-    };
+-});
+-
+-builder.Services.AddAntiforgery((options) =>
+-{
+-    options.Cookie.HttpOnly = true;
+-    options.Cookie.Name = "_anti-forgery";
+-    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+-    options.FormFieldName = "_anti-forgery";
+-    options.HeaderName = "x-anti-forgery";
+-});
+-
+-builder.Services.AddHttpContextAccessor();
+-
+-builder.Services.AddRouting((options) =>
+-{
+-    options.AppendTrailingSlash = true;
+-    options.LowercaseUrls = true;
+-});
+-
+-if (!builder.Environment.IsDevelopment())
+-{
+-    builder.Services.AddHsts((options) =>
+-    {
+-        options.MaxAge = TimeSpan.FromDays(365);
+-        options.IncludeSubDomains = false;
+-        options.Preload = false;
+-    });
+-}
+-
+-builder.Services.AddResponseCaching();
+-
+-builder.Services.AddTelemetry(builder.Environment);
+-
+-builder.Services.Configure<GzipCompressionProviderOptions>((p) => p.Level = CompressionLevel.Fastest);
+-builder.Services.Configure<BrotliCompressionProviderOptions>((p) => p.Level = CompressionLevel.Fastest);
+-
+-builder.Services.AddResponseCompression((options) =>
+-{
+-    options.EnableForHttps = true;
+-    options.Providers.Add<BrotliCompressionProvider>();
+-    options.Providers.Add<GzipCompressionProvider>();
+-});
+-
+-builder.Logging.AddTelemetry();
+-
+-builder.WebHost.CaptureStartupErrors(true);
+-builder.WebHost.ConfigureKestrel((p) => p.AddServerHeader = false);
++builder.AddWebsite();
+ 
+ var app = builder.Build();
+ 
+-app.UseMiddleware<CustomHttpHeadersMiddleware>();
+-
+-bool isDevelopment = app.Environment.IsDevelopment();
+-
+-if (!isDevelopment)
+-{
+-    app.UseExceptionHandler("/error");
+-}
+-
+-app.UseStatusCodePagesWithReExecute("/error", "?id={0}");
+-
+-if (!app.Environment.IsDevelopment())
+-{
+-    app.UseHsts();
+-
+-    if (!string.Equals(app.Configuration["ForwardedHeaders_Enabled"], bool.TrueString, StringComparison.OrdinalIgnoreCase))
+-    {
+-        app.UseHttpsRedirection();
+-    }
+-}
+-
+-app.UseResponseCompression();
+-
+-app.UseRewriter(new RewriteOptions().AddRedirectToNonWww());
+-
+-app.UseStaticFiles();
+-
+-app.MapRedirects();
+-
+-app.MapGet("/version", static () =>
+-{
+-    return new JsonObject()
+-    {
+-        ["applicationVersion"] = GitMetadata.Version,
+-        ["frameworkDescription"] = RuntimeInformation.FrameworkDescription,
+-        ["operatingSystem"] = new JsonObject()
+-        {
+-            ["description"] = RuntimeInformation.OSDescription,
+-            ["architecture"] = RuntimeInformation.OSArchitecture.ToString(),
+-            ["version"] = Environment.OSVersion.VersionString,
+-            ["is64Bit"] = Environment.Is64BitOperatingSystem,
+-        },
+-        ["process"] = new JsonObject()
+-        {
+-            ["architecture"] = RuntimeInformation.ProcessArchitecture.ToString(),
+-            ["is64BitProcess"] = Environment.Is64BitProcess,
+-            ["isNativeAoT"] = !RuntimeFeature.IsDynamicCodeSupported,
+-            ["isPrivilegedProcess"] = Environment.IsPrivilegedProcess,
+-        },
+-        ["dotnetVersions"] = new JsonObject()
+-        {
+-            ["runtime"] = GetVersion<object>(),
+-            ["aspNetCore"] = GetVersion<HttpContext>(),
+-        },
+-    };
+-
+-    static string GetVersion<T>()
+-        => typeof(T).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+-});
+-
+-// HACK Workaround for https://github.com/dotnet/sdk/issues/40511
+-app.MapGet(".well-known/{fileName}", (string fileName, IWebHostEnvironment environment) =>
+-{
+-    var file = environment.WebRootFileProvider.GetFileInfo(Path.Combine("well-known", fileName));
+-
+-    if (file.Exists && file.PhysicalPath is { Length: > 0 })
+-    {
+-        return Results.File(file.PhysicalPath, contentType: "application/json");
+-    }
+-
+-    return Results.NotFound();
+-});
+-
+-app.UseCookiePolicy(new()
+-{
+-    HttpOnly = HttpOnlyPolicy.Always,
+-    Secure = app.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always,
+-});
+-
+-string[] methods = [HttpMethod.Get.Method, HttpMethod.Head.Method];
+-
+-app.MapMethods("/", methods, () => Results.Extensions.RazorSlice<Home>());
+-app.MapMethods("/home/about", methods, () => Results.Extensions.RazorSlice<About>());
+-app.MapMethods("/projects", methods, () => Results.Extensions.RazorSlice<Projects>());
+-app.MapMethods("/tools", methods, () => Results.Extensions.RazorSlice<Tools>());
+-
+-app.MapMethods("/error", methods, (int? id) =>
+-{
+-    int statusCode = StatusCodes.Status500InternalServerError;
+-
+-    if (id is { } status &&
+-        status >= 400 && status < 599)
+-    {
+-        statusCode = status;
+-    }
+-
+-    return Results.Extensions.RazorSlice<Error>(statusCode);
+-});
++app.UseWebsite();
+ 
+ app.Run();
+diff --git a/src/Website/WebsiteBuilder.cs b/src/Website/WebsiteBuilder.cs
+new file mode 100644
+index 000000000..c5f49e685
+--- /dev/null
++++ b/src/Website/WebsiteBuilder.cs
+@@ -0,0 +1,235 @@
++﻿// Copyright (c) Martin Costello, 2016. All rights reserved.
++// Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
++
++using System.IO.Compression;
++using System.Reflection;
++using System.Runtime.CompilerServices;
++using System.Runtime.InteropServices;
++using System.Text.Json.Nodes;
++using MartinCostello.Website.Middleware;
++using MartinCostello.Website.Options;
++using MartinCostello.Website.Slices;
++using Microsoft.AspNetCore.CookiePolicy;
++using Microsoft.AspNetCore.ResponseCompression;
++using Microsoft.AspNetCore.Rewrite;
++using Microsoft.AspNetCore.StaticFiles;
++
++namespace MartinCostello.Website;
++
++/// <summary>
++/// Extension methods for configuring the website application.
++/// </summary>
++public static class WebsiteBuilder
++{
++    /// <summary>
++    /// Adds website services to the specified <see cref="WebApplicationBuilder"/>.
++    /// </summary>
++    /// <param name="builder">The <see cref="WebApplicationBuilder"/> to configure.</param>
++    /// <returns>
++    /// The value passed by <paramref name="builder"/> for chaining.
++    /// </returns>
++    public static WebApplicationBuilder AddWebsite(this WebApplicationBuilder builder)
++    {
++        builder.Services.AddOptions();
++
++        builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection("Site"));
++        builder.Services.ConfigureHttpJsonOptions((options) =>
++        {
++            options.SerializerOptions.PropertyNameCaseInsensitive = false;
++            options.SerializerOptions.WriteIndented = true;
++            options.SerializerOptions.TypeInfoResolverChain.Add(ApplicationJsonSerializerContext.Default);
++        });
++
++        builder.Services.Configure<StaticFileOptions>((options) =>
++        {
++            var provider = new FileExtensionContentTypeProvider();
++            provider.Mappings[".webmanifest"] = "application/manifest+json";
++
++            options.ContentTypeProvider = provider;
++            options.DefaultContentType = "application/json";
++            options.ServeUnknownFileTypes = true;
++
++            options.OnPrepareResponse = (context) =>
++            {
++                var maxAge = TimeSpan.FromDays(7);
++
++                if (context.File.Exists && builder.Environment.IsProduction())
++                {
++                    string? extension = Path.GetExtension(context.File.PhysicalPath);
++
++                    // These files are served with a content hash in the URL so can be cached for longer
++                    bool isScriptOrStyle =
++                        string.Equals(extension, ".css", StringComparison.OrdinalIgnoreCase) ||
++                        string.Equals(extension, ".js", StringComparison.OrdinalIgnoreCase);
++
++                    if (isScriptOrStyle)
++                    {
++                        maxAge = TimeSpan.FromDays(365);
++                    }
++                }
++
++                var headers = context.Context.Response.GetTypedHeaders();
++                headers.CacheControl = new() { MaxAge = maxAge };
++            };
++        });
++
++        builder.Services.AddAntiforgery((options) =>
++        {
++            options.Cookie.HttpOnly = true;
++            options.Cookie.Name = "_anti-forgery";
++            options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
++            options.FormFieldName = "_anti-forgery";
++            options.HeaderName = "x-anti-forgery";
++        });
++
++        builder.Services.AddHttpContextAccessor();
++
++        builder.Services.AddRouting((options) =>
++        {
++            options.AppendTrailingSlash = true;
++            options.LowercaseUrls = true;
++        });
++
++        if (!builder.Environment.IsDevelopment())
++        {
++            builder.Services.AddHsts((options) =>
++            {
++                options.MaxAge = TimeSpan.FromDays(365);
++                options.IncludeSubDomains = false;
++                options.Preload = false;
++            });
++        }
++
++        builder.Services.AddResponseCaching();
++
++        builder.Services.AddTelemetry(builder.Environment);
++
++        builder.Services.Configure<GzipCompressionProviderOptions>((p) => p.Level = CompressionLevel.Fastest);
++        builder.Services.Configure<BrotliCompressionProviderOptions>((p) => p.Level = CompressionLevel.Fastest);
++
++        builder.Services.AddResponseCompression((options) =>
++        {
++            options.EnableForHttps = true;
++            options.Providers.Add<BrotliCompressionProvider>();
++            options.Providers.Add<GzipCompressionProvider>();
++        });
++
++        builder.Logging.AddTelemetry();
++
++        builder.WebHost.CaptureStartupErrors(true);
++        builder.WebHost.ConfigureKestrel((p) => p.AddServerHeader = false);
++
++        return builder;
++    }
++
++    /// <summary>
++    /// Configures the specified <see cref="WebApplication"/> to use the website.
++    /// </summary>
++    /// <param name="app">The <see cref="WebApplication"/> to configure.</param>
++    /// <returns>
++    /// The value passed by <paramref name="app"/> for chaining.
++    /// </returns>
++    public static WebApplication UseWebsite(this WebApplication app)
++    {
++        app.UseMiddleware<CustomHttpHeadersMiddleware>();
++
++        bool isDevelopment = app.Environment.IsDevelopment();
++
++        if (!isDevelopment)
++        {
++            app.UseExceptionHandler("/error");
++        }
++
++        app.UseStatusCodePagesWithReExecute("/error", "?id={0}");
++
++        if (!app.Environment.IsDevelopment())
++        {
++            app.UseHsts();
++
++            if (!string.Equals(app.Configuration["ForwardedHeaders_Enabled"], bool.TrueString, StringComparison.OrdinalIgnoreCase))
++            {
++                app.UseHttpsRedirection();
++            }
++        }
++
++        app.UseResponseCompression();
++
++        app.UseRewriter(new RewriteOptions().AddRedirectToNonWww());
++
++        app.UseStaticFiles();
++
++        app.MapRedirects();
++
++        app.MapGet("/version", static () =>
++        {
++            return new JsonObject()
++            {
++                ["applicationVersion"] = GitMetadata.Version,
++                ["frameworkDescription"] = RuntimeInformation.FrameworkDescription,
++                ["operatingSystem"] = new JsonObject()
++                {
++                    ["description"] = RuntimeInformation.OSDescription,
++                    ["architecture"] = RuntimeInformation.OSArchitecture.ToString(),
++                    ["version"] = Environment.OSVersion.VersionString,
++                    ["is64Bit"] = Environment.Is64BitOperatingSystem,
++                },
++                ["process"] = new JsonObject()
++                {
++                    ["architecture"] = RuntimeInformation.ProcessArchitecture.ToString(),
++                    ["is64BitProcess"] = Environment.Is64BitProcess,
++                    ["isNativeAoT"] = !RuntimeFeature.IsDynamicCodeSupported,
++                    ["isPrivilegedProcess"] = Environment.IsPrivilegedProcess,
++                },
++                ["dotnetVersions"] = new JsonObject()
++                {
++                    ["runtime"] = GetVersion<object>(),
++                    ["aspNetCore"] = GetVersion<HttpContext>(),
++                },
++            };
++
++            static string GetVersion<T>()
++                => typeof(T).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
++        });
++
++        // HACK Workaround for https://github.com/dotnet/sdk/issues/40511
++        app.MapGet(".well-known/{fileName}", (string fileName, IWebHostEnvironment environment) =>
++        {
++            var file = environment.WebRootFileProvider.GetFileInfo(Path.Combine("well-known", fileName));
++
++            if (file.Exists && file.PhysicalPath is { Length: > 0 })
++            {
++                return Results.File(file.PhysicalPath, contentType: "application/json");
++            }
++
++            return Results.NotFound();
++        });
++
++        app.UseCookiePolicy(new()
++        {
++            HttpOnly = HttpOnlyPolicy.Always,
++            Secure = app.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always,
++        });
++
++        string[] methods = [HttpMethod.Get.Method, HttpMethod.Head.Method];
++
++        app.MapMethods("/", methods, () => Results.Extensions.RazorSlice<Home>());
++        app.MapMethods("/home/about", methods, () => Results.Extensions.RazorSlice<About>());
++        app.MapMethods("/projects", methods, () => Results.Extensions.RazorSlice<Projects>());
++        app.MapMethods("/tools", methods, () => Results.Extensions.RazorSlice<Tools>());
++
++        app.MapMethods("/error", methods, (int? id) =>
++        {
++            int statusCode = StatusCodes.Status500InternalServerError;
++
++            if (id is { } status &&
++                status >= 400 && status < 599)
++            {
++                statusCode = status;
++            }
++
++            return Results.Extensions.RazorSlice<Error>(statusCode);
++        });
++
++        return app;
++    }
++}
+diff --git a/src/Website/wwwroot/favicon.ico b/src/Website/wwwroot/favicon.ico
+index 08a8cbe16..188b96b73 100644
+Binary files a/src/Website/wwwroot/favicon.ico and b/src/Website/wwwroot/favicon.ico differ
