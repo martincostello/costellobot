@@ -252,10 +252,26 @@ public sealed partial class PullRequestHandler(
             repository.Name,
             message.PullRequest.Head.Sha);
 
+        var diff = await GetDiffAsync(message.PullRequest.DiffUrl);
+
         return await commitAnalyzer.IsTrustedDependencyUpdateAsync(
             repository,
             message.PullRequest.Head.Ref,
-            commit);
+            commit,
+            diff);
+    }
+
+    private async Task<string?> GetDiffAsync(string diffUrl)
+    {
+        try
+        {
+            return await client.GetDiffAsync(diffUrl);
+        }
+        catch (Exception ex)
+        {
+            Log.GetDiffFailed(logger, ex, diffUrl);
+            return null;
+        }
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -346,5 +362,14 @@ public sealed partial class PullRequestHandler(
             ILogger logger,
             Exception exception,
             IssueId pullRequest);
+
+        [LoggerMessage(
+           EventId = 11,
+           Level = LogLevel.Warning,
+           Message = "Failed to get Git diff from URL {GitDiffUrl}.")]
+        public static partial void GetDiffFailed(
+            ILogger logger,
+            Exception exception,
+            string gitDiffUrl);
     }
 }

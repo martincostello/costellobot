@@ -31,9 +31,12 @@ public static class GitDiffParser
         string diff,
         [NotNullWhen(true)] out IDictionary<string, (NuGetVersion From, NuGetVersion To)>? packages)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(diff);
-
         packages = null;
+
+        if (string.IsNullOrEmpty(diff))
+        {
+            return false;
+        }
 
         var edits = GetEdits(diff);
 

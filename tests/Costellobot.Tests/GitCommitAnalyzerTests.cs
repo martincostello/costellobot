@@ -150,6 +150,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
 
+        var diff = string.Empty;
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage(dependency);
 
@@ -158,7 +159,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             repository,
             reference,
             sha,
-            commitMessage);
+            commitMessage,
+            diff);
 
         // Assert
         actual.ShouldBe(expected);
@@ -211,6 +213,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
+        var diff = string.Empty;
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage(dependency, version);
 
@@ -219,7 +222,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             repository,
             reference,
             sha,
-            commitMessage);
+            commitMessage,
+            diff);
 
         // Assert
         actual.ShouldBe(expected);
@@ -246,6 +250,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [Substitute.For<IPackageRegistry>()]);
 
+        var diff = string.Empty;
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = @"""
                             Bump Foo to 1.0.1
@@ -266,7 +271,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             new("someone", "something"),
             "blah-blah",
             sha,
-            commitMessage);
+            commitMessage,
+            diff);
 
         // Assert
         actual.ShouldBeFalse();
@@ -284,6 +290,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [Substitute.For<IPackageRegistry>()]);
 
+        var diff = string.Empty;
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage();
 
@@ -292,7 +299,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             new("someone", "something"),
             "dependabot/nuget/NodaTimeVersion-3.1.0",
             sha,
-            commitMessage);
+            commitMessage,
+            diff);
 
         // Assert
         actual.ShouldBeFalse();
@@ -316,6 +324,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [Substitute.For<IPackageRegistry>()]);
 
+        var diff = string.Empty;
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage();
 
@@ -324,7 +333,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             new("someone", "something"),
             "dependabot/nuget/NodaTimeVersion-3.1.0",
             sha,
-            commitMessage);
+            commitMessage,
+            diff);
 
         // Assert
         actual.ShouldBeFalse();
@@ -363,6 +373,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
+        var diff = string.Empty;
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage("actions/checkout", "3");
 
@@ -371,7 +382,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             repository,
             "dependabot/github_actions/actions/checkout-3",
             sha,
-            commitMessage);
+            commitMessage,
+            diff);
 
         // Assert
         actual.ShouldBeFalse();
@@ -412,6 +424,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
+        var diff = string.Empty;
         var sha = "987879d752236a5a574000f40da7630be061faca";
         var commitMessage = """
                             Bump OpenTelemetryInstrumentationVersion
@@ -443,7 +456,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             repository,
             "dependabot/nuget/OpenTelemetryInstrumentationVersion-1.0.0-rc9.12",
             sha,
-            commitMessage);
+            commitMessage,
+            diff);
 
         // Assert
         actual.ShouldBeTrue();
@@ -478,6 +492,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
+        var diff = string.Empty;
         var sha = "62bf0f9046a782d0233aed41e9fe466aa6751f95";
         var commitMessage = """
                             Bump the xunit group with 1 update
@@ -501,7 +516,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             repository,
             "dependabot/nuget/xunit-beb0c94413",
             sha,
-            commitMessage);
+            commitMessage,
+            diff);
 
         // Assert
         actual.ShouldBeTrue();
@@ -539,6 +555,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
+        var diff = string.Empty;
         var sha = "dd1180fe710bc24ef13403f2b9dec6e069cb607c";
         var commitMessage = """
                             Bump the xunit group with 2 updates (#315)
@@ -573,7 +590,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             repository,
             "dependabot/nuget/xunit-9380cae661",
             sha,
-            commitMessage);
+            commitMessage,
+            diff);
 
         // Assert
         actual.ShouldBeTrue();
@@ -611,6 +629,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
+        var diff = string.Empty;
         var sha = "661369a466e4ac01d5db6057d499074733d8086f";
         var commitMessage = """
                             Bump the xunit group with 2 updates
@@ -641,7 +660,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             repository,
             "dependabot/nuget/xunit-8e312df114",
             sha,
-            commitMessage);
+            commitMessage,
+            diff);
 
         // Assert
         actual.ShouldBeTrue();
@@ -680,6 +700,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
+        var diff = string.Empty;
         var sha = "552aae859c24f0ed63bcc1f82ef96dd83040762f";
         var commitMessage = """
                             Bump Microsoft.TypeScript.MSBuild from 4.9.4 to 4.9.5
@@ -698,7 +719,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             repository,
             "dependabot/nuget/Microsoft.TypeScript.MSBuild-4.9.5",
             sha,
-            commitMessage);
+            commitMessage,
+            diff);
 
         // Assert
         actual.ShouldBeTrue();
@@ -742,6 +764,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [registry]);
 
+        var diff = string.Empty;
         var sha = "4f01e284f9bfac38bcf14f7595b1258fc5b1b542";
         var commitMessage = """
                             Bump .NET NuGet packages
@@ -772,7 +795,89 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             repository,
             "update-dotnet-sdk-7.0.203",
             sha,
-            commitMessage);
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Grouped_Package_Update_With_Only_Yaml_Frontmatter()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+
+        registry.GetPackageOwnersAsync(repository, "AWSSDK.SecurityToken", "3.7.300.118")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["awsdotnet"]));
+
+        registry.GetPackageOwnersAsync(repository, "AWSSDK.SimpleSystemsManagement", "3.7.305.8")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["awsdotnet"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["awsdotnet"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var sha = "bd2804732332a86c336d1c9308b9dba36f0c2e03";
+        var commitMessage = """
+                            Bump the awssdk group with 2 updates
+                            ---
+                            updated-dependencies:
+                            - dependency-name: AWSSDK.SecurityToken
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: awssdk
+                            - dependency-name: AWSSDK.SimpleSystemsManagement
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: awssdk
+                            ...
+
+                            Signed-off-by: dependabot[bot] <support@github.com>
+                            """;
+
+        var diff =
+            """
+            diff --git a/Directory.Packages.props b/Directory.Packages.props
+            index 5efad590..bd28047 100644
+            --- a/Directory.Packages.props
+            +++ b/Directory.Packages.props
+            @@ -7,8 +7,8 @@
+               <ItemGroup>
+                 <PackageVersion Include="Amazon.AspNetCore.DataProtection.SSM" Version="3.2.1" />
+                 <PackageVersion Include="Aspire.Hosting.AppHost" Version="8.1.0" />
+            -    <PackageVersion Include="AWSSDK.SecurityToken" Version="3.7.300.117" />
+            -    <PackageVersion Include="AWSSDK.SimpleSystemsManagement" Version="3.7.305.7" />
+            +    <PackageVersion Include="AWSSDK.SecurityToken" Version="3.7.300.118" />
+            +    <PackageVersion Include="AWSSDK.SimpleSystemsManagement" Version="3.7.305.8" />
+                 <PackageVersion Include="BenchmarkDotNet" Version="0.14.0" />
+                 <PackageVersion Include="coverlet.msbuild" Version="6.0.2" />
+                 <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
+            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            "dependabot/nuget/awssdk-b8164d6bd2",
+            sha,
+            commitMessage,
+            diff);
 
         // Assert
         actual.ShouldBeTrue();

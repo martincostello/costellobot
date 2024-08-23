@@ -54,20 +54,23 @@ public sealed partial class GitCommitAnalyzer(
     public async Task<bool> IsTrustedDependencyUpdateAsync(
         RepositoryId repository,
         string? reference,
-        GitHubCommit commit)
+        GitHubCommit commit,
+        string? diff)
     {
         return await IsTrustedDependencyUpdateAsync(
             repository,
             reference,
             commit.Sha,
-            commit.Commit.Message);
+            commit.Commit.Message,
+            diff);
     }
 
     public async Task<bool> IsTrustedDependencyUpdateAsync(
         RepositoryId repository,
         string? reference,
         string sha,
-        string commitMessage)
+        string commitMessage,
+        string? diff)
     {
         bool isTrusted = IsTrustedDependencyName(
             repository,
@@ -81,6 +84,7 @@ public sealed partial class GitCommitAnalyzer(
                 repository,
                 reference,
                 commitMessage,
+                diff,
                 dependencies);
         }
 
@@ -212,6 +216,7 @@ public sealed partial class GitCommitAnalyzer(
         RepositoryId repository,
         string? reference,
         string commitMessage,
+        string? diff,
         IReadOnlyList<string> dependencies)
     {
         if (dependencies.Count < 1 || _registries.Count < 1)
@@ -226,7 +231,8 @@ public sealed partial class GitCommitAnalyzer(
                     repository,
                     dependency,
                     reference,
-                    commitMessage))
+                    commitMessage,
+                    diff))
             {
                 return false;
             }
@@ -240,14 +246,9 @@ public sealed partial class GitCommitAnalyzer(
             RepositoryId repository,
             string dependency,
             string? reference,
-            string commitMessage)
+            string commitMessage,
+            string? diff)
         {
-            if (!TryParseVersionNumber(commitMessage, dependency, out var version) ||
-                string.IsNullOrWhiteSpace(version))
-            {
-                return false;
-            }
-
             var ecosystem = ParseEcosystem(reference);
 
             if (ecosystem is DependencyEcosystem.Unknown or DependencyEcosystem.Unsupported)
@@ -264,6 +265,24 @@ public sealed partial class GitCommitAnalyzer(
             var registry = _registries.FirstOrDefault((p) => p.Ecosystem == ecosystem);
 
             if (registry is null)
+            {
+                return false;
+            }
+
+            // HACK https://github.com/dependabot/dependabot-core/issues/8217
+            // Use the Git diff for the commit and try to parse it to get
+            // the version of the dependency that was updated if it could not
+            // otherwise be determined.
+            if (!TryParseVersionNumber(commitMessage, dependency, out var version) &&
+                ecosystem is DependencyEcosystem.NuGet &&
+                !string.IsNullOrEmpty(diff) &&
+                GitDiffParser.TryParseUpdatedPackages(diff, out var updates) &&
+                updates.TryGetValue(dependency, out var update))
+            {
+                version = update.To.ToString();
+            }
+
+            if (string.IsNullOrWhiteSpace(version))
             {
                 return false;
             }
