@@ -131,15 +131,11 @@ public static class GitDiffParser
                     {
                         edits.Add((type, package.Value.Package, package.Value.Version));
                     }
-
-                    continue;
                 }
-                else if (prefix is ' ')
+                else if (prefix is not ' ')
                 {
-                    continue;
+                    inHunk = false;
                 }
-
-                inHunk = false;
             }
         }
 
@@ -184,15 +180,13 @@ public static class GitDiffParser
         {
             fragment = XElement.Parse(fragmentText);
 
-            if (fragment.Name == PackageReference ||
-                fragment.Name == PackageVersion ||
-                fragment.Name == GlobalPackageReference)
+            if ((fragment.Name == PackageReference ||
+                 fragment.Name == PackageVersion ||
+                 fragment.Name == GlobalPackageReference) &&
+                 TryParsePackage(fragment, out var name, out var version))
             {
-                if (TryParsePackage(fragment, out var name, out var version))
-                {
-                    package = (name, version);
-                    return true;
-                }
+                package = (name, version);
+                return true;
             }
         }
         catch (Exception)
