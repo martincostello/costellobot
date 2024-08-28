@@ -3,12 +3,16 @@
     Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 */
 
+:root {
+    --link-color-dark: #b0b0b0;
+}
+
 html {
     font-size: 16px;
 }
 
 a {
-    color: #0060C7;
+    color: #0060c7;
     text-decoration: none;
 }
 
@@ -25,23 +29,23 @@ a:not([href], [class]):hover {
 }
 
 code.webhook-content {
-    color: #e83e8c;
+    color: var(--bs-code-color);
 }
 
 img.user-profile {
-    max-height: 30px;
-    max-width: 30px;
+    max-height: 1.5rem;
+    max-width: 1.5rem;
 }
 
 pre.hook-delivery-container {
-    padding: 8px 12px;
-    margin: 8px 0;
+    padding: 1rem 1.5rem;
+    margin: 1rem 0;
     overflow: auto;
-    font-size: 13px;
+    font-size: 0.8rem;
     line-height: 1.5;
-    background-color: #f6f8fa;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
+    background-color: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-secondary-bg);
+    border-radius: 1rem;
 }
 
 textarea.form-payload {
@@ -49,24 +53,24 @@ textarea.form-payload {
 }
 
 .bg-dark {
-    background-color: #343a40 !important;
+    background-color: var(--bs-gray-dark) !important;
 }
 
 .body-content {
-    padding-top: 10px;
+    padding-top: 1rem;
 }
 
 .navbar-dark .navbar-nav .nav-link {
-    color: #B0B0B0;
+    color: var(--link-color-dark);
 }
 
 .log-console,
 .log-console[disabled],
 .log-console[readonly] {
-    background-color: #000;
+    background-color: black;
     border-radius: .375rem;
-    color: #fff;
-    font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+    color: white;
+    font-family: var(--bs-font-monospace);
     max-height: 20rem;
     min-height: 20rem;
     overflow-y: auto;
@@ -74,13 +78,21 @@ textarea.form-payload {
     resize: none;
 }
 
+.log-entry {
+    --level-debug: #76e3ea;
+    --level-error: #f85149;
+    --level-info: #3fb950;
+    --level-trace: #b0b0b0;
+    --level-warning: #d29922;
+}
+
 .log-entry .log-link {
-    color: #b0b0b0;
+    color: var(--link-color-dark);
     text-decoration: underline;
 }
 
 .log-entry > .log-exception {
-    color: #d29922;
+    color: var(--level-warning);
     padding-left: 0.75rem;
 }
 
@@ -94,29 +106,29 @@ textarea.form-payload {
 
 .log-entry > .log-level-critical,
 .log-entry > .log-level-error {
-    color: #f85149;
+    color: var(--level-error);
 }
 
 .log-entry > .log-level-warn,
 .log-entry > .log-level-warning{
-    color: #d29922;
+    color: var(--level-warning);
 }
 
 .log-entry > .log-level-info,
 .log-entry > .log-level-information {
-    color: #3fb950;
+    color: var(--level-info);
 }
 
 .log-entry > .log-level-debug {
-    color: #76e3ea;
+    color: var(--level-debug);
 }
 
 .log-entry > .log-level-trace {
-    color: #b0b0b0;
+    color: var(--level-trace);
 }
 
 .text-webhook {
-    font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+    font-family: var(--bs-font-monospace);
 }
 
 .webhook-item > pre {
@@ -124,7 +136,7 @@ textarea.form-payload {
 }
 
 .webhook-item.active > pre {
-    color: #fff;
+    color: white;
 }
 
 @media (width >= 1200px) {
