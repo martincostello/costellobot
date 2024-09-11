@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/nightly/runtime-deps:9.0-preview-noble-chiseled-extra</ContainerBaseImage>
     <ContainerFamily>noble-chiseled-extra</ContainerFamily>
     <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
@@ -11,8 +12,6 @@
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <TypeScriptToolsVersion>latest</TypeScriptToolsVersion>
     <UserSecretsId>Costellobot</UserSecretsId>
-    <!-- HACK Workaround for https://github.com/dotnet/runtime/issues/106566 -->
-    <UseSystemZlib>false</UseSystemZlib>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Azure.Messaging.ServiceBus" />
