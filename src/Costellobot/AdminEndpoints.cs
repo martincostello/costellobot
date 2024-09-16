@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using MartinCostello.Costellobot.Models;
 using MartinCostello.Costellobot.Slices;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -103,6 +104,7 @@ public static class AdminEndpoints
         var admin = new CostellobotAdminAttribute();
 
         builder.MapMethods("/", [HttpMethod.Get.Method, HttpMethod.Head.Method], () => Results.Extensions.RazorSlice<Home>())
+               .AddEndpointFilter<AntiforgeryFilter>()
                .WithMetadata(admin);
 
         builder
@@ -111,6 +113,7 @@ public static class AdminEndpoints
                 (var deliveries, _) = await GetDeliveries(client, cursor: null);
                 return Results.Extensions.RazorSlice<Deliveries, IReadOnlyList<WebhookDelivery>>(deliveries);
             })
+            .AddEndpointFilter<AntiforgeryFilter>()
             .WithName(DeliveriesRoute)
             .WithMetadata(admin);
 
@@ -202,6 +205,7 @@ public static class AdminEndpoints
                     }
                 }
             })
+            .AddEndpointFilter<AntiforgeryFilter>()
             .WithName(DeliveryRoute)
             .WithMetadata(admin);
 
@@ -216,6 +220,7 @@ public static class AdminEndpoints
         }).WithMetadata(admin);
 
         builder.MapGet("/github-webhook", (IOptions<GitHubOptions> options) => Results.Extensions.RazorSlice<Debug, GitHubOptions>(options.Value))
+               .AddEndpointFilter<AntiforgeryFilter>()
                .WithMetadata(admin);
 
         return builder;
@@ -280,5 +285,16 @@ public static class AdminEndpoints
         }
 
         return cursor;
+    }
+
+    private sealed class AntiforgeryFilter : IEndpointFilter
+    {
+        public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+        {
+            var antiforgery = context.HttpContext.RequestServices.GetRequiredService<IAntiforgery>();
+            antiforgery.SetCookieTokenAndHeader(context.HttpContext);
+
+            return await next(context);
+        }
     }
 }
