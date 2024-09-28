@@ -40,7 +40,7 @@ Any feedback or issues can be added to the issues for this project in
 
 The repository is hosted in
 [GitHub](https://github.com/martincostello/costellobot "This project on GitHub.com"):
-https://github.com/martincostello/costellobot.git
+<https://github.com/martincostello/costellobot.git>
 
 ## License
 
