@@ -14,7 +14,7 @@ itself: [#5](https://github.com/martincostello/costellobot/pull/5)
 ## Building and Testing
 
 Compiling the application yourself requires Git and the
-[.NET SDK](https://dotnet.microsoft.com/en-us/download "Download the .NET SDK")
+[.NET SDK](https://dotnet.microsoft.com/download "Download the .NET SDK")
 to be installed.
 
 To build and test the application locally from a terminal/command-line, run the

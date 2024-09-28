@@ -27,7 +27,7 @@ public sealed partial class NuGetPackageRegistry(
             return [];
         }
 
-        // https://docs.microsoft.com/en-us/nuget/api/search-query-service-resource#versioning
+        // https://docs.microsoft.com/nuget/api/search-query-service-resource#versioning
         var baseAddress = await GetBaseAddressAsync("SearchQueryService/3.5.0");
 
         if (baseAddress is null)
@@ -35,7 +35,7 @@ public sealed partial class NuGetPackageRegistry(
             return [];
         }
 
-        // https://docs.microsoft.com/en-us/nuget/api/search-query-service-resource#search-for-packages
+        // https://docs.microsoft.com/nuget/api/search-query-service-resource#search-for-packages
         var query = new Dictionary<string, string?>()
         {
             ["prerelease"] = "true",
@@ -78,7 +78,7 @@ public sealed partial class NuGetPackageRegistry(
             return [];
         }
 
-        // https://docs.microsoft.com/en-us/nuget/api/search-query-service-resource#search-result
+        // https://docs.microsoft.com/nuget/api/search-query-service-resource#search-result
         return package.Owners.ValueKind switch
         {
             JsonValueKind.Array => GetPackageOwners(package.Owners),
