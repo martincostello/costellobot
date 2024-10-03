@@ -125,7 +125,7 @@ public static class CostellobotBuilder
 
         app.MapHealthCheckRoutes();
         app.MapAuthenticationRoutes();
-        app.MapApiRoutes(app.Configuration);
+        app.MapApiRoutes();
         app.MapAdminRoutes();
 
         return app;

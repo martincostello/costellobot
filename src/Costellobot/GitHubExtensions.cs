@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using Octokit;
 using Octokit.Internal;
 using Octokit.Webhooks;
+using Octokit.Webhooks.AspNetCore;
 
 namespace MartinCostello.Costellobot;
 
@@ -30,6 +31,7 @@ public static class GitHubExtensions
         services.AddOptions();
 
         services.Configure<GitHubOptions>(configuration.GetSection("GitHub"));
+        services.Configure<GitHubWebhookOptions>((p) => p.Secret = configuration["GitHub:WebhookSecret"]);
         services.Configure<SiteOptions>(configuration.GetSection("Site"));
         services.Configure<WebhookOptions>(configuration.GetSection("Webhook"));
 
