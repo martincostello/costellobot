@@ -12,9 +12,9 @@ namespace MartinCostello.Costellobot;
 
 public static class ApiEndpoints
 {
-    public static IEndpointRouteBuilder MapApiRoutes(this IEndpointRouteBuilder builder, IConfiguration configuration)
+    public static IEndpointRouteBuilder MapApiRoutes(this IEndpointRouteBuilder builder)
     {
-        builder.MapGitHubWebhooks("/github-webhook", configuration["GitHub:WebhookSecret"] ?? string.Empty);
+        builder.MapGitHubWebhooks("/github-webhook");
 
         builder.MapGet("/badge/{type}/{owner}/{repo}", async (string type, string owner, string repo, [FromQuery(Name = "s")] string? signature, BadgeService service) =>
         {
