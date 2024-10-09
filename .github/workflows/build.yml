@@ -140,7 +140,7 @@ jobs:
         subject-name: ${{ steps.publish-container.outputs.container-image }}
 
     - name: Publish screenshots
-      uses: actions/upload-artifact@604373da6381bf24206979c74d06a550515601b9 # v4.4.1
+      uses: actions/upload-artifact@84480863f228bb9747b473957fcc9e309aa96097 # v4.4.2
       if: ${{ !cancelled() }}
       with:
         name: screenshots-${{ matrix.os-name }}
@@ -148,7 +148,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Publish traces
-      uses: actions/upload-artifact@604373da6381bf24206979c74d06a550515601b9 # v4.4.1
+      uses: actions/upload-artifact@84480863f228bb9747b473957fcc9e309aa96097 # v4.4.2
       if: ${{ !cancelled() }}
       with:
         name: traces-${{ matrix.os-name }}
@@ -156,7 +156,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Publish videos
-      uses: actions/upload-artifact@604373da6381bf24206979c74d06a550515601b9 # v4.4.1
+      uses: actions/upload-artifact@84480863f228bb9747b473957fcc9e309aa96097 # v4.4.2
       if: ${{ !cancelled() }}
       with:
         name: videos-${{ matrix.os-name }}
@@ -298,7 +298,7 @@ jobs:
         APPLICATION_URL: ${{ env.APPLICATION_URL_PROD }}
 
     - name: Publish screenshots
-      uses: actions/upload-artifact@604373da6381bf24206979c74d06a550515601b9 # v4.4.1
+      uses: actions/upload-artifact@84480863f228bb9747b473957fcc9e309aa96097 # v4.4.2
       if: ${{ !cancelled() }}
       with:
         name: screenshots-e2e
@@ -306,7 +306,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Publish traces
-      uses: actions/upload-artifact@604373da6381bf24206979c74d06a550515601b9 # v4.4.1
+      uses: actions/upload-artifact@84480863f228bb9747b473957fcc9e309aa96097 # v4.4.2
       if: ${{ !cancelled() }}
       with:
         name: traces-e2e
@@ -314,7 +314,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Publish videos
-      uses: actions/upload-artifact@604373da6381bf24206979c74d06a550515601b9 # v4.4.1
+      uses: actions/upload-artifact@84480863f228bb9747b473957fcc9e309aa96097 # v4.4.2
       if: ${{ !cancelled() }}
       with:
         name: videos-e2e
