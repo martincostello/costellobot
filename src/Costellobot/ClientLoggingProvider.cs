@@ -10,7 +10,7 @@ public sealed class ClientLoggingProvider(ClientLogQueue queue, TimeProvider tim
 {
     internal const string CategoryPrefix = "MartinCostello.Costellobot";
 
-    private readonly ConcurrentDictionary<string, ILogger> _loggers = [];
+    private readonly ConcurrentDictionary<string, ClientLogger> _loggers = [];
 
     public ILogger CreateLogger(string categoryName)
     {
@@ -19,7 +19,7 @@ public sealed class ClientLoggingProvider(ClientLogQueue queue, TimeProvider tim
             return NullLogger.Instance;
         }
 
-        return _loggers.GetOrAdd(categoryName, (name) => new ClientLogger(name, queue, timeProvider));
+        return _loggers.GetOrAdd(categoryName, (name) => new(name, queue, timeProvider));
     }
 
     public void Dispose()
