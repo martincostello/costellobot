@@ -45,6 +45,7 @@ jobs:
         with:
           image-ref: ${{ steps.configure.outputs.container-image }}
           format: 'sarif'
+          github-pat: ${{ secrets.GITHUB_TOKEN }}
           ignore-unfixed: true
           limit-severities-for-sarif: true
           output: 'trivy.sarif'
@@ -64,6 +65,7 @@ jobs:
         with:
           image-ref: ${{ steps.configure.outputs.container-image }}
           format: 'json'
+          github-pat: ${{ secrets.GITHUB_TOKEN }}
           ignore-unfixed: true
           output: 'trivy.json'
           severity: 'CRITICAL,HIGH'
