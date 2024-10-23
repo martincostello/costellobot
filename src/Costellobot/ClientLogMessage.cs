@@ -18,4 +18,14 @@ public sealed class ClientLogMessage
     public DateTimeOffset Timestamp { get; init; }
 
     public string Exception { get; init; } = string.Empty;
+
+    public string? DeliveryId { get; set; }
+
+    public string? Event { get; set; }
+
+    public string? Action { get; set; }
+
+    public string? RepositoryName { get; set; }
+
+    public string? RepositoryUrl { get; set; }
 }

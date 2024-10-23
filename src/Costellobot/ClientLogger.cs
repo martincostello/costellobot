@@ -1,15 +1,21 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using Octokit.Webhooks;
+
 namespace MartinCostello.Costellobot;
 
-public sealed class ClientLogger(string categoryName, ClientLogQueue queue, TimeProvider timeProvider) : ILogger
+public sealed class ClientLogger(
+    string categoryName,
+    ClientLogQueue queue,
+    IExternalScopeProvider scopeProvider,
+    TimeProvider timeProvider) : ILogger
 {
     public string CategoryName { get; } = categoryName[ClientLoggingProvider.CategoryPrefix.Length..].TrimStart('.');
 
     public IDisposable? BeginScope<TState>(TState state)
         where TState : notnull
-        => NullDisposable.Instance;
+        => scopeProvider.Push(state) ?? NullDisposable.Instance;
 
     public bool IsEnabled(LogLevel logLevel)
     {
@@ -53,7 +59,28 @@ public sealed class ClientLogger(string categoryName, ClientLogQueue queue, Time
             Timestamp = timeProvider.GetUtcNow(),
         };
 
+        scopeProvider.ForEachScope(EnrichFromScope, payload);
+
         queue.Enqueue(payload);
+    }
+
+    private static void EnrichFromScope(object? scope, ClientLogMessage message)
+    {
+        if (scope is WebhookHeaders headers)
+        {
+            message.DeliveryId = headers.Delivery;
+            message.Event = headers.Event;
+        }
+        else if (scope is WebhookEvent payload)
+        {
+            message.Action = payload.Action;
+
+            if (payload.Repository is { } repo)
+            {
+                message.RepositoryName = repo.FullName;
+                message.RepositoryUrl = repo.HtmlUrl;
+            }
+        }
     }
 
     private sealed class NullDisposable : IDisposable

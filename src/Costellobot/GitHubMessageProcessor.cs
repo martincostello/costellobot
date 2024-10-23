@@ -24,8 +24,11 @@ public sealed partial class GitHubMessageProcessor(
 
         var webhookEvent = DeserializeWebhookEvent(webhookHeaders, body);
 
-        Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
-        await ProcessAsync(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload));
+        using (logger.BeginScope(webhookEvent))
+        {
+            Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
+            await ProcessAsync(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload));
+        }
     }
 
     private static (IDictionary<string, string> Headers, JsonElement Payload) ParseRaw(
