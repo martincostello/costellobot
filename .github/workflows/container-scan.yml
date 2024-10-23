@@ -40,12 +40,12 @@ jobs:
       - name: Run Trivy (SARIF)
         uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2 # 0.28.0
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TRIVY_USERNAME: ${{ secrets.TRIVY_USERNAME }}
           TRIVY_PASSWORD: ${{ secrets.TRIVY_PASSWORD }}
         with:
           image-ref: ${{ steps.configure.outputs.container-image }}
           format: 'sarif'
-          github-pat: ${{ secrets.GITHUB_TOKEN }}
           ignore-unfixed: true
           limit-severities-for-sarif: true
           output: 'trivy.sarif'
@@ -60,12 +60,12 @@ jobs:
       - name: Run Trivy (JSON)
         uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2 # 0.28.0
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TRIVY_USERNAME: ${{ secrets.TRIVY_USERNAME }}
           TRIVY_PASSWORD: ${{ secrets.TRIVY_PASSWORD }}
         with:
           image-ref: ${{ steps.configure.outputs.container-image }}
           format: 'json'
-          github-pat: ${{ secrets.GITHUB_TOKEN }}
           ignore-unfixed: true
           output: 'trivy.json'
           severity: 'CRITICAL,HIGH'
