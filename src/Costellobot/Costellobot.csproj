@@ -12,6 +12,13 @@
     <TypeScriptToolsVersion>latest</TypeScriptToolsVersion>
     <UserSecretsId>Costellobot</UserSecretsId>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(GITHUB_ACTIONS)' != '' AND '$(SENTRY_AUTH_TOKEN)' != '' AND '$(ContainerRegistry)' != '' ">
+    <SentryOrg>martin-costello</SentryOrg>
+    <SentryProject>costellobot</SentryProject>
+    <SentryCreateRelease>true</SentryCreateRelease>
+    <SentrySetCommits>true</SentrySetCommits>
+    <SentryUploadSymbols>true</SentryUploadSymbols>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Azure.Messaging.ServiceBus" />
     <PackageReference Include="Aspire.Azure.Security.KeyVault" />

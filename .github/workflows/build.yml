@@ -124,6 +124,7 @@ jobs:
       shell: pwsh
       env:
         ContainerRegistry: ${{ env.PUBLISH_CONTAINER == 'true' && env.CONTAINER_REGISTRY || '' }}
+        SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_TOKEN }}
       run: |
         dotnet publish ./src/Costellobot --arch x64 --os linux -p:PublishProfile=DefaultContainer
 
