@@ -43,6 +43,7 @@
     <PackageReference Include="Polly.Extensions" />
     <PackageReference Include="Polly.RateLimiting" />
     <PackageReference Include="RazorSlices" />
+    <PackageReference Include="Sentry.AspNetCore" />
     <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
   <ItemGroup>
