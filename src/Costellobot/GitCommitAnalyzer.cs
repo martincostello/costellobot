@@ -72,21 +72,9 @@ public sealed partial class GitCommitAnalyzer(
         string commitMessage,
         string? diff)
     {
-        bool isTrusted = IsTrustedDependencyName(
-            repository,
-            sha,
-            commitMessage,
-            out var dependencies);
+        var dependencies = await GetDependencyTrustAsync(repository, reference, sha, commitMessage, diff);
 
-        if (!isTrusted)
-        {
-            isTrusted = await IsTrustedDependencyOwnerAsync(
-                repository,
-                reference,
-                commitMessage,
-                diff,
-                dependencies);
-        }
+        bool isTrusted = dependencies.Count > 0 && dependencies.Values.All((p) => p);
 
         if (isTrusted)
         {
@@ -168,64 +156,54 @@ public sealed partial class GitCommitAnalyzer(
         };
     }
 
-    private bool IsTrustedDependencyName(
+    private async Task<Dictionary<string, bool>> GetDependencyTrustAsync(
         RepositoryId repository,
+        string? reference,
         string sha,
         string commitMessage,
-        out IReadOnlyList<string> dependencies)
+        string? diff)
     {
-        dependencies = ParseDependencies(commitMessage);
+        var dependencyNames = ParseDependencies(commitMessage);
 
-        var trustedDependencies = options.CurrentValue.TrustedEntities.Dependencies;
-
-        if (dependencies.Count < 1 || trustedDependencies.Count < 1)
+        if (dependencyNames.Count < 1)
         {
-            return false;
+            return [];
         }
 
         Log.CommitUpdatesDependencies(
             logger,
             sha,
             repository,
-            [.. dependencies]);
+            [.. dependencyNames]);
 
-        foreach (string dependency in dependencies)
+        // First do a simple lookup by name
+        var trustedDependencies = options.CurrentValue.TrustedEntities.Dependencies;
+        var dependencyTrust = dependencyNames.ToDictionary((k) => k, (_) => false);
+
+        foreach (string dependency in dependencyNames)
         {
-            if (!trustedDependencies.Any((p) => Regex.IsMatch(dependency, p)))
+            if (trustedDependencies.Any((p) => Regex.IsMatch(dependency, p)))
+            {
+                Log.TrustedDependencyNameUpdated(
+                    logger,
+                    sha,
+                    repository,
+                    dependency);
+
+                dependencyTrust[dependency] = true;
+            }
+            else
             {
                 Log.UntrustedDependencyNameUpdated(
                     logger,
                     sha,
                     repository,
                     dependency);
-
-                return false;
             }
-
-            Log.TrustedDependencyNameUpdated(
-                logger,
-                sha,
-                repository,
-                dependency);
         }
 
-        return true;
-    }
-
-    private async Task<bool> IsTrustedDependencyOwnerAsync(
-        RepositoryId repository,
-        string? reference,
-        string commitMessage,
-        string? diff,
-        IReadOnlyList<string> dependencies)
-    {
-        if (dependencies.Count < 1 || _registries.Count < 1)
-        {
-            // No dependencies were parsed or there are no applicable registries
-            return false;
-        }
-
-        foreach (string dependency in dependencies)
+        // If a dependency is not trusted by name alone, determine whether it is trusted through its owner
+        foreach (string dependency in dependencyTrust.Where((p) => !p.Value).Select((p) => p.Key))
         {
             if (!await IsTrustedDependencyOwnerAsync(
                     repository,
@@ -234,11 +212,14 @@ public sealed partial class GitCommitAnalyzer(
                     commitMessage,
                     diff))
             {
-                return false;
+                // We only care if all dependencies are trusted, so stop looking on the first failure
+                break;
             }
+
+            dependencyTrust[dependency] = true;
         }
 
-        return true;
+        return dependencyTrust;
 
         // If only one dependency was found, we can attempt to extract the version
         // from the commit message to see if the package was from a trusted publisher.
