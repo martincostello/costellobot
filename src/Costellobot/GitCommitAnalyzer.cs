@@ -94,7 +94,7 @@ public sealed partial class GitCommitAnalyzer(
             .ReplaceLineEndings("\n")
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        var dependencies = new List<string>(commitLines.Length);
+        var dependencies = new HashSet<string>(commitLines.Length);
 
         foreach (string line in commitLines)
         {
@@ -119,7 +119,7 @@ public sealed partial class GitCommitAnalyzer(
 
         dependencies.TrimExcess();
 
-        return dependencies;
+        return [.. dependencies];
     }
 
     private static DependencyEcosystem ParseEcosystem(string? reference)
