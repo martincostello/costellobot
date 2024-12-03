@@ -252,7 +252,7 @@ public sealed partial class PullRequestHandler(
             repository.Name,
             message.PullRequest.Head.Sha);
 
-        var diff = await GetDiffAsync(message.PullRequest.DiffUrl);
+        var diff = await GetDiffAsync(message.PullRequest.Url);
 
         return await commitAnalyzer.IsTrustedDependencyUpdateAsync(
             repository,

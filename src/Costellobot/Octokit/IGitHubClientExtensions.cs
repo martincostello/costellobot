@@ -8,10 +8,11 @@ public static class IGitHubClientExtensions
     public static IWorkflowRunsClient WorkflowRuns(this IGitHubClient client)
         => new WorkflowRunsClient(new ApiConnection(client.Connection));
 
-    public static async Task<string> GetDiffAsync(this IGitHubClient client, string url)
+    public static async Task<string> GetDiffAsync(this IGitHubClient client, string pullRequestUrl)
     {
+        // See https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#get-a-pull-request
         var parameters = new Dictionary<string, string>(0);
-        var response = await client.Connection.Get<string>(new(url, UriKind.Absolute), parameters);
+        var response = await client.Connection.Get<string>(new(pullRequestUrl, UriKind.Absolute), parameters, "application/vnd.github.v3.diff");
         return response.Body;
     }
 
