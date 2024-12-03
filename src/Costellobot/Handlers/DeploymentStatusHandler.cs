@@ -275,7 +275,7 @@ public sealed partial class DeploymentStatusHandler(
                 reference,
                 new IssueId(repository, pullRequest.Number));
 
-            var diff = await GetDiffAsync(pullRequest.DiffUrl);
+            var diff = await GetDiffAsync(pullRequest.Url);
 
             return (reference, diff);
         }

@@ -617,7 +617,8 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
 
         CreateDefaultBuilder()
             .Requests()
-            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/pulls/{driver.PullRequest.Number}.diff")
+            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/pulls/{driver.PullRequest.Number}")
+            .ForRequestHeader("Accept", "application/vnd.github.v3.diff")
             .Responds()
             .WithContent(string.Empty)
             .RegisterWith(Fixture.Interceptor);

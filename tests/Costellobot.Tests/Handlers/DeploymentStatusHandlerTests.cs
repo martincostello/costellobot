@@ -862,7 +862,8 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         CreateDefaultBuilder()
             .Requests()
-            .ForPath($"/repos/{pullRequest.Repository.Owner.Login}/{pullRequest.Repository.Name}/pulls/{pullRequest.Number}.diff")
+            .ForPath($"/repos/{pullRequest.Repository.Owner.Login}/{pullRequest.Repository.Name}/pulls/{pullRequest.Number}")
+            .ForRequestHeader("Accept", "application/vnd.github.v3.diff")
             .Responds()
             .WithContent(string.Empty)
             .RegisterWith(Fixture.Interceptor);
