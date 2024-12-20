@@ -11,7 +11,7 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot.Handlers;
 
-[Collection(AppCollection.Name)]
+[Collection<AppCollection>]
 public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 {
     public DeploymentStatusHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper)
@@ -49,7 +49,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await deploymentApproved.Task.WaitAsync(ResultTimeout);
+        await deploymentApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await deploymentApproved.Task.WaitAsync(ResultTimeout);
+        await deploymentApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Fact]
@@ -130,7 +130,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await deploymentApproved.Task.WaitAsync(ResultTimeout);
+        await deploymentApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await deploymentApproved.Task.WaitAsync(ResultTimeout);
+        await deploymentApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Theory]
@@ -574,7 +574,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         if (shouldApprove)
         {
-            await deploymentApproved.Task.WaitAsync(ResultTimeout);
+            await deploymentApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
         }
         else
         {

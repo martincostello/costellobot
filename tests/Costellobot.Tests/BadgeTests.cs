@@ -9,7 +9,7 @@ using MartinCostello.Costellobot.Infrastructure;
 
 namespace MartinCostello.Costellobot;
 
-[Collection(AppCollection.Name)]
+[Collection<AppCollection>]
 public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
     [Theory]
@@ -21,7 +21,7 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
         using var client = Fixture.CreateHttpClientForApp();
 
         // Act
-        using var response = await client.GetAsync($"/badge/{type}/github-user/github-repo");
+        using var response = await client.GetAsync($"/badge/{type}/github-user/github-repo", CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -44,7 +44,7 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
         using var client = Fixture.CreateHttpClientForApp();
 
         // Act
-        using var response = await client.GetAsync($"/badge/security/github-user/github-repo?s={signature}");
+        using var response = await client.GetAsync($"/badge/security/github-user/github-repo?s={signature}", CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -69,7 +69,7 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
         using var client = Fixture.CreateHttpClientForApp();
 
         // Act
-        using var response = await client.GetAsync($"/badge/security/{owner}/{repo}?s={Uri.EscapeDataString(signature)}");
+        using var response = await client.GetAsync($"/badge/security/{owner}/{repo}?s={Uri.EscapeDataString(signature)}", CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
@@ -93,7 +93,7 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
         using var client = Fixture.CreateHttpClientForApp();
 
         // Act
-        using var response = await client.GetAsync($"/badge/security/{owner}/{repo}?s={Uri.EscapeDataString(signature)}");
+        using var response = await client.GetAsync($"/badge/security/{owner}/{repo}?s={Uri.EscapeDataString(signature)}", CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
@@ -117,7 +117,7 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
         using var client = Fixture.CreateHttpClientForApp();
 
         // Act
-        using var response = await client.GetAsync($"/badge/security/{owner}/{repo}?s={Uri.EscapeDataString(signature)}");
+        using var response = await client.GetAsync($"/badge/security/{owner}/{repo}?s={Uri.EscapeDataString(signature)}", CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
@@ -147,7 +147,7 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
         using var client = Fixture.CreateHttpClientForApp();
 
         // Act
-        using var response = await client.GetAsync($"/badge/release/{owner}/{repo}?s={Uri.EscapeDataString(signature)}");
+        using var response = await client.GetAsync($"/badge/release/{owner}/{repo}?s={Uri.EscapeDataString(signature)}", CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -175,7 +175,7 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
         using var client = Fixture.CreateHttpClientForApp();
 
         // Act
-        using var response = await client.GetAsync($"/badge/release/{owner}/{repo}?s={Uri.EscapeDataString(signature)}");
+        using var response = await client.GetAsync($"/badge/release/{owner}/{repo}?s={Uri.EscapeDataString(signature)}", CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);

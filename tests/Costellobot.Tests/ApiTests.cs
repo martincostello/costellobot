@@ -108,7 +108,7 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         using var client = Fixture.CreateClient();
 
         // Act
-        var actual = await client.GetFromJsonAsync<JsonElement>("/version");
+        var actual = await client.GetFromJsonAsync<JsonElement>("/version", CancellationToken);
 
         // Assert
         actual.TryGetProperty("application", out var application).ShouldBeTrue();
@@ -139,7 +139,7 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         }
 
         // Act
-        using var actual = await client.SendAsync(request);
+        using var actual = await client.SendAsync(request, CancellationToken);
 
         // Assert
         actual.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -147,7 +147,7 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         actual.Content.Headers.ContentType.ShouldNotBeNull();
         actual.Content.Headers.ContentType.MediaType.ShouldBe("application/problem+json");
 
-        var response = await actual.Content.ReadFromJsonAsync<ProblemDetails>();
+        var response = await actual.Content.ReadFromJsonAsync<ProblemDetails>(CancellationToken);
         response.ShouldNotBeNull();
         response.Status.ShouldBe(StatusCodes.Status404NotFound);
     }

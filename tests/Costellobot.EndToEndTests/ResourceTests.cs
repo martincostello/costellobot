@@ -8,7 +8,7 @@ namespace MartinCostello.Costellobot;
 
 public class ResourceTests(AppFixture fixture, ITestOutputHelper outputHelper) : EndToEndTest(fixture, outputHelper)
 {
-    [SkippableTheory]
+    [Theory]
     [InlineData("/bad-request.html", MediaTypeNames.Text.Html)]
     [InlineData("/error.html", MediaTypeNames.Text.Html)]
     [InlineData("/favicon.png", "image/png")]
@@ -31,7 +31,7 @@ public class ResourceTests(AppFixture fixture, ITestOutputHelper outputHelper) :
         using var client = Fixture.CreateClient();
 
         // Act
-        using var response = await client.GetAsync(requestUri);
+        using var response = await client.GetAsync(requestUri, CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -41,7 +41,7 @@ public class ResourceTests(AppFixture fixture, ITestOutputHelper outputHelper) :
         response.Content.Headers.ContentType.MediaType.ShouldBe(contentType);
     }
 
-    [SkippableFact]
+    [Fact]
     public async Task Response_Headers_Contains_Expected_Headers()
     {
         // Arrange
@@ -61,7 +61,7 @@ public class ResourceTests(AppFixture fixture, ITestOutputHelper outputHelper) :
         using var client = Fixture.CreateClient();
 
         // Act
-        using var response = await client.GetAsync("/");
+        using var response = await client.GetAsync("/", CancellationToken);
 
         // Assert
         foreach (string expected in expectedHeaders)
@@ -70,7 +70,7 @@ public class ResourceTests(AppFixture fixture, ITestOutputHelper outputHelper) :
         }
     }
 
-    [SkippableFact]
+    [Fact]
     public async Task Response_Headers_Does_Not_Contain_Unexpected_Headers()
     {
         // Arrange
@@ -83,7 +83,7 @@ public class ResourceTests(AppFixture fixture, ITestOutputHelper outputHelper) :
         using var client = Fixture.CreateClient();
 
         // Act
-        using var response = await client.GetAsync("/");
+        using var response = await client.GetAsync("/", CancellationToken);
 
         // Assert
         foreach (string expected in expectedHeaders)

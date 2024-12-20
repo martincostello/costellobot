@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MartinCostello.Costellobot.Handlers;
 
-[Collection(AppCollection.Name)]
+[Collection<AppCollection>]
 public class PushHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
     [Theory]
@@ -59,7 +59,7 @@ public class PushHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await dispatched.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await dispatched.Task.WaitAsync(TimeSpan.FromSeconds(1), CancellationToken);
     }
 
     [Theory]

@@ -8,7 +8,7 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot;
 
-[Collection(HttpServerCollection.Name)]
+[Collection<HttpServerCollection>]
 public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : UITests(fixture, outputHelper)
 {
     [Fact]

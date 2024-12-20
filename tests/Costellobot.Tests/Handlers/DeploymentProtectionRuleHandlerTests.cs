@@ -10,7 +10,7 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot.Handlers;
 
-[Collection(AppCollection.Name)]
+[Collection<AppCollection>]
 public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppFixture>
 {
     public DeploymentProtectionRuleHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper)
@@ -37,7 +37,7 @@ public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppF
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await deploymentApproved.Task.WaitAsync(ResultTimeout);
+        await deploymentApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Fact]

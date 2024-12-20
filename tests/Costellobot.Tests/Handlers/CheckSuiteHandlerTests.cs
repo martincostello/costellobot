@@ -12,7 +12,7 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot.Handlers;
 
-[Collection(AppCollection.Name)]
+[Collection<AppCollection>]
 public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
     [Fact]
@@ -35,7 +35,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await rerequestCheckSuite.Task.WaitAsync(ResultTimeout);
+        await rerequestCheckSuite.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Theory]
@@ -65,7 +65,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await rerequestCheckSuite.Task.WaitAsync(ResultTimeout);
+        await rerequestCheckSuite.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Theory]
@@ -97,7 +97,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await failedJobsRetried.Task.WaitAsync(ResultTimeout);
+        await failedJobsRetried.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await failedJobsRetried.Task.WaitAsync(ResultTimeout);
+        await failedJobsRetried.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Fact]
@@ -335,7 +335,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await rerequestCheckSuite.Task.WaitAsync(ResultTimeout);
+        await rerequestCheckSuite.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Fact]
@@ -363,7 +363,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await failedJobsRetried.Task.WaitAsync(ResultTimeout);
+        await failedJobsRetried.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Theory]

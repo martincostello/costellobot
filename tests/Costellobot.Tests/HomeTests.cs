@@ -9,7 +9,7 @@ using Microsoft.Playwright;
 
 namespace MartinCostello.Costellobot;
 
-[Collection(HttpServerCollection.Name)]
+[Collection<HttpServerCollection>]
 public class HomeTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : UITests(fixture, outputHelper)
 {
     [Theory]
@@ -50,12 +50,12 @@ public class HomeTests(HttpServerFixture fixture, ITestOutputHelper outputHelper
         });
     }
 
-    [SkippableTheory]
+    [Theory]
     [MemberData(nameof(Browsers))]
     public async Task Can_View_Logs(string browserType, string? browserChannel)
     {
         // Arrange
-        Skip.If(
+        Assert.SkipWhen(
             string.Equals(browserType, BrowserType.Webkit, StringComparison.OrdinalIgnoreCase),
             "Webkit does not trust for self-signed certificate with the web socket.");
 
@@ -89,7 +89,7 @@ public class HomeTests(HttpServerFixture fixture, ITestOutputHelper outputHelper
             await app.WaitForContentAsync();
 
             // Wait for the web socket to have connected
-            await connected.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            await connected.Task.WaitAsync(TimeSpan.FromSeconds(10), CancellationToken);
 
             // Act - Deliver a ping webhook
             var value = new

@@ -37,6 +37,8 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         Dispose(false);
     }
 
+    protected virtual CancellationToken CancellationToken => TestContext.Current.CancellationToken;
+
     protected T Fixture { get; }
 
     protected ITestOutputHelper OutputHelper { get; }
@@ -45,12 +47,12 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
 
     protected virtual TimeSpan ResultTimeout { get; } = TimeSpan.FromSeconds(1);
 
-    public virtual Task InitializeAsync() => Task.CompletedTask;
+    public virtual ValueTask InitializeAsync() => ValueTask.CompletedTask;
 
-    public virtual Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        Dispose();
-        return Task.CompletedTask;
+        await DisposeAsync(true);
+        GC.SuppressFinalize(this);
     }
 
     public void Dispose()
@@ -187,6 +189,12 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
     {
         _scope?.Dispose();
         Fixture.ClearConfigurationOverrides();
+    }
+
+    protected virtual ValueTask DisposeAsync(bool disposing)
+    {
+        Dispose(true);
+        return ValueTask.CompletedTask;
     }
 
     private (string Payload, string Signature) CreateWebhook(

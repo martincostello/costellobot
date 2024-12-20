@@ -12,7 +12,7 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot.Handlers;
 
-[Collection(AppCollection.Name)]
+[Collection<AppCollection>]
 public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
     [Fact]
@@ -35,7 +35,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await pullRequestApproved.Task.WaitAsync(ResultTimeout);
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     {
         // Arrange
         Fixture.ApprovePullRequests();
-        await Fixture.Interceptor.RegisterBundleAsync(Path.Combine("Bundles", "nuget-search.json"));
+        await Fixture.Interceptor.RegisterBundleAsync(Path.Combine("Bundles", "nuget-search.json"), cancellationToken: CancellationToken);
 
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(TrustedCommitMessage("Newtonsoft.Json", "13.0.1"));
@@ -59,7 +59,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await pullRequestApproved.Task.WaitAsync(ResultTimeout);
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Theory]
@@ -94,7 +94,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         {
             request.Content.ShouldNotBeNull();
 
-            byte[] body = await request.Content.ReadAsByteArrayAsync();
+            byte[] body = await request.Content.ReadAsByteArrayAsync(CancellationToken);
             using var document = JsonDocument.Parse(body);
 
             var query = document.RootElement.GetProperty("query").GetString();
@@ -119,7 +119,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await automergeEnabled.Task.WaitAsync(ResultTimeout);
+        await automergeEnabled.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Theory]
@@ -155,8 +155,8 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await pullRequestApproved.Task.WaitAsync(ResultTimeout);
-        await automergeEnabled.Task.WaitAsync(ResultTimeout);
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
+        await automergeEnabled.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Theory]
@@ -222,9 +222,9 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await pullRequestApproved.Task.WaitAsync(ResultTimeout);
-        await automergeEnabled.Task.WaitAsync(ResultTimeout);
-        await pullRequestMerged.Task.WaitAsync(ResultTimeout);
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
+        await automergeEnabled.Task.WaitAsync(ResultTimeout, CancellationToken);
+        await pullRequestMerged.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Fact]
@@ -253,7 +253,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await automergeEnabled.Task.WaitAsync(ResultTimeout);
+        await automergeEnabled.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Fact]
@@ -574,9 +574,9 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await pullRequestApproved.Task.WaitAsync(ResultTimeout);
-        await automergeEnabled.Task.WaitAsync(ResultTimeout);
-        await pullRequestMerged.Task.WaitAsync(ResultTimeout);
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
+        await automergeEnabled.Task.WaitAsync(ResultTimeout, CancellationToken);
+        await pullRequestMerged.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Fact]

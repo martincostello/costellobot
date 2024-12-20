@@ -2,7 +2,6 @@
   <ItemGroup Condition=" '$(IsTestProject)' == 'true' ">
     <Using Include="Shouldly" />
     <Using Include="Xunit" />
-    <Using Include="Xunit.Abstractions" />
   </ItemGroup>
   <PropertyGroup>
     <BuildId Condition=" '$(BuildId)' == '' ">$(GITHUB_RUN_ID)</BuildId>
