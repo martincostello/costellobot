@@ -7,7 +7,7 @@ namespace MartinCostello.Costellobot;
 
 public class UITests(AppFixture fixture, ITestOutputHelper outputHelper) : EndToEndTest(fixture, outputHelper), IAsyncLifetime
 {
-    [SkippableFact]
+    [Fact]
     public async Task Can_Load_Homepage()
     {
         // Arrange
@@ -28,7 +28,7 @@ public class UITests(AppFixture fixture, ITestOutputHelper outputHelper) : EndTo
         await Assertions.Expect(page.Locator("id=sign-in")).ToBeVisibleAsync();
     }
 
-    public Task InitializeAsync()
+    public ValueTask InitializeAsync()
     {
         int exitCode = Program.Main(["install"]);
 
@@ -37,8 +37,12 @@ public class UITests(AppFixture fixture, ITestOutputHelper outputHelper) : EndTo
             throw new InvalidOperationException($"Playwright exited with code {exitCode}.");
         }
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
-    public Task DisposeAsync() => Task.CompletedTask;
+    public ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+        return ValueTask.CompletedTask;
+    }
 }

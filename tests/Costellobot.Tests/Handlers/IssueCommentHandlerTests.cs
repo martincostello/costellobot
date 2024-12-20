@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MartinCostello.Costellobot.Handlers;
 
-[Collection(AppCollection.Name)]
+[Collection<AppCollection>]
 public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
     [Fact]
@@ -32,8 +32,8 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await dispatched.Task.WaitAsync(ResultTimeout);
-        await reacted.Task.WaitAsync(ResultTimeout);
+        await dispatched.Task.WaitAsync(ResultTimeout, CancellationToken);
+        await reacted.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Theory]

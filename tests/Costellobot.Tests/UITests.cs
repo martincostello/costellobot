@@ -9,7 +9,7 @@ using Microsoft.Playwright;
 
 namespace MartinCostello.Costellobot;
 
-[Collection(HttpServerCollection.Name)]
+[Collection<HttpServerCollection>]
 public abstract class UITests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<HttpServerFixture>(fixture, outputHelper)
 {
     public static TheoryData<string, string?> Browsers()
@@ -35,13 +35,13 @@ public abstract class UITests(HttpServerFixture fixture, ITestOutputHelper outpu
         return browsers;
     }
 
-    public override async Task InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
         InstallPlaywright();
         await base.InitializeAsync();
     }
 
-    public override Task DisposeAsync()
+    protected override async ValueTask DisposeAsync(bool disposing)
     {
         var cache = Fixture.Services.GetRequiredService<IMemoryCache>();
 
@@ -50,7 +50,7 @@ public abstract class UITests(HttpServerFixture fixture, ITestOutputHelper outpu
             memoryCache.Compact(100);
         }
 
-        return base.DisposeAsync();
+        await base.DisposeAsync(disposing);
     }
 
     protected async Task<AppPage> SignInAsync(IPage page, bool waitForContent = true)

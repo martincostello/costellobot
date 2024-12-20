@@ -11,7 +11,7 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot;
 
-[Collection(AppCollection.Name)]
+[Collection<AppCollection>]
 public class GitCommitAnalyzerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
     [Fact]
@@ -990,6 +990,183 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Assert
         actual.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Duplicated_Dependency_Names()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+
+        registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", "8.0.0")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["AzureAD", "Microsoft"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies = ["^AspNet.Security.OAuth\\..*$"],
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["Microsoft"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var sha = "314783fa32248fc8961b9cea5a3dbf8e32a93393";
+        var commitMessage = """
+                            Bump the opentelemetry group with 5 updates
+                            Bumps the opentelemetry group with 5 updates:
+
+                            | Package | From | To |
+                            | --- | --- | --- |
+                            | [Microsoft.Extensions.Configuration.Binder](https://github.com/dotnet/runtime) | `9.0.0` | `9.0.0` |
+                            | [Microsoft.Extensions.DependencyInjection](https://github.com/dotnet/runtime) | `9.0.0` | `9.0.0` |
+                            | [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-dotnet) | `1.9.0` | `1.10.0` |
+                            | [OpenTelemetry.Exporter.OpenTelemetryProtocol](https://github.com/open-telemetry/opentelemetry-dotnet) | `1.9.0` | `1.10.0` |
+                            | [OpenTelemetry.Extensions.Hosting](https://github.com/open-telemetry/opentelemetry-dotnet) | `1.9.0` | `1.10.0` |
+
+
+                            Updates `Microsoft.Extensions.Configuration.Binder` from 9.0.0 to 9.0.0
+                            - [Release notes](https://github.com/dotnet/runtime/releases)
+                            - [Commits](dotnet/runtime@v9.0.0...v9.0.0)
+
+                            Updates `Microsoft.Extensions.DependencyInjection` from 9.0.0 to 9.0.0
+                            - [Release notes](https://github.com/dotnet/runtime/releases)
+                            - [Commits](dotnet/runtime@v9.0.0...v9.0.0)
+
+                            Updates `OpenTelemetry` from 1.9.0 to 1.10.0
+                            - [Release notes](https://github.com/open-telemetry/opentelemetry-dotnet/releases)
+                            - [Changelog](https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/RELEASENOTES.md)
+                            - [Commits](open-telemetry/opentelemetry-dotnet@core-1.9.0...core-1.10.0)
+
+                            Updates `Microsoft.Extensions.Configuration.Binder` from 9.0.0 to 9.0.0
+                            - [Release notes](https://github.com/dotnet/runtime/releases)
+                            - [Commits](dotnet/runtime@v9.0.0...v9.0.0)
+
+                            Updates `Microsoft.Extensions.DependencyInjection` from 9.0.0 to 9.0.0
+                            - [Release notes](https://github.com/dotnet/runtime/releases)
+                            - [Commits](dotnet/runtime@v9.0.0...v9.0.0)
+
+                            Updates `OpenTelemetry` from 1.9.0 to 1.10.0
+                            - [Release notes](https://github.com/open-telemetry/opentelemetry-dotnet/releases)
+                            - [Changelog](https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/RELEASENOTES.md)
+                            - [Commits](open-telemetry/opentelemetry-dotnet@core-1.9.0...core-1.10.0)
+
+                            Updates `OpenTelemetry.Exporter.OpenTelemetryProtocol` from 1.9.0 to 1.10.0
+                            - [Release notes](https://github.com/open-telemetry/opentelemetry-dotnet/releases)
+                            - [Changelog](https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/RELEASENOTES.md)
+                            - [Commits](open-telemetry/opentelemetry-dotnet@core-1.9.0...core-1.10.0)
+
+                            Updates `Microsoft.Extensions.Configuration.Binder` from 9.0.0 to 9.0.0
+                            - [Release notes](https://github.com/dotnet/runtime/releases)
+                            - [Commits](dotnet/runtime@v9.0.0...v9.0.0)
+
+                            Updates `Microsoft.Extensions.DependencyInjection` from 9.0.0 to 9.0.0
+                            - [Release notes](https://github.com/dotnet/runtime/releases)
+                            - [Commits](dotnet/runtime@v9.0.0...v9.0.0)
+
+                            Updates `OpenTelemetry` from 1.9.0 to 1.10.0
+                            - [Release notes](https://github.com/open-telemetry/opentelemetry-dotnet/releases)
+                            - [Changelog](https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/RELEASENOTES.md)
+                            - [Commits](open-telemetry/opentelemetry-dotnet@core-1.9.0...core-1.10.0)
+
+                            Updates `OpenTelemetry.Extensions.Hosting` from 1.9.0 to 1.10.0
+                            - [Release notes](https://github.com/open-telemetry/opentelemetry-dotnet/releases)
+                            - [Changelog](https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/RELEASENOTES.md)
+                            - [Commits](open-telemetry/opentelemetry-dotnet@core-1.9.0...core-1.10.0)
+
+                            ---
+                            updated-dependencies:
+                            - dependency-name: Microsoft.Extensions.Configuration.Binder
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: opentelemetry
+                            - dependency-name: Microsoft.Extensions.DependencyInjection
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: opentelemetry
+                            - dependency-name: OpenTelemetry
+                              dependency-type: direct:production
+                              update-type: version-update:semver-minor
+                              dependency-group: opentelemetry
+                            - dependency-name: Microsoft.Extensions.Configuration.Binder
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: opentelemetry
+                            - dependency-name: Microsoft.Extensions.DependencyInjection
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: opentelemetry
+                            - dependency-name: OpenTelemetry
+                              dependency-type: direct:production
+                              update-type: version-update:semver-minor
+                              dependency-group: opentelemetry
+                            - dependency-name: OpenTelemetry.Exporter.OpenTelemetryProtocol
+                              dependency-type: direct:production
+                              update-type: version-update:semver-minor
+                              dependency-group: opentelemetry
+                            - dependency-name: Microsoft.Extensions.Configuration.Binder
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: opentelemetry
+                            - dependency-name: Microsoft.Extensions.DependencyInjection
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: opentelemetry
+                            - dependency-name: OpenTelemetry
+                              dependency-type: direct:production
+                              update-type: version-update:semver-minor
+                              dependency-group: opentelemetry
+                            - dependency-name: OpenTelemetry.Extensions.Hosting
+                              dependency-type: direct:production
+                              update-type: version-update:semver-minor
+                              dependency-group: opentelemetry
+                            ...
+
+                            Signed-off-by: dependabot[bot] <support@github.com>
+                            """;
+
+        var diff =
+            """
+            diff --git a/Directory.Packages.props b/Directory.Packages.props
+            index 72e72ccd..35f86689 100644
+            --- a/Directory.Packages.props
+            +++ b/Directory.Packages.props
+            @@ -28,9 +28,9 @@
+                 <PackageVersion Include="Microsoft.Extensions.Telemetry" Version="9.0.0" />
+                 <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+                 <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+            -    <PackageVersion Include="OpenTelemetry" Version="1.9.0" />
+            -    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
+            -    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.9.0" />
+            +    <PackageVersion Include="OpenTelemetry" Version="1.10.0" />
+            +    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.10.0" />
+            +    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.10.0" />
+                 <PackageVersion Include="OpenTelemetry.Instrumentation.AWS" Version="1.1.0-beta.6" />
+                 <PackageVersion Include="OpenTelemetry.Instrumentation.AWSLambda" Version="1.3.0-beta.1" />
+                 <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
+            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            "dependabot/nuget/opentelemetry-97480a8ec4",
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBeFalse();
     }
 
     private static GitCommitAnalyzer CreateTarget(

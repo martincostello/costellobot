@@ -9,7 +9,7 @@ using Octokit;
 
 namespace MartinCostello.Costellobot;
 
-[Collection(AppCollection.Name)]
+[Collection<AppCollection>]
 public sealed class AuthenticationTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
     [Fact]
@@ -42,7 +42,7 @@ public sealed class AuthenticationTests(AppFixture fixture, ITestOutputHelper ou
         token1.ValidTo.ShouldBe(utcNow.AddMinutes(10), tolerance);
 
         // Arrange
-        await Task.Delay(TimeSpan.FromSeconds(1.1));
+        await Task.Delay(TimeSpan.FromSeconds(1.1), CancellationToken);
 
         Fixture.ClearCache();
 

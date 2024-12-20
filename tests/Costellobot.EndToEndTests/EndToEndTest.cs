@@ -3,10 +3,12 @@
 
 namespace MartinCostello.Costellobot;
 
-[Collection(AppCollection.Name)]
+[Collection<AppCollection>]
 [Trait("Category", "EndToEnd")]
 public abstract class EndToEndTest(AppFixture fixture, ITestOutputHelper outputHelper)
 {
+    protected virtual CancellationToken CancellationToken => TestContext.Current.CancellationToken;
+
     protected AppFixture Fixture { get; } = fixture;
 
     protected ITestOutputHelper OutputHelper { get; } = outputHelper;
