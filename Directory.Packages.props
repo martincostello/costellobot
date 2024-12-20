@@ -25,7 +25,7 @@
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
     <PackageVersion Include="Humanizer" Version="2.14.1" />
     <PackageVersion Include="JustEat.HttpClientInterception" Version="5.0.0" />
-    <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.5.0-beta.1569" />
+    <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.5.0" />
     <PackageVersion Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="9.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.0" />
