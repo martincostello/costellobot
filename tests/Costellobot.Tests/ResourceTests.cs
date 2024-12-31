@@ -210,6 +210,9 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
         string[] expectedHeaders =
         [
             "Content-Security-Policy",
+            "Cross-Origin-Embedder-Policy",
+            "Cross-Origin-Opener-Policy",
+            "Cross-Origin-Resource-Policy",
             "Expect-CT",
             "Permissions-Policy",
             "Referrer-Policy",
