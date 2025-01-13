@@ -19,6 +19,11 @@ public sealed partial class GitCommitAnalyzer(
     ILogger<GitCommitAnalyzer> logger)
 {
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
+    private static readonly IDeserializer YamlDeserializer = new DeserializerBuilder()
+        .IgnoreUnmatchedProperties()
+        .WithNamingConvention(HyphenatedNamingConvention.Instance)
+        .Build();
+
     private readonly ImmutableList<IPackageRegistry> _registries = registries.ToImmutableList();
 
     public static bool TryParseVersionNumber(
@@ -358,12 +363,7 @@ public sealed partial class GitCommitAnalyzer(
             using var stream = new MemoryStream(configuration);
             using var reader = new StreamReader(stream);
 
-            var deserializer = new DeserializerBuilder()
-                .IgnoreUnmatchedProperties()
-                .WithNamingConvention(HyphenatedNamingConvention.Instance)
-                .Build();
-
-            var config = deserializer.Deserialize<DependabotConfig>(reader);
+            var config = YamlDeserializer.Deserialize<DependabotConfig>(reader);
 
             if (config?.Version is 2 && config.Updates is not null)
             {
