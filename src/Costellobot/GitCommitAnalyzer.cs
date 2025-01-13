@@ -206,6 +206,7 @@ public sealed partial class GitCommitAnalyzer(
 
             if (ignored)
             {
+                Log.UpdateToDependencyIsIgnoredByDependabot(logger, reference, repository, dependency);
                 ignoredDependencies.Add(dependency);
             }
 
@@ -483,6 +484,16 @@ public sealed partial class GitCommitAnalyzer(
             ILogger logger,
             RepositoryId repository,
             Exception exception);
+
+        [LoggerMessage(
+           EventId = 10,
+           Level = LogLevel.Information,
+           Message = "Reference {Reference} for {Repository} updates dependency {Dependency} which is ignored by the dependabot configuration.")]
+        public static partial void UpdateToDependencyIsIgnoredByDependabot(
+            ILogger logger,
+            string? reference,
+            RepositoryId repository,
+            string dependency);
     }
 
     private sealed class DependabotConfig
