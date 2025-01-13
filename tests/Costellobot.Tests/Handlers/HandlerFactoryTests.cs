@@ -33,6 +33,7 @@ public static class HandlerFactoryTests
         var gitHubClient = Substitute.For<IGitHubClientForInstallation>();
 
         var commitAnalyzer = new GitCommitAnalyzer(
+            gitHubClient,
             [],
             webhookOptions,
             NullLoggerFactory.Instance.CreateLogger<GitCommitAnalyzer>());

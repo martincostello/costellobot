@@ -10,5 +10,5 @@ public enum DependencyEcosystem
     GitHubActions,
     Npm,
     NuGet,
-    Submodules,
+    GitSubmodule,
 }

@@ -7,14 +7,18 @@ using System.Text.RegularExpressions;
 using MartinCostello.Costellobot.Registries;
 using Microsoft.Extensions.Options;
 using Octokit;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace MartinCostello.Costellobot;
 
 public sealed partial class GitCommitAnalyzer(
+    IGitHubClientForInstallation client,
     IEnumerable<IPackageRegistry> registries,
     IOptionsMonitor<WebhookOptions> options,
     ILogger<GitCommitAnalyzer> logger)
 {
+    private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
     private readonly ImmutableList<IPackageRegistry> _registries = registries.ToImmutableList();
 
     public static bool TryParseVersionNumber(
@@ -72,7 +76,14 @@ public sealed partial class GitCommitAnalyzer(
         string commitMessage,
         string? diff)
     {
-        var dependencies = await GetDependencyTrustAsync(repository, reference, sha, commitMessage, diff);
+        var ecosystem = ParseEcosystem(reference);
+
+        if (ecosystem is DependencyEcosystem.Unknown or DependencyEcosystem.Unsupported)
+        {
+            return false;
+        }
+
+        var dependencies = await GetDependencyTrustAsync(repository, reference, sha, commitMessage, diff, ecosystem);
 
         bool isTrusted = dependencies.Count > 0 && dependencies.Values.All((p) => p);
 
@@ -151,7 +162,7 @@ public sealed partial class GitCommitAnalyzer(
             "github_actions" => DependencyEcosystem.GitHubActions,
             "npm_and_yarn" => DependencyEcosystem.Npm,
             "nuget" => DependencyEcosystem.NuGet,
-            "submodules" => DependencyEcosystem.Submodules,
+            "submodules" => DependencyEcosystem.GitSubmodule,
             _ => DependencyEcosystem.Unsupported,
         };
     }
@@ -161,7 +172,8 @@ public sealed partial class GitCommitAnalyzer(
         string? reference,
         string sha,
         string commitMessage,
-        string? diff)
+        string? diff,
+        DependencyEcosystem ecosystem)
     {
         var dependencyNames = ParseDependencies(commitMessage);
 
@@ -180,9 +192,20 @@ public sealed partial class GitCommitAnalyzer(
         var trustedDependencies = options.CurrentValue.TrustedEntities.Dependencies;
         var dependencyTrust = dependencyNames.ToDictionary((k) => k, (_) => false);
 
+        var dependenciesToIgnore = await GetIgnoredDependenciesAsync(repository, reference, ecosystem);
+        var ignoredDependencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (string dependency in dependencyNames)
         {
-            if (trustedDependencies.Any((p) => Regex.IsMatch(dependency, p)))
+            bool ignored = dependenciesToIgnore.Any((p) => Regex.IsMatch(dependency, p, RegexOptions.None, RegexTimeout));
+
+            if (ignored)
+            {
+                ignoredDependencies.Add(dependency);
+            }
+
+            if (!ignored &&
+                trustedDependencies.Any((p) => Regex.IsMatch(dependency, p, RegexOptions.None, RegexTimeout)))
             {
                 Log.TrustedDependencyNameUpdated(
                     logger,
@@ -205,6 +228,12 @@ public sealed partial class GitCommitAnalyzer(
         // If a dependency is not trusted by name alone, determine whether it is trusted through its owner
         foreach (string dependency in dependencyTrust.Where((p) => !p.Value).Select((p) => p.Key))
         {
+            if (ignoredDependencies.Contains(dependency))
+            {
+                // We only care if all dependencies are trusted, so stop looking on the first ignore
+                break;
+            }
+
             if (!await IsTrustedDependencyOwnerAsync(
                     repository,
                     dependency,
@@ -230,8 +259,6 @@ public sealed partial class GitCommitAnalyzer(
             string commitMessage,
             string? diff)
         {
-            var ecosystem = ParseEcosystem(reference);
-
             if (ecosystem is DependencyEcosystem.Unknown or DependencyEcosystem.Unsupported)
             {
                 return false;
@@ -311,6 +338,56 @@ public sealed partial class GitCommitAnalyzer(
 
             return false;
         }
+    }
+
+    private async Task<IReadOnlyList<string>> GetIgnoredDependenciesAsync(
+        RepositoryId repository,
+        string? reference,
+        DependencyEcosystem ecosystem)
+    {
+        IReadOnlyList<string> dependencies = [];
+
+        try
+        {
+            var configuration = await client.Repository.Content.GetRawContentByRef(
+                repository.Owner,
+                repository.Name,
+                ".github/dependabot.yml",
+                reference);
+
+            using var stream = new MemoryStream(configuration);
+            using var reader = new StreamReader(stream);
+
+            var deserializer = new DeserializerBuilder()
+                .IgnoreUnmatchedProperties()
+                .WithNamingConvention(HyphenatedNamingConvention.Instance)
+                .Build();
+
+            var config = deserializer.Deserialize<DependabotConfig>(reader);
+
+            if (config?.Version is 2 && config.Updates is not null)
+            {
+                var comparison = StringComparison.OrdinalIgnoreCase;
+                var ecosystemName = ecosystem.ToString();
+                var normalized = ecosystemName.Replace("-", string.Empty, comparison);
+
+                dependencies = config.Updates
+                    .Where((p) => string.Equals(p.PackageEcosystem, normalized, StringComparison.OrdinalIgnoreCase))
+                    .SelectMany((p) => p.Ignore)
+                    .Select((p) => p.DependencyName)
+                    .ToList();
+            }
+        }
+        catch (NotFoundException)
+        {
+            // No dependabot configuration file
+        }
+        catch (Exception ex)
+        {
+            Log.FailedToParseDependabotConfiguration(logger, repository, ex);
+        }
+
+        return dependencies;
     }
 
     [ExcludeFromCodeCoverage]
@@ -397,5 +474,38 @@ public sealed partial class GitCommitAnalyzer(
             RepositoryId repository,
             string dependency,
             string registry);
+
+        [LoggerMessage(
+           EventId = 9,
+           Level = LogLevel.Warning,
+           Message = "Failed to parse dependabot configuration for repository {Repository}.")]
+        public static partial void FailedToParseDependabotConfiguration(
+            ILogger logger,
+            RepositoryId repository,
+            Exception exception);
+    }
+
+    private sealed class DependabotConfig
+    {
+        [YamlMember(Alias = "version")]
+        public long Version { get; set; }
+
+        [YamlMember(Alias = "updates")]
+        public IList<Update> Updates { get; set; } = [];
+    }
+
+    private sealed class Update
+    {
+        [YamlMember(Alias = "package-ecosystem")]
+        public string? PackageEcosystem { get; set; }
+
+        [YamlMember(Alias = "ignore")]
+        public IList<Ignore> Ignore { get; set; } = [];
+    }
+
+    private sealed class Ignore
+    {
+        [YamlMember(Alias = "dependency-name")]
+        public string DependencyName { get; set; } = string.Empty;
     }
 }

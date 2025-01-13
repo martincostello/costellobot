@@ -52,6 +52,7 @@
     <PackageReference Include="RazorSlices" />
     <PackageReference Include="Sentry.AspNetCore" />
     <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="YamlDotNet" />
   </ItemGroup>
   <ItemGroup>
     <ContainerPort Include="8080" Type="tcp" />
