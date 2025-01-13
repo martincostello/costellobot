@@ -7,7 +7,7 @@
   "scripts": {
     "build": "npm run compile && npm run format && npm run lint && npm test",
     "compile": "webpack",
-    "format": "prettier --write scripts/**/*.ts && stylelint --fix styles/**/*.css",
+    "format": "prettier --write scripts/**/*.ts && stylelint --fix lax styles/**/*.css",
     "format-check": "prettier --check scripts/**/*.ts && stylelint --fix styles/**/*.css",
     "lint": "eslint scripts",
     "test": "jest",
@@ -37,7 +37,7 @@
     "moment": "^2.30.1",
     "prettier": "^3.4.2",
     "style-loader": "^4.0.0",
-    "stylelint": "^16.12.0",
+    "stylelint": "^16.13.0",
     "stylelint-config-standard": "^36.0.1",
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
