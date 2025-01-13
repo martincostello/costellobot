@@ -1,12 +1,14 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Text;
 using MartinCostello.Costellobot.Infrastructure;
 using MartinCostello.Costellobot.Registries;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
+using Octokit;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot;
@@ -174,7 +176,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     [InlineData("Microsoft.NET.Sdk", "update-dotnet-sdk-6.0.302", "6.0.302", DependencyEcosystem.Unknown, new string[0], false)]
     [InlineData("NodaTime", "dependabot/nuget/NodaTimeVersion-3.1.0", "3.1.0", DependencyEcosystem.NuGet, new[] { "NodaTime" }, false)]
     [InlineData("python-dotenv", "dependabot/pip/python-dotenv-0.17.1", "0.17.1", DependencyEcosystem.Unsupported, new string[0], false)]
-    [InlineData("src/submodules/dependabot-helper", "dependabot/submodules/src/submodules/dependabot-helper-697aaa7", "697aaa7", DependencyEcosystem.Submodules, new[] { "https://github.com/martincostello" }, true)]
+    [InlineData("src/submodules/dependabot-helper", "dependabot/submodules/src/submodules/dependabot-helper-697aaa7", "697aaa7", DependencyEcosystem.GitSubmodule, new[] { "https://github.com/martincostello" }, true)]
     [InlineData("typescript", "dependabot/npm_and_yarn/typescript-5.0.1", "5.0.1", DependencyEcosystem.Npm, new[] { "typescript-bot" }, true)]
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers(
         string dependency,
@@ -205,7 +207,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.GitHubActions] = ["actions"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
-                    [DependencyEcosystem.Submodules] = ["https://github.com/martincostello"],
+                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                 },
             },
         };
@@ -242,7 +244,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.GitHubActions] = ["actions"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
-                    [DependencyEcosystem.Submodules] = ["https://github.com/martincostello"],
+                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                 },
             },
         };
@@ -365,7 +367,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.GitHubActions] = ["actions"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
-                    [DependencyEcosystem.Submodules] = ["https://github.com/martincostello"],
+                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                 },
             },
         };
@@ -416,7 +418,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.GitHubActions] = ["actions"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft", "OpenTelemetry"],
-                    [DependencyEcosystem.Submodules] = ["https://github.com/martincostello"],
+                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                 },
             },
         };
@@ -692,7 +694,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.GitHubActions] = ["actions"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
-                    [DependencyEcosystem.Submodules] = ["https://github.com/martincostello"],
+                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                 },
             },
         };
@@ -993,6 +995,162 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     }
 
     [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Ignored_Packages_In_Dependabot_Configuration()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/nuget/aspnet-security-oauth-b2c2f7560d";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+
+        registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", "8.0.0")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["AzureAD", "Microsoft"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies = ["^AspNet.Security.OAuth\\..*$"],
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["Microsoft"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+
+        var dependabotConfiguration =
+            """
+            version: 2
+            updates:
+            - package-ecosystem: "github-actions"
+              directory: "/"
+              schedule:
+                interval: daily
+                time: "05:30"
+                timezone: Europe/London
+              reviewers:
+                - "octocat"
+            - package-ecosystem: nuget
+              directory: "/"
+              groups:
+                Microsoft.OpenApi:
+                  patterns:
+                    - Microsoft.OpenApi*
+                xunit:
+                  patterns:
+                    - Verify.Xunit
+                    - xunit*
+              schedule:
+                interval: daily
+                time: "05:30"
+                timezone: Europe/London
+              reviewers:
+                - "octocat"
+              open-pull-requests-limit: 99
+              ignore:
+                - dependency-name: "Microsoft.IdentityModel.*"
+            """;
+
+        var target = CreateTarget(
+            scope.ServiceProvider,
+            options,
+            [registry],
+            (client) =>
+            {
+                client.GetRawContentByRef(
+                    repository.Owner,
+                    repository.Name,
+                    ".github/dependabot.yml",
+                    reference)
+                    .Returns(Task.FromResult(Encoding.UTF8.GetBytes(dependabotConfiguration)));
+            });
+
+        var sha = "815aad7927000ff23a2a61f2c640dad01a88658c";
+        var commitMessage = """
+                            Bump the aspnet-security-oauth group with 4 updates
+                            Bumps the aspnet-security-oauth group with 4 updates: [AspNet.Security.OAuth.Amazon](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers), [AspNet.Security.OAuth.Apple](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers), [Microsoft.IdentityModel.JsonWebTokens](https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet) and [AspNet.Security.OAuth.GitHub](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers).
+
+
+                            Updates `AspNet.Security.OAuth.Amazon` from 9.0.0-rc.2.24554.41 to 9.0.0-rc.2.24557.45
+                            - [Release notes](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers/releases)
+                            - [Commits](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers/commits)
+
+                            Updates `AspNet.Security.OAuth.Apple` from 9.0.0-rc.2.24554.41 to 9.0.0-rc.2.24557.45
+                            - [Release notes](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers/releases)
+                            - [Commits](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers/commits)
+
+                            Updates `Microsoft.IdentityModel.JsonWebTokens` from 8.2.0 to 8.0.0
+                            - [Release notes](https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/releases)
+                            - [Changelog](https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/blob/dev/CHANGELOG.md)
+                            - [Commits](AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet@8.2.0...8.0.0)
+
+                            Updates `AspNet.Security.OAuth.GitHub` from 9.0.0-rc.2.24554.41 to 9.0.0-rc.2.24557.45
+                            - [Release notes](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers/releases)
+                            - [Commits](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers/commits)
+
+                            ---
+                            updated-dependencies:
+                            - dependency-name: AspNet.Security.OAuth.Amazon
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: aspnet-security-oauth
+                            - dependency-name: AspNet.Security.OAuth.Apple
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: aspnet-security-oauth
+                            - dependency-name: Microsoft.IdentityModel.JsonWebTokens
+                              dependency-type: direct:production
+                              update-type: version-update:semver-minor
+                              dependency-group: aspnet-security-oauth
+                            - dependency-name: AspNet.Security.OAuth.GitHub
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: aspnet-security-oauth
+                            ...
+
+                            Signed-off-by: dependabot[bot] <support@github.com>
+                            """;
+
+        var diff =
+            """
+            diff --git a/Directory.Packages.props b/Directory.Packages.props
+            index ead99a216..44207d0d1 100644
+            --- a/Directory.Packages.props
+            +++ b/Directory.Packages.props
+            @@ -11,9 +11,9 @@
+                 <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="9.0.0-rc.1.24511.1" />
+                 <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="9.0.0-rc.1.24511.1" />
+                 <PackageVersion Include="Aspire.Microsoft.Azure.Cosmos" Version="9.0.0-rc.1.24511.1" />
+            -    <PackageVersion Include="AspNet.Security.OAuth.Amazon" Version="9.0.0-rc.2.24554.41" />
+            -    <PackageVersion Include="AspNet.Security.OAuth.Apple" Version="9.0.0-rc.2.24554.41" />
+            -    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="9.0.0-rc.2.24554.41" />
+            +    <PackageVersion Include="AspNet.Security.OAuth.Amazon" Version="9.0.0-rc.2.24557.45" />
+            +    <PackageVersion Include="AspNet.Security.OAuth.Apple" Version="9.0.0-rc.2.24557.45" />
+            +    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="9.0.0-rc.2.24557.45" />
+                 <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.3.2" />
+                 <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" Version="1.3.4" />
+                 <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.2.4" />
+            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task Commit_Is_Analyzed_Correctly_With_Duplicated_Dependency_Names()
     {
         // Arrange
@@ -1172,12 +1330,22 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     private static GitCommitAnalyzer CreateTarget(
         IServiceProvider serviceProvider,
         WebhookOptions? options = null,
-        IEnumerable<IPackageRegistry>? registries = null)
+        IEnumerable<IPackageRegistry>? registries = null,
+        Action<IRepositoryContentsClient>? configureActionsClient = null)
     {
         registries ??= serviceProvider.GetServices<IPackageRegistry>();
         var optionsMonitor = options?.ToMonitor() ?? serviceProvider.GetRequiredService<IOptionsMonitor<WebhookOptions>>();
         var logger = serviceProvider.GetRequiredService<ILogger<GitCommitAnalyzer>>();
 
-        return new(registries, optionsMonitor, logger);
+        var contents = Substitute.For<IRepositoryContentsClient>();
+        var repositories = Substitute.For<IRepositoriesClient>();
+        var client = Substitute.For<IGitHubClientForInstallation>();
+
+        repositories.Content.Returns(contents);
+        client.Repository.Returns(repositories);
+
+        configureActionsClient?.Invoke(contents);
+
+        return new(client, registries, optionsMonitor, logger);
     }
 }

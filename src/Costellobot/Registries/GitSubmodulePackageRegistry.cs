@@ -9,7 +9,7 @@ public sealed class GitSubmodulePackageRegistry(
     IGitHubClientForInstallation client,
     Octokit.GraphQL.IConnection connection) : GitHubPackageRegistry(client, connection)
 {
-    public override DependencyEcosystem Ecosystem => DependencyEcosystem.Submodules;
+    public override DependencyEcosystem Ecosystem => DependencyEcosystem.GitSubmodule;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         RepositoryId repository,

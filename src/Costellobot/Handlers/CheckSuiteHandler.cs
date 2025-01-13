@@ -17,6 +17,7 @@ public sealed partial class CheckSuiteHandler(
     IOptionsMonitor<WebhookOptions> options,
     ILogger<CheckSuiteHandler> logger) : IHandler
 {
+    private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
     private readonly IOptionsMonitor<WebhookOptions> _options = options;
 
     public async Task HandleAsync(WebhookEvent message)
@@ -140,7 +141,7 @@ public sealed partial class CheckSuiteHandler(
         var options = _options.CurrentValue;
 
         var retryEligibleRuns = failedRuns
-            .Where((p) => options.RerunFailedChecks.Any((pattern) => Regex.IsMatch(p.Name, pattern)))
+            .Where((p) => options.RerunFailedChecks.Any((pattern) => Regex.IsMatch(p.Name, pattern, RegexOptions.None, RegexTimeout)))
             .GroupBy((p) => p.Name)
             .ToList();
 
