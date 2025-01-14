@@ -6,10 +6,10 @@ namespace MartinCostello.Costellobot;
 public static class GitDiffParserTests
 {
     [Fact]
-    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_For_One_File()
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_For_One_File_NuGet()
     {
         // Arrange
-        string diff = GetDiff("OneFile");
+        string diff = GetDiff("NuGet.OneFile");
 
         // Act
         bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
@@ -23,10 +23,10 @@ public static class GitDiffParserTests
     }
 
     [Fact]
-    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_For_Multiple_Files()
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_For_Multiple_Files_NuGet()
     {
         // Arrange
-        string diff = GetDiff("MultipleFiles");
+        string diff = GetDiff("NuGet.MultipleFiles");
 
         // Act
         bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
@@ -40,10 +40,73 @@ public static class GitDiffParserTests
     }
 
     [Fact]
-    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_For_No_Package_Updates()
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_For_No_Package_Updates_NuGet()
     {
         // Arrange
-        string diff = GetDiff("NoUpdates");
+        string diff = GetDiff("NuGet.NoUpdates");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeFalse();
+        packages.ShouldBeNull();
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_For_One_Package_Npm()
+    {
+        // Arrange
+        string diff = GetDiff("npm.OnePackage");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("webpack-cli", ("6.0.0", "6.0.1"));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_For_One_Package_Last_Line_Npm()
+    {
+        // Arrange
+        string diff = GetDiff("npm.OnePackageLastLine");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("webpack-remove-empty-scripts", ("1.0.3", "1.0.4"));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_Multiple_Packages_Npm()
+    {
+        // Arrange
+        string diff = GetDiff("npm.MultiplePackages");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("@typescript-eslint/eslint-plugin", ("8.19.1", "8.20.0"));
+        packages.ShouldContainKeyAndValue("@typescript-eslint/parser", ("8.19.1", "8.20.0"));
+        packages.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_For_No_Package_Updates_Npm()
+    {
+        // Arrange
+        string diff = GetDiff("npm.None");
 
         // Act
         bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
