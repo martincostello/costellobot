@@ -17,8 +17,8 @@ public static class GitDiffParserTests
         // Assert
         actual.ShouldBeTrue();
         packages.ShouldNotBeNull();
-        packages.ShouldContainKeyAndValue("AWSSDK.SecurityToken", (new("3.7.400.10"), new("3.7.400.11")));
-        packages.ShouldContainKeyAndValue("AWSSDK.SimpleSystemsManagement", (new("3.7.401.8"), new("3.7.401.9")));
+        packages.ShouldContainKeyAndValue("AWSSDK.SecurityToken", ("3.7.400.10", "3.7.400.11"));
+        packages.ShouldContainKeyAndValue("AWSSDK.SimpleSystemsManagement", ("3.7.401.8", "3.7.401.9"));
         packages.Count.ShouldBe(2);
     }
 
@@ -34,8 +34,8 @@ public static class GitDiffParserTests
         // Assert
         actual.ShouldBeTrue();
         packages.ShouldNotBeNull();
-        packages.ShouldContainKeyAndValue("Microsoft.AspNetCore.Mvc.Testing", (new("8.0.8"), new("9.0.0-preview.7.24406.2")));
-        packages.ShouldContainKeyAndValue("Microsoft.EntityFrameworkCore.Sqlite", (new("8.0.8"), new("9.0.0-preview.7.24405.3")));
+        packages.ShouldContainKeyAndValue("Microsoft.AspNetCore.Mvc.Testing", ("8.0.8", "9.0.0-preview.7.24406.2"));
+        packages.ShouldContainKeyAndValue("Microsoft.EntityFrameworkCore.Sqlite", ("8.0.8", "9.0.0-preview.7.24405.3"));
         packages.Count.ShouldBe(2);
     }
 
