@@ -22,6 +22,8 @@ public static class GitDiffParser
     private static readonly XName PackageVersion = nameof(PackageVersion);
     private static readonly XName Version = nameof(Version);
 
+    private static readonly char[] NpmVersionPrefixes = ['^', '~'];
+
     private enum DiffLineType
     {
         None = 0,
@@ -215,7 +217,7 @@ public static class GitDiffParser
                 if (property.Value.ValueKind is JsonValueKind.String &&
                     property.Value.GetString() is { Length: > 0 } versionString)
                 {
-                    versionString = versionString.TrimStart(['^', '~']);
+                    versionString = versionString.TrimStart(NpmVersionPrefixes);
 
                     if (NuGetVersion.TryParse(versionString, out var version))
                     {
@@ -225,7 +227,7 @@ public static class GitDiffParser
                 }
             }
         }
-        catch (System.Text.Json.JsonException)
+        catch (JsonException)
         {
             // Ignore JSON parsing errors
         }
