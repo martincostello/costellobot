@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using System.Xml.Linq;
 using NuGet.Versioning;
 
@@ -13,6 +14,7 @@ public static class GitDiffParser
     private const char Added = '+';
     private const char Removed = '-';
     private const string HunkPrefix = "@@ ";
+    private const string TargetPrefix = "+++ b/";
 
     private static readonly XName Include = nameof(Include);
     private static readonly XName GlobalPackageReference = nameof(GlobalPackageReference);
@@ -57,7 +59,7 @@ public static class GitDiffParser
     }
 
     private static Dictionary<string, (string From, string To)> GetPackages(
-        List<(DiffLineType Type, string Package, NuGetVersion Version)> edits)
+        List<(string Path, DiffLineType Type, string Package, NuGetVersion Version)> edits)
     {
         var comparer = StringComparer.OrdinalIgnoreCase;
         var added = new Dictionary<string, IList<NuGetVersion>>(comparer);
@@ -108,7 +110,7 @@ public static class GitDiffParser
         return packages;
     }
 
-    private static List<(DiffLineType Type, string Package, NuGetVersion Version)> GetEdits(string diff)
+    private static List<(string Path, DiffLineType Type, string Package, NuGetVersion Version)> GetEdits(string diff)
     {
         // See https://stackoverflow.com/a/2530012/1064169
         using var reader = new StringReader(diff);
@@ -116,11 +118,16 @@ public static class GitDiffParser
 
         bool inHunk = false;
 
-        var edits = new List<(DiffLineType Type, string Package, NuGetVersion Version)>();
+        var edits = new List<(string Path, DiffLineType Type, string Package, NuGetVersion Version)>();
+        string path = string.Empty;
 
         while ((line = reader.ReadLine()) is not null)
         {
-            if (line.StartsWith(HunkPrefix, StringComparison.Ordinal))
+            if (line.StartsWith(TargetPrefix, StringComparison.Ordinal))
+            {
+                path = line[TargetPrefix.Length..];
+            }
+            else if (line.StartsWith(HunkPrefix, StringComparison.Ordinal))
             {
                 inHunk = true;
             }
@@ -130,9 +137,9 @@ public static class GitDiffParser
 
                 if (prefix is Added or Removed)
                 {
-                    if (TryParseLine(line, out var type, out var package))
+                    if (TryParseLine(path, line, out var type, out var package))
                     {
-                        edits.Add((type, package.Value.Package, package.Value.Version));
+                        edits.Add((path, type, package.Value.Package, package.Value.Version));
                     }
                 }
                 else if (prefix is not ' ')
@@ -146,6 +153,7 @@ public static class GitDiffParser
     }
 
     private static bool TryParseLine(
+        string path,
         string line,
         out DiffLineType lineType,
         [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
@@ -171,17 +179,71 @@ public static class GitDiffParser
         }
 
         var fragmentText = line[1..];
+        var fragmentTrimmed = fragmentText.Trim();
 
-        if (!fragmentText.Contains('<', StringComparison.Ordinal))
+        if (fragmentTrimmed.StartsWith('<'))
         {
-            return false;
+            return TryParseXml(fragmentTrimmed, out package);
         }
+        else if (fragmentTrimmed.StartsWith('"') && Path.GetFileName(path) is "package.json")
+        {
+            return TryParseJson(fragmentTrimmed, out package);
+        }
+
+        return false;
+    }
+
+    private static bool TryParseJson(
+        string text,
+        [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
+    {
+        package = null;
+        text = text.TrimEnd(',');
+
+        try
+        {
+            // This will return false positives if a non-version property is changed
+            // if it happens to parse to a NuGet version string, but within the bounds
+            // of what is actually being used in the application, this is fine.
+            using var element = JsonDocument.Parse('{' + text + '}');
+            using var enumerator = element.RootElement.EnumerateObject();
+
+            if (enumerator.MoveNext())
+            {
+                var property = enumerator.Current;
+
+                if (property.Value.ValueKind is JsonValueKind.String &&
+                    property.Value.GetString() is { Length: > 0 } versionString)
+                {
+                    versionString = versionString.TrimStart(['^', '~']);
+
+                    if (NuGetVersion.TryParse(versionString, out var version))
+                    {
+                        package = (property.Name, version);
+                        return true;
+                    }
+                }
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // Ignore JSON parsing errors
+        }
+
+        return false;
+    }
+
+    private static bool TryParseXml(
+        string text,
+        [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
+    {
+        package = null;
 
         XElement fragment;
 
         try
         {
-            fragment = XElement.Parse(fragmentText);
+            fragment = XElement.Parse(text);
 
             if ((fragment.Name == PackageReference ||
                  fragment.Name == PackageVersion ||
