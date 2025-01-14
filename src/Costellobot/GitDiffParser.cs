@@ -29,7 +29,7 @@ public static class GitDiffParser
 
     public static bool TryParseUpdatedPackages(
         string diff,
-        [NotNullWhen(true)] out IDictionary<string, (NuGetVersion From, NuGetVersion To)>? packages)
+        [NotNullWhen(true)] out IDictionary<string, (string From, string To)>? packages)
     {
         packages = null;
 
@@ -56,7 +56,7 @@ public static class GitDiffParser
         return true;
     }
 
-    private static Dictionary<string, (NuGetVersion From, NuGetVersion To)> GetPackages(
+    private static Dictionary<string, (string From, string To)> GetPackages(
         List<(DiffLineType Type, string Package, NuGetVersion Version)> edits)
     {
         var comparer = StringComparer.OrdinalIgnoreCase;
@@ -85,7 +85,7 @@ public static class GitDiffParser
             versions.Add(edit.Version);
         }
 
-        var packages = new Dictionary<string, (NuGetVersion From, NuGetVersion To)>(comparer);
+        var packages = new Dictionary<string, (string From, string To)>(comparer);
 
         foreach ((var package, var previous) in removed)
         {
@@ -101,7 +101,7 @@ public static class GitDiffParser
 
             if (minimum < maximum)
             {
-                packages[package] = (minimum, maximum);
+                packages[package] = (minimum.ToString(), maximum.ToString());
             }
         }
 

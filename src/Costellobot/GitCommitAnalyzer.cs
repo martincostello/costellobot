@@ -293,7 +293,7 @@ public sealed partial class GitCommitAnalyzer(
                 GitDiffParser.TryParseUpdatedPackages(diff, out var updates) &&
                 updates.TryGetValue(dependency, out var update))
             {
-                version = update.To.ToString();
+                version = update.To;
             }
 
             if (string.IsNullOrWhiteSpace(version))
