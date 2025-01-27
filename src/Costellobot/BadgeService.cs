@@ -97,6 +97,7 @@ public sealed partial class BadgeService(
             releaseName = releaseName.Split(' ').Last();
         }
 
+        releaseName = releaseName.TrimStart('v');
         releaseName = Uri.EscapeDataString(releaseName).Replace("-", "--", StringComparison.Ordinal);
 
         return $"https://img.shields.io/badge/release-{releaseName}-blue?logo=github";

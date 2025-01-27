@@ -155,8 +155,8 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
 
     [Theory]
     [InlineData("1.2.3", "1.2.3")]
-    [InlineData("v1.2.3", "v1.2.3")]
-    [InlineData("v1.2.3-preview.1", "v1.2.3--preview.1")]
+    [InlineData("v1.2.3", "1.2.3")]
+    [InlineData("v1.2.3-preview.1", "1.2.3--preview.1")]
     [InlineData("My Product 1.2.3", "1.2.3")]
     public async Task Can_Get_Release_Badge_When_Latest_Release_Found(string name, string expected)
     {
