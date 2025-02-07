@@ -40,7 +40,7 @@ jobs:
         $GitStatus = (git status --porcelain)
 
         if ([string]::IsNullOrEmpty($GitStatus)) {
-          Write-Host "No changes to commit."
+          Write-Output "No changes to commit."
           exit 0
         }
 
@@ -52,7 +52,7 @@ jobs:
         git rev-parse --verify --quiet "remotes/origin/${BranchName}" | Out-Null
 
         if ($LASTEXITCODE -eq 0) {
-          Write-Host "Branch ${BranchName} already exists."
+          Write-Output "Branch ${BranchName} already exists."
           exit 0
         }
 
