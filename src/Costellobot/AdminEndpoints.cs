@@ -1,4 +1,4 @@
-﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
+// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Net;
@@ -265,7 +265,10 @@ public static class AdminEndpoints
 
         if (headers.TryGetValue("Link", out var link))
         {
-            var nextUrl = [.. link.Split(',').Where((p) => p.EndsWith("; rel=\"next\"", StringComparison.Ordinal))];
+            var nextUrl = link
+                .Split(',')
+                .Where((p) => p.EndsWith("; rel=\"next\"", StringComparison.Ordinal))
+                .FirstOrDefault();
 
             if (nextUrl is not null)
             {
