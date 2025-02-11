@@ -136,7 +136,7 @@ public sealed partial class CheckSuiteHandler(
             failedRuns.Count,
             checkSuiteId,
             repository,
-            failedRuns.Select((p) => p.Name).Distinct().ToArray());
+            [.. failedRuns.Select((p) => p.Name).Distinct()]);
 
         var options = _options.CurrentValue;
 
@@ -180,7 +180,7 @@ public sealed partial class CheckSuiteHandler(
             retryEligibleRuns.Count,
             checkSuiteId,
             repository,
-            retryEligibleRuns.Select((p) => p.Key).ToArray());
+            [.. retryEligibleRuns.Select((p) => p.Key)]);
 
         if (retryEligibleRuns.Any((p) => p.Count() > options.RerunFailedChecksAttempts))
         {

@@ -81,9 +81,7 @@ public sealed partial class DeploymentStatusHandler(
 
         if (pendingDeployments.Count > 0)
         {
-            pendingDeployments = pendingDeployments
-                .Where((p) => p.Environment.Name == deploy.Environment)
-                .ToList();
+            pendingDeployments = [.. pendingDeployments.Where((p) => p.Environment.Name == deploy.Environment)];
         }
 
         if (pendingDeployments.Count != 1)

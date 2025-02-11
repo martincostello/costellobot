@@ -265,10 +265,7 @@ public static class AdminEndpoints
 
         if (headers.TryGetValue("Link", out var link))
         {
-            var nextUrl = link
-                .Split(',')
-                .Where((p) => p.EndsWith("; rel=\"next\"", StringComparison.Ordinal))
-                .FirstOrDefault();
+            var nextUrl = [.. link.Split(',').Where((p) => p.EndsWith("; rel=\"next\"", StringComparison.Ordinal))];
 
             if (nextUrl is not null)
             {

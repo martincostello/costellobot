@@ -24,7 +24,7 @@ public sealed partial class GitCommitAnalyzer(
         .WithNamingConvention(HyphenatedNamingConvention.Instance)
         .Build();
 
-    private readonly ImmutableList<IPackageRegistry> _registries = registries.ToImmutableList();
+    private readonly ImmutableList<IPackageRegistry> _registries = [.. registries];
 
     public static bool TryParseVersionNumber(
         string commitMessage,
@@ -372,11 +372,10 @@ public sealed partial class GitCommitAnalyzer(
                 var ecosystemName = ecosystem.ToString();
                 var normalized = ecosystemName.Replace("-", string.Empty, comparison);
 
-                dependencies = config.Updates
+                dependencies = [.. config.Updates
                     .Where((p) => string.Equals(p.PackageEcosystem, normalized, StringComparison.OrdinalIgnoreCase))
                     .SelectMany((p) => p.Ignore)
-                    .Select((p) => p.DependencyName)
-                    .ToList();
+                    .Select((p) => p.DependencyName)];
             }
         }
         catch (NotFoundException)
