@@ -267,8 +267,7 @@ public static class AdminEndpoints
         {
             var nextUrl = link
                 .Split(',')
-                .Where((p) => p.EndsWith("; rel=\"next\"", StringComparison.Ordinal))
-                .FirstOrDefault();
+                .FirstOrDefault((p) => p.EndsWith("; rel=\"next\"", StringComparison.Ordinal));
 
             if (nextUrl is not null)
             {
