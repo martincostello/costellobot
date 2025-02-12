@@ -51,7 +51,6 @@
     <PackageReference Include="Polly.RateLimiting" />
     <PackageReference Include="RazorSlices" />
     <PackageReference Include="Sentry.AspNetCore" />
-    <PackageReference Include="System.Drawing.Common" />
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>
   <ItemGroup>
