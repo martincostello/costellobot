@@ -1,4 +1,4 @@
-﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
+// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Net;
@@ -124,11 +124,7 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
         response.Headers.Location.ShouldBe(new("https://img.shields.io/badge/security-9-red?logo=github"));
 
         static object[] Alerts(int count)
-        {
-            return Enumerable.Range(0, count)
-                .Select((i) => new { })
-                .ToArray();
-        }
+            => [.. Enumerable.Range(0, count).Select((i) => new { })];
     }
 
     [Fact]

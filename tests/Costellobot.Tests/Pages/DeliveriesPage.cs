@@ -1,4 +1,4 @@
-﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
+// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using Microsoft.Playwright;
@@ -10,7 +10,7 @@ public sealed class DeliveriesPage(IPage page) : AppPage(page)
     public async Task<IReadOnlyList<DeliveryItem>> GetDeliveriesAsync()
     {
         var elements = await Page.QuerySelectorAllAsync(Selectors.DeliveryItem);
-        return elements.Select((p) => new DeliveryItem(p, Page)).ToArray();
+        return [.. elements.Select((p) => new DeliveryItem(p, Page))];
     }
 
     public async Task<DeliveryPage> FindDeliveryAsync(string deliveryId)

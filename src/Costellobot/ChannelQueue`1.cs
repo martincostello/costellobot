@@ -55,5 +55,5 @@ public abstract class ChannelQueue<T>
         return written;
     }
 
-    public IList<T> History() => new List<T>(_history);
+    public IList<T> History() => [.. _history];
 }
