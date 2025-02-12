@@ -124,9 +124,7 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
         response.Headers.Location.ShouldBe(new("https://img.shields.io/badge/security-9-red?logo=github"));
 
         static object[] Alerts(int count)
-        {
-            return [.. Enumerable.Range(0, count).Select((i) => new { })];
-        }
+            => [.. Enumerable.Range(0, count).Select((i) => new { })];
     }
 
     [Fact]
