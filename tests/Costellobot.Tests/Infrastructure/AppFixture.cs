@@ -105,6 +105,10 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
             "ConnectionStrings:AzureServiceBus",
             "costellobot.servicebus.windows.local");
 
+        builder.UseSetting(
+            "ConnectionStrings:AzureTableStorage",
+            "UseDevelopmentStorage=true");
+
         builder.ConfigureAppConfiguration((configBuilder) =>
         {
             string testKey = File.ReadAllText("costellobot-tests.pem");
@@ -154,6 +158,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
             services.AddSingleton<IPostConfigureOptions<GitHubAuthenticationOptions>, RemoteAuthorizationEventsFilter>();
             services.AddScoped<LoopbackOAuthEvents>();
 
+            services.AddSingleton<ITrustStore, InMemoryTrustStore>();
             services.AddSingleton<ServiceBusClient, InMemoryServiceBusClient>();
         });
 

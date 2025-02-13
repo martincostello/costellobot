@@ -15,6 +15,7 @@ namespace MartinCostello.Costellobot;
 public sealed partial class GitCommitAnalyzer(
     IGitHubClientForInstallation client,
     IEnumerable<IPackageRegistry> registries,
+    ITrustStore trustStore,
     IOptionsMonitor<WebhookOptions> options,
     ILogger<GitCommitAnalyzer> logger)
 {
@@ -231,7 +232,7 @@ public sealed partial class GitCommitAnalyzer(
             }
         }
 
-        // If a dependency is not trusted by name alone, determine whether it is trusted through its owner
+        // If a dependency is not trusted by name alone, determine whether it is trusted through its owner or implicitly
         foreach (string dependency in dependencyTrust.Where((p) => !p.Value).Select((p) => p.Key))
         {
             if (ignoredDependencies.Contains(dependency))
@@ -240,7 +241,7 @@ public sealed partial class GitCommitAnalyzer(
                 break;
             }
 
-            if (!await IsTrustedDependencyOwnerAsync(
+            if (!await IsTrustedByVersionOrOwner(
                     repository,
                     dependency,
                     reference,
@@ -257,8 +258,9 @@ public sealed partial class GitCommitAnalyzer(
         return dependencyTrust;
 
         // If only one dependency was found, we can attempt to extract the version
-        // from the commit message to see if the package was from a trusted publisher.
-        async Task<bool> IsTrustedDependencyOwnerAsync(
+        // from the commit message to see if the package was from a trusted publisher
+        // or was trusted implicitly through prior approval of this specific version.
+        async Task<bool> IsTrustedByVersionOrOwner(
             RepositoryId repository,
             string dependency,
             string? reference,
@@ -301,6 +303,21 @@ public sealed partial class GitCommitAnalyzer(
                 return false;
             }
 
+            if (await IsTrustedDependencyOwnerAsync(repository, dependency, version, publishers, registry))
+            {
+                return true;
+            }
+
+            return await IsTrustedDependencyVersionAsync(repository, ecosystem, dependency, version);
+        }
+
+        async Task<bool> IsTrustedDependencyOwnerAsync(
+            RepositoryId repository,
+            string dependency,
+            string version,
+            IList<string> publishers,
+            IPackageRegistry registry)
+        {
             try
             {
                 var owners = await registry.GetPackageOwnersAsync(
@@ -340,6 +357,41 @@ public sealed partial class GitCommitAnalyzer(
             catch (Exception ex)
             {
                 Log.FailedToQueryPackageRegistry(logger, dependency, version, ecosystem, ex);
+            }
+
+            return false;
+        }
+
+        async Task<bool> IsTrustedDependencyVersionAsync(
+            RepositoryId repository,
+            DependencyEcosystem ecosystem,
+            string dependency,
+            string version)
+        {
+            try
+            {
+                if (await trustStore.IsTrustedAsync(ecosystem, dependency, version))
+                {
+                    Log.ImplicitlyTrustedDependencyUpdated(
+                        logger,
+                        reference,
+                        repository,
+                        dependency,
+                        version,
+                        ecosystem.ToString());
+
+                    return true;
+                }
+
+                Log.DependencyNotImplicitlyTrusted(
+                    logger,
+                    reference,
+                    repository,
+                    dependency);
+            }
+            catch (Exception ex)
+            {
+                Log.FailedToQueryTrustStore(logger, dependency, version, ecosystem, ex);
             }
 
             return false;
@@ -493,6 +545,39 @@ public sealed partial class GitCommitAnalyzer(
             string? reference,
             RepositoryId repository,
             string dependency);
+
+        [LoggerMessage(
+           EventId = 11,
+           Level = LogLevel.Information,
+           Message = "Reference {Reference} for {Repository} updates dependency {Dependency} version {Version} for the {Registry} registry which is implicitly trusted.")]
+        public static partial void ImplicitlyTrustedDependencyUpdated(
+            ILogger logger,
+            string? reference,
+            RepositoryId repository,
+            string dependency,
+            string version,
+            string registry);
+
+        [LoggerMessage(
+           EventId = 12,
+           Level = LogLevel.Debug,
+           Message = "Reference {Reference} for {Repository} updates dependency {Dependency} which is not implicitly trusted.")]
+        public static partial void DependencyNotImplicitlyTrusted(
+            ILogger logger,
+            string? reference,
+            RepositoryId repository,
+            string dependency);
+
+        [LoggerMessage(
+           EventId = 13,
+           Level = LogLevel.Error,
+           Message = "Failed to query trust store for package {PackageId} version {PackageVersion} from the {Ecosystem} ecosystem.")]
+        public static partial void FailedToQueryTrustStore(
+            ILogger logger,
+            string packageId,
+            string packageVersion,
+            DependencyEcosystem ecosystem,
+            Exception exception);
     }
 
     private sealed class DependabotConfig

@@ -69,6 +69,8 @@ public static class GitHubExtensions
             return new Octokit.GraphQL.Connection(productInformation, baseAddress, credentialStore, httpClient);
         });
 
+        services.TryAddSingleton<ITrustStore, AzureTableTrustStore>();
+
         services.AddSingleton<WebhookEventProcessor, GitHubEventProcessor>();
         services.AddSingleton<GitHubEventHandler>();
         services.AddSingleton<GitHubMessageProcessor>();
