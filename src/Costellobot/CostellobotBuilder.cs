@@ -29,6 +29,15 @@ public static class CostellobotBuilder
             builder.AddAzureBlobClient("AzureBlobStorage", (p) => p.Credential = credential);
         }
 
+        if (builder.Configuration["ConnectionStrings:AzureTableStorage"] is { Length: > 0 })
+        {
+            builder.AddAzureTableClient("AzureTableStorage", (p) =>
+            {
+                p.Credential = credential;
+                p.DisableHealthChecks = true;
+            });
+        }
+
         builder.Services.AddAntiforgery();
         builder.Services.AddApplicationHealthChecks();
         builder.Services.AddGitHub(builder.Configuration);

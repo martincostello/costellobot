@@ -7,10 +7,15 @@ const string BlobStorage = "AzureBlobStorage";
 const string KeyVault = "AzureKeyVault";
 const string ServiceBus = "AzureServiceBus";
 const string Storage = "AzureStorage";
+const string TableStorage = "AzureTableStorage";
 
 var blobStorage = builder.ExecutionContext.IsPublishMode
     ? builder.AddAzureStorage(Storage).AddBlobs(BlobStorage)
     : builder.AddConnectionString(BlobStorage);
+
+var tableStorage = builder.ExecutionContext.IsPublishMode
+    ? builder.AddAzureStorage(Storage).AddTables(TableStorage)
+    : builder.AddConnectionString(TableStorage);
 
 var secrets = builder.ExecutionContext.IsPublishMode
     ? builder.AddAzureKeyVault(KeyVault)
@@ -21,8 +26,9 @@ var serviceBus = builder.ExecutionContext.IsPublishMode
     : builder.AddConnectionString(ServiceBus);
 
 builder.AddProject<Projects.Costellobot>("Costellobot")
-       .WithReference(blobStorage)
        .WithReference(secrets)
+       .WithReference(blobStorage)
+       .WithReference(tableStorage)
        .WithReference(serviceBus);
 
 var app = builder.Build();

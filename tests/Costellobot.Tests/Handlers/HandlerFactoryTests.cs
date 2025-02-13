@@ -31,10 +31,12 @@ public static class HandlerFactoryTests
         var webhookOptions = new WebhookOptions().ToMonitor();
 
         var gitHubClient = Substitute.For<IGitHubClientForInstallation>();
+        var trustStore = Substitute.For<ITrustStore>();
 
         var commitAnalyzer = new GitCommitAnalyzer(
             gitHubClient,
             [],
+            trustStore,
             webhookOptions,
             NullLoggerFactory.Instance.CreateLogger<GitCommitAnalyzer>());
 

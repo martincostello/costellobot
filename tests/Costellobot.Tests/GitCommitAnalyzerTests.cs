@@ -1340,12 +1340,13 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var contents = Substitute.For<IRepositoryContentsClient>();
         var repositories = Substitute.For<IRepositoriesClient>();
         var client = Substitute.For<IGitHubClientForInstallation>();
+        var trustStore = Substitute.For<ITrustStore>();
 
         repositories.Content.Returns(contents);
         client.Repository.Returns(repositories);
 
         configureActionsClient?.Invoke(contents);
 
-        return new(client, registries, optionsMonitor, logger);
+        return new(client, registries, trustStore, optionsMonitor, logger);
     }
 }
