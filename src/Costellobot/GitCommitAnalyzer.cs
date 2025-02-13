@@ -241,7 +241,7 @@ public sealed partial class GitCommitAnalyzer(
                 break;
             }
 
-            if (!await IsTrustedByVersionOrOwner(
+            if (!await IsTrustedByVersionOrOwnerAsync(
                     repository,
                     dependency,
                     reference,
@@ -260,7 +260,7 @@ public sealed partial class GitCommitAnalyzer(
         // If only one dependency was found, we can attempt to extract the version
         // from the commit message to see if the package was from a trusted publisher
         // or was trusted implicitly through prior approval of this specific version.
-        async Task<bool> IsTrustedByVersionOrOwner(
+        async Task<bool> IsTrustedByVersionOrOwnerAsync(
             RepositoryId repository,
             string dependency,
             string? reference,
