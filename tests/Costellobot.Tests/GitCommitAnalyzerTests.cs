@@ -166,6 +166,18 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Assert
         actual.ShouldBe(expected);
+
+        // Act
+        (_, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        trust.ShouldContainKeyAndValue(dependency, (expected, null));
+        trust.Count.ShouldBe(1);
     }
 
     [Theory]
@@ -229,6 +241,22 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Assert
         actual.ShouldBe(expected);
+
+        if (ecosystem is DependencyEcosystem.Npm or DependencyEcosystem.NuGet)
+        {
+            // Act
+            (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+                repository,
+                reference,
+                sha,
+                commitMessage,
+                diff);
+
+            // Assert
+            actualEcosystem.ShouldBe(ecosystem);
+            trust.ShouldContainKeyAndValue(dependency, (expected, version));
+            trust.Count.ShouldBe(1);
+        }
     }
 
     [Fact]
@@ -252,7 +280,9 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [Substitute.For<IPackageRegistry>()]);
 
+        var repository = new RepositoryId("someone", "something");
         var diff = string.Empty;
+        var reference = "blah-blah";
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = @"""
                             Bump Foo to 1.0.1
@@ -271,13 +301,25 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
             new("someone", "something"),
-            "blah-blah",
+            reference,
             sha,
             commitMessage,
             diff);
 
         // Assert
         actual.ShouldBeFalse();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.Unknown);
+        trust.Count.ShouldBe(0);
     }
 
     [Fact]
@@ -292,20 +334,37 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [Substitute.For<IPackageRegistry>()]);
 
+        var repository = new RepositoryId("someone", "something");
         var diff = string.Empty;
+        var reference = "dependabot/nuget/NodaTimeVersion-3.1.0";
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage();
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
-            new("someone", "something"),
-            "dependabot/nuget/NodaTimeVersion-3.1.0",
+            repository,
+            reference,
             sha,
             commitMessage,
             diff);
 
         // Assert
         actual.ShouldBeFalse();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("NodaTime", (false, null));
+        trust.ShouldContainKeyAndValue("NodaTime.Testing", (false, null));
+        trust.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -326,20 +385,37 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         using var scope = Fixture.Services.CreateScope();
         var target = CreateTarget(scope.ServiceProvider, options, [Substitute.For<IPackageRegistry>()]);
 
+        var repository = new RepositoryId("someone", "something");
         var diff = string.Empty;
+        var reference = "dependabot/nuget/NodaTimeVersion-3.1.0";
         var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
         var commitMessage = TrustedCommitMessage();
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
-            new("someone", "something"),
-            "dependabot/nuget/NodaTimeVersion-3.1.0",
+            repository,
+            reference,
             sha,
             commitMessage,
             diff);
 
         // Assert
         actual.ShouldBeFalse();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("NodaTime", (false, null));
+        trust.ShouldContainKeyAndValue("NodaTime.Testing", (false, null));
+        trust.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -349,6 +425,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/github_actions/actions/checkout-3";
 
         var registry = Substitute.For<IPackageRegistry>();
 
@@ -382,13 +459,27 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
             repository,
-            "dependabot/github_actions/actions/checkout-3",
+            reference,
             sha,
             commitMessage,
             diff);
 
         // Assert
         actual.ShouldBeFalse();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.GitHubActions);
+
+        trust.ShouldContainKeyAndValue("actions/checkout", (false, "3"));
+        trust.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -398,6 +489,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/nuget/OpenTelemetryInstrumentationVersion-1.0.0-rc9.12";
 
         var registry = Substitute.For<IPackageRegistry>();
 
@@ -456,13 +548,28 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
             repository,
-            "dependabot/nuget/OpenTelemetryInstrumentationVersion-1.0.0-rc9.12",
+            reference,
             sha,
             commitMessage,
             diff);
 
         // Assert
         actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("OpenTelemetry.Instrumentation.AspNetCore", (true, "1.0.0-rc9.12"));
+        trust.ShouldContainKeyAndValue("OpenTelemetry.Instrumentation.Http", (true, "1.0.0-rc9.12"));
+        trust.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -472,6 +579,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/nuget/xunit-beb0c94413";
 
         var registry = Substitute.For<IPackageRegistry>();
 
@@ -516,13 +624,27 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
             repository,
-            "dependabot/nuget/xunit-beb0c94413",
+            reference,
             sha,
             commitMessage,
             diff);
 
         // Assert
         actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("xunit", (true, "2.6.3"));
+        trust.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -532,6 +654,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/nuget/xunit-9380cae661";
 
         var registry = Substitute.For<IPackageRegistry>();
 
@@ -590,13 +713,28 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
             repository,
-            "dependabot/nuget/xunit-9380cae661",
+            reference,
             sha,
             commitMessage,
             diff);
 
         // Assert
         actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("xunit", (true, "2.6.3"));
+        trust.ShouldContainKeyAndValue("xunit.runner.visualstudio", (true, "2.5.5"));
+        trust.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -606,6 +744,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/nuget/xunit-8e312df114";
 
         var registry = Substitute.For<IPackageRegistry>();
 
@@ -660,13 +799,28 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
             repository,
-            "dependabot/nuget/xunit-8e312df114",
+            reference,
             sha,
             commitMessage,
             diff);
 
         // Assert
         actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("xunit", (true, "2.9.0"));
+        trust.ShouldContainKeyAndValue("xunit.runner.visualstudio", (true, "2.8.2"));
+        trust.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -676,6 +830,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/nuget/Microsoft.TypeScript.MSBuild-4.9.5";
 
         var registry = Substitute.For<IPackageRegistry>();
 
@@ -719,13 +874,27 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
             repository,
-            "dependabot/nuget/Microsoft.TypeScript.MSBuild-4.9.5",
+            reference,
             sha,
             commitMessage,
             diff);
 
         // Assert
         actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("Microsoft.TypeScript.MSBuild", (true, "4.9.5"));
+        trust.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -735,6 +904,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "update-dotnet-sdk-7.0.203";
 
         var registry = Substitute.For<IPackageRegistry>();
 
@@ -795,13 +965,30 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
             repository,
-            "update-dotnet-sdk-7.0.203",
+            reference,
             sha,
             commitMessage,
             diff);
 
         // Assert
         actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("Microsoft.Extensions.Configuration.Binder", (true, "7.0.4"));
+        trust.ShouldContainKeyAndValue("Microsoft.Extensions.Http.Polly", (true, "7.0.5"));
+        trust.ShouldContainKeyAndValue("Microsoft.NET.Test.Sdk", (true, "17.5.0"));
+        trust.ShouldContainKeyAndValue("System.Text.Json", (true, "7.0.2"));
+        trust.Count.ShouldBe(4);
     }
 
     [Fact]
@@ -811,6 +998,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/nuget/awssdk-b8164d6bd2";
 
         var registry = Substitute.For<IPackageRegistry>();
 
@@ -876,13 +1064,28 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
             repository,
-            "dependabot/nuget/awssdk-b8164d6bd2",
+            reference,
             sha,
             commitMessage,
             diff);
 
         // Assert
         actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("AWSSDK.SecurityToken", (true, "3.7.300.118"));
+        trust.ShouldContainKeyAndValue("AWSSDK.SimpleSystemsManagement", (true, "3.7.305.8"));
+        trust.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -892,6 +1095,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/nuget/aspnet-security-oauth-b2c2f7560d";
 
         var registry = Substitute.For<IPackageRegistry>();
 
@@ -985,13 +1189,30 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
             repository,
-            "dependabot/nuget/aspnet-security-oauth-b2c2f7560d",
+            reference,
             sha,
             commitMessage,
             diff);
 
         // Assert
         actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.Amazon", (true, null));
+        trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.Apple", (true, null));
+        trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.GitHub", (true, null));
+        trust.ShouldContainKeyAndValue("Microsoft.IdentityModel.JsonWebTokens", (true, "8.0.0"));
+        trust.Count.ShouldBe(4);
     }
 
     [Fact]
@@ -1148,6 +1369,23 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Assert
         actual.ShouldBeFalse();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.Amazon", (true, null));
+        trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.Apple", (true, null));
+        trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.GitHub", (true, null));
+        trust.ShouldContainKeyAndValue("Microsoft.IdentityModel.JsonWebTokens", (false, null));
+        trust.Count.ShouldBe(4);
     }
 
     [Fact]
@@ -1157,6 +1395,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/nuget/opentelemetry-97480a8ec4";
 
         var registry = Substitute.For<IPackageRegistry>();
 
@@ -1169,7 +1408,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies = ["^AspNet.Security.OAuth\\..*$"],
+                Dependencies = ["^AspNet.Security.OAuth\\..*$", "^Microsoft.Extensions\\..*$"],
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
                     [DependencyEcosystem.NuGet] = ["Microsoft"],
@@ -1318,13 +1557,31 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
             repository,
-            "dependabot/nuget/opentelemetry-97480a8ec4",
+            reference,
             sha,
             commitMessage,
             diff);
 
         // Assert
         actual.ShouldBeFalse();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("Microsoft.Extensions.Configuration.Binder", (true, null));
+        trust.ShouldContainKeyAndValue("Microsoft.Extensions.DependencyInjection", (true, null));
+        trust.ShouldContainKeyAndValue("OpenTelemetry", (false, "1.10.0"));
+        trust.ShouldContainKeyAndValue("OpenTelemetry.Exporter.OpenTelemetryProtocol", (false, "1.10.0"));
+        trust.ShouldContainKeyAndValue("OpenTelemetry.Extensions.Hosting", (false, "1.10.0"));
+        trust.Count.ShouldBe(5);
     }
 
     private static GitCommitAnalyzer CreateTarget(
