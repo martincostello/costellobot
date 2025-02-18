@@ -5,6 +5,10 @@ namespace MartinCostello.Costellobot;
 
 public interface ITrustStore
 {
+    Task<IReadOnlyList<KeyValuePair<string, string>>> GetTrustAsync(
+       DependencyEcosystem ecosystem,
+       CancellationToken cancellationToken = default);
+
     Task<bool> IsTrustedAsync(
         DependencyEcosystem ecosystem,
         string id,

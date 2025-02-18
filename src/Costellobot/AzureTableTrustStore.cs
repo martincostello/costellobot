@@ -13,6 +13,29 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
     private const string TableName = "TrustStore";
 
     /// <inheritdoc/>
+    public async Task<IReadOnlyList<KeyValuePair<string, string>>> GetTrustAsync(
+        DependencyEcosystem ecosystem,
+        CancellationToken cancellationToken = default)
+    {
+        var ecosystemName = ecosystem.ToString();
+
+        var table = GetClient();
+        var query = table.QueryAsync<TrustEntity>((p) => p.DependencyEcosystem == ecosystemName, cancellationToken: cancellationToken);
+
+        var results = new List<KeyValuePair<string, string>>();
+
+        await foreach (var page in query.AsPages().WithCancellation(cancellationToken))
+        {
+            foreach (var item in page.Values)
+            {
+                results.Add(KeyValuePair.Create(item.DependencyId, item.DependencyVersion));
+            }
+        }
+
+        return results;
+    }
+
+    /// <inheritdoc/>
     public async Task<bool> IsTrustedAsync(
         DependencyEcosystem ecosystem,
         string id,
@@ -41,6 +64,9 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
 
         var entity = new TrustEntity()
         {
+            DependencyEcosystem = ecosystem.ToString(),
+            DependencyId = id,
+            DependencyVersion = version,
             ETag = new(etag),
             PartitionKey = partition,
             RowKey = row,
@@ -60,6 +86,12 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
     /// </summary>
     private sealed class TrustEntity : ITableEntity
     {
+        public string DependencyEcosystem { get; set; } = default!;
+
+        public string DependencyId { get; set; } = default!;
+
+        public string DependencyVersion { get; set; } = default!;
+
         /// <inheritdoc/>
         public string PartitionKey { get; set; } = default!;
 
