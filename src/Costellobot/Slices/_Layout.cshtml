@@ -82,12 +82,12 @@
                 <img src="@(this.Content("~/favicon.png"))" width="30" height="30" class="d-inline-block align-top" alt="costellobot" aria-hidden="true">
                 costellobot
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#site-navbar" aria-controls="site-navbar" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="site-navbar">
-                @if (user.Identity?.IsAuthenticated is true)
-                {
+            @if (user.Identity?.IsAuthenticated is true)
+            {
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#site-navbar" aria-controls="site-navbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="site-navbar">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
                             <a class="nav-link" href="@(repository)" target="_blank" rel="noopener" title="GitHub">
@@ -139,8 +139,8 @@
                             </li>
                         </ul>
                     </form>
-                }
-            </div>
+                </div>
+            }
         </div>
     </nav>
     <main class="container body-content">
@@ -160,10 +160,10 @@
                 @if (!string.IsNullOrWhiteSpace(GitMetadata.BuildId))
                 {
                     <text>
-                    by
-                    <a href="@(build)" title="View deployment on GitHub" target="_blank" rel="noopener">
-                        GitHub
-                    </a>
+                        by
+                        <a href="@(build)" title="View deployment on GitHub" target="_blank" rel="noopener">
+                            GitHub
+                        </a>
                     </text>
                 }
                 <span id="build-date" title="@(GitMetadata.Timestamp.ToString("u", CultureInfo.InvariantCulture))">@(GitMetadata.Timestamp.Humanize())</span>.
