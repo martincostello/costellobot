@@ -41,6 +41,12 @@ public static class HandlerFactoryTests
             webhookOptions,
             NullLoggerFactory.Instance.CreateLogger<GitCommitAnalyzer>());
 
+        var pullRequestAnalyzer = new PullRequestAnalyzer(
+            gitHubClient,
+            commitAnalyzer,
+            webhookOptions,
+            NullLoggerFactory.Instance.CreateLogger<PullRequestAnalyzer>());
+
         var publicHolidayProvider = new PublicHolidayProvider(
             TimeProvider.System,
             NullLoggerFactory.Instance.CreateLogger<PublicHolidayProvider>());
@@ -89,12 +95,6 @@ public static class HandlerFactoryTests
         serviceProvider.GetService(typeof(PullRequestHandler))
             .Returns((_) =>
             {
-                var pullRequestAnalyzer = new PullRequestAnalyzer(
-                    gitHubClient,
-                    commitAnalyzer,
-                    webhookOptions,
-                    NullLoggerFactory.Instance.CreateLogger<PullRequestAnalyzer>());
-
                 var pullRequestApprover = new PullRequestApprover(
                     gitHubClient,
                     Substitute.For<Octokit.GraphQL.IConnection>(),

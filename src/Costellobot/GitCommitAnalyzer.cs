@@ -30,7 +30,7 @@ public sealed partial class GitCommitAnalyzer(
     public static bool TryParseVersionNumber(
         string commitMessage,
         string dependencyName,
-        [MaybeNullWhen(false)] out string? version)
+        [NotNullWhen(true)] out string? version)
     {
         // Extract the version numbers from the commit message.
         // See https://github.com/dependabot/fetch-metadata/blob/d9606730415777cc0dc46d64c4ce0e16624bd714/src/dependabot/update_metadata.ts#L30
@@ -89,7 +89,14 @@ public sealed partial class GitCommitAnalyzer(
             return false;
         }
 
-        var dependencies = await GetDependencyTrustAsync(repository, reference, sha, commitMessage, diff, ecosystem);
+        var dependencies = await GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            ecosystem,
+            stopAfterFirstUntrustedDependency: true);
 
         bool isTrusted = dependencies.Count > 0 && dependencies.Values.All((p) => p);
 
@@ -173,13 +180,36 @@ public sealed partial class GitCommitAnalyzer(
         };
     }
 
+    private static string? TryGetDependencyVersion(
+        DependencyEcosystem ecosystem,
+        string dependency,
+        string commitMessage,
+        string? diff)
+    {
+        // HACK https://github.com/dependabot/dependabot-core/issues/8217
+        // Use the Git diff for the commit and try to parse it to get
+        // the version of the dependency that was updated if it could not
+        // otherwise be determined.
+        if (!TryParseVersionNumber(commitMessage, dependency, out var version) &&
+            ecosystem is DependencyEcosystem.NuGet &&
+            !string.IsNullOrEmpty(diff) &&
+            GitDiffParser.TryParseUpdatedPackages(diff, out var updates) &&
+            updates.TryGetValue(dependency, out var update))
+        {
+            version = update.To;
+        }
+
+        return version;
+    }
+
     private async Task<Dictionary<string, bool>> GetDependencyTrustAsync(
         RepositoryId repository,
         string? reference,
         string sha,
         string commitMessage,
         string? diff,
-        DependencyEcosystem ecosystem)
+        DependencyEcosystem ecosystem,
+        bool stopAfterFirstUntrustedDependency)
     {
         var dependencyNames = ParseDependencies(commitMessage);
 
@@ -238,21 +268,28 @@ public sealed partial class GitCommitAnalyzer(
             if (ignoredDependencies.Contains(dependency))
             {
                 // We only care if all dependencies are trusted, so stop looking on the first ignore
-                break;
+                if (stopAfterFirstUntrustedDependency)
+                {
+                    break;
+                }
             }
-
-            if (!await IsTrustedByVersionOrOwnerAsync(
-                    repository,
-                    dependency,
-                    reference,
-                    commitMessage,
-                    diff))
+            else
             {
-                // We only care if all dependencies are trusted, so stop looking on the first failure
-                break;
+                if (await IsTrustedByVersionOrOwnerAsync(
+                        repository,
+                        dependency,
+                        reference,
+                        commitMessage,
+                        diff))
+                {
+                    dependencyTrust[dependency] = true;
+                }
+                else if (stopAfterFirstUntrustedDependency)
+                {
+                    // We only care if all dependencies are trusted, so stop looking on the first failure
+                    break;
+                }
             }
-
-            dependencyTrust[dependency] = true;
         }
 
         return dependencyTrust;
@@ -285,18 +322,7 @@ public sealed partial class GitCommitAnalyzer(
                 return false;
             }
 
-            // HACK https://github.com/dependabot/dependabot-core/issues/8217
-            // Use the Git diff for the commit and try to parse it to get
-            // the version of the dependency that was updated if it could not
-            // otherwise be determined.
-            if (!TryParseVersionNumber(commitMessage, dependency, out var version) &&
-                ecosystem is DependencyEcosystem.NuGet &&
-                !string.IsNullOrEmpty(diff) &&
-                GitDiffParser.TryParseUpdatedPackages(diff, out var updates) &&
-                updates.TryGetValue(dependency, out var update))
-            {
-                version = update.To;
-            }
+            string? version = TryGetDependencyVersion(ecosystem, dependency, commitMessage, diff);
 
             if (string.IsNullOrWhiteSpace(version))
             {

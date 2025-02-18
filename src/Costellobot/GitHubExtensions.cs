@@ -79,6 +79,7 @@ public static class GitHubExtensions
 
         services.AddTransient<GitCommitAnalyzer>();
         services.AddTransient<GitHubWebhookDispatcher>();
+
         services.AddTransient<PullRequestAnalyzer>();
         services.AddTransient<PullRequestApprover>();
 
