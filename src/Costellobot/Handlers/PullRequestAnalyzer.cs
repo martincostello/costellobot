@@ -16,7 +16,7 @@ public sealed partial class PullRequestAnalyzer(
 {
     private readonly IOptionsMonitor<WebhookOptions> _options = options;
 
-    public async Task<bool> IsFromCollaborator(IssueId id, string login)
+    public async Task<bool> IsFromCollaboratorAsync(IssueId id, string login)
         => await client.Repository.Collaborator.IsCollaborator(
             id.Repository.Owner,
             id.Repository.Name,
