@@ -13,6 +13,19 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
     private const string TableName = "TrustStore";
 
     /// <inheritdoc/>
+    public async Task DistrustAsync(
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        CancellationToken cancellationToken = default)
+    {
+        (string partition, string row) = GetKeys(ecosystem, id, version);
+
+        var table = GetClient();
+        await table.DeleteEntityAsync(partition, row, cancellationToken: cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<KeyValuePair<string, string>>> GetTrustAsync(
         DependencyEcosystem ecosystem,
         CancellationToken cancellationToken = default)
