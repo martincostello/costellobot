@@ -28,9 +28,6 @@ public sealed partial class PullRequestAnalyzer(
         return IsFromTrustedUser(id, pr.User.Login, pr.Draft);
     }
 
-    public bool IsFromTrustedUser(IssueId id, SimplePullRequest pullRequest)
-        => IsFromTrustedUser(id, pullRequest.User.Login, pullRequest.Draft);
-
     public async Task<bool> IsTrustedDependencyUpdateAsync(
         RepositoryId repository,
         string pullRequestHeadRef,
