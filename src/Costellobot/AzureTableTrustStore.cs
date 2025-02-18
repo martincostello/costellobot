@@ -90,7 +90,14 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
     }
 
     private static (string PartitionKey, string RowKey) GetKeys(DependencyEcosystem ecosystem, string id, string version)
-        => (ecosystem.ToString().ToUpperInvariant(), $"{id.ToUpperInvariant()}@{version.ToUpperInvariant()}");
+    {
+        var partitionKey = ecosystem.ToString().ToUpperInvariant();
+
+        var normalizedId = id.ToUpperInvariant().Replace('/', '~');
+        var normalizedVersion = version.ToUpperInvariant();
+
+        return (partitionKey, $"{normalizedId}@{normalizedVersion}");
+    }
 
     private TableClient GetClient() => client.GetTableClient(TableName);
 
