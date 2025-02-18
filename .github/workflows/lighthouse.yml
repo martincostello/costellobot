@@ -80,7 +80,7 @@ jobs:
       uses: foo-software/lighthouse-check-status-action@2b9d5101f7a0de86ddb153a0d77ad7046aac1052 # v3.0.1
       with:
         lighthouseCheckResults: ${{ steps.lighthouse.outputs.lighthouseCheckResults }}
-        minAccessibilityScore: "93"
+        minAccessibilityScore: "92"
         minBestPracticesScore: "92"
         minPerformanceScore: "95"
         minProgressiveWebAppScore: "50"

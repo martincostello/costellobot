@@ -64,20 +64,6 @@ public sealed partial class GitCommitAnalyzer(
     public async Task<(DependencyEcosystem Ecosystem, IDictionary<string, (bool Trusted, string? Version)> Dependencies)> GetDependencyTrustAsync(
         RepositoryId repository,
         string? reference,
-        GitHubCommit commit,
-        string? diff)
-    {
-        return await GetDependencyTrustAsync(
-            repository,
-            reference,
-            commit.Sha,
-            commit.Commit.Message,
-            diff);
-    }
-
-    public async Task<(DependencyEcosystem Ecosystem, IDictionary<string, (bool Trusted, string? Version)> Dependencies)> GetDependencyTrustAsync(
-        RepositoryId repository,
-        string? reference,
         string sha,
         string commitMessage,
         string? diff)
