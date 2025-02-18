@@ -98,7 +98,7 @@ public sealed partial class GitCommitAnalyzer(
             ecosystem,
             stopAfterFirstUntrustedDependency: true);
 
-        bool isTrusted = dependencies.Count > 0 && dependencies.Values.All((p) => p);
+        bool isTrusted = dependencies.Count > 0 && dependencies.Values.All((p) => p.Trusted);
 
         if (isTrusted)
         {
@@ -202,7 +202,7 @@ public sealed partial class GitCommitAnalyzer(
         return version;
     }
 
-    private async Task<Dictionary<string, bool>> GetDependencyTrustAsync(
+    private async Task<Dictionary<string, (bool Trusted, string? Version)>> GetDependencyTrustAsync(
         RepositoryId repository,
         string? reference,
         string sha,
@@ -226,7 +226,9 @@ public sealed partial class GitCommitAnalyzer(
 
         // First do a simple lookup by name
         var trustedDependencies = options.CurrentValue.TrustedEntities.Dependencies;
-        var dependencyTrust = dependencyNames.ToDictionary((k) => k, (_) => false);
+        var unknownTrust = (false, (string?)null);
+
+        Dictionary<string, (bool Trusted, string? Version)> dependencyTrust = dependencyNames.ToDictionary((k) => k, (_) => unknownTrust);
 
         var dependenciesToIgnore = await GetIgnoredDependenciesAsync(repository, reference, ecosystem);
         var ignoredDependencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -250,7 +252,7 @@ public sealed partial class GitCommitAnalyzer(
                     repository,
                     dependency);
 
-                dependencyTrust[dependency] = true;
+                dependencyTrust[dependency] = (true, null);
             }
             else
             {
@@ -263,7 +265,7 @@ public sealed partial class GitCommitAnalyzer(
         }
 
         // If a dependency is not trusted by name alone, determine whether it is trusted through its owner or implicitly
-        foreach (string dependency in dependencyTrust.Where((p) => !p.Value).Select((p) => p.Key))
+        foreach (string dependency in dependencyTrust.Where((p) => !p.Value.Trusted).Select((p) => p.Key))
         {
             if (ignoredDependencies.Contains(dependency))
             {
@@ -275,16 +277,16 @@ public sealed partial class GitCommitAnalyzer(
             }
             else
             {
-                if (await IsTrustedByVersionOrOwnerAsync(
-                        repository,
-                        dependency,
-                        reference,
-                        commitMessage,
-                        diff))
-                {
-                    dependencyTrust[dependency] = true;
-                }
-                else if (stopAfterFirstUntrustedDependency)
+                (bool trusted, string? version) = await IsTrustedByVersionOrOwnerAsync(
+                    repository,
+                    dependency,
+                    reference,
+                    commitMessage,
+                    diff);
+
+                dependencyTrust[dependency] = (trusted, version);
+
+                if (!trusted && stopAfterFirstUntrustedDependency)
                 {
                     // We only care if all dependencies are trusted, so stop looking on the first failure
                     break;
@@ -297,7 +299,7 @@ public sealed partial class GitCommitAnalyzer(
         // If only one dependency was found, we can attempt to extract the version
         // from the commit message to see if the package was from a trusted publisher
         // or was trusted implicitly through prior approval of this specific version.
-        async Task<bool> IsTrustedByVersionOrOwnerAsync(
+        async Task<(bool IsTrusted, string? Version)> IsTrustedByVersionOrOwnerAsync(
             RepositoryId repository,
             string dependency,
             string? reference,
@@ -306,35 +308,35 @@ public sealed partial class GitCommitAnalyzer(
         {
             if (ecosystem is DependencyEcosystem.Unknown or DependencyEcosystem.Unsupported)
             {
-                return false;
+                return (false, null);
             }
 
             if (!options.CurrentValue.TrustedEntities.Publishers.TryGetValue(ecosystem, out var publishers) ||
                 publishers.Count < 1)
             {
-                return false;
+                return (false, null);
             }
 
             var registry = _registries.FirstOrDefault((p) => p.Ecosystem == ecosystem);
 
             if (registry is null)
             {
-                return false;
+                return (false, null);
             }
 
             string? version = TryGetDependencyVersion(ecosystem, dependency, commitMessage, diff);
 
             if (string.IsNullOrWhiteSpace(version))
             {
-                return false;
+                return (false, null);
             }
 
             if (await IsTrustedDependencyOwnerAsync(repository, dependency, version, publishers, registry))
             {
-                return true;
+                return (true, version);
             }
 
-            return await IsTrustedDependencyVersionAsync(repository, ecosystem, dependency, version);
+            return (await IsTrustedDependencyVersionAsync(repository, ecosystem, dependency, version), version);
         }
 
         async Task<bool> IsTrustedDependencyOwnerAsync(
