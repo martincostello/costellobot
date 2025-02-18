@@ -86,29 +86,34 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="site-navbar">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="@(repository)" target="_blank" rel="noopener" title="GitHub">
-                            GitHub
-                            <span class="fa-brands fa-github" aria-hidden="true"></span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="@(this.RouteUrl("~/deliveries"))" title="Webhook deliveries" id="deliveries-link">
-                            Deliveries
-                            <span class="fa-solid fa-truck-ramp-box" aria-hidden="true"></span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="@(this.RouteUrl("~/github-webhook"))" title="Debug">
-                            Debug
-                            <span class="fa-solid fa-bug"></span>
-                        </a>
-                    </li>
-                </ul>
-
-                @if (user.Identity!.IsAuthenticated)
+                @if (user.Identity?.IsAuthenticated is true)
                 {
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="@(repository)" target="_blank" rel="noopener" title="GitHub">
+                                GitHub
+                                <span class="fa-brands fa-github" aria-hidden="true"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@(this.RouteUrl("~/deliveries"))" title="Webhook deliveries" id="deliveries-link">
+                                Deliveries
+                                <span class="fa-solid fa-truck-ramp-box" aria-hidden="true"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@(this.RouteUrl("~/dependencies"))" title="Dependencies">
+                                Dependencies
+                                <span class="fa-solid fa-cubes" aria-hidden="true"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@(this.RouteUrl("~/github-webhook"))" title="Debug">
+                                Debug
+                                <span class="fa-solid fa-bug"></span>
+                            </a>
+                        </li>
+                    </ul>
                     <form action="@(this.RouteUrl("~/sign-out"))" method="post">
                         <input name="@(tokens.FormFieldName)" type="hidden" value="@(tokens.RequestToken)">
                         <ul class="nav navbar-nav">
