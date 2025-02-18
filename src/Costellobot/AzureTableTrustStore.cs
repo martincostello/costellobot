@@ -8,7 +8,6 @@ using Azure.Data.Tables;
 
 namespace MartinCostello.Costellobot;
 
-[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStore
 {
     private const string TableName = "TrustStore";

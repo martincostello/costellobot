@@ -111,7 +111,11 @@ public static class HandlerFactoryTests
         serviceProvider.GetService(typeof(PullRequestReviewHandler))
             .Returns((_) =>
             {
-                return new PullRequestReviewHandler();
+                return new PullRequestReviewHandler(
+                    pullRequestAnalyzer,
+                    trustStore,
+                    webhookOptions,
+                    NullLoggerFactory.Instance.CreateLogger<PullRequestReviewHandler>());
             });
 
         serviceProvider.GetService(typeof(PushHandler))
