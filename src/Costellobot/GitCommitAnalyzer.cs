@@ -61,6 +61,46 @@ public sealed partial class GitCommitAnalyzer(
         return false;
     }
 
+    public async Task<(DependencyEcosystem Ecosystem, IDictionary<string, (bool Trusted, string? Version)> Dependencies)> GetDependencyTrustAsync(
+        RepositoryId repository,
+        string? reference,
+        GitHubCommit commit,
+        string? diff)
+    {
+        return await GetDependencyTrustAsync(
+            repository,
+            reference,
+            commit.Sha,
+            commit.Commit.Message,
+            diff);
+    }
+
+    public async Task<(DependencyEcosystem Ecosystem, IDictionary<string, (bool Trusted, string? Version)> Dependencies)> GetDependencyTrustAsync(
+        RepositoryId repository,
+        string? reference,
+        string sha,
+        string commitMessage,
+        string? diff)
+    {
+        var ecosystem = ParseEcosystem(reference);
+
+        if (ecosystem is DependencyEcosystem.Unknown or DependencyEcosystem.Unsupported)
+        {
+            return (ecosystem, new Dictionary<string, (bool Trusted, string? Version)>(0));
+        }
+
+        var dependencies = await GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            ecosystem,
+            stopAfterFirstUntrustedDependency: false);
+
+        return (ecosystem, dependencies);
+    }
+
     public async Task<bool> IsTrustedDependencyUpdateAsync(
         RepositoryId repository,
         string? reference,
@@ -191,7 +231,7 @@ public sealed partial class GitCommitAnalyzer(
         // the version of the dependency that was updated if it could not
         // otherwise be determined.
         if (!TryParseVersionNumber(commitMessage, dependency, out var version) &&
-            ecosystem is DependencyEcosystem.NuGet &&
+            ecosystem is DependencyEcosystem.NuGet or DependencyEcosystem.Npm &&
             !string.IsNullOrEmpty(diff) &&
             GitDiffParser.TryParseUpdatedPackages(diff, out var updates) &&
             updates.TryGetValue(dependency, out var update))
