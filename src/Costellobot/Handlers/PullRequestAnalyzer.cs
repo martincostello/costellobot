@@ -16,6 +16,50 @@ public sealed partial class PullRequestAnalyzer(
 {
     private readonly IOptionsMonitor<WebhookOptions> _options = options;
 
+    public async Task<(DependencyEcosystem Ecosystem, IDictionary<string, (bool Trusted, string? Version)> Dependencies)> GetDependencyTrustAsync(
+        RepositoryId repository,
+        string pullRequestHeadRef,
+        string pullRequestHeadSha,
+        string pullRequestUrl)
+    {
+        var commit = await client.Repository.Commit.Get(
+            repository.Owner,
+            repository.Name,
+            pullRequestHeadSha);
+
+        var diff = await GetDiffAsync(pullRequestUrl);
+
+        return await commitAnalyzer.GetDependencyTrustAsync(
+            repository,
+            pullRequestHeadRef,
+            commit,
+            diff);
+    }
+
+    public async Task<bool> HasValidApprovalAsync(IssueId id, bool isDraft)
+    {
+        var reviews = await client.PullRequest.Review.GetAll(
+            id.Repository.Owner,
+            id.Repository.Name,
+            id.Number);
+
+        foreach (var review in reviews)
+        {
+            if (review.State.Value is not PullRequestReviewState.Approved)
+            {
+                continue;
+            }
+
+            if (IsFromTrustedUser(id, review.User.Login, isDraft) ||
+                await IsFromCollaboratorAsync(id, review.User.Login))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public async Task<bool> IsFromCollaboratorAsync(IssueId id, string login)
         => await client.Repository.Collaborator.IsCollaborator(
             id.Repository.Owner,
@@ -27,6 +71,9 @@ public sealed partial class PullRequestAnalyzer(
         var pr = message.PullRequest!;
         return IsFromTrustedUser(id, pr.User.Login, pr.Draft);
     }
+
+    public bool IsFromTrustedUser(IssueId id, SimplePullRequest pullRequest)
+        => IsFromTrustedUser(id, pullRequest.User.Login, pullRequest.Draft);
 
     public async Task<bool> IsTrustedDependencyUpdateAsync(
         RepositoryId repository,

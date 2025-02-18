@@ -219,6 +219,29 @@ public static class AdminEndpoints
             return Results.RedirectToRoute(DeliveriesRoute, []);
         }).WithMetadata(admin);
 
+        builder
+            .MapGet("/dependencies", async (ITrustStore store, CancellationToken cancellationToken) =>
+            {
+                DependencyEcosystem[] ecosystems =
+                [
+                    DependencyEcosystem.GitHubActions,
+                    DependencyEcosystem.Npm,
+                    DependencyEcosystem.NuGet,
+                ];
+
+                var model = new Dictionary<DependencyEcosystem, IReadOnlyList<KeyValuePair<string, string>>>();
+
+                foreach (var ecosystem in ecosystems)
+                {
+                    model[ecosystem] = await store.GetTrustAsync(ecosystem, cancellationToken);
+                }
+
+                return Results.Extensions.RazorSlice<Dependencies, IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<KeyValuePair<string, string>>>>(model);
+            })
+            .AddEndpointFilter<AntiforgeryFilter>()
+            .WithName("Dependencies")
+            .WithMetadata(admin);
+
         builder.MapGet("/github-webhook", (IOptions<GitHubOptions> options) => Results.Extensions.RazorSlice<Debug, GitHubOptions>(options.Value))
                .AddEndpointFilter<AntiforgeryFilter>()
                .WithMetadata(admin);

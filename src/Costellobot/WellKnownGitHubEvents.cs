@@ -7,6 +7,7 @@ using Octokit.Webhooks.Events.DeploymentProtectionRule;
 using Octokit.Webhooks.Events.DeploymentStatus;
 using Octokit.Webhooks.Events.IssueComment;
 using Octokit.Webhooks.Events.PullRequest;
+using Octokit.Webhooks.Events.PullRequestReview;
 
 namespace MartinCostello.Costellobot;
 
@@ -25,6 +26,7 @@ public static class WellKnownGitHubEvents
         (WebhookEventType.Push, null),
         (WebhookEventType.PullRequest, PullRequestActionValue.Labeled),
         (WebhookEventType.PullRequest, PullRequestActionValue.Opened),
+        (WebhookEventType.PullRequestReview, PullRequestReviewActionValue.Submitted),
     ];
 
     public static bool IsKnown(GitHubEvent message)

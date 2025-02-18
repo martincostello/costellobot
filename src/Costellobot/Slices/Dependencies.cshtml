@@ -1,0 +1,61 @@
+@inherits RazorSliceHttpResult<IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<KeyValuePair<string, string>>>>
+@implements IUsesLayout<_Layout, LayoutModel>
+
+<div id="dependencies-content">
+    <h1>
+        <span class="fa-solid fa-cube" aria-hidden="true"></span>
+        @(LayoutModel.Title)
+    </h1>
+    <form method="post">
+        @{
+            var tokens = Antiforgery.GetTokens(HttpContext!);
+        }
+        <input name="@(tokens.FormFieldName)" type="hidden" value="@(tokens.RequestToken)">
+    </form>
+    <hr />
+    <table class="table">
+        <caption class="caption-top">
+            The trusted dependencies.
+        </caption>
+        <thead>
+            <tr>
+                <th scope="col">Ecosystem</th>
+                <th scope="col">ID</th>
+                <th scope="col">Version</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ((var ecosystem, var dependencies) in Model)
+            {
+                foreach ((var id, var version) in dependencies)
+                {
+                    <tr class="dependency">
+                        <td>
+                            @{
+                                // TODO Link to the dependency and add the delete/remove button
+                                (var icon, var title) = ecosystem switch
+                                {
+                                    DependencyEcosystem.GitHubActions => ("fa-brands fa-square-github", "GitHub Actions"),
+                                    DependencyEcosystem.Npm => ("fa-brands fa-npm", "npm"),
+                                    DependencyEcosystem.NuGet => ("fa-brands fa-microsoft", "NuGet"),
+                                    _ => ("fa-solid fa-cube", ecosystem.ToString())
+                                };
+                            }
+                            <span class="@(icon)" title="@(title)"></span>
+                        </td>
+                        <td>
+                            <code class="dependency-id">@(id)</code>
+                        </td>
+                        <td>
+                            <code class="dependency-version">@(version)</code>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@functions {
+    public LayoutModel LayoutModel { get; } = new("Dependencies");
+}
