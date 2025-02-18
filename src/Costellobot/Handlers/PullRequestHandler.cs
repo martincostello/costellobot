@@ -97,7 +97,7 @@ public sealed partial class PullRequestHandler(
 
         string actor = sender.Login;
 
-        bool isCollaborator = await pullRequestAnalyzer.IsFromCollaborator(pull, actor);
+        bool isCollaborator = await pullRequestAnalyzer.IsFromCollaboratorAsync(pull, actor);
 
         if (isCollaborator)
         {
