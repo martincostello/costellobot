@@ -10,7 +10,7 @@ using Octokit.Webhooks.Events.PullRequest;
 namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class PullRequestHandler(
-    PullRequestAnalyzer pullRequestAnalyzer,
+    PullRequestAnalyzer analyzer,
     PullRequestApprover approver,
     IOptionsMonitor<WebhookOptions> options,
     ILogger<PullRequestHandler> logger) : IHandler
@@ -42,7 +42,7 @@ public sealed partial class PullRequestHandler(
 
         if (!isManualApproval)
         {
-            isTrusted = await pullRequestAnalyzer.IsTrustedDependencyUpdateAsync(
+            isTrusted = await analyzer.IsTrustedDependencyUpdateAsync(
                 pull.Repository,
                 pr.Head.Ref,
                 pr.Head.Sha,
@@ -69,7 +69,7 @@ public sealed partial class PullRequestHandler(
             return false;
         }
 
-        return pullRequestAnalyzer.IsFromTrustedUser(pull, message);
+        return analyzer.IsFromTrustedUser(pull, message);
     }
 
     private async Task<bool> IsManuallyApprovedAsync(IssueId pull, PullRequestEvent message)
@@ -97,7 +97,7 @@ public sealed partial class PullRequestHandler(
 
         string actor = sender.Login;
 
-        bool isCollaborator = await pullRequestAnalyzer.IsFromCollaboratorAsync(pull, actor);
+        bool isCollaborator = await analyzer.IsFromCollaboratorAsync(pull, actor);
 
         if (isCollaborator)
         {
