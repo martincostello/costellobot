@@ -79,6 +79,8 @@ public static class GitHubExtensions
 
         services.AddTransient<GitCommitAnalyzer>();
         services.AddTransient<GitHubWebhookDispatcher>();
+        services.AddTransient<PullRequestAnalyzer>();
+        services.AddTransient<PullRequestApprover>();
 
         services.AddPackageRegistry<GitHubActionsPackageRegistry>();
         services.AddPackageRegistry<GitSubmodulePackageRegistry>();
@@ -94,6 +96,7 @@ public static class GitHubExtensions
         services.AddTransient<DeploymentStatusHandler>();
         services.AddTransient<IssueCommentHandler>();
         services.AddTransient<PullRequestHandler>();
+        services.AddTransient<PullRequestReviewHandler>();
         services.AddTransient<PushHandler>();
 
         services.AddHostedService<GitHubWebhookService>();

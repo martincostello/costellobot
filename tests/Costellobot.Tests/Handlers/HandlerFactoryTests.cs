@@ -23,6 +23,7 @@ public static class HandlerFactoryTests
     [InlineData("issue_comment", typeof(IssueCommentHandler))]
     [InlineData("ping", typeof(NullHandler))]
     [InlineData("pull_request", typeof(PullRequestHandler))]
+    [InlineData("pull_request_review", typeof(PullRequestReviewHandler))]
     [InlineData("push", typeof(PushHandler))]
     public static void Create_Creates_Correct_Handler_Type(string? eventType, Type expected)
     {
@@ -88,12 +89,29 @@ public static class HandlerFactoryTests
         serviceProvider.GetService(typeof(PullRequestHandler))
             .Returns((_) =>
             {
-                return new PullRequestHandler(
+                var pullRequestAnalyzer = new PullRequestAnalyzer(
                     gitHubClient,
-                    Substitute.For<Octokit.GraphQL.IConnection>(),
                     commitAnalyzer,
                     webhookOptions,
+                    NullLoggerFactory.Instance.CreateLogger<PullRequestAnalyzer>());
+
+                var pullRequestApprover = new PullRequestApprover(
+                    gitHubClient,
+                    Substitute.For<Octokit.GraphQL.IConnection>(),
+                    webhookOptions,
+                    NullLoggerFactory.Instance.CreateLogger<PullRequestApprover>());
+
+                return new PullRequestHandler(
+                    pullRequestAnalyzer,
+                    pullRequestApprover,
+                    webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<PullRequestHandler>());
+            });
+
+        serviceProvider.GetService(typeof(PullRequestReviewHandler))
+            .Returns((_) =>
+            {
+                return new PullRequestReviewHandler();
             });
 
         serviceProvider.GetService(typeof(PushHandler))
