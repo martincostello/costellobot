@@ -14,12 +14,12 @@ public static class ILoggerExtensions
 
         if (headers.Delivery is { Length: > 0 } delivery)
         {
-            items["GitHubDelivery"] = delivery;
+            items["GitHub.Delivery"] = delivery;
         }
 
         if (headers.Event is { Length: > 0 } @event)
         {
-            items["GitHubEvent"] = @event;
+            items["GitHub.Event"] = @event;
         }
 
         return logger.BeginScope(items);
