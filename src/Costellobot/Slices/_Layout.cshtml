@@ -70,6 +70,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="@(this.Content("~/static/css/main.css"))" />
     @{
+        var authenticated = user.Identity?.IsAuthenticated is true;
         var tokens = Antiforgery.GetTokens(HttpContext);
     }
     <meta name="x-antiforgery-header" content="@(tokens.HeaderName)" />
@@ -82,19 +83,19 @@
                 <img src="@(this.Content("~/favicon.png"))" width="30" height="30" class="d-inline-block align-top" alt="costellobot" aria-hidden="true">
                 costellobot
             </a>
-            @if (user.Identity?.IsAuthenticated is true)
-            {
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#site-navbar" aria-controls="site-navbar" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="site-navbar">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="@(repository)" target="_blank" rel="noopener" title="GitHub">
-                                GitHub
-                                <span class="fa-brands fa-github" aria-hidden="true"></span>
-                            </a>
-                        </li>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#site-navbar" aria-controls="site-navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="site-navbar">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="@(repository)" target="_blank" rel="noopener" title="GitHub">
+                            GitHub
+                            <span class="fa-brands fa-github" aria-hidden="true"></span>
+                        </a>
+                    </li>
+                    @if (authenticated)
+                    {
                         <li class="nav-item">
                             <a class="nav-link" href="@(this.RouteUrl("~/deliveries"))" title="Webhook deliveries" id="deliveries-link">
                                 Deliveries
@@ -115,7 +116,10 @@
                                 <span class="fa-solid fa-bug" aria-hidden="true"></span>
                             </a>
                         </li>
-                    </ul>
+                    }
+                </ul>
+                @if (authenticated)
+                {
                     <form action="@(this.RouteUrl("~/sign-out"))" method="post">
                         <input name="@(tokens.FormFieldName)" type="hidden" value="@(tokens.RequestToken)">
                         <ul class="nav navbar-nav">
@@ -141,8 +145,8 @@
                             </li>
                         </ul>
                     </form>
-                </div>
-            }
+                }
+            </div>
         </div>
     </nav>
     <main class="container body-content">
