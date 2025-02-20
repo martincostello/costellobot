@@ -3,13 +3,17 @@
 
 namespace MartinCostello.Costellobot;
 
-public sealed class ClientLogger(string categoryName, ClientLogQueue queue, TimeProvider timeProvider) : ILogger
+public sealed class ClientLogger(
+    string categoryName,
+    ClientLogQueue queue,
+    IExternalScopeProvider? scopeProvider,
+    TimeProvider timeProvider) : ILogger
 {
     public string CategoryName { get; } = categoryName[ClientLoggingProvider.CategoryPrefix.Length..].TrimStart('.');
 
     public IDisposable? BeginScope<TState>(TState state)
         where TState : notnull
-        => NullDisposable.Instance;
+        => scopeProvider?.Push(state) ?? NullDisposable.Instance;
 
     public bool IsEnabled(LogLevel logLevel)
     {
@@ -53,7 +57,28 @@ public sealed class ClientLogger(string categoryName, ClientLogQueue queue, Time
             Timestamp = timeProvider.GetUtcNow(),
         };
 
+        EnrichPayload(payload);
+
         queue.Enqueue(payload);
+    }
+
+    private void EnrichPayload(ClientLogMessage payload)
+    {
+        scopeProvider?.ForEachScope(Enrich, payload);
+
+        static void Enrich(object? scope, ClientLogMessage payload)
+        {
+            if (scope is IDictionary<string, object> context)
+            {
+                foreach ((var key, var value) in context)
+                {
+                    if (value is string { Length: > 0 } valueString)
+                    {
+                        payload.Properties[key] = valueString;
+                    }
+                }
+            }
+        }
     }
 
     private sealed class NullDisposable : IDisposable

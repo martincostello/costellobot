@@ -20,12 +20,16 @@ public sealed partial class GitHubMessageProcessor(
 
         var webhookHeaders = WebhookHeaders.Parse(headers);
 
-        using var scope = logger.BeginScope(webhookHeaders);
+        using (logger.BeginWebhookScope(webhookHeaders))
+        {
+            var webhookEvent = DeserializeWebhookEvent(webhookHeaders, body);
 
-        var webhookEvent = DeserializeWebhookEvent(webhookHeaders, body);
-
-        Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
-        await ProcessAsync(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload));
+            using (logger.BeginWebhookScope(webhookEvent))
+            {
+                Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
+                await ProcessAsync(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload));
+            }
+        }
     }
 
     private static (IDictionary<string, string> Headers, JsonElement Payload) ParseRaw(

@@ -13,25 +13,29 @@ public sealed partial class GitHubWebhookDispatcher(
 {
     public async Task DispatchAsync(GitHubEvent message)
     {
-        Log.ProcessingWebhook(logger, message.Headers.Delivery, message);
-
-        if (!IsValidInstallation(message))
+        using (logger.BeginWebhookScope(message.Headers))
+        using (logger.BeginWebhookScope(message.Event))
         {
-            Log.IncorrectInstallationWebhookIgnored(logger, message.Headers.Delivery, message, message.Event.Installation?.Id);
-            return;
-        }
+            Log.ProcessingWebhook(logger, message.Headers.Delivery, message);
 
-        try
-        {
-            var handler = handlerFactory.Create(message.Headers.Event);
-            await handler.HandleAsync(message.Event);
+            if (!IsValidInstallation(message))
+            {
+                Log.IncorrectInstallationWebhookIgnored(logger, message.Headers.Delivery, message, message.Event.Installation?.Id);
+                return;
+            }
 
-            Log.ProcessedWebhook(logger, message.Headers.Delivery, message);
-        }
-        catch (Exception ex)
-        {
-            Log.WebhookProcessingFailed(logger, ex, message.Headers.Delivery, message);
-            throw;
+            try
+            {
+                var handler = handlerFactory.Create(message.Headers.Event);
+                await handler.HandleAsync(message.Event);
+
+                Log.ProcessedWebhook(logger, message.Headers.Delivery, message);
+            }
+            catch (Exception ex)
+            {
+                Log.WebhookProcessingFailed(logger, ex, message.Headers.Delivery, message);
+                throw;
+            }
         }
     }
 
