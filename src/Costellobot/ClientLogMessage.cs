@@ -18,4 +18,6 @@ public sealed class ClientLogMessage
     public DateTimeOffset Timestamp { get; init; }
 
     public string Exception { get; init; } = string.Empty;
+
+    public Dictionary<string, string> Properties { get; } = [];
 }

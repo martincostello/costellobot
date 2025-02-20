@@ -36,17 +36,21 @@ public sealed partial class GitHubEventProcessor(
 
         var webhookHeaders = WebhookHeaders.Parse(headers);
 
-        using var scope = logger.BeginScope(webhookHeaders);
+        using (logger.BeginWebhookScope(webhookHeaders))
+        {
+            var webhookEvent = DeserializeWebhookEvent(webhookHeaders, body);
 
-        var webhookEvent = DeserializeWebhookEvent(webhookHeaders, body);
+            using (logger.BeginWebhookScope(webhookEvent))
+            {
+                Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
 
-        Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
+                var payload = new GitHubEvent(webhookHeaders, webhookEvent, rawHeaders, rawPayload);
 
-        var payload = new GitHubEvent(webhookHeaders, webhookEvent, rawHeaders, rawPayload);
+                await handler.HandleAsync(payload);
 
-        await handler.HandleAsync(payload);
-
-        Log.ProcessedWebhook(logger, webhookHeaders.Delivery);
+                Log.ProcessedWebhook(logger, webhookHeaders.Delivery);
+            }
+        }
     }
 
     private async Task<(IDictionary<string, string> Headers, JsonElement Payload)> BroadcastLogAsync(
