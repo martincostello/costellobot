@@ -127,6 +127,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 KeyValuePair.Create<string, string?>("GitHub:PrivateKey", testKey),
                 KeyValuePair.Create<string, string?>("GitHub:WebhookSecret", "github-webhook-secret"),
                 KeyValuePair.Create<string, string?>("HostOptions:ShutdownTimeout", "00:00:01"),
+                KeyValuePair.Create<string, string?>("Logging:LogLevel:MartinCostello.Costellobot.GitHubWebhookDispatcher", "Information"),
                 KeyValuePair.Create<string, string?>("Site:AdminUsers:0", "john-smith"),
                 KeyValuePair.Create<string, string?>("Webhook:DeployEnvironments:0", "production"),
                 KeyValuePair.Create<string, string?>("Webhook:IgnoreRepositories:0", "ignored-org/ignored-repo"),
