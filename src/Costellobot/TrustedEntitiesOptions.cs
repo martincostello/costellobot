@@ -9,5 +9,7 @@ public sealed class TrustedEntitiesOptions
 
     public IDictionary<DependencyEcosystem, IList<string>> Publishers { get; set; } = new Dictionary<DependencyEcosystem, IList<string>>();
 
+    public IList<string> Reviewers { get; set; } = [];
+
     public IList<string> Users { get; set; } = [];
 }
