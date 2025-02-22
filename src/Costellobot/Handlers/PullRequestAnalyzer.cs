@@ -77,7 +77,7 @@ public sealed partial class PullRequestAnalyzer(
             return false;
         }
 
-        bool isTrusted = _options.CurrentValue.TrustedEntities.Users.Contains(
+        bool isTrusted = options.TrustedEntities.Users.Contains(
             authorLogin,
             StringComparer.Ordinal);
 
