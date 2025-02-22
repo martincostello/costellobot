@@ -15,7 +15,7 @@ public sealed class GitHubCommitBuilder(RepositoryBuilder repository) : Response
 
     public RepositoryBuilder Repository { get; set; } = repository;
 
-    public string Sha { get; set; } = RandomString().Replace("-", string.Empty, StringComparison.Ordinal);
+    public string Sha { get; set; } = RandomGitSha();
 
     public override object Build()
     {
