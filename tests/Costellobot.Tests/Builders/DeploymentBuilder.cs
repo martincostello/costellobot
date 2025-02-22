@@ -7,7 +7,7 @@ public sealed class DeploymentBuilder : ResponseBuilder
 {
     public string Environment { get; set; } = RandomString();
 
-    public string Sha { get; set; } = RandomString();
+    public string Sha { get; set; } = RandomGitSha();
 
     public PendingDeploymentBuilder CreatePendingDeployment()
         => new() { Environment = Environment };

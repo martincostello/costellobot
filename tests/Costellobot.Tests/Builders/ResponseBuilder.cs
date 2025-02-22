@@ -13,5 +13,7 @@ public abstract class ResponseBuilder
 
     protected static int RandomNumber() => RandomNumberGenerator.GetInt32(int.MaxValue);
 
+    protected static string RandomGitSha() => Guid.NewGuid().ToString().Replace("-", string.Empty, StringComparison.Ordinal);
+
     protected static string RandomString() => Guid.NewGuid().ToString();
 }

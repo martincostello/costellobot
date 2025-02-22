@@ -27,9 +27,9 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
 
     public string RefHead { get; set; } = "dependabot/nuget/Foo-1.2.3";
 
-    public string ShaBase { get; set; } = RandomString();
+    public string ShaBase { get; set; } = RandomGitSha();
 
-    public string ShaHead { get; set; } = RandomString();
+    public string ShaHead { get; set; } = RandomGitSha();
 
     public string State { get; set; } = "open";
 
