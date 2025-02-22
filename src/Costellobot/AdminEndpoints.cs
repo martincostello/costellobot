@@ -104,7 +104,6 @@ public static class AdminEndpoints
         var admin = new CostellobotAdminAttribute();
 
         builder.MapMethods("/", [HttpMethod.Get.Method, HttpMethod.Head.Method], () => Results.Extensions.RazorSlice<Home>())
-               .AddEndpointFilter<AntiforgeryFilter>()
                .WithMetadata(admin);
 
         builder
@@ -113,38 +112,41 @@ public static class AdminEndpoints
                 (var deliveries, _) = await GetDeliveries(client, cursor: null);
                 return Results.Extensions.RazorSlice<Deliveries, IReadOnlyList<WebhookDelivery>>(deliveries);
             })
-            .AddEndpointFilter<AntiforgeryFilter>()
             .WithName(DeliveriesRoute)
             .WithMetadata(admin);
 
-        builder.MapPost("/deliveries", async ([FromForm] Guid? id, IGitHubClientForApp client) =>
-        {
-            const int MaxPages = 20;
-
-            string? cursor = null;
-            string? deliveryId = id?.ToString();
-
-            if (deliveryId is { } guid)
+        builder.MapPost(
+            "/deliveries",
+            async ([FromForm] Guid? id, IGitHubClientForApp client) =>
             {
-                for (int i = 0; i < MaxPages; i++)
+                const int MaxPages = 20;
+
+                string? cursor = null;
+                string? deliveryId = id?.ToString();
+
+                if (deliveryId is { } guid)
                 {
-                    (var deliveries, cursor) = await GetDeliveries(client, cursor);
-
-                    var item = deliveries.FirstOrDefault((p) => p.Guid == guid);
-
-                    if (item is not null)
+                    for (int i = 0; i < MaxPages; i++)
                     {
-                        var routeValues = new RouteValueDictionary()
+                        (var deliveries, cursor) = await GetDeliveries(client, cursor);
+
+                        var item = deliveries.FirstOrDefault((p) => p.Guid == guid);
+
+                        if (item is not null)
                         {
-                            ["id"] = item.Id,
-                        };
-                        return Results.RedirectToRoute(DeliveryRoute, routeValues);
+                            var routeValues = new RouteValueDictionary()
+                            {
+                                ["id"] = item.Id,
+                            };
+                            return Results.RedirectToRoute(DeliveryRoute, routeValues);
+                        }
                     }
                 }
-            }
 
-            return Results.RedirectToRoute(DeliveriesRoute, []);
-        }).WithMetadata(admin);
+                return Results.RedirectToRoute(DeliveriesRoute, []);
+            })
+            .AddEndpointFilter<AntiforgeryFilter>()
+            .WithMetadata(admin);
 
         builder
             .MapGet("/delivery/{id}", async (long id, IGitHubClientForApp client) =>
@@ -205,22 +207,24 @@ public static class AdminEndpoints
                     }
                 }
             })
-            .AddEndpointFilter<AntiforgeryFilter>()
             .WithName(DeliveryRoute)
             .WithMetadata(admin);
 
-        builder.MapPost("/delivery/{id}", async (long id, IGitHubClientForApp client) =>
-        {
-            // See https://docs.github.com/en/rest/apps/webhooks#redeliver-a-delivery-for-an-app-webhook
-            var uri = new Uri($"app/hook/deliveries/{id}/attempts", UriKind.Relative);
+        builder.MapPost(
+            "/delivery/{id}",
+            async (long id, IGitHubClientForApp client) =>
+            {
+                // See https://docs.github.com/en/rest/apps/webhooks#redeliver-a-delivery-for-an-app-webhook
+                var uri = new Uri($"app/hook/deliveries/{id}/attempts", UriKind.Relative);
 
-            await client.Connection.Post(uri);
+                await client.Connection.Post(uri);
 
-            return Results.RedirectToRoute(DeliveriesRoute, []);
-        }).WithMetadata(admin);
+                return Results.RedirectToRoute(DeliveriesRoute, []);
+            })
+            .AddEndpointFilter<AntiforgeryFilter>()
+            .WithMetadata(admin);
 
         builder.MapGet("/github-webhook", (IOptions<GitHubOptions> options) => Results.Extensions.RazorSlice<Debug, GitHubOptions>(options.Value))
-               .AddEndpointFilter<AntiforgeryFilter>()
                .WithMetadata(admin);
 
         return builder;
