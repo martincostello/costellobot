@@ -39,7 +39,7 @@ public sealed class DeploymentProtectionRuleDriver
             action,
             environment = Environment,
             @event = Event,
-            deployment_callback_url = $"https://api.github.com/repos/{Repository.Owner.Login}/{Repository.Name}/actions/runs/{RunId}/deployment_protection_rule",
+            deployment_callback_url = $"https://api.github.com/repos/{Repository.FullName}/actions/runs/{RunId}/deployment_protection_rule",
             deployment = Deployment.Build(),
             pull_requests = PullRequests.Build(),
             repository = Repository.Build(),

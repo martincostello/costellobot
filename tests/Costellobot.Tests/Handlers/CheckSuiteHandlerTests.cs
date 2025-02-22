@@ -450,7 +450,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
 
     private void RegisterGetCheckRuns(CheckSuiteDriver driver)
     {
-        string path = $"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/check-suites/{driver.CheckSuite.Id}/check-runs";
+        string path = $"/repos/{driver.Repository.FullName}/check-suites/{driver.CheckSuite.Id}/check-runs";
 
         var allCheckRuns = driver.CheckRuns.ToArray();
 
@@ -480,7 +480,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
     {
         CreateDefaultBuilder()
             .Requests()
-            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/pulls/{driver.PullRequest.Number}")
+            .ForPath($"/repos/{driver.Repository.FullName}/pulls/{driver.PullRequest.Number}")
             .Responds()
             .WithJsonContent(driver.PullRequest)
             .RegisterWith(Fixture.Interceptor);
@@ -492,7 +492,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
     {
         CreateDefaultBuilder()
             .Requests()
-            .ForPath($"/repos/{checkSuite.Repository.Owner.Login}/{checkSuite.Repository.Name}/actions/runs")
+            .ForPath($"/repos/{checkSuite.Repository.FullName}/actions/runs")
             .ForQuery($"check_suite_id={checkSuite.Id}")
             .Responds()
             .WithJsonContent(CreateWorkflowRuns(workflows))
@@ -517,7 +517,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         var builder = CreateDefaultBuilder()
             .Requests()
             .ForPost()
-            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/check-suites/{driver.CheckSuite.Id}/rerequest")
+            .ForPath($"/repos/{driver.Repository.FullName}/check-suites/{driver.CheckSuite.Id}/rerequest")
             .Responds()
             .WithStatus(StatusCodes.Status201Created)
             .WithSystemTextJsonContent(new { });
@@ -545,7 +545,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         var builder = CreateDefaultBuilder()
             .Requests()
             .ForPost()
-            .ForPath($"/repos/{driver.WorkflowRun.Repository.Owner.Login}/{driver.WorkflowRun.Repository.Name}/actions/runs/{driver.WorkflowRun.Id}/rerun-failed-jobs")
+            .ForPath($"/repos/{driver.WorkflowRun.Repository.FullName}/actions/runs/{driver.WorkflowRun.Id}/rerun-failed-jobs")
             .Responds()
             .WithStatus(StatusCodes.Status201Created)
             .WithSystemTextJsonContent(new { });

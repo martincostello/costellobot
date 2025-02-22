@@ -596,34 +596,6 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         return await PostWebhookAsync("pull_request", value);
     }
 
-    private void RegisterCollaborator(PullRequestDriver driver, string login, bool isCollaborator)
-    {
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/collaborators/{login}")
-            .Responds()
-            .WithStatus(isCollaborator ? HttpStatusCode.NoContent : HttpStatusCode.NotFound)
-            .RegisterWith(Fixture.Interceptor);
-    }
-
-    private void RegisterCommitAndDiff(PullRequestDriver driver)
-    {
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/commits/{driver.Commit.Sha}")
-            .Responds()
-            .WithJsonContent(driver.Commit)
-            .RegisterWith(Fixture.Interceptor);
-
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/pulls/{driver.PullRequest.Number}")
-            .ForRequestHeader("Accept", "application/vnd.github.v3.diff")
-            .Responds()
-            .WithContent(string.Empty)
-            .RegisterWith(Fixture.Interceptor);
-    }
-
     private TaskCompletionSource RegisterEnableAutomerge(
         PullRequestDriver driver,
         Action<HttpRequestInterceptionBuilder, TaskCompletionSource>? configure = null)
@@ -652,7 +624,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         CreateDefaultBuilder()
             .Requests()
             .ForPut()
-            .ForPath($"/repos/{driver.PullRequest.Repository.Owner.Login}/{driver.PullRequest.Repository.Name}/pulls/{driver.PullRequest.Number}/merge")
+            .ForPath($"/repos/{driver.PullRequest.Repository.FullName}/pulls/{driver.PullRequest.Number}/merge")
             .Responds()
             .WithStatus(mergeable ? StatusCodes.Status200OK : StatusCodes.Status405MethodNotAllowed)
             .WithSystemTextJsonContent(new { merged = mergeable })
@@ -660,34 +632,6 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
             .RegisterWith(Fixture.Interceptor);
 
         return pullRequestMerged;
-    }
-
-    private TaskCompletionSource RegisterReview(PullRequestDriver driver)
-    {
-        var pullRequestApproved = new TaskCompletionSource();
-
-        RegisterReview(
-            driver,
-            (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
-
-        return pullRequestApproved;
-    }
-
-    private void RegisterReview(
-        PullRequestDriver driver,
-        Action<HttpRequestInterceptionBuilder> configure)
-    {
-        var builder = CreateDefaultBuilder()
-            .Requests()
-            .ForPost()
-            .ForPath($"/repos/{driver.PullRequest.Repository.Owner.Login}/{driver.PullRequest.Repository.Name}/pulls/{driver.PullRequest.Number}/reviews")
-            .Responds()
-            .WithStatus(StatusCodes.Status201Created)
-            .WithSystemTextJsonContent(new { });
-
-        configure(builder);
-
-        builder.RegisterWith(Fixture.Interceptor);
     }
 
     private TaskCompletionSource RegisterGraphQLQuery(

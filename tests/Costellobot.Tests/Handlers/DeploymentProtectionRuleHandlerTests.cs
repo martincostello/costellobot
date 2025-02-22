@@ -123,7 +123,7 @@ public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppF
         var builder = CreateDefaultBuilder()
             .Requests()
             .ForPost()
-            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/actions/runs/{driver.RunId}/deployment_protection_rule")
+            .ForPath($"/repos/{driver.Repository.FullName}/actions/runs/{driver.RunId}/deployment_protection_rule")
             .Responds()
             .WithStatus(HttpStatusCode.NoContent);
 

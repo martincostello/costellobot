@@ -34,12 +34,12 @@ public sealed class IssueBuilder(RepositoryBuilder repository, UserBuilder? user
         {
             id = Id,
             author_association = AuthorAssociation,
-            html_url = $"https://github.com/{Repository.Owner.Login}/{Repository.Name}/issues/{Number}",
+            html_url = $"https://github.com/{Repository.FullName}/issues/{Number}",
             number = Number,
             pull_request = PullRequest?.Build(),
             state = State,
             title = Title,
-            url = $"https://api.github.com/repos/{Repository.Owner.Login}/{Repository.Name}/issues/{Number}",
+            url = $"https://api.github.com/repos/{Repository.FullName}/issues/{Number}",
             user = (User ?? Repository.Owner).Build(),
         };
     }

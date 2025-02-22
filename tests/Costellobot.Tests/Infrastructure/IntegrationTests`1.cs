@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Builders;
+using MartinCostello.Costellobot.Drivers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing.Handlers;
 using Microsoft.Extensions.DependencyInjection;
@@ -143,6 +144,46 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         }
     }
 
+    protected void RegisterCollaborator(PullRequestDriver driver, string login, bool isCollaborator)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{driver.Repository.FullName}/collaborators/{login}")
+            .Responds()
+            .WithStatus(isCollaborator ? HttpStatusCode.NoContent : HttpStatusCode.NotFound)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    protected void RegisterCommitAndDiff(PullRequestDriver driver)
+        => RegisterCommitAndDiff(driver.PullRequest, driver.Commit);
+
+    protected void RegisterCommitAndDiff(PullRequestBuilder builder, GitHubCommitBuilder? commit = null)
+    {
+        commit ??= builder.CreateCommit();
+
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{builder.Repository.FullName}/commits/{commit.Sha}")
+            .Responds()
+            .WithJsonContent(commit)
+            .RegisterWith(Fixture.Interceptor);
+
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{builder.Repository.FullName}/commits/{commit.Sha}/pulls")
+            .Responds()
+            .WithJsonContent(builder)
+            .RegisterWith(Fixture.Interceptor);
+
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{builder.Repository.FullName}/pulls/{builder.Number}")
+            .ForRequestHeader("Accept", "application/vnd.github.v3.diff")
+            .Responds()
+            .WithContent(string.Empty)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
     protected void RegisterGetAccessToken(AccessTokenBuilder? accessToken = null)
     {
         accessToken ??= new();
@@ -154,6 +195,41 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .Responds()
             .WithJsonContent(accessToken)
             .RegisterWith(Fixture.Interceptor);
+    }
+
+    protected void RegisterGetDependabotConfiguration(RepositoryBuilder repository, string reference)
+    {
+        string configuration =
+            """
+            version: 2
+            updates:
+            - package-ecosystem: "github-actions"
+              directory: "/"
+              schedule:
+                interval: daily
+                time: "12:00"
+                timezone: Europe/London
+            """;
+
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{repository.FullName}/contents/.github/dependabot.yml")
+            .ForQuery($"ref={reference}")
+            .Responds()
+            .WithContent(configuration)
+            .WithContentHeader("Content-Type", "application/vnd.github.v3.raw")
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    protected TaskCompletionSource RegisterReview(PullRequestDriver driver)
+    {
+        var pullRequestApproved = new TaskCompletionSource();
+
+        RegisterReview(
+            driver,
+            (p) => p.WithInterceptionCallback((_) => pullRequestApproved.SetResult()));
+
+        return pullRequestApproved;
     }
 
     protected async Task<HttpResponseMessage> PostWebhookAsync(
@@ -219,5 +295,22 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         string hashString = Convert.ToHexStringLower(hash);
 
         return (payload, $"sha256={hashString}");
+    }
+
+    private void RegisterReview(
+        PullRequestDriver driver,
+        Action<HttpRequestInterceptionBuilder> configure)
+    {
+        var builder = CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath($"/repos/{driver.PullRequest.Repository.FullName}/pulls/{driver.PullRequest.Number}/reviews")
+            .Responds()
+            .WithStatus(StatusCodes.Status201Created)
+            .WithSystemTextJsonContent(new { });
+
+        configure(builder);
+
+        builder.RegisterWith(Fixture.Interceptor);
     }
 }

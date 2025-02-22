@@ -164,7 +164,7 @@ public class PushHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper
                 var sha = clientPayload.GetProperty("sha").GetString();
 
                 return
-                    string.Equals(repository, $"{driver.Owner.Login}/{driver.Repository.Name}", StringComparison.Ordinal) &&
+                    string.Equals(repository, driver.Repository.FullName, StringComparison.Ordinal) &&
                     string.Equals(reference, driver.Ref, StringComparison.Ordinal) &&
                     string.Equals(referenceName, branch, StringComparison.Ordinal) &&
                     string.Equals(sha, driver.After, StringComparison.Ordinal);

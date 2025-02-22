@@ -730,7 +730,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         var builder = CreateDefaultBuilder()
             .Requests()
             .ForPost()
-            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/actions/runs/{driver.WorkflowRun.Id}/pending_deployments")
+            .ForPath($"/repos/{driver.Repository.FullName}/actions/runs/{driver.WorkflowRun.Id}/pending_deployments")
             .Responds()
             .WithJsonContent(driver.PendingDeployment!);
 
@@ -746,7 +746,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     {
         CreateDefaultBuilder()
             .Requests()
-            .ForPath($"/repos/{@base.Repository.Owner.Login}/{@base.Repository.Name}/compare/{@base.Sha}...{head.Sha}")
+            .ForPath($"/repos/{@base.Repository.FullName}/compare/{@base.Sha}...{head.Sha}")
             .Responds()
             .WithJsonContent(comparison)
             .RegisterWith(Fixture.Interceptor);
@@ -756,7 +756,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     {
         CreateDefaultBuilder()
             .Requests()
-            .ForPath($"/repos/{driver.BaseCommit.Repository.Owner.Login}/{driver.BaseCommit.Repository.Name}/compare/{driver.BaseCommit.Sha}...{driver.HeadCommit.Sha}")
+            .ForPath($"/repos/{driver.BaseCommit.Repository.FullName}/compare/{driver.BaseCommit.Sha}...{driver.HeadCommit.Sha}")
             .Responds()
             .WithJsonContent(driver.Comparison())
             .RegisterWith(Fixture.Interceptor);
@@ -769,7 +769,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     {
         CreateDefaultBuilder()
             .Requests()
-            .ForPath($"/repos/{repository.Owner.Login}/{repository.Name}/deployments")
+            .ForPath($"/repos/{repository.FullName}/deployments")
             .ForQuery($"environment={environmentName}")
             .Responds()
             .WithJsonContent(deployments)
@@ -783,7 +783,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     {
         CreateDefaultBuilder()
             .Requests()
-            .ForPath($"/repos/{repository.Owner.Login}/{repository.Name}/deployments/{deployment.Id}/statuses")
+            .ForPath($"/repos/{repository.FullName}/deployments/{deployment.Id}/statuses")
             .Responds()
             .WithJsonContent(deploymentStatuses)
             .RegisterWith(Fixture.Interceptor);
@@ -819,7 +819,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         CreateDefaultBuilder()
             .Requests()
-            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/deployments")
+            .ForPath($"/repos/{driver.Repository.FullName}/deployments")
             .ForQuery($"environment={driver.PendingDeployment!.Environment}")
             .Responds()
             .WithJsonContent(deployments)
@@ -833,7 +833,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     {
         CreateDefaultBuilder()
             .Requests()
-            .ForPath($"/repos/{repository.Owner.Login}/{repository.Name}/actions/runs/{runId}/pending_deployments")
+            .ForPath($"/repos/{repository.FullName}/actions/runs/{runId}/pending_deployments")
             .Responds()
             .WithJsonContent(deployments)
             .RegisterWith(Fixture.Interceptor);
@@ -843,7 +843,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     {
         CreateDefaultBuilder()
             .Requests()
-            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/actions/runs/{driver.WorkflowRun.Id}/pending_deployments")
+            .ForPath($"/repos/{driver.Repository.FullName}/actions/runs/{driver.WorkflowRun.Id}/pending_deployments")
             .Responds()
             .WithJsonContent(driver.PendingDeployment!.CreatePendingDeployment())
             .RegisterWith(Fixture.Interceptor);
@@ -852,20 +852,6 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     private void RegisterPullRequestForCommit(GitHubCommitBuilder commit)
     {
         var pullRequest = CreatePullRequestForCommit(commit);
-
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPath($"/repos/{commit.Repository.Owner.Login}/{commit.Repository.Name}/commits/{commit.Sha}/pulls")
-            .Responds()
-            .WithJsonContent(pullRequest)
-            .RegisterWith(Fixture.Interceptor);
-
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPath($"/repos/{pullRequest.Repository.Owner.Login}/{pullRequest.Repository.Name}/pulls/{pullRequest.Number}")
-            .ForRequestHeader("Accept", "application/vnd.github.v3.diff")
-            .Responds()
-            .WithContent(string.Empty)
-            .RegisterWith(Fixture.Interceptor);
+        RegisterCommitAndDiff(pullRequest, commit);
     }
 }

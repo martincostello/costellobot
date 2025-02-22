@@ -7,6 +7,10 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
 {
     public string AuthorAssociation { get; set; } = "owner";
 
+    public string DiffUrl => $"{Url}.diff";
+
+    public string HtmlUrl => $"https://github.com/{Repository.FullName}/pull/{Number}";
+
     public bool IsDraft { get; set; }
 
     public bool? IsMergeable { get; set; }
@@ -30,6 +34,8 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
     public string State { get; set; } = "open";
 
     public string Title { get; set; } = RandomString();
+
+    public string Url => $"https://api.github.com/repos/{Repository.FullName}/pulls/{Number}";
 
     public UserBuilder? User { get; set; } = user;
 
@@ -59,15 +65,15 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
                 @ref = RefHead,
                 sha = ShaHead,
             },
-            diff_url = $"https://api.github.com/repos/{Repository.Owner.Login}/{Repository.Name}/pulls/{Number}.diff",
-            html_url = $"https://github.com/{Repository.Owner.Login}/{Repository.Name}/pull/{Number}",
+            diff_url = DiffUrl,
+            html_url = HtmlUrl,
             labels = Labels.Build(),
             mergeable = IsMergeable,
             node_id = NodeId,
             number = Number,
             state = State,
             title = Title,
-            url = $"https://api.github.com/repos/{Repository.Owner.Login}/{Repository.Name}/pulls/{Number}",
+            url = Url,
             user = (User ?? Repository.Owner).Build(),
         };
     }
