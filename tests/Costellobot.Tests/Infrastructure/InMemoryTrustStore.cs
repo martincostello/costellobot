@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using MartinCostello.Costellobot.Models;
+
 namespace MartinCostello.Costellobot.Infrastructure;
 
 internal sealed class InMemoryTrustStore : ITrustStore
@@ -15,14 +17,14 @@ internal sealed class InMemoryTrustStore : ITrustStore
         return Task.CompletedTask;
     }
 
-    public Task<IReadOnlyList<KeyValuePair<string, string>>> GetTrustAsync(DependencyEcosystem ecosystem, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<TrustedDependency>> GetTrustAsync(DependencyEcosystem ecosystem, CancellationToken cancellationToken = default)
     {
         var trusted = _trustStore
             .Where((p) => p.Ecosystem == ecosystem)
-            .Select((p) => KeyValuePair.Create(p.Id, p.Version))
+            .Select((p) => new TrustedDependency(p.Id, p.Version))
             .ToList();
 
-        return Task.FromResult<IReadOnlyList<KeyValuePair<string, string>>>(trusted);
+        return Task.FromResult<IReadOnlyList<TrustedDependency>>(trusted);
     }
 
     public Task<bool> IsTrustedAsync(DependencyEcosystem ecosystem, string id, string version, CancellationToken cancellationToken = default)

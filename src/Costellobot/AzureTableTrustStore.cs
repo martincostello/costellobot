@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Azure;
 using Azure.Data.Tables;
+using MartinCostello.Costellobot.Models;
 
 namespace MartinCostello.Costellobot;
 
@@ -27,7 +28,7 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<KeyValuePair<string, string>>> GetTrustAsync(
+    public async Task<IReadOnlyList<TrustedDependency>> GetTrustAsync(
         DependencyEcosystem ecosystem,
         CancellationToken cancellationToken = default)
     {
@@ -36,13 +37,18 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
         var table = GetClient();
         var query = table.QueryAsync<TrustEntity>((p) => p.DependencyEcosystem == ecosystemName, cancellationToken: cancellationToken);
 
-        var results = new List<KeyValuePair<string, string>>();
+        var results = new List<TrustedDependency>();
 
         await foreach (var page in query.AsPages().WithCancellation(cancellationToken))
         {
             foreach (var item in page.Values)
             {
-                results.Add(KeyValuePair.Create(item.DependencyId, item.DependencyVersion));
+                var dependency = new TrustedDependency(item.DependencyId, item.DependencyVersion)
+                {
+                    TrustedAt = item.Timestamp,
+                };
+
+                results.Add(dependency);
             }
         }
 
