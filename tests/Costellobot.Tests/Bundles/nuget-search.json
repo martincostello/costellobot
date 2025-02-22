@@ -470,6 +470,19 @@
         "totalHits": 0,
         "data": []
       }
+    },
+    {
+      "comment": "NuGet search result for bar",
+      "uri": "https://azuresearch-usnc.nuget.org/query?prerelease=true&q=PackageId%3Abar&semVerLevel=2.0.0&take=1",
+      "contentFormat": "json",
+      "contentJson": {
+        "@context": {
+          "@vocab": "http://schema.nuget.org/schema#",
+          "@base": "https://api.nuget.org/v3/registration5-gz-semver2/"
+        },
+        "totalHits": 0,
+        "data": []
+      }
     }
   ]
 }

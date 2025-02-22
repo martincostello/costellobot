@@ -7,7 +7,7 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot.Drivers;
 
-public sealed class PullRequestDriver
+public class PullRequestDriver
 {
     public PullRequestDriver(string? login = null)
     {
@@ -42,7 +42,7 @@ public sealed class PullRequestDriver
         return this;
     }
 
-    public object CreateWebhook(string action)
+    public virtual object CreateWebhook(string action)
     {
         return new
         {

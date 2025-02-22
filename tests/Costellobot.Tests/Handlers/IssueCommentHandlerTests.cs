@@ -97,7 +97,7 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
     {
         CreateDefaultBuilder()
             .Requests()
-            .ForPath($"/repos/{driver.Repository.Owner.Login}/{driver.Repository.Name}/pulls/{driver.Issue.PullRequest!.Number}")
+            .ForPath($"/repos/{driver.Repository.FullName}/pulls/{driver.Issue.PullRequest!.Number}")
             .Responds()
             .WithJsonContent(driver.Issue.PullRequest.Build())
             .RegisterWith(Fixture.Interceptor);
@@ -138,7 +138,7 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
                 var number = clientPayload.GetProperty("number").GetInt32();
 
                 return
-                    string.Equals(repository, $"{driver.Owner.Login}/{driver.Repository.Name}", StringComparison.Ordinal) &&
+                    string.Equals(repository, driver.Repository.FullName, StringComparison.Ordinal) &&
                     string.Equals(baseRef, driver.Issue.PullRequest?.RefBase, StringComparison.Ordinal) &&
                     string.Equals(headRef, driver.Issue.PullRequest?.RefHead, StringComparison.Ordinal) &&
                     number == driver.Issue.Number;
@@ -158,7 +158,7 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
         CreateDefaultBuilder()
             .Requests()
             .ForPost()
-            .ForPath($"/repos/{driver.Issue.Repository.Owner.Login}/{driver.Issue.Repository.Name}/issues/comments/{driver.Comment.Id}/reactions")
+            .ForPath($"/repos/{driver.Issue.Repository.FullName}/issues/comments/{driver.Comment.Id}/reactions")
             .ForContent(async (request) =>
             {
                 request.ShouldNotBeNull();

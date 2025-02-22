@@ -7,6 +7,8 @@ internal sealed class InMemoryTrustStore : ITrustStore
 {
     private readonly HashSet<(DependencyEcosystem Ecosystem, string Id, string Version)> _trustStore = [];
 
+    public int Count => _trustStore.Count;
+
     public Task DistrustAsync(DependencyEcosystem ecosystem, string id, string version, CancellationToken cancellationToken = default)
     {
         _trustStore.Remove((ecosystem, id, version));
@@ -34,4 +36,6 @@ internal sealed class InMemoryTrustStore : ITrustStore
         _trustStore.Add((ecosystem, id, version));
         return Task.CompletedTask;
     }
+
+    public void Clear() => _trustStore.Clear();
 }

@@ -11,6 +11,8 @@ public sealed class RepositoryBuilder(UserBuilder owner, string? name = null) : 
 
     public bool? AllowSquashMerge { get; set; } = true;
 
+    public string FullName => $"{Owner.Login}/{Name}";
+
     public bool IsFork { get; set; }
 
     public bool IsPrivate { get; set; }
@@ -41,14 +43,14 @@ public sealed class RepositoryBuilder(UserBuilder owner, string? name = null) : 
             allow_rebase_merge = AllowRebaseMerge,
             allow_squash_merge = AllowSquashMerge,
             fork = IsFork,
-            full_name = $"{Owner.Login}/{Name}",
-            html_url = $"https://github.com/{Owner.Login}/{Name}",
+            full_name = FullName,
+            html_url = $"https://github.com/{FullName}",
             id = Id,
             language = Language,
             name = Name,
             owner = Owner.Build(),
             @private = IsPrivate,
-            url = $"https://api.github.com/repos/{Owner.Login}/{Name}",
+            url = $"https://api.github.com/repos/{FullName}",
         };
     }
 }
