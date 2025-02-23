@@ -288,6 +288,7 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
     [InlineData("/perl.alfa")]
     [InlineData("/web.config")]
     [InlineData("/wp-admin/blah")]
+    [InlineData("/wp-json")]
     [InlineData("/xmlrpc.php")]
     public async Task Crawler_Spam_Is_Redirected_To_YouTube(string requestUri)
     {
