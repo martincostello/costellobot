@@ -6,7 +6,6 @@ using System.Text.Json;
 using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Drivers;
 using MartinCostello.Costellobot.Infrastructure;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
@@ -183,7 +182,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         RegisterCommitAndDiff(driver);
         RegisterReview(driver);
 
-        var pullRequestMerged = RegisterPutPullRequestMerge(driver, mergeable: true);
+        var pullRequestMerged = RegisterMergePullRequest(driver, mergeable: true);
         var pullRequestApproved = RegisterReview(driver);
         var automergeEnabled = RegisterEnableAutomerge(driver, (p, tcs) =>
         {
@@ -532,7 +531,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         RegisterCommitAndDiff(driver);
         RegisterReview(driver);
 
-        var pullRequestMerged = RegisterPutPullRequestMerge(driver, mergeable: false);
+        var pullRequestMerged = RegisterMergePullRequest(driver, mergeable: false);
         var pullRequestApproved = RegisterReview(driver);
         var automergeEnabled = RegisterEnableAutomerge(driver, (p, tcs) =>
         {
@@ -594,81 +593,5 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     {
         var value = driver.CreateWebhook(action);
         return await PostWebhookAsync("pull_request", value);
-    }
-
-    private TaskCompletionSource RegisterEnableAutomerge(
-        PullRequestDriver driver,
-        Action<HttpRequestInterceptionBuilder, TaskCompletionSource>? configure = null)
-    {
-        var data = new
-        {
-            enablePullRequestAutoMerge = new
-            {
-                number = new
-                {
-                    number = driver.PullRequest.Number,
-                },
-            },
-        };
-
-        return RegisterGraphQLQuery(
-            (_) => true,
-            data,
-            configure);
-    }
-
-    private TaskCompletionSource RegisterPutPullRequestMerge(PullRequestDriver driver, bool mergeable = true)
-    {
-        var pullRequestMerged = new TaskCompletionSource();
-
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPut()
-            .ForPath($"/repos/{driver.PullRequest.Repository.FullName}/pulls/{driver.PullRequest.Number}/merge")
-            .Responds()
-            .WithStatus(mergeable ? StatusCodes.Status200OK : StatusCodes.Status405MethodNotAllowed)
-            .WithSystemTextJsonContent(new { merged = mergeable })
-            .WithInterceptionCallback((_) => pullRequestMerged.SetResult())
-            .RegisterWith(Fixture.Interceptor);
-
-        return pullRequestMerged;
-    }
-
-    private TaskCompletionSource RegisterGraphQLQuery(
-        Predicate<string> queryPredicate,
-        object data,
-        Action<HttpRequestInterceptionBuilder, TaskCompletionSource>? configure = null)
-    {
-        var tcs = new TaskCompletionSource();
-
-        var response = new { data };
-
-        var builder = CreateDefaultBuilder()
-            .Requests()
-            .ForPost()
-            .ForPath("graphql")
-            .ForContent(async (request) =>
-            {
-                request.ShouldNotBeNull();
-
-                byte[] body = await request.ReadAsByteArrayAsync();
-                using var document = JsonDocument.Parse(body);
-
-                var query = document.RootElement.GetProperty("query").GetString();
-
-                query.ShouldNotBeNull();
-
-                return queryPredicate(query);
-            })
-            .Responds()
-            .WithStatus(StatusCodes.Status201Created)
-            .WithSystemTextJsonContent(response)
-            .WithInterceptionCallback((_) => tcs.SetResult());
-
-        configure?.Invoke(builder, tcs);
-
-        builder.RegisterWith(Fixture.Interceptor);
-
-        return tcs;
     }
 }

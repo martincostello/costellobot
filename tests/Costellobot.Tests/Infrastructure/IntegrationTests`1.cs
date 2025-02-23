@@ -62,12 +62,6 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    protected static async Task AssertTaskNotRun(TaskCompletionSource source)
-    {
-        await Task.Delay(TimeSpan.FromSeconds(0.5));
-        source.Task.Status.ShouldBe(TaskStatus.WaitingForActivation);
-    }
-
     protected static HttpRequestInterceptionBuilder ConfigureRateLimit(HttpRequestInterceptionBuilder builder)
     {
         string oneHourFromNowEpoch = DateTimeOffset.UtcNow
@@ -92,6 +86,20 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .WithStatus(StatusCodes.Status200OK);
 
         return ConfigureRateLimit(builder);
+    }
+
+    protected async Task AssertTaskNotRun(TaskCompletionSource source)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(0.5), CancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignore
+        }
+
+        source.Task.Status.ShouldBe(TaskStatus.WaitingForActivation);
     }
 
     protected async Task<HttpClient> CreateAuthenticatedClientAsync(bool setAntiforgeryTokenHeader = true)
@@ -197,7 +205,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .RegisterWith(Fixture.Interceptor);
     }
 
-    protected void RegisterGetDependabotConfiguration(RepositoryBuilder repository, string reference)
+    protected void RegisterDependabotConfiguration(RepositoryBuilder repository, string reference)
     {
         string configuration =
             """
@@ -219,6 +227,44 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .WithContent(configuration)
             .WithContentHeader("Content-Type", "application/vnd.github.v3.raw")
             .RegisterWith(Fixture.Interceptor);
+    }
+
+    protected TaskCompletionSource RegisterEnableAutomerge(
+        PullRequestDriver driver,
+        Action<HttpRequestInterceptionBuilder, TaskCompletionSource>? configure = null)
+    {
+        var data = new
+        {
+            enablePullRequestAutoMerge = new
+            {
+                number = new
+                {
+                    number = driver.PullRequest.Number,
+                },
+            },
+        };
+
+        return RegisterGraphQLQuery(
+            (query) => query.Contains($@"pullRequestId:""{driver.PullRequest.NodeId}""", StringComparison.Ordinal),
+            data,
+            configure);
+    }
+
+    protected TaskCompletionSource RegisterMergePullRequest(PullRequestDriver driver, bool mergeable = true)
+    {
+        var pullRequestMerged = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPut()
+            .ForPath($"/repos/{driver.PullRequest.Repository.FullName}/pulls/{driver.PullRequest.Number}/merge")
+            .Responds()
+            .WithStatus(mergeable ? StatusCodes.Status200OK : StatusCodes.Status405MethodNotAllowed)
+            .WithSystemTextJsonContent(new { merged = mergeable })
+            .WithInterceptionCallback((_) => pullRequestMerged.SetResult())
+            .RegisterWith(Fixture.Interceptor);
+
+        return pullRequestMerged;
     }
 
     protected TaskCompletionSource RegisterReview(PullRequestDriver driver)
@@ -295,6 +341,44 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         string hashString = Convert.ToHexStringLower(hash);
 
         return (payload, $"sha256={hashString}");
+    }
+
+    private TaskCompletionSource RegisterGraphQLQuery(
+        Predicate<string> queryPredicate,
+        object data,
+        Action<HttpRequestInterceptionBuilder, TaskCompletionSource>? configure = null)
+    {
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var response = new { data };
+
+        var builder = CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath("graphql")
+            .ForContent(async (request) =>
+            {
+                request.ShouldNotBeNull();
+
+                byte[] body = await request.ReadAsByteArrayAsync();
+                using var document = JsonDocument.Parse(body);
+
+                var query = document.RootElement.GetProperty("query").GetString();
+
+                query.ShouldNotBeNull();
+
+                return queryPredicate(query);
+            })
+            .Responds()
+            .WithStatus(StatusCodes.Status201Created)
+            .WithSystemTextJsonContent(response)
+            .WithInterceptionCallback((_) => tcs.SetResult());
+
+        configure?.Invoke(builder, tcs);
+
+        builder.RegisterWith(Fixture.Interceptor);
+
+        return tcs;
     }
 
     private void RegisterReview(
