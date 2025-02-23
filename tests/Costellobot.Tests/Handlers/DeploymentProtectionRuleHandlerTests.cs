@@ -107,7 +107,7 @@ public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppF
 
     private TaskCompletionSource RegisterApprovePendingDeployment(DeploymentProtectionRuleDriver driver)
     {
-        var deploymentApproved = new TaskCompletionSource();
+        var deploymentApproved = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         RegisterApproveDeploymentProtectionRule(
             driver,

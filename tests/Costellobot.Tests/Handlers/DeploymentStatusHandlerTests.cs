@@ -154,7 +154,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         RegisterCommitComparison(driver);
         RegisterPullRequestForCommit(driver.HeadCommit);
 
-        var deploymentApproved = new TaskCompletionSource();
+        var deploymentApproved = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         RegisterApprovePendingDeployment(driver, (p) =>
         {
             p.WithStatus(HttpStatusCode.Forbidden)
@@ -714,7 +714,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
     private TaskCompletionSource RegisterApprovePendingDeployment(DeploymentStatusDriver driver)
     {
-        var deploymentApproved = new TaskCompletionSource();
+        var deploymentApproved = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         RegisterApprovePendingDeployment(
             driver,

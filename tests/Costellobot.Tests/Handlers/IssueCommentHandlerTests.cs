@@ -105,7 +105,7 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
 
     private TaskCompletionSource RegisterDispatch(IssueCommentDriver driver)
     {
-        var dispatched = new TaskCompletionSource();
+        var dispatched = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         CreateDefaultBuilder()
             .Requests()
@@ -153,7 +153,7 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
 
     private TaskCompletionSource RegisterReaction(IssueCommentDriver driver, string reaction)
     {
-        var dispatched = new TaskCompletionSource();
+        var dispatched = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         CreateDefaultBuilder()
             .Requests()

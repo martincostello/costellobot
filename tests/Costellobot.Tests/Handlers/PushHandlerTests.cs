@@ -131,7 +131,7 @@ public class PushHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper
 
     private TaskCompletionSource RegisterDispatch(PushDriver driver, string branch = "main")
     {
-        var dispatched = new TaskCompletionSource();
+        var dispatched = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         CreateDefaultBuilder()
             .Requests()
