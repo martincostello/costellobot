@@ -6,6 +6,7 @@ using System.Diagnostics;
 using AspNet.Security.OAuth.GitHub;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.Extensions.Options;
+using OpenTelemetry.Instrumentation.AspNetCore;
 using OpenTelemetry.Instrumentation.Http;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -93,6 +94,18 @@ public static class TelemetryExtensions
                     options.EnrichWithHttpResponseMessage = EnrichHttpActivity;
 
                     options.RecordException = true;
+                });
+
+        services.AddOptions<AspNetCoreTraceInstrumentationOptions>()
+                .Configure<IServiceProvider>((options, provider) =>
+                {
+                    options.EnrichWithHttpResponse = static (activity, response) =>
+                    {
+                        if (response.StatusCode is StatusCodes.Status404NotFound)
+                        {
+                            activity.SetStatus(ActivityStatusCode.Ok);
+                        }
+                    };
                 });
     }
 
