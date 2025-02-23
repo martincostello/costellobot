@@ -15,6 +15,12 @@ public abstract class AppPage(IPage page)
         return new(Page);
     }
 
+    public async Task<DependenciesPage> DependenciesAsync()
+    {
+        await Page.ClickAsync(Selectors.DependenciesLink);
+        return new(Page);
+    }
+
     public async Task<HomePage> HomeAsync()
     {
         await Page.ClickAsync(Selectors.AdminLink);
@@ -61,6 +67,7 @@ public abstract class AppPage(IPage page)
     {
         internal const string AdminLink = "id=admin-link";
         internal const string DeliveriesLink = "id=deliveries-link";
+        internal const string DependenciesLink = "id=dependencies-link";
         internal const string SignIn = "id=sign-in";
         internal const string SignOut = "id=sign-out";
         internal const string UserName = "id=user-name";

@@ -32,4 +32,11 @@ public static class AppFixtureExtensions
         fixture.OverrideConfiguration("Webhook:RerunFailedChecksAttempts", value.ToString(CultureInfo.InvariantCulture));
         return fixture;
     }
+
+    public static T ImplicitTrustEnabled<T>(this T fixture, bool enabled = true)
+        where T : AppFixture
+    {
+        fixture.OverrideConfiguration("Webhook:ImplicitTrust", enabled.ToString());
+        return fixture;
+    }
 }
