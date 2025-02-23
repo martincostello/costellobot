@@ -9,7 +9,6 @@ using MartinCostello.Costellobot.Models;
 
 namespace MartinCostello.Costellobot;
 
-[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStore
 {
     private const string TableName = "TrustStore";
@@ -138,7 +137,7 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
     /// <summary>
     /// A class representing an entity in the trust store. This class cannot be inherited.
     /// </summary>
-    private sealed class TrustEntity : ITableEntity
+    public sealed class TrustEntity : ITableEntity
     {
         public string DependencyEcosystem { get; set; } = default!;
 
