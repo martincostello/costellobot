@@ -42,6 +42,19 @@ public abstract class AppPage(IPage page)
         protected IElementHandle Handle { get; } = handle;
 
         protected IPage Page { get; } = page;
+
+        protected async Task<IElementHandle> SelectAsync(string selector)
+        {
+            var element = await Handle.QuerySelectorAsync(selector);
+            element.ShouldNotBeNull();
+            return element;
+        }
+
+        protected async Task<string> StringAsync(string selector)
+        {
+            var element = await SelectAsync(selector);
+            return await element.InnerTextAsync();
+        }
     }
 
     private sealed class Selectors
