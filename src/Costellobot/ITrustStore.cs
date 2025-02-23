@@ -13,6 +13,8 @@ public interface ITrustStore
         string version,
         CancellationToken cancellationToken = default);
 
+    Task DistrustAllAsync(CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<TrustedDependency>> GetTrustAsync(
        DependencyEcosystem ecosystem,
        CancellationToken cancellationToken = default);
