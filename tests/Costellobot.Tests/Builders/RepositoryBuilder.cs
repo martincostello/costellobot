@@ -13,6 +13,8 @@ public sealed class RepositoryBuilder(UserBuilder owner, string? name = null) : 
 
     public string FullName => $"{Owner.Login}/{Name}";
 
+    public bool IsArchived { get; set; }
+
     public bool IsFork { get; set; }
 
     public bool IsPrivate { get; set; }
@@ -42,6 +44,7 @@ public sealed class RepositoryBuilder(UserBuilder owner, string? name = null) : 
             allow_merge_commit = AllowMergeCommit,
             allow_rebase_merge = AllowRebaseMerge,
             allow_squash_merge = AllowSquashMerge,
+            archived = IsArchived,
             fork = IsFork,
             full_name = FullName,
             html_url = $"https://github.com/{FullName}",

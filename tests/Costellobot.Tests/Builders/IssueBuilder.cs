@@ -23,7 +23,10 @@ public sealed class IssueBuilder(RepositoryBuilder repository, UserBuilder? user
     {
         PullRequest = new(Repository, User)
         {
+            AuthorAssociation = AuthorAssociation,
             Number = Number,
+            State = State,
+            Title = Title,
         };
         return this;
     }

@@ -48,6 +48,19 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
         return this;
     }
 
+    public IssueBuilder ToIssue()
+    {
+        return new IssueBuilder(Repository, User)
+        {
+            AuthorAssociation = AuthorAssociation,
+            Id = Id,
+            Number = Number,
+            PullRequest = this,
+            State = State,
+            Title = Title,
+        };
+    }
+
     public override object Build()
     {
         return new
