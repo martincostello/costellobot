@@ -30,9 +30,16 @@ public abstract class ChannelQueue<T>
     {
         T? item = default;
 
-        if (await _queue.Reader.WaitToReadAsync(cancellationToken))
+        try
         {
-            item = await _queue.Reader.ReadAsync(cancellationToken);
+            if (await _queue.Reader.WaitToReadAsync(cancellationToken))
+            {
+                item = await _queue.Reader.ReadAsync(cancellationToken);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignore
         }
 
         return item;
