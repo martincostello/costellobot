@@ -51,7 +51,8 @@ public sealed partial class PullRequestHandler(
 
         if (isManualApproval || isTrusted)
         {
-            await approver.ApproveAndMergeAsync(pull, pr.NodeId, pr.Base.Repo);
+            var mergeMethod = PullRequestApprover.GetMergeMethod(pr.Base.Repo);
+            await approver.ApproveAndMergeAsync(pull, pr.NodeId, mergeMethod);
         }
     }
 

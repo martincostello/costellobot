@@ -19,7 +19,13 @@ public sealed partial class PullRequestApprover(
 {
     private readonly IOptionsMonitor<WebhookOptions> _options = options;
 
-    public async Task ApproveAndMergeAsync(IssueId pull, string nodeId, Octokit.Webhooks.Models.Repository repo)
+    public static PullRequestMergeMethod GetMergeMethod(Octokit.Repository repo)
+        => GetMergeMethod((repo.AllowMergeCommit, repo.AllowSquashMerge, repo.AllowRebaseMerge));
+
+    public static PullRequestMergeMethod GetMergeMethod(Octokit.Webhooks.Models.Repository repo)
+        => GetMergeMethod((repo.AllowMergeCommit, repo.AllowSquashMerge, repo.AllowRebaseMerge));
+
+    public async Task ApproveAndMergeAsync(IssueId pull, string nodeId, PullRequestMergeMethod mergeMethod)
     {
         var options = _options.CurrentValue;
 
@@ -33,11 +39,11 @@ public sealed partial class PullRequestApprover(
             await EnableAutoMergeAsync(
                 pull,
                 nodeId,
-                GetMergeMethod(repo));
+                mergeMethod);
         }
     }
 
-    private static PullRequestMergeMethod GetMergeMethod(Octokit.Webhooks.Models.Repository repo)
+    private static PullRequestMergeMethod GetMergeMethod((bool? AllowMergeCommit, bool? AllowSquashMerge, bool? AllowRebaseMerge) repo)
     {
         if (repo.AllowMergeCommit == true)
         {
