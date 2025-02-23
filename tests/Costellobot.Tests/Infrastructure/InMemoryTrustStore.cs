@@ -12,6 +12,12 @@ internal sealed class InMemoryTrustStore : ITrustStore
 
     public int Count => _trustStore.Count;
 
+    public Task DistrustAllAsync(CancellationToken cancellationToken = default)
+    {
+        _trustStore.Clear();
+        return Task.CompletedTask;
+    }
+
     public Task DistrustAsync(DependencyEcosystem ecosystem, string id, string version, CancellationToken cancellationToken = default)
     {
         _trustStore.Remove((ecosystem, id, version), out _);
@@ -39,6 +45,4 @@ internal sealed class InMemoryTrustStore : ITrustStore
         _trustStore[(ecosystem, id, version)] = true;
         return Task.CompletedTask;
     }
-
-    public void Clear() => _trustStore.Clear();
 }

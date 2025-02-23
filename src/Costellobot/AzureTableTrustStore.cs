@@ -15,6 +15,33 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
     private const string TableName = "TrustStore";
 
     /// <inheritdoc/>
+    public async Task DistrustAllAsync(CancellationToken cancellationToken = default)
+    {
+        const int BatchSize = 100;
+        const int PageSize = 1_000;
+
+        var table = GetClient();
+
+        // Adapted from https://medium.com/medialesson/deleting-all-rows-from-azure-table-storage-as-fast-as-possible-79e03937c331
+        var query = table.QueryAsync<TrustEntity>(
+            select: ["PartitionKey", "RowKey"],
+            maxPerPage: PageSize,
+            cancellationToken: cancellationToken);
+
+        await foreach (var page in query.AsPages().WithCancellation(cancellationToken))
+        {
+            foreach (var items in page.Values.GroupBy((p) => p.PartitionKey))
+            {
+                foreach (var chunk in items.Chunk(BatchSize))
+                {
+                    var actions = chunk.Select((p) => new TableTransactionAction(TableTransactionActionType.Delete, p));
+                    await table.SubmitTransactionAsync(actions, cancellationToken);
+                }
+            }
+        }
+    }
+
+    /// <inheritdoc/>
     public async Task DistrustAsync(
         DependencyEcosystem ecosystem,
         string id,
