@@ -256,4 +256,63 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
             response.Headers.Contains(expected).ShouldBeFalse($"The '{expected}' response header was found.");
         }
     }
+
+    [Theory]
+    [InlineData("/.env")]
+    [InlineData("/.git")]
+    [InlineData("/.git/head")]
+    [InlineData("/admin.php")]
+    [InlineData("/admin")]
+    [InlineData("/admin/")]
+    [InlineData("/admin/index.php")]
+    [InlineData("/administration")]
+    [InlineData("/administration/")]
+    [InlineData("/administration/index.php")]
+    [InlineData("/administrator")]
+    [InlineData("/administrator/")]
+    [InlineData("/administrator/index.php")]
+    [InlineData("/appsettings.json")]
+    [InlineData("/bin/site.dll")]
+    [InlineData("/foo.asp")]
+    [InlineData("/foo.ASP")]
+    [InlineData("/foo.aspx")]
+    [InlineData("/foo.ASPX")]
+    [InlineData("/foo.jsp")]
+    [InlineData("/foo.JSP")]
+    [InlineData("/foo.php")]
+    [InlineData("/foo.PHP")]
+    [InlineData("/obj/site.dll")]
+    [InlineData("/package.json")]
+    [InlineData("/package-lock.json")]
+    [InlineData("/parameters.xml")]
+    [InlineData("/perl.alfa")]
+    [InlineData("/web.config")]
+    [InlineData("/wp-admin/blah")]
+    [InlineData("/xmlrpc.php")]
+    public async Task Crawler_Spam_Is_Redirected_To_YouTube(string requestUri)
+    {
+        // Arrange
+        HttpMethod[] methods = [HttpMethod.Get, HttpMethod.Head, HttpMethod.Post];
+
+        using var client = Fixture.CreateClient();
+
+        foreach (var method in methods)
+        {
+            // Arrange
+            using var message = new HttpRequestMessage(method, requestUri);
+
+            if (method.Equals(HttpMethod.Post))
+            {
+                message.Content = new StringContent(string.Empty);
+            }
+
+            // Act
+            using var response = await client.SendAsync(message, CancellationToken);
+
+            // Assert
+            response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
+            response.Headers.Location.ShouldNotBeNull();
+            response.Headers.Location.Host.ShouldBe("www.youtube.com");
+        }
+    }
 }

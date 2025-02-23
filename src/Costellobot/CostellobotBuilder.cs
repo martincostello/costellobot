@@ -138,6 +138,7 @@ public static class CostellobotBuilder
         app.UseAntiforgery();
 
         app.MapHealthCheckRoutes();
+        app.MapRedirects();
         app.MapAuthenticationRoutes();
         app.MapApiRoutes();
         app.MapAdminRoutes();
