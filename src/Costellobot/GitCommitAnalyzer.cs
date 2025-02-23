@@ -187,7 +187,7 @@ public sealed partial class GitCommitAnalyzer(
         // * dependabot/github_actions/actions/dependency-review-action-2
         // * dependabot/npm_and_yarn/src/Costellobot/typescript-eslint/eslint-plugin-5.31.0
         // * dependabot/nuget/Microsoft.IdentityModel.JsonWebTokens-6.22.0
-        string[]? parts = reference?.Split('/');
+        string[] parts = reference?.Split('/') ?? [];
 
         if (parts is null ||
             parts.Length < 3 ||
