@@ -31,21 +31,28 @@ public static class HandlerFactoryTests
         var gitHubOptions = new GitHubOptions().ToMonitor();
         var webhookOptions = new WebhookOptions().ToMonitor();
 
-        var gitHubClient = Substitute.For<IGitHubClientForInstallation>();
+        var gitHubInstallationClient = Substitute.For<IGitHubClientForInstallation>();
+
         var trustStore = Substitute.For<ITrustStore>();
 
         var commitAnalyzer = new GitCommitAnalyzer(
-            gitHubClient,
+            gitHubInstallationClient,
             [],
             trustStore,
             webhookOptions,
             NullLoggerFactory.Instance.CreateLogger<GitCommitAnalyzer>());
 
         var pullRequestAnalyzer = new PullRequestAnalyzer(
-            gitHubClient,
+            gitHubInstallationClient,
             commitAnalyzer,
             webhookOptions,
             NullLoggerFactory.Instance.CreateLogger<PullRequestAnalyzer>());
+
+        var pullRequestApprover = new PullRequestApprover(
+            gitHubInstallationClient,
+            Substitute.For<Octokit.GraphQL.IConnection>(),
+            webhookOptions,
+            NullLoggerFactory.Instance.CreateLogger<PullRequestApprover>());
 
         var publicHolidayProvider = new PublicHolidayProvider(
             TimeProvider.System,
@@ -57,7 +64,7 @@ public static class HandlerFactoryTests
             .Returns((_) =>
             {
                 return new CheckSuiteHandler(
-                    gitHubClient,
+                    gitHubInstallationClient,
                     webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<CheckSuiteHandler>());
             });
@@ -66,7 +73,7 @@ public static class HandlerFactoryTests
             .Returns((_) =>
             {
                 return new DeploymentProtectionRuleHandler(
-                    gitHubClient,
+                    gitHubInstallationClient,
                     publicHolidayProvider,
                     webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<DeploymentProtectionRuleHandler>());
@@ -76,7 +83,7 @@ public static class HandlerFactoryTests
             .Returns((_) =>
             {
                 return new DeploymentStatusHandler(
-                    gitHubClient,
+                    gitHubInstallationClient,
                     commitAnalyzer,
                     publicHolidayProvider,
                     gitHubOptions,
@@ -88,19 +95,13 @@ public static class HandlerFactoryTests
             .Returns((_) =>
             {
                 return new IssueCommentHandler(
-                    gitHubClient,
+                    gitHubInstallationClient,
                     NullLoggerFactory.Instance.CreateLogger<IssueCommentHandler>());
             });
 
         serviceProvider.GetService(typeof(PullRequestHandler))
             .Returns((_) =>
             {
-                var pullRequestApprover = new PullRequestApprover(
-                    gitHubClient,
-                    Substitute.For<Octokit.GraphQL.IConnection>(),
-                    webhookOptions,
-                    NullLoggerFactory.Instance.CreateLogger<PullRequestApprover>());
-
                 return new PullRequestHandler(
                     pullRequestAnalyzer,
                     pullRequestApprover,
@@ -118,7 +119,7 @@ public static class HandlerFactoryTests
             .Returns((_) =>
             {
                 return new PushHandler(
-                    gitHubClient,
+                    gitHubInstallationClient,
                     NullLoggerFactory.Instance.CreateLogger<PushHandler>());
             });
 
