@@ -158,8 +158,6 @@ public sealed partial class PullRequestReviewHandler(
 
         Log.SearchingInstallationRepositories(logger, repositories.Count);
 
-        string? appLogin = null;
-
         var options = new ApiOptions() { PageSize = PageSize };
         var request = new RepositoryIssueRequest()
         {
@@ -168,35 +166,35 @@ public sealed partial class PullRequestReviewHandler(
             State = ItemStateFilter.Open,
         };
 
-        foreach (var (repoOwner, repoName, repoId) in repositories)
+        await Parallel.ForEachAsync(repositories, async (repo, _) =>
         {
-            var issues = await installationClient.Issue.GetAllForRepository(repoId, request, options);
+            var issues = await installationClient.Issue.GetAllForRepository(repo.Id, request, options);
 
             var issuesWithPulls = issues
                 .Where((p) => p.PullRequest is { })
                 .ToArray();
 
-            var repositoryId = new RepositoryId(repoOwner, repoName);
+            var repositoryId = new RepositoryId(repo.Owner, repo.Name);
 
             Log.FoundDependabotPullRequests(logger, repositoryId, issuesWithPulls.Length);
 
             if (issuesWithPulls.Length < 1)
             {
-                continue;
+                return;
             }
 
             PullRequestMergeMethod? mergeMethod = default;
 
             foreach (var issue in issuesWithPulls)
             {
-                appLogin ??= await GetAppLoginAsync();
-
                 var pullId = new IssueId(repositoryId, issue.Number);
 
                 if (pullId == triggeringId)
                 {
                     continue;
                 }
+
+                var appLogin = await GetAppLoginAsync();
 
                 if (await pullRequestAnalyzer.IsApprovedByAsync(pullId, appLogin))
                 {
@@ -214,7 +212,7 @@ public sealed partial class PullRequestReviewHandler(
 
                     if (isTrusted)
                     {
-                        mergeMethod ??= await GetRepositoryMergeMethodAsync(repoId);
+                        mergeMethod ??= await GetRepositoryMergeMethodAsync(repo.Id);
 
                         await pullRequestApprover.ApproveAndMergeAsync(
                             pullId,
@@ -225,7 +223,7 @@ public sealed partial class PullRequestReviewHandler(
                     }
                 }
             }
-        }
+        });
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
