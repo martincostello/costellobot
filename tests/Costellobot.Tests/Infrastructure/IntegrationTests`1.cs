@@ -257,6 +257,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         CreateDefaultBuilder()
             .Requests()
             .ForPath($"/repos/{builder.Repository.FullName}/pulls/{builder.Number}")
+            .ForRequestHeader("Accept", "application/vnd.github.v3+json")
             .Responds()
             .WithJsonContent(builder)
             .RegisterWith(Fixture.Interceptor);
