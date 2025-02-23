@@ -190,6 +190,8 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .Responds()
             .WithContent(string.Empty)
             .RegisterWith(Fixture.Interceptor);
+
+        RegisterGetPullRequest(builder);
     }
 
     protected void RegisterGetAccessToken(AccessTokenBuilder? accessToken = null)
@@ -248,6 +250,16 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             (query) => query.Contains($@"pullRequestId:""{driver.PullRequest.NodeId}""", StringComparison.Ordinal),
             data,
             configure);
+    }
+
+    protected void RegisterGetPullRequest(PullRequestBuilder builder)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/repos/{builder.Repository.FullName}/pulls/{builder.Number}")
+            .Responds()
+            .WithJsonContent(builder)
+            .RegisterWith(Fixture.Interceptor);
     }
 
     protected TaskCompletionSource RegisterMergePullRequest(PullRequestDriver driver, bool mergeable = true)

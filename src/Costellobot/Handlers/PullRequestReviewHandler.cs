@@ -172,26 +172,26 @@ public sealed partial class PullRequestReviewHandler(
         {
             var issues = await installationClient.Issue.GetAllForRepository(repoId, request, options);
 
-            var pullRequests = issues
+            var issuesWithPulls = issues
                 .Where((p) => p.PullRequest is { })
                 .ToArray();
 
             var repositoryId = new RepositoryId(repoOwner, repoName);
 
-            Log.FoundDependabotPullRequests(logger, repositoryId, pullRequests.Length);
+            Log.FoundDependabotPullRequests(logger, repositoryId, issuesWithPulls.Length);
 
-            if (pullRequests.Length < 1)
+            if (issuesWithPulls.Length < 1)
             {
                 continue;
             }
 
             PullRequestMergeMethod? mergeMethod = default;
 
-            foreach (var pull in pullRequests)
+            foreach (var issue in issuesWithPulls)
             {
                 appLogin ??= await GetAppLoginAsync();
 
-                var pullId = new IssueId(repositoryId, pull.Number);
+                var pullId = new IssueId(repositoryId, issue.Number);
 
                 if (pullId == triggeringId)
                 {
@@ -204,11 +204,13 @@ public sealed partial class PullRequestReviewHandler(
                 }
                 else
                 {
+                    var pull = await installationClient.PullRequest.Get(repositoryId.Owner, repositoryId.Name, issue.Number);
+
                     bool isTrusted = await pullRequestAnalyzer.IsTrustedDependencyUpdateAsync(
                         repositoryId,
-                        pull.PullRequest.Head.Ref,
-                        pull.PullRequest.Head.Sha,
-                        pull.PullRequest.Url);
+                        pull.Head.Ref,
+                        pull.Head.Sha,
+                        pull.Url);
 
                     if (isTrusted)
                     {
@@ -216,7 +218,7 @@ public sealed partial class PullRequestReviewHandler(
 
                         await pullRequestApprover.ApproveAndMergeAsync(
                             pullId,
-                            pull.PullRequest.NodeId,
+                            pull.NodeId,
                             mergeMethod.GetValueOrDefault());
 
                         Log.PullRequestApprovedAfterImplicitTrust(logger, pullId);

@@ -477,14 +477,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
     }
 
     private void RegisterGetPullRequest(CheckSuiteDriver driver)
-    {
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPath($"/repos/{driver.Repository.FullName}/pulls/{driver.PullRequest.Number}")
-            .Responds()
-            .WithJsonContent(driver.PullRequest)
-            .RegisterWith(Fixture.Interceptor);
-    }
+        => RegisterGetPullRequest(driver.PullRequest);
 
     private void RegisterGetWorkflows(
         CheckSuiteBuilder checkSuite,
