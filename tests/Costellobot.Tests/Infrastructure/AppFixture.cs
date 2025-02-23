@@ -141,7 +141,11 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
         builder.ConfigureAntiforgeryTokenResource();
 
         builder.ConfigureLogging(
-            (loggingBuilder) => loggingBuilder.ClearProviders().AddXUnit(this).AddSignalR());
+            (loggingBuilder) =>
+                loggingBuilder.ClearProviders()
+                              .AddXUnit(this)
+                              .AddSignalR()
+                              .AddFilter("MartinCostello.Costellobot", (_) => true));
 
         builder.UseEnvironment(Environments.Production);
 
