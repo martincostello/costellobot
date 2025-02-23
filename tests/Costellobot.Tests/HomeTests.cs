@@ -68,7 +68,7 @@ public class HomeTests(HttpServerFixture fixture, ITestOutputHelper outputHelper
         var browser = new BrowserFixture(options, OutputHelper);
         await browser.WithPageAsync(async page =>
         {
-            var connected = new TaskCompletionSource();
+            var connected = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             page.WebSocket += (_, p) =>
                 p.FrameReceived += (_, _) => connected.TrySetResult();
 

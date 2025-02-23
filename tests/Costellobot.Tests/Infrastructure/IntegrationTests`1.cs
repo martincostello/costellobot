@@ -223,7 +223,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
 
     protected TaskCompletionSource RegisterReview(PullRequestDriver driver)
     {
-        var pullRequestApproved = new TaskCompletionSource();
+        var pullRequestApproved = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         RegisterReview(
             driver,

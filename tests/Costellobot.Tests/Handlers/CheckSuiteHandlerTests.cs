@@ -322,7 +322,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
 
         RegisterCheckSuiteWithNoWorkflowRun(driver);
 
-        var rerequestCheckSuite = new TaskCompletionSource();
+        var rerequestCheckSuite = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         RegisterRerequestCheckSuite(driver, (p) =>
         {
             p.WithStatus(HttpStatusCode.BadRequest)
@@ -350,7 +350,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
 
         RegisterCheckSuiteWithWorkflowRun(driver);
 
-        var failedJobsRetried = new TaskCompletionSource();
+        var failedJobsRetried = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         RegisterRerunFailedJobs(driver, (p) =>
         {
             p.WithStatus(HttpStatusCode.BadRequest)
@@ -501,7 +501,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
 
     private TaskCompletionSource RegisterRerequestCheckSuite(CheckSuiteDriver driver)
     {
-        var rerequestCheckSuite = new TaskCompletionSource();
+        var rerequestCheckSuite = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         RegisterRerequestCheckSuite(
             driver,
@@ -529,7 +529,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
 
     private TaskCompletionSource RegisterRerunFailedJobs(CheckSuiteDriver driver)
     {
-        var failedJobsRetried = new TaskCompletionSource();
+        var failedJobsRetried = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         RegisterRerunFailedJobs(
             driver,
