@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
@@ -31,8 +32,10 @@ public static class HandlerFactoryTests
         var gitHubOptions = new GitHubOptions().ToMonitor();
         var webhookOptions = new WebhookOptions().ToMonitor();
 
+        var gitHubAppClient = Substitute.For<IGitHubClientForApp>();
         var gitHubInstallationClient = Substitute.For<IGitHubClientForInstallation>();
 
+        using var cache = new MemoryCache(new MemoryCacheOptions());
         var trustStore = Substitute.For<ITrustStore>();
 
         var commitAnalyzer = new GitCommitAnalyzer(
@@ -112,7 +115,15 @@ public static class HandlerFactoryTests
         serviceProvider.GetService(typeof(PullRequestReviewHandler))
             .Returns((_) =>
             {
-                return new PullRequestReviewHandler();
+                return new PullRequestReviewHandler(
+                    gitHubAppClient,
+                    gitHubInstallationClient,
+                    pullRequestAnalyzer,
+                    pullRequestApprover,
+                    cache,
+                    trustStore,
+                    webhookOptions,
+                    NullLoggerFactory.Instance.CreateLogger<PullRequestReviewHandler>());
             });
 
         serviceProvider.GetService(typeof(PushHandler))

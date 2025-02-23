@@ -1,4 +1,4 @@
-// Copyright (c) Martin Costello, 2022. All rights reserved.
+﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Net;
@@ -222,6 +222,57 @@ public static class AdminEndpoints
                 return Results.RedirectToRoute(DeliveriesRoute, []);
             })
             .AddEndpointFilter<AntiforgeryFilter>()
+            .WithMetadata(admin);
+
+        const string DependenciesRoute = "Dependencies";
+
+        builder
+            .MapGet("/dependencies", async (ITrustStore store, CancellationToken cancellationToken) =>
+            {
+                DependencyEcosystem[] ecosystems =
+                [
+                    DependencyEcosystem.GitHubActions,
+                    DependencyEcosystem.Npm,
+                    DependencyEcosystem.NuGet,
+                ];
+
+                var model = new Dictionary<DependencyEcosystem, IReadOnlyList<TrustedDependency>>();
+
+                foreach (var ecosystem in ecosystems)
+                {
+                    model[ecosystem] = await store.GetTrustAsync(ecosystem, cancellationToken);
+                }
+
+                return Results.Extensions.RazorSlice<Dependencies, IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<TrustedDependency>>>(model);
+            })
+            .WithName(DependenciesRoute)
+            .WithMetadata(admin);
+
+        builder.MapPost(
+            "/dependencies/distrust",
+            async (
+                [FromForm] DependencyEcosystem ecosystem,
+                [FromForm] string id,
+                [FromForm] string version,
+                ITrustStore store,
+                CancellationToken cancellationToken) =>
+            {
+                await store.DistrustAsync(ecosystem, id, version, cancellationToken);
+                return Results.RedirectToRoute(DependenciesRoute);
+            })
+            .AddEndpointFilter<AntiforgeryFilter>()
+            .WithName("DistrustDependencies")
+            .WithMetadata(admin);
+
+        builder.MapPost(
+            "/dependencies/distrust-all",
+            async (ITrustStore store, CancellationToken cancellationToken) =>
+            {
+                await store.DistrustAllAsync(cancellationToken);
+                return Results.RedirectToRoute(DependenciesRoute);
+            })
+            .AddEndpointFilter<AntiforgeryFilter>()
+            .WithName("DistrustAllDependencies")
             .WithMetadata(admin);
 
         builder.MapGet("/github-webhook", (IOptions<GitHubOptions> options) => Results.Extensions.RazorSlice<Debug, GitHubOptions>(options.Value))

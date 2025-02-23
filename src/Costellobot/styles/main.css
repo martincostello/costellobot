@@ -127,6 +127,10 @@ textarea.form-payload {
     color: var(--level-trace);
 }
 
+.text-dotnet {
+    color: rgb(81 43 212)
+}
+
 .text-webhook {
     font-family: var(--bs-font-monospace);
 }

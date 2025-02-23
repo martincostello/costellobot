@@ -16,6 +16,56 @@ public sealed partial class PullRequestAnalyzer(
 {
     private readonly IOptionsMonitor<WebhookOptions> _options = options;
 
+    public async Task<(DependencyEcosystem Ecosystem, IDictionary<string, (bool Trusted, string? Version)> Dependencies)> GetDependencyTrustAsync(
+        RepositoryId repository,
+        string pullRequestHeadRef,
+        string pullRequestHeadSha,
+        string pullRequestUrl)
+    {
+        var commit = await client.Repository.Commit.Get(
+            repository.Owner,
+            repository.Name,
+            pullRequestHeadSha);
+
+        var diff = await GetDiffAsync(pullRequestUrl);
+
+        return await commitAnalyzer.GetDependencyTrustAsync(
+            repository,
+            pullRequestHeadRef,
+            commit,
+            diff);
+    }
+
+    public async Task<bool> HasValidApprovalAsync(IssueId id, string authorLogin)
+    {
+        var reviews = await client.PullRequest.Review.GetAll(
+            id.Repository.Owner,
+            id.Repository.Name,
+            id.Number);
+
+        if (reviews.Count < 1)
+        {
+            return false;
+        }
+
+        var options = _options.CurrentValue;
+
+        return reviews.Any((p) =>
+            p.State is { Value: PullRequestReviewState.Approved } &&
+            p.User.Login != authorLogin &&
+            options.TrustedEntities.Reviewers.Contains(p.User.Login, StringComparer.Ordinal));
+    }
+
+    public async Task<bool> IsApprovedByAsync(IssueId id, string authorLogin)
+    {
+        var reviews = await client.PullRequest.Review.GetAll(
+            id.Repository.Owner,
+            id.Repository.Name,
+            id.Number);
+
+        return reviews.Any((p) => p.State is { Value: PullRequestReviewState.Approved } && p.User.Login == authorLogin);
+    }
+
     public async Task<bool> IsFromCollaboratorAsync(IssueId id, string login)
         => await client.Repository.Collaborator.IsCollaborator(
             id.Repository.Owner,
@@ -27,6 +77,9 @@ public sealed partial class PullRequestAnalyzer(
         var pr = message.PullRequest!;
         return IsFromTrustedUser(id, pr.User.Login, pr.Draft);
     }
+
+    public bool IsFromTrustedUser(IssueId id, SimplePullRequest pullRequest)
+        => IsFromTrustedUser(id, pullRequest.User.Login, pullRequest.Draft);
 
     public async Task<bool> IsTrustedDependencyUpdateAsync(
         RepositoryId repository,
