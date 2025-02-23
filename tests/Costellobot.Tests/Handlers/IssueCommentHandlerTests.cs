@@ -94,14 +94,7 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
     }
 
     private void RegisterPullRequest(IssueCommentDriver driver)
-    {
-        CreateDefaultBuilder()
-            .Requests()
-            .ForPath($"/repos/{driver.Repository.FullName}/pulls/{driver.Issue.PullRequest!.Number}")
-            .Responds()
-            .WithJsonContent(driver.Issue.PullRequest.Build())
-            .RegisterWith(Fixture.Interceptor);
-    }
+        => RegisterGetPullRequest(driver.Issue.PullRequest!);
 
     private TaskCompletionSource RegisterDispatch(IssueCommentDriver driver)
     {
