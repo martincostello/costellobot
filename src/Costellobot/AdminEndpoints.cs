@@ -98,10 +98,43 @@ public static class AdminEndpoints
           .DisableAntiforgery()
           .WithMetadata(new ResponseCacheAttribute() { Duration = 0, Location = ResponseCacheLocation.None, NoStore = true });
 
+        var admin = new CostellobotAdminAttribute();
+
+        builder
+            .MapGet(
+                "/configuration",
+                async (
+                    IGitHubClientForApp appClient,
+                    IGitHubClientForInstallation installationClient,
+                    IGitHubClientForUser userClient,
+                    IOptions<GitHubOptions> github,
+                    IOptions<WebhookOptions> webhook) =>
+                {
+                    var appLimits = await GetRateLimitsAsync(appClient);
+                    var installationLimits = await GetRateLimitsAsync(installationClient);
+                    var userLimits = await GetRateLimitsAsync(userClient);
+
+                    var model = new ConfigurationModel(github.Value, webhook.Value, appLimits, installationLimits, userLimits);
+                    return Results.Extensions.RazorSlice<Configuration, ConfigurationModel>(model);
+
+                    static async Task<MiscellaneousRateLimit?> GetRateLimitsAsync(IGitHubClient client)
+                    {
+                        try
+                        {
+                            return await client.RateLimit.GetRateLimits();
+                        }
+                        catch (Exception)
+                        {
+                            // Ignore
+                            return null;
+                        }
+                    }
+                })
+            .WithName("Configuration")
+            .WithMetadata(admin);
+
         const string DeliveryRoute = "Delivery";
         const string DeliveriesRoute = "Deliveries";
-
-        var admin = new CostellobotAdminAttribute();
 
         builder.MapMethods("/", [HttpMethod.Get.Method, HttpMethod.Head.Method], () => Results.Extensions.RazorSlice<Home>())
                .WithMetadata(admin);

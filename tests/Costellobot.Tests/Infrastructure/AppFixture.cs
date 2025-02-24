@@ -124,6 +124,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 KeyValuePair.Create<string, string?>("GitHub:ClientSecret", "github-secret"),
                 KeyValuePair.Create<string, string?>("GitHub:EnterpriseDomain", string.Empty),
                 KeyValuePair.Create<string, string?>("GitHub:InstallationId", InstallationId),
+                KeyValuePair.Create<string, string?>("GitHub:OAuthId", "github-oauth"),
                 KeyValuePair.Create<string, string?>("GitHub:PrivateKey", testKey),
                 KeyValuePair.Create<string, string?>("GitHub:WebhookSecret", "github-webhook-secret"),
                 KeyValuePair.Create<string, string?>("HostOptions:ShutdownTimeout", "00:00:01"),

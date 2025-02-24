@@ -12,10 +12,10 @@ using Polly;
 namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class DeploymentStatusHandler(
-    IGitHubClientForInstallation client,
+    IGitHubClientForInstallation installationClient,
+    IGitHubClientForUser userClient,
     GitCommitAnalyzer commitAnalyzer,
     PublicHolidayProvider publicHolidayProvider,
-    IOptionsMonitor<GitHubOptions> gitHubOptions,
     IOptionsMonitor<WebhookOptions> webhookOptions,
     ILogger<DeploymentStatusHandler> logger) : IHandler
 {
@@ -72,7 +72,7 @@ public sealed partial class DeploymentStatusHandler(
             return;
         }
 
-        var workflowsClient = client.WorkflowRuns();
+        var workflowsClient = installationClient.WorkflowRuns();
 
         var pendingDeployments = await workflowsClient.GetPendingDeploymentsAsync(
             repo.Owner.Login,
@@ -117,12 +117,9 @@ public sealed partial class DeploymentStatusHandler(
         long runId,
         PendingDeployment deployment)
     {
-        if (!deployment.CurrentUserCanApprove)
-        {
-            // HACK Use OAuth token for user that has permissions to review instead of the app.
-            // This can be removed in the future if GitHub Apps can be allowed review deployments.
-            client.Connection.Credentials = new Credentials(gitHubOptions.CurrentValue.AccessToken);
-        }
+        // HACK Use OAuth token for user that has permissions to review instead of the app.
+        // This can be removed in the future if GitHub Apps can be allowed review deployments.
+        IGitHubClient client = deployment.CurrentUserCanApprove ? installationClient : userClient;
 
         try
         {
@@ -181,7 +178,7 @@ public sealed partial class DeploymentStatusHandler(
             ["environment"] = environment,
         };
 
-        var connection = new ApiConnection(client.Connection);
+        var connection = new ApiConnection(installationClient.Connection);
         var deployments = await connection.Get<Octokit.Deployment[]>(
             new Uri($"repos/{repository.FullName}/deployments", UriKind.Relative),
             parameters);
@@ -198,7 +195,7 @@ public sealed partial class DeploymentStatusHandler(
 
         var previousDeployment = previousDeployments[0];
 
-        var previousDeploymentStatuses = await client.Repository.Deployment.Status.GetAll(
+        var previousDeploymentStatuses = await installationClient.Repository.Deployment.Status.GetAll(
             repository.Owner,
             repository.Name,
             previousDeployment.Id);
@@ -219,7 +216,7 @@ public sealed partial class DeploymentStatusHandler(
 
         foreach (var deployment in previousDeployments.Skip(1))
         {
-            previousDeploymentStatuses = await client.Repository.Deployment.Status.GetAll(
+            previousDeploymentStatuses = await installationClient.Repository.Deployment.Status.GetAll(
                 repository.Owner,
                 repository.Name,
                 deployment.Id);
@@ -259,7 +256,7 @@ public sealed partial class DeploymentStatusHandler(
         string sha)
     {
         // See https://docs.github.com/en/rest/commits/commits#list-pull-requests-associated-with-a-commit.
-        var pullRequests = await client.Connection.GetResponse<PullRequest[]>(
+        var pullRequests = await installationClient.Connection.GetResponse<PullRequest[]>(
             new($"repos/{repository.FullName}/commits/{sha}/pulls", UriKind.Relative));
 
         if (pullRequests.Body is { Length: 1 } pulls)
@@ -285,7 +282,7 @@ public sealed partial class DeploymentStatusHandler(
     {
         try
         {
-            return await client.GetDiffAsync(diffUrl);
+            return await installationClient.GetDiffAsync(diffUrl);
         }
         catch (Exception ex)
         {
@@ -301,7 +298,7 @@ public sealed partial class DeploymentStatusHandler(
     {
         // Diff the active and pending deployment and verify that only trusted dependency
         // changes from trusted users contribute to the changes pending to be deployed.
-        var comparison = await client.Repository.Commit.Compare(
+        var comparison = await installationClient.Repository.Commit.Compare(
             repository.Owner,
             repository.Name,
             activeDeployment.Sha,

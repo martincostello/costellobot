@@ -46,6 +46,8 @@ public static class GitHubExtensions
 
         services.AddSingleton<AppCredentialStore>();
         services.AddSingleton<InstallationCredentialStore>();
+        services.AddSingleton<UserCredentialStore>();
+
         services.AddSingleton<ICredentialStore>((provider) => provider.GetRequiredService<AppCredentialStore>());
         services.AddSingleton<IJsonSerializer, SimpleJsonSerializer>();
 
@@ -57,6 +59,7 @@ public static class GitHubExtensions
 
         services.AddTransient<IGitHubClientForApp>((provider) => provider.CreateClient<AppCredentialStore>());
         services.AddTransient<IGitHubClientForInstallation>((provider) => provider.CreateClient<InstallationCredentialStore>());
+        services.AddTransient<IGitHubClientForUser>((provider) => provider.CreateClient<UserCredentialStore>());
 
         services.AddTransient<Octokit.GraphQL.IConnection>((provider) =>
         {
