@@ -3,7 +3,7 @@
 
 namespace Octokit;
 
-public sealed class GitHubClientAdapter : GitHubClient, IGitHubClientForApp, IGitHubClientForInstallation
+public sealed class GitHubClientAdapter : GitHubClient, IGitHubClientForApp, IGitHubClientForInstallation, IGitHubClientForUser
 {
     public GitHubClientAdapter(ProductHeaderValue productInformation, ICredentialStore credentialStore, Uri baseAddress)
         : base(productInformation, credentialStore, baseAddress)

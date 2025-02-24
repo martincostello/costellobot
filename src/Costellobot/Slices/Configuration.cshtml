@@ -1,0 +1,421 @@
+@inherits RazorSliceHttpResult<ConfigurationModel>
+@implements IUsesLayout<_Layout, LayoutModel>
+
+@using System.Security.Cryptography
+@using Microsoft.AspNetCore.Html
+
+<div id="configuration-content">
+    <h1>
+        <span class="fa-solid fa-box-gears" aria-hidden="true"></span>
+        @(LayoutModel.Title)
+    </h1>
+    <ul class="nav nav-fill nav-pills mb-3" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="settings-tab-github" href="#tab-github" role="tab" type="button" aria-controls="tab-github" aria-current="page" aria-selected="true" data-bs-target="#tab-github" data-bs-toggle="pill">
+                GitHub
+                <span class="fa-brands fa-github" aria-hidden="true"></span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="settings-tab-webhook" href="#tab-webhook" role="tab" type="button" aria-controls="tab-webhook" aria-current="page" aria-selected="true" data-bs-target="#tab-webhook" data-bs-toggle="pill">
+                Webhook
+                <span class="fa-solid fa-bolt" aria-hidden="true"></span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="settings-tab-trusted-entities" href="#tab-trusted-entities" role="tab" type="button" aria-controls="tab-trusted-entities" aria-current="page" aria-selected="true" data-bs-target="#tab-trusted-entities" data-bs-toggle="pill">
+                Trusted Entities
+                <span class="fa-solid fa-certificate" aria-hidden="true"></span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="settings-tab-rate-limits" href="#tab-rate-limits" role="tab" type="button" aria-controls="tab-rate-limits" aria-current="page" aria-selected="true" data-bs-target="#tab-rate-limits" data-bs-toggle="pill">
+                Rate Limits
+                <span class="fa-solid fa-gauge-high" aria-hidden="true"></span>
+            </button>
+        </li>
+    </ul>
+    <div class="tab-content" id="tab-content-configuration">
+        <div class="tab-pane fade show active" id="tab-github" role="tabpanel" aria-labelledby="settings-tab-github">
+            <div class="card my-2">
+                <div class="card-header card-title">
+                    GitHub
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Option</th>
+                                <th scope="col">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>App ID</td>
+                                <td>
+                                    <a href="https://github.com/settings/apps/costellobot" target="_blank" rel="noopener">
+                                        <code id="app-id">@(Model.GitHub.AppId)</code>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>App Private Key</td>
+                                <td>
+                                    <code id="private-key-hash">@(GetPrivateKeyThumbprint())</code>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Badges Key</td>
+                                <td>
+                                    <code id="badges-key-hash">@(HashSecret(Model.GitHub.BadgesKey))</code>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>GitHub Access Token</td>
+                                <td>
+                                    <code id="access-token-hash">@(HashSecret(Model.GitHub.AccessToken))</code>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Installation ID</td>
+                                <td>
+                                    <code id="installation-id">@(Model.GitHub.InstallationId.ToString(CultureInfo.InvariantCulture))</code>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>OAuth Client ID</td>
+                                <td>
+                                    <a href="https://github.com/settings/applications/@(Model.GitHub.OAuthId)" target="_blank" rel="noopener">
+                                        <code id="oauth-client-id">@(Model.GitHub.ClientId)</code>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>OAuth Client Secret</td>
+                                <td>
+                                    <code id="oauth-secret-hash">@(HashSecret(Model.GitHub.ClientSecret))</code>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Scopes</td>
+                                <td>
+                                    <code id="scopes">@(string.Join(", ", Model.GitHub.Scopes))</code>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Webhook Secret</td>
+                                <td>
+                                    <code id="webhook-secret-hash">@(HashSecret(Model.GitHub.WebhookSecret))</code>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <caption class="font-weight-light">
+                            The Costellobot GitHub configuration options.
+                        </caption>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="tab-webhook" role="tabpanel" aria-labelledby="settings-tab-webhook">
+            <div class="card my-2">
+                <div class="card-header card-title">
+                    Webhook
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Option</th>
+                                <th scope="col">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Approve pull requests?</td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" id="approve" type="checkbox" checked="@(Model.Webhook.Approve)" disabled>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Auto-merge pull requests?</td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" id="automerge" type="checkbox" checked="@(Model.Webhook.Automerge)" disabled>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Approve deployments?</td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" id="deploy" type="checkbox" checked="@(Model.Webhook.Deploy)" disabled>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Implicitly trust owner approvals?</td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" id="implicit-trust" type="checkbox" checked="@(Model.Webhook.ImplicitTrust)" disabled>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <caption class="font-weight-light">
+                            The Costellobot webhook configuration options.
+                        </caption>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="tab-trusted-entities" role="tabpanel" aria-labelledby="settings-tab-trusted-entities">
+            <div class="card my-2">
+                <div class="card-header card-title">
+                    Trusted Entities
+                </div>
+                <div class="card-body">
+                    <p class="card-text font-weight-light">
+                        The configured trusted entities.
+                    </p>
+                    <hr />
+                    <div class="align-items-start d-flex">
+                        <div class="flex-column me-3 nav nav-fill nav-pills" role="tablist" aria-orientation="vertical">
+                            <button class="nav-link text-start active" id="settings-tab-trusted-entities-dependencies" role="tab" type="button" aria-controls="tab-trusted-entities-dependencies" aria-selected="true" data-bs-target="#tab-trusted-entities-dependencies" data-bs-toggle="pill">
+                                Dependencies
+                            </button>
+                            <button class="nav-link text-start" id="settings-tab-trusted-entities-publishers" role="tab" type="button" aria-controls="tab-trusted-entities-publishers" aria-selected="true" data-bs-target="#tab-trusted-entities-publishers" data-bs-toggle="pill">
+                                Publishers
+                            </button>
+                            <button class="nav-link text-start" id="settings-tab-trusted-entities-reviewers" role="tab" type="button" aria-controls="tab-trusted-entities-reviewers" aria-selected="true" data-bs-target="#tab-trusted-entities-reviewers" data-bs-toggle="pill">
+                                Reviewers
+                            </button>
+                            <button class="nav-link text-start" id="settings-tab-trusted-entities-users" role="tab" type="button" aria-controls="tab-trusted-entities-users" aria-selected="true" data-bs-target="#tab-trusted-entities-users" data-bs-toggle="pill">
+                                Users
+                            </button>
+                        </div>
+                        <div class="tab-content w-75" id="tab-content-rate-limits">
+                            <div class="tab-pane fade show active" id="tab-trusted-entities-dependencies" role="tabpanel" aria-labelledby="settings-tab-trusted-entities-dependencies">
+                                <div class="card my-2">
+                                    <div class="card-header card-title">
+                                        Trusted Dependencies
+                                    </div>
+                                    <div class="card-body">
+                                        <ul id="trusted-dependencies">
+                                            @foreach (var dependency in Model.Webhook.TrustedEntities.Dependencies)
+                                            {
+                                                <li>
+                                                    <code class="trusted-dependency">@(dependency)</code>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade show" id="tab-trusted-entities-publishers" role="tabpanel" aria-labelledby="settings-tab-trusted-entities-publishers">
+                                <div class="card my-2">
+                                    <div class="card-header card-title">
+                                        Trusted Publishers
+                                    </div>
+                                    <div class="card-body">
+                                        <ul id="trusted-publishers">
+                                            @foreach ((var ecosystem, var publishers) in Model.Webhook.TrustedEntities.Publishers)
+                                            {
+                                                foreach (var publisher in publishers)
+                                                {
+                                                    <li>
+                                                        <code class="trusted-publisher">@($"{ecosystem}:{publisher}")</code>
+                                                    </li>
+                                                }
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade show" id="tab-trusted-entities-reviewers" role="tabpanel" aria-labelledby="settings-tab-trusted-entities-reviewers">
+                                <div class="card my-2">
+                                    <div class="card-header card-title">
+                                        Trusted Reviewers
+                                    </div>
+                                    <div class="card-body">
+                                        <ul id="trusted-reviewers">
+                                            @foreach (var user in Model.Webhook.TrustedEntities.Reviewers)
+                                            {
+                                                <li>
+                                                    <code class="trusted-reviewer">@(user)</code>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade show" id="tab-trusted-entities-users" role="tabpanel" aria-labelledby="settings-tab-trusted-entities-users">
+                                <div class="card my-2">
+                                    <div class="card-header card-title">
+                                        Trusted Users
+                                    </div>
+                                    <div class="card-body">
+                                        <ul id="trusted-users">
+                                            @foreach (var user in Model.Webhook.TrustedEntities.Users)
+                                            {
+                                                <li>
+                                                    <code class="trusted-user">@(user)</code>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="tab-rate-limits" role="tabpanel" aria-labelledby="settings-tab-rate-limits">
+            <div class="card my-2">
+                <div class="card-header card-title">
+                    Rate Limits
+                </div>
+                <div class="card-body">
+                    <p class="card-text font-weight-light">
+                        The GitHub app, installation and user rate limits.
+                    </p>
+                    <hr />
+                    <div class="align-items-start d-flex">
+                        <div class="flex-column me-3 nav nav-fill nav-pills" role="tablist" aria-orientation="vertical">
+                            <button class="nav-link text-start active" id="settings-tab-rate-limits-app" role="tab" type="button" aria-controls="tab-rate-limits-app" aria-selected="true" data-bs-target="#tab-rate-limits-app" data-bs-toggle="pill">
+                                <span class="fa-solid fa-robot" aria-hidden="true"></span>
+                                App
+                            </button>
+                            <button class="nav-link text-start" id="settings-tab-rate-limits-installation" role="tab" type="button" aria-controls="tab-rate-limits-installation" aria-selected="true" data-bs-target="#tab-rate-limits-installation" data-bs-toggle="pill">
+                                <span class="fa-solid fa-gear" aria-hidden="true"></span>
+                                Installation
+                            </button>
+                            <button class="nav-link text-start" id="settings-tab-rate-limits-user" role="tab" type="button" aria-controls="tab-rate-limits-user" aria-selected="true" data-bs-target="#tab-rate-limits-user" data-bs-toggle="pill">
+                                <span class="fa-solid fa-user" aria-hidden="true"></span>
+                                User
+                            </button>
+                        </div>
+                        <div class="tab-content w-75" id="tab-content-rate-limits">
+                            <div class="tab-pane fade show active" id="tab-rate-limits-app" role="tabpanel" aria-labelledby="settings-tab-rate-limits-app">
+                                <div class="card my-2">
+                                    <div class="card-header card-title">
+                                        GitHub App
+                                    </div>
+                                    <div class="card-body">
+                                        @(RateLimitTable("App", Model.AppRateLimits))
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="tab-rate-limits-installation" role="tabpanel" aria-labelledby="settings-tab-rate-limits-installation">
+                                <div class="card my-2">
+                                    <div class="card-header card-title">
+                                        GitHub Installation
+                                    </div>
+                                    <div class="card-body">
+                                        @(RateLimitTable("Installation", Model.InstallationRateLimits))
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="tab-rate-limits-user" role="tabpanel" aria-labelledby="settings-tab-rate-limits-user">
+                                <div class="card my-2">
+                                    <div class="card-header card-title">
+                                        GitHub User
+                                    </div>
+                                    <div class="card-body">
+                                        @(RateLimitTable("User", Model.UserRateLimits))
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public LayoutModel LayoutModel => new("Configuration");
+
+    private string GetPrivateKeyThumbprint()
+    {
+        using var algorithm = RSA.Create();
+        algorithm.ImportFromPem(Model.GitHub.PrivateKey);
+
+        var publicKey = algorithm.ExportSubjectPublicKeyInfo();
+
+        return HashSecret(publicKey);
+    }
+
+    private string HashSecret(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        var buffer = System.Text.Encoding.UTF8.GetBytes(value);
+        return HashSecret(buffer);
+    }
+
+    private string HashSecret(byte[] value)
+    {
+        var hash = SHA256.HashData(value);
+        return "SHA256:" + Convert.ToBase64String(hash);
+    }
+
+    private IHtmlContent RateLimitTable(string label, Octokit.MiscellaneousRateLimit? rateLimit)
+    {
+        if (rateLimit is null)
+        {
+            <text>Unavailable.</text>
+            return HtmlString.Empty;
+        }
+
+        var core = rateLimit.Resources.Core;
+        var graphql = rateLimit.Resources.Graphql;
+        var search = rateLimit.Resources.Search;
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Core</td>
+                    <td>
+                        <code title="Resets @(core!.Reset.Humanize())">
+                            @(core.Remaining)/@(core.Limit)
+                        </code>
+                    </td>
+                </tr>
+                <tr>
+                    <td>GraphQL</td>
+                    <td>
+                        <code title="Resets @(graphql!.Reset.Humanize())">
+                            @(graphql.Remaining)/@(graphql.Limit)
+                        </code>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Search</td>
+                    <td>
+                        <code title="Resets @(search!.Reset.Humanize())">
+                            @(search.Remaining)/@(search.Limit)
+                        </code>
+                    </td>
+                </tr>
+            </tbody>
+            <caption class="font-weight-light">
+                Rate limits for GitHub @(label).
+            </caption>
+        </table>
+
+        return HtmlString.Empty;
+    }
+}

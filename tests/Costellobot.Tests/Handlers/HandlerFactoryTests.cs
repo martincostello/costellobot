@@ -34,6 +34,7 @@ public static class HandlerFactoryTests
 
         var gitHubAppClient = Substitute.For<IGitHubClientForApp>();
         var gitHubInstallationClient = Substitute.For<IGitHubClientForInstallation>();
+        var gitHubUserClient = Substitute.For<IGitHubClientForUser>();
 
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var trustStore = Substitute.For<ITrustStore>();
@@ -87,9 +88,9 @@ public static class HandlerFactoryTests
             {
                 return new DeploymentStatusHandler(
                     gitHubInstallationClient,
+                    gitHubUserClient,
                     commitAnalyzer,
                     publicHolidayProvider,
-                    gitHubOptions,
                     webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<DeploymentStatusHandler>());
             });

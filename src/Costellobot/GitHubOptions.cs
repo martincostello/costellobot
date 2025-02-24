@@ -19,6 +19,8 @@ public sealed class GitHubOptions
 
     public long InstallationId { get; set; }
 
+    public string OAuthId { get; set; } = string.Empty;
+
     public string PrivateKey { get; set; } = string.Empty;
 
     public IList<string> Scopes { get; set; } = [];
