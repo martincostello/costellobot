@@ -41,3 +41,4 @@ PublishProfiles
 *.sln.ide
 *.suo
 *.user
+!.packages/*.nupkg
