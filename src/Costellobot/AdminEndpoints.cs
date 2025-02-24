@@ -104,17 +104,15 @@ public static class AdminEndpoints
             .MapGet(
                 "/configuration",
                 async (
-                    IGitHubClientForApp appClient,
                     IGitHubClientForInstallation installationClient,
                     IGitHubClientForUser userClient,
                     IOptions<GitHubOptions> github,
                     IOptions<WebhookOptions> webhook) =>
                 {
-                    var appLimits = await GetRateLimitsAsync(appClient);
                     var installationLimits = await GetRateLimitsAsync(installationClient);
                     var userLimits = await GetRateLimitsAsync(userClient);
 
-                    var model = new ConfigurationModel(github.Value, webhook.Value, appLimits, installationLimits, userLimits);
+                    var model = new ConfigurationModel(github.Value, webhook.Value, installationLimits, userLimits);
                     return Results.Extensions.RazorSlice<Configuration, ConfigurationModel>(model);
 
                     static async Task<MiscellaneousRateLimit?> GetRateLimitsAsync(IGitHubClient client)

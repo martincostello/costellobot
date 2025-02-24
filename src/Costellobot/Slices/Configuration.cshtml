@@ -279,17 +279,13 @@
                 </div>
                 <div class="card-body">
                     <p class="card-text font-weight-light">
-                        The GitHub app, installation and user rate limits.
+                        The GitHub installation and user rate limits.
                     </p>
                     <hr />
                     <div class="align-items-start d-flex">
                         <div class="flex-column me-3 nav nav-fill nav-pills" role="tablist" aria-orientation="vertical">
-                            <button class="nav-link text-start active" id="settings-tab-rate-limits-app" role="tab" type="button" aria-controls="tab-rate-limits-app" aria-selected="true" data-bs-target="#tab-rate-limits-app" data-bs-toggle="pill">
-                                <span class="fa-solid fa-robot" aria-hidden="true"></span>
-                                App
-                            </button>
                             <button class="nav-link text-start" id="settings-tab-rate-limits-installation" role="tab" type="button" aria-controls="tab-rate-limits-installation" aria-selected="true" data-bs-target="#tab-rate-limits-installation" data-bs-toggle="pill">
-                                <span class="fa-solid fa-gear" aria-hidden="true"></span>
+                                <span class="fa-solid fa-robot" aria-hidden="true"></span>
                                 Installation
                             </button>
                             <button class="nav-link text-start" id="settings-tab-rate-limits-user" role="tab" type="button" aria-controls="tab-rate-limits-user" aria-selected="true" data-bs-target="#tab-rate-limits-user" data-bs-toggle="pill">
@@ -298,17 +294,7 @@
                             </button>
                         </div>
                         <div class="tab-content w-75" id="tab-content-rate-limits">
-                            <div class="tab-pane fade show active" id="tab-rate-limits-app" role="tabpanel" aria-labelledby="settings-tab-rate-limits-app">
-                                <div class="card my-2">
-                                    <div class="card-header card-title">
-                                        GitHub App
-                                    </div>
-                                    <div class="card-body">
-                                        @(RateLimitTable("App", Model.AppRateLimits))
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="tab-pane fade" id="tab-rate-limits-installation" role="tabpanel" aria-labelledby="settings-tab-rate-limits-installation">
+                            <div class="tab-pane fade show active" id="tab-rate-limits-installation" role="tabpanel" aria-labelledby="settings-tab-rate-limits-installation">
                                 <div class="card my-2">
                                     <div class="card-header card-title">
                                         GitHub Installation
