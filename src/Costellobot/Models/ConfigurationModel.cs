@@ -10,6 +10,5 @@ namespace MartinCostello.Costellobot.Models;
 public sealed record ConfigurationModel(
     GitHubOptions GitHub,
     WebhookOptions Webhook,
-    MiscellaneousRateLimit? AppRateLimits,
     MiscellaneousRateLimit? InstallationRateLimits,
     MiscellaneousRateLimit? UserRateLimits);
