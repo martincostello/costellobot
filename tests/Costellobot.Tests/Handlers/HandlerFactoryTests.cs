@@ -29,8 +29,7 @@ public static class HandlerFactoryTests
     public static void Create_Creates_Correct_Handler_Type(string? eventType, Type expected)
     {
         // Arrange
-        var gitHubOptions = new GitHubOptions().ToMonitor();
-        var webhookOptions = new WebhookOptions().ToMonitor();
+        var options = new WebhookOptions().ToMonitor();
 
         var gitHubAppClient = Substitute.For<IGitHubClientForApp>();
         var gitHubInstallationClient = Substitute.For<IGitHubClientForInstallation>();
@@ -43,19 +42,19 @@ public static class HandlerFactoryTests
             gitHubInstallationClient,
             [],
             trustStore,
-            webhookOptions,
+            options,
             NullLoggerFactory.Instance.CreateLogger<GitCommitAnalyzer>());
 
         var pullRequestAnalyzer = new PullRequestAnalyzer(
             gitHubInstallationClient,
             commitAnalyzer,
-            webhookOptions,
+            options,
             NullLoggerFactory.Instance.CreateLogger<PullRequestAnalyzer>());
 
         var pullRequestApprover = new PullRequestApprover(
             gitHubInstallationClient,
             Substitute.For<Octokit.GraphQL.IConnection>(),
-            webhookOptions,
+            options,
             NullLoggerFactory.Instance.CreateLogger<PullRequestApprover>());
 
         var publicHolidayProvider = new PublicHolidayProvider(
@@ -69,7 +68,7 @@ public static class HandlerFactoryTests
             {
                 return new CheckSuiteHandler(
                     gitHubInstallationClient,
-                    webhookOptions,
+                    options,
                     NullLoggerFactory.Instance.CreateLogger<CheckSuiteHandler>());
             });
 
@@ -79,7 +78,7 @@ public static class HandlerFactoryTests
                 return new DeploymentProtectionRuleHandler(
                     gitHubInstallationClient,
                     publicHolidayProvider,
-                    webhookOptions,
+                    options,
                     NullLoggerFactory.Instance.CreateLogger<DeploymentProtectionRuleHandler>());
             });
 
@@ -91,7 +90,7 @@ public static class HandlerFactoryTests
                     gitHubUserClient,
                     commitAnalyzer,
                     publicHolidayProvider,
-                    webhookOptions,
+                    options,
                     NullLoggerFactory.Instance.CreateLogger<DeploymentStatusHandler>());
             });
 
@@ -109,7 +108,7 @@ public static class HandlerFactoryTests
                 return new PullRequestHandler(
                     pullRequestAnalyzer,
                     pullRequestApprover,
-                    webhookOptions,
+                    options,
                     NullLoggerFactory.Instance.CreateLogger<PullRequestHandler>());
             });
 
@@ -123,7 +122,7 @@ public static class HandlerFactoryTests
                     pullRequestApprover,
                     cache,
                     trustStore,
-                    webhookOptions,
+                    options,
                     NullLoggerFactory.Instance.CreateLogger<PullRequestReviewHandler>());
             });
 
