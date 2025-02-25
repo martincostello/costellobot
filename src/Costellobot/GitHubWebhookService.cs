@@ -107,9 +107,20 @@ public sealed partial class GitHubWebhookService(
 
         await processor.ProcessWebhookAsync(headers, body);
 
-        await args.CompleteMessageAsync(args.Message, args.CancellationToken);
-
-        Log.CompletedMessage(logger, args.Message.MessageId);
+        try
+        {
+            await args.CompleteMessageAsync(args.Message, args.CancellationToken);
+            Log.CompletedMessage(logger, args.Message.MessageId);
+        }
+        catch (OperationCanceledException ex)
+        {
+            Log.CompleteFailed(
+                logger,
+                ex,
+                args.Identifier,
+                args.EntityPath,
+                args.FullyQualifiedNamespace);
+        }
     }
 
     private Task ProcessErrorAsync(ProcessErrorEventArgs args)
@@ -161,6 +172,17 @@ public sealed partial class GitHubWebhookService(
             Exception exception,
             string identifier,
             string errorSource,
+            string entityPath,
+            string fullyQualifiedNamespace);
+
+        [LoggerMessage(
+           EventId = 6,
+           Level = LogLevel.Warning,
+           Message = "Failed to complete message with identifier {Identifier} for entity {EntityPath} of namespace {FullyQualifiedNamespace}.")]
+        public static partial void CompleteFailed(
+            ILogger logger,
+            Exception exception,
+            string identifier,
             string entityPath,
             string fullyQualifiedNamespace);
     }
