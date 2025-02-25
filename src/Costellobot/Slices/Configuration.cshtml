@@ -79,7 +79,9 @@
                             <tr>
                                 <td>Installation ID</td>
                                 <td>
-                                    <code id="installation-id">@(Model.GitHub.InstallationId.ToString(CultureInfo.InvariantCulture))</code>
+                                    <a href="https://github.com/settings/installations/@(Model.GitHub.InstallationId)" target="_blank" rel="noopener">
+                                        <code id="installation-id">@(Model.GitHub.InstallationId.ToString(CultureInfo.InvariantCulture))</code>
+                                    </a>
                                 </td>
                             </tr>
                             <tr>
