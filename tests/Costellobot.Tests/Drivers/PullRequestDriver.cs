@@ -42,6 +42,12 @@ public class PullRequestDriver
         return this;
     }
 
+    public PullRequestDriver WithDiff(string diff)
+    {
+        PullRequest.Diff = diff;
+        return this;
+    }
+
     public virtual object CreateWebhook(string action)
     {
         return new

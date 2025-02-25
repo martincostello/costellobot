@@ -34,7 +34,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
     }
 
     [Fact]
-    public async Task Trust_Store_Is_Updated_For_Owner_Approved_Pull_Request_From_Trusted_User_For_Multiple_Dependencies()
+    public async Task Trust_Store_Is_Updated_For_Owner_Approved_Pull_Request_From_Trusted_User_For_Multiple_Dependencies_From_Commit()
     {
         // Arrange
         (string Id, string Version)[] dependencies =
@@ -68,6 +68,67 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
             
             Signed-off-by: dependabot[bot] <support@github.com>
             Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+            """);
+
+        var trustStoreUpdated = RegisterTrusted(DependencyEcosystem.NuGet, dependencies);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await trustStoreUpdated.Task.WaitAsync(ResultTimeout, CancellationToken);
+    }
+
+    [Fact(Skip = "https://github.com/justeattakeaway/httpclient-interception/pull/1009")]
+    public async Task Trust_Store_Is_Updated_For_Owner_Approved_Pull_Request_From_Trusted_User_For_Multiple_Dependencies_From_Diff()
+    {
+        // Arrange
+        (string Id, string Version)[] dependencies =
+        [
+            ("bar", "4.5.6"),
+            ("foo", "1.2.3"),
+        ];
+
+        var driver = await ConfigureAsync(("_", "_"));
+
+        driver.WithCommitMessage(
+            """
+            Bump the foobar group with 2 updates (#1234)
+            ---
+            updated-dependencies:
+            - dependency-name: bar
+              dependency-type: direct:production
+              update-type: version-update:semver-patch
+              dependency-group: foobar
+            - dependency-name: foo
+              dependency-type: direct:production
+              update-type: version-update:semver-patch
+              dependency-group: foobar
+            ...
+            
+            Signed-off-by: dependabot[bot] <support@github.com>
+            Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+            """);
+
+        driver.WithDiff(
+            """
+            diff --git a/Directory.Packages.props b/Directory.Packages.props
+            index effd847a..4cd09220 100644
+            --- a/Directory.Packages.props
+            +++ b/Directory.Packages.props
+            @@ -10,8 +10,8 @@
+                 <PackageVersion Include="Aspire.Azure.Messaging.ServiceBus" Version="9.0.0" />
+                 <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.0.0" />
+                 <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="9.0.0" />
+            -    <PackageVersion Include="bar" Version="4.5.5" />
+            -    <PackageVersion Include="foo" Version="1.2.2" />
+            +    <PackageVersion Include="bar" Version="4.5.6" />
+            +    <PackageVersion Include="foo" Version="1.2.3" />
+                 <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
+                 <PackageVersion Include="GitVersion.Tool" Version="6.1.0" />
+                 <PackageVersion Include="Humanizer" Version="2.14.1" />
             """);
 
         var trustStoreUpdated = RegisterTrusted(DependencyEcosystem.NuGet, dependencies);
