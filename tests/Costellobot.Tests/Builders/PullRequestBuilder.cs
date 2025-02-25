@@ -7,6 +7,8 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
 {
     public string AuthorAssociation { get; set; } = "owner";
 
+    public string Diff { get; set; } = string.Empty;
+
     public string DiffUrl => $"{Url}.diff";
 
     public string HtmlUrl => $"https://github.com/{Repository.FullName}/pull/{Number}";

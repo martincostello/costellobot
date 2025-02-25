@@ -189,7 +189,8 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .ForPath($"/repos/{builder.Repository.FullName}/pulls/{builder.Number}")
             .ForRequestHeader("Accept", "application/vnd.github.v3.diff")
             .Responds()
-            .WithContent(string.Empty)
+            .WithContentHeader("Content-Type", "application/vnd.github.diff; charset=utf-8")
+            .WithContent(() => Encoding.UTF8.GetBytes(builder.Diff))
             .RegisterWith(Fixture.Interceptor);
 
         RegisterGetPullRequest(builder);
