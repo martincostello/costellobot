@@ -162,7 +162,7 @@ public static class AuthenticationEndpoints
                 string url = RootPath;
 
                 if (context.Request.Query.TryGetValue("ReturnUrl", out var returnUrl) &&
-                    RedirectHttpResult.IsLocalUrl(returnUrl))
+                    Microsoft.AspNetCore.Http.HttpResults.RedirectHttpResult.IsLocalUrl(returnUrl))
                 {
                     url = returnUrl.ToString();
                 }
