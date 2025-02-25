@@ -137,6 +137,7 @@ public class PushHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper
             .Requests()
             .ForPost()
             .ForPath($"/repos/martincostello/github-automation/dispatches")
+            .ForRequestHeader("Accept", "application/vnd.github+json")
             .ForContent(async (request) =>
             {
                 request.ShouldNotBeNull();

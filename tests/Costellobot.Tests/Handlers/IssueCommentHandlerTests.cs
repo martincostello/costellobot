@@ -104,6 +104,7 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
             .Requests()
             .ForPost()
             .ForPath("/repos/martincostello/github-automation/dispatches")
+            .ForRequestHeader("Accept", "application/vnd.github+json")
             .ForContent(async (request) =>
             {
                 request.ShouldNotBeNull();

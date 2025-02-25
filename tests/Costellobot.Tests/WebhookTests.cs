@@ -184,6 +184,7 @@ public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHel
             .Requests()
             .ForPath("/app/hook/deliveries")
             .ForQuery($"per_page=100{(cursor is null ? string.Empty : $"&cursor={cursor}")}")
+            .ForRequestHeader("Accept", "application/vnd.github+json")
             .Responds()
             .WithJsonContent(deliveries.Build());
 
@@ -200,6 +201,7 @@ public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHel
         CreateDefaultBuilder()
             .Requests()
             .ForPath($"/app/hook/deliveries/{payload.Id}")
+            .ForRequestHeader("Accept", "application/vnd.github.v3.raw")
             .Responds()
             .WithJsonContent(payload)
             .RegisterWith(Fixture.Interceptor);

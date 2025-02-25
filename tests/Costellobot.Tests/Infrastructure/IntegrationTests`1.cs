@@ -82,6 +82,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .ForHttps()
             .ForHost("api.github.com")
             .ForGet()
+            .ForRequestHeader("Accept", "application/vnd.github.v3+json")
             .Responds()
             .WithStatus(StatusCodes.Status200OK);
 
@@ -225,6 +226,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .Requests()
             .ForPath($"/repos/{repository.FullName}/contents/.github/dependabot.yml")
             .ForQuery($"ref={reference}")
+            .ForRequestHeader("Accept", "application/vnd.github.v3.raw")
             .Responds()
             .WithContent(configuration)
             .WithContentHeader("Content-Type", "application/vnd.github.v3.raw")
@@ -257,7 +259,6 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         CreateDefaultBuilder()
             .Requests()
             .ForPath($"/repos/{builder.Repository.FullName}/pulls/{builder.Number}")
-            .ForRequestHeader("Accept", "application/vnd.github.v3+json")
             .Responds()
             .WithJsonContent(builder)
             .RegisterWith(Fixture.Interceptor);
@@ -369,6 +370,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .Requests()
             .ForPost()
             .ForPath("graphql")
+            .ForRequestHeader("Accept", "application/vnd.github.antiope-preview+json")
             .ForContent(async (request) =>
             {
                 request.ShouldNotBeNull();

@@ -124,6 +124,7 @@ public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppF
             .Requests()
             .ForPost()
             .ForPath($"/repos/{driver.Repository.FullName}/actions/runs/{driver.RunId}/deployment_protection_rule")
+            .ForRequestHeader("Accept", "application/vnd.github+json")
             .Responds()
             .WithStatus(HttpStatusCode.NoContent);
 
