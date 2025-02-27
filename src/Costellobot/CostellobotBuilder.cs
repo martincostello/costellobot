@@ -2,7 +2,9 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.IO.Compression;
+using Azure.Data.Tables;
 using Azure.Identity;
+using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 
@@ -109,6 +111,20 @@ public static class CostellobotBuilder
 
     public static WebApplication UseCostellobot(this WebApplication app)
     {
+        if (app.Environment.IsDevelopment())
+        {
+            const string ContainerName = "data-protection";
+            var blobClient = app.Services.GetRequiredService<BlobServiceClient>();
+
+            if (!blobClient.GetBlobContainers().Any((p) => p.Name == ContainerName))
+            {
+                blobClient.CreateBlobContainer(ContainerName);
+            }
+
+            var tableClient = app.Services.GetRequiredService<TableServiceClient>();
+            tableClient.CreateTableIfNotExists("TrustStore");
+        }
+
         if (!app.Environment.IsDevelopment())
         {
             app.UseExceptionHandler("/error");
