@@ -114,15 +114,17 @@ public static class CostellobotBuilder
         if (app.Environment.IsDevelopment())
         {
             const string ContainerName = "data-protection";
-            var blobClient = app.Services.GetRequiredService<BlobServiceClient>();
 
-            if (!blobClient.GetBlobContainers().Any((p) => p.Name == ContainerName))
+            if (app.Services.GetService<BlobServiceClient>() is { } blobClient &&
+                !blobClient.GetBlobContainers().Any((p) => p.Name == ContainerName))
             {
                 blobClient.CreateBlobContainer(ContainerName);
             }
 
-            var tableClient = app.Services.GetRequiredService<TableServiceClient>();
-            tableClient.CreateTableIfNotExists("TrustStore");
+            if (app.Services.GetService<TableServiceClient>() is { } tableClient)
+            {
+                tableClient.CreateTableIfNotExists("TrustStore");
+            }
         }
 
         if (!app.Environment.IsDevelopment())
