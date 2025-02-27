@@ -4,7 +4,6 @@
 using System.IO.Compression;
 using Azure.Data.Tables;
 using Azure.Identity;
-using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 
@@ -111,20 +110,10 @@ public static class CostellobotBuilder
 
     public static WebApplication UseCostellobot(this WebApplication app)
     {
-        if (app.Environment.IsDevelopment())
+        if (app.Environment.IsDevelopment() &&
+            app.Services.GetService<TableServiceClient>() is { } tableClient)
         {
-            const string ContainerName = "data-protection";
-
-            if (app.Services.GetService<BlobServiceClient>() is { } blobClient &&
-                !blobClient.GetBlobContainers().Any((p) => p.Name == ContainerName))
-            {
-                blobClient.CreateBlobContainer(ContainerName);
-            }
-
-            if (app.Services.GetService<TableServiceClient>() is { } tableClient)
-            {
-                tableClient.CreateTableIfNotExists("TrustStore");
-            }
+            tableClient.CreateTableIfNotExists("TrustStore");
         }
 
         if (!app.Environment.IsDevelopment())
