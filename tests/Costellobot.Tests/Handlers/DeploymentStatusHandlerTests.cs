@@ -134,6 +134,45 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Fact]
+    public async Task Deployment_Is_Approved_For_Trusted_User_And_Dependency_When_Another_Build_Behind_In_Queue()
+    {
+        // Arrange
+        Fixture.ApproveDeployments();
+
+        var driver = new DeploymentStatusDriver(
+            (repo) => repo.CreateCommit(),
+            CreateTrustedCommit);
+
+        driver.WithNextDeployment(CreateDeployment);
+        driver.WithPendingDeployment(CreateDeployment);
+
+        driver.WithActiveDeployment();
+        driver.WithInactiveDeployment();
+
+        driver.WithPendingCommit(CreateTrustedCommit(driver.Repository));
+
+        foreach (var commit in driver.Commits)
+        {
+            RegisterPullRequestForCommit(commit);
+        }
+
+        RegisterGetAccessToken();
+
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
+
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await deploymentApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
+    }
+
+    [Fact]
     public async Task Deployment_Approval_Failure_For_Trusted_User_And_Dependency_Is_Handled()
     {
         // Arrange
@@ -792,6 +831,12 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     private void RegisterAllDeployments(DeploymentStatusDriver driver)
     {
         var deployments = new List<DeploymentBuilder>();
+
+        if (driver.NextDeployment is { } next)
+        {
+            deployments.Add(next);
+            RegisterPendingDeployment(driver);
+        }
 
         if (driver.PendingDeployment is { } pending)
         {

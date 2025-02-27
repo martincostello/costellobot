@@ -183,7 +183,11 @@ public sealed partial class DeploymentStatusHandler(
             new Uri($"repos/{repository.FullName}/deployments", UriKind.Relative),
             parameters);
 
+        // Because the list is sorted by time descending, we need to skip over any
+        // deployments before the current deployment in the list to find the correct
+        // previous deployment to compare against the deployment for this delivery.
         var previousDeployments = deployments
+            .SkipWhile((p) => p.Id != deploymentId)
             .Where((p) => p.Id != deploymentId)
             .ToList();
 
