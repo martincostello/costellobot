@@ -32,9 +32,13 @@ public sealed class DeploymentStatusDriver
 
     public IList<DeploymentBuilder> InactiveDeployments { get; } = [];
 
+    public DeploymentBuilder? NextDeployment { get; set; }
+
     public DeploymentBuilder? PendingDeployment { get; set; }
 
     public DeploymentBuilder? SkippedDeployment { get; set; }
+
+    public DeploymentStatusBuilder? NextDeploymentStatus { get; set; }
 
     public DeploymentStatusBuilder? PendingDeploymentStatus { get; set; }
 
@@ -59,6 +63,18 @@ public sealed class DeploymentStatusDriver
         var deployment = CreateDeployment(environmentName ?? PendingDeployment!.Environment, commit?.Sha);
 
         InactiveDeployments.Add(deployment);
+
+        return this;
+    }
+
+    [MemberNotNull(nameof(NextDeployment))]
+    [MemberNotNull(nameof(NextDeploymentStatus))]
+    public DeploymentStatusDriver WithNextDeployment(
+        Func<GitHubCommitBuilder, DeploymentBuilder>? deploymentFactory = null,
+        Func<DeploymentStatusBuilder>? statusFactory = null)
+    {
+        NextDeployment = deploymentFactory?.Invoke(HeadCommit) ?? CreateDeployment();
+        NextDeploymentStatus = statusFactory?.Invoke() ?? CreateDeploymentStatus();
 
         return this;
     }
