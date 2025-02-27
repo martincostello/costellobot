@@ -129,6 +129,11 @@ public static class AuthenticationEndpoints
                 string containerName = "data-protection";
                 string blobName = $"{environment.EnvironmentName.ToLowerInvariant()}/keys.xml";
 
+                if (environment.IsDevelopment() && !client.GetBlobContainers().Any((p) => p.Name == containerName))
+                {
+                    client.CreateBlobContainer(containerName);
+                }
+
                 return client.GetBlobContainerClient(containerName).GetBlobClient(blobName);
             });
 #pragma warning restore CA1308

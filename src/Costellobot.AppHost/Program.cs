@@ -9,27 +9,35 @@ const string ServiceBus = "AzureServiceBus";
 const string Storage = "AzureStorage";
 const string TableStorage = "AzureTableStorage";
 
-var blobStorage = builder.ExecutionContext.IsPublishMode
-    ? builder.AddAzureStorage(Storage).AddBlobs(BlobStorage)
-    : builder.AddConnectionString(BlobStorage);
+var storage = builder.AddAzureStorage(Storage)
+                     .RunAsEmulator((container) =>
+                     {
+                         container.WithDataVolume()
+                                  .WithLifetime(ContainerLifetime.Persistent);
+                     });
 
-var tableStorage = builder.ExecutionContext.IsPublishMode
-    ? builder.AddAzureStorage(Storage).AddTables(TableStorage)
-    : builder.AddConnectionString(TableStorage);
+var blobStorage = storage.AddBlobs(BlobStorage);
+
+var tableStorage = storage.AddTables(TableStorage);
 
 var secrets = builder.ExecutionContext.IsPublishMode
     ? builder.AddAzureKeyVault(KeyVault)
     : builder.AddConnectionString(KeyVault);
 
-var serviceBus = builder.ExecutionContext.IsPublishMode
-    ? builder.AddAzureServiceBus(ServiceBus)
-    : builder.AddConnectionString(ServiceBus);
+var serviceBus = builder.AddAzureServiceBus(ServiceBus)
+                        .RunAsEmulator((container) => container.WithLifetime(ContainerLifetime.Persistent));
+
+var webhooks = serviceBus.AddServiceBusQueue("webhooks");
 
 builder.AddProject<Projects.Costellobot>("Costellobot")
        .WithReference(secrets)
        .WithReference(blobStorage)
        .WithReference(tableStorage)
-       .WithReference(serviceBus);
+       .WithReference(serviceBus)
+       .WaitFor(blobStorage)
+       .WaitFor(tableStorage)
+       .WaitFor(serviceBus)
+       .WaitFor(webhooks);
 
 var app = builder.Build();
 

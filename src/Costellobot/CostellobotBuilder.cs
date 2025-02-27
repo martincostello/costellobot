@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.IO.Compression;
+using Azure.Data.Tables;
 using Azure.Identity;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -109,6 +110,12 @@ public static class CostellobotBuilder
 
     public static WebApplication UseCostellobot(this WebApplication app)
     {
+        if (app.Environment.IsDevelopment() &&
+            app.Services.GetService<TableServiceClient>() is { } tableClient)
+        {
+            tableClient.CreateTableIfNotExists("TrustStore");
+        }
+
         if (!app.Environment.IsDevelopment())
         {
             app.UseExceptionHandler("/error");

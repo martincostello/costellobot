@@ -41,6 +41,7 @@ jobs:
         APPLICATION_URL: ${{ env.APPLICATION_URL }}
         ConnectionStrings__AzureServiceBus: 'costellobot.servicebus.windows.local'
         ConnectionStrings__AzureTableStorage: 'UseDevelopmentStorage=true'
+        DOTNET_ENVIRONMENT: 'Production'
         GitHub__ClientId: 'github-client-id'
         GitHub__ClientSecret: 'github-client-secret'
         Logging__LogLevel__Azure: 'None'
