@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Options;
 
@@ -23,6 +24,14 @@ public sealed partial class GitHubEventHandler(
             if (WellKnownGitHubEvents.IsKnown(payload))
             {
                 var message = GitHubMessageSerializer.Serialize(payload.Headers.Delivery, payload.RawHeaders, payload.RawPayload.ToString());
+
+                if (Activity.Current is { } activity)
+                {
+                    activity.AddBaggage("messaging.message.id", message.MessageId);
+                    activity.AddBaggage("github.webhook.delivery", payload.Headers.Delivery);
+                    activity.AddBaggage("github.webhook.event", payload.Headers.Event);
+                    activity.AddBaggage("github.webhook.event.action", payload.Event?.Action);
+                }
 
                 var sender = client.CreateSender(config.QueueName);
                 await sender.SendMessageAsync(message, cts.Token);
