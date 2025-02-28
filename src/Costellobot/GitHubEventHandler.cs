@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Options;
-using OpenTelemetry;
 
 namespace MartinCostello.Costellobot;
 
@@ -15,6 +15,16 @@ public sealed partial class GitHubEventHandler(
 {
     public async Task HandleAsync(GitHubEvent payload)
     {
+        if (Activity.Current is { } activity)
+        {
+            activity.SetTag("github.webhook.delivery", payload.Headers.Delivery);
+            activity.SetTag("github.webhook.hook.id", payload.Headers.HookId);
+            activity.SetTag("github.webhook.hook.installation.target.id", payload.Headers.HookInstallationTargetId);
+            activity.SetTag("github.webhook.hook.installation.target.type", payload.Headers.HookInstallationTargetType);
+            activity.SetTag("github.webhook.event", payload.Headers.Event);
+            activity.SetTag("github.webhook.payload.action", payload.Event?.Action);
+        }
+
         var config = options.CurrentValue;
 
         using var cts = new CancellationTokenSource(config.PublishTimeout);
@@ -25,13 +35,7 @@ public sealed partial class GitHubEventHandler(
             {
                 var message = GitHubMessageSerializer.Serialize(payload.Headers.Delivery, payload.RawHeaders, payload.RawPayload.ToString());
 
-                Baggage.SetBaggage(
-                [
-                    KeyValuePair.Create<string, string?>("github.webhook.delivery", payload.Headers.Delivery),
-                    KeyValuePair.Create<string, string?>("github.webhook.event", payload.Headers.Event),
-                    KeyValuePair.Create<string, string?>("github.webhook.event.action", payload.Event?.Action),
-                    KeyValuePair.Create<string, string?>("messaging.message.id", message.MessageId),
-                ]);
+                Activity.Current?.SetTag("messaging.message.id", message.MessageId);
 
                 var sender = client.CreateSender(config.QueueName);
                 await sender.SendMessageAsync(message, cts.Token);
