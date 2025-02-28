@@ -5,6 +5,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 const string BlobStorage = "AzureBlobStorage";
 const string KeyVault = "AzureKeyVault";
+const string Project = "Costellobot";
 const string ServiceBus = "AzureServiceBus";
 const string Storage = "AzureStorage";
 const string TableStorage = "AzureTableStorage";
@@ -29,7 +30,10 @@ var serviceBus = builder.AddAzureServiceBus(ServiceBus)
 
 var webhooks = serviceBus.AddServiceBusQueue("webhooks");
 
-builder.AddProject<Projects.Costellobot>("Costellobot")
+var dashboardUrl = DashboardUrl(builder.Configuration["DASHBOARD_URL"]);
+
+builder.AddProject<Projects.Costellobot>(Project)
+       .WithEnvironment("Site:LogsUrl", dashboardUrl)
        .WithReference(secrets)
        .WithReference(blobStorage)
        .WithReference(tableStorage)
@@ -42,3 +46,25 @@ builder.AddProject<Projects.Costellobot>("Costellobot")
 var app = builder.Build();
 
 app.Run();
+
+static string? DashboardUrl(string? urls)
+{
+    if (string.IsNullOrWhiteSpace(urls))
+    {
+        return null;
+    }
+
+    var url = urls.Split(';').FirstOrDefault();
+
+    if (string.IsNullOrWhiteSpace(url))
+    {
+        return null;
+    }
+
+    var builder = new UriBuilder(url)
+    {
+        Path = $"/structuredlogs/resource/{Project}",
+    };
+
+    return builder.Uri.ToString();
+}

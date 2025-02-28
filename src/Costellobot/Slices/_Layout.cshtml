@@ -21,8 +21,17 @@
     string branch = repository + "/tree/" + GitMetadata.Branch;
     string build = repository + "/actions/runs/" + GitMetadata.BuildId;
     string commit = repository + "/commit/" + GitMetadata.Commit;
+    var logs = string.Empty;
 
     var user = this.User();
+    var authenticated = user.Identity?.IsAuthenticated is true;
+
+    if (authenticated && HttpContext.RequestServices.GetService<IOptions<SiteOptions>>() is { Value: not null } site)
+    {
+        logs = site.Value.LogsUrl;
+    }
+
+    var tokens = Antiforgery.GetTokens(HttpContext);
 }
 
 <!DOCTYPE html>
@@ -69,10 +78,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="@(this.Content("~/static/css/main.css"))" />
-    @{
-        var authenticated = user.Identity?.IsAuthenticated is true;
-        var tokens = Antiforgery.GetTokens(HttpContext);
-    }
     <meta name="x-antiforgery-header" content="@(tokens.HeaderName)" />
     <meta name="x-antiforgery-token" content="@(tokens.RequestToken)" />
 </head>
@@ -89,9 +94,9 @@
             <div class="collapse navbar-collapse" id="site-navbar">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="@(repository)" target="_blank" rel="noopener" title="GitHub">
+                        <a class="nav-link" href="@(repository)" title="GitHub" target="_blank" rel="noopener">
                             GitHub
-                            <span class="fa-brands fa-github" aria-hidden="true"></span>
+                            <span class="fa-brands fa-github fa-fw" aria-hidden="true"></span>
                         </a>
                     </li>
                     @if (authenticated)
@@ -99,25 +104,31 @@
                         <li class="nav-item">
                             <a class="nav-link" href="@(this.RouteUrl("~/deliveries"))" title="Webhook deliveries" id="deliveries-link">
                                 Deliveries
-                                <span class="fa-solid fa-truck-ramp-box" aria-hidden="true"></span>
+                                <span class="fa-solid fa-truck-ramp-box fa-fw" aria-hidden="true"></span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="@(this.RouteUrl("~/dependencies"))" title="Dependencies" id="dependencies-link">
                                 Dependencies
-                                <span class="fa-solid fa-cubes" aria-hidden="true"></span>
+                                <span class="fa-solid fa-cubes fa-fw" aria-hidden="true"></span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="@(this.RouteUrl("~/github-webhook"))" title="Debug">
                                 Debug
-                                <span class="fa-solid fa-bug" aria-hidden="true"></span>
+                                <span class="fa-solid fa-bug fa-fw" aria-hidden="true"></span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="@(this.RouteUrl("~/configuration"))" title="Configuration" id="configuration-link">
                                 Configuration
-                                <span class="fa-solid fa-gears" aria-hidden="true"></span>
+                                <span class="fa-solid fa-gears fa-fw" aria-hidden="true"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@(logs)" title="Logs" id="logs-link" target="_blank" rel="noopener">
+                                Logs
+                                <span class="fa-solid fa-book fa-fw" aria-hidden="true"></span>
                             </a>
                         </li>
                     }
@@ -144,7 +155,7 @@
                             <li>
                                 <button type="submit" class="btn btn-link navbar-btn nav-link" title="Sign out" id="sign-out">
                                     Sign out
-                                    <span class="fa fa-sign-out" aria-hidden="true"></span>
+                                    <span class="fa fa-sign-out fa-fw" aria-hidden="true"></span>
                                 </button>
                             </li>
                         </ul>
