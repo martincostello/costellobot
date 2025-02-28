@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Options;
+using OpenTelemetry;
 
 namespace MartinCostello.Costellobot;
 
@@ -25,20 +25,20 @@ public sealed partial class GitHubEventHandler(
             {
                 var message = GitHubMessageSerializer.Serialize(payload.Headers.Delivery, payload.RawHeaders, payload.RawPayload.ToString());
 
-                if (Activity.Current is { } activity)
-                {
-                    activity.AddBaggage("messaging.message.id", message.MessageId);
-                    activity.AddBaggage("github.webhook.delivery", payload.Headers.Delivery);
-                    activity.AddBaggage("github.webhook.event", payload.Headers.Event);
-                    activity.AddBaggage("github.webhook.event.action", payload.Event?.Action);
-                }
+                Baggage.SetBaggage(
+                [
+                    KeyValuePair.Create<string, string?>("github.webhook.delivery", payload.Headers.Delivery),
+                    KeyValuePair.Create<string, string?>("github.webhook.event", payload.Headers.Event),
+                    KeyValuePair.Create<string, string?>("github.webhook.event.action", payload.Event?.Action),
+                    KeyValuePair.Create<string, string?>("messaging.message.id", message.MessageId),
+                ]);
 
                 var sender = client.CreateSender(config.QueueName);
                 await sender.SendMessageAsync(message, cts.Token);
             }
             else
             {
-                Log.IgnoringEvent(logger, payload.Headers.Delivery, payload.Headers.Event, payload.Event.Action);
+                Log.IgnoringEvent(logger, payload.Headers.Delivery, payload.Headers.Event, payload.Event?.Action);
             }
         }
         catch (Exception ex)
