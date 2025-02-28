@@ -64,7 +64,7 @@
                                 </td>
                                 <td>
                                     <form action="dependencies/distrust" method="post">
-                                        <input name="@(tokens.FormFieldName)" type="hidden" value="@(tokens.RequestToken)">
+                                        <input type="hidden" name="@(tokens.FormFieldName)" value="@(tokens.RequestToken)">
                                         <input type="hidden" name="ecosystem" value="@(ecosystem)">
                                         <input type="hidden" name="id" value="@(dependency.Id)">
                                         <input type="hidden" name="version" value="@(dependency.Version)">
@@ -82,7 +82,7 @@
                         <td colspan="4">
                         <td class="text-end">
                             <form action="dependencies/distrust-all" method="post">
-                                <input name="@(tokens.FormFieldName)" type="hidden" value="@(tokens.RequestToken)">
+                                <input type="hidden" name="@(tokens.FormFieldName)" value="@(tokens.RequestToken)">
                                 <button class="btn btn-danger btn-sm" id="distrust-all" title="Distrust all dependencies" type="submit">
                                     Distrust all
                                     <span class="fa-stack" aria-hidden="true">

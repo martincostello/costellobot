@@ -131,25 +131,33 @@ public static class AdminEndpoints
             .WithName("Configuration")
             .WithMetadata(admin);
 
-        const string DeliveryRoute = "Delivery";
-        const string DeliveriesRoute = "Deliveries";
-
         builder.MapMethods("/", [HttpMethod.Get.Method, HttpMethod.Head.Method], () => Results.Extensions.RazorSlice<Home>())
                .WithMetadata(admin);
 
+        const string DeliveryRoute = "Delivery";
+        const string DeliveriesRoute = "Deliveries";
+        const string DeliveriesPath = "/deliveries";
+
         builder
-            .MapGet("/deliveries", async (IGitHubClientForApp client) =>
+            .MapGet(DeliveriesPath, async (IGitHubClientForApp client) =>
             {
                 (var deliveries, _) = await GetDeliveries(client, cursor: null);
                 return Results.Extensions.RazorSlice<Deliveries, IReadOnlyList<WebhookDelivery>>(deliveries);
             })
+            .AddEndpointFilter<SetAntiforgeryCookieFilter>()
             .WithName(DeliveriesRoute)
             .WithMetadata(admin);
 
         builder.MapPost(
-            "/deliveries",
-            async ([FromForm] Guid? id, IGitHubClientForApp client) =>
+            DeliveriesPath,
+            async ([FromForm] Guid? id, IGitHubClientForApp client, HttpContext context, IAntiforgery antiforgery) =>
             {
+                if (!await antiforgery.IsRequestValidAsync(context))
+                {
+                    antiforgery.SetCookieTokenAndHeader(context);
+                    return Results.LocalRedirect(DeliveriesPath);
+                }
+
                 const int MaxPages = 20;
 
                 string? cursor = null;
@@ -165,10 +173,7 @@ public static class AdminEndpoints
 
                         if (item is not null)
                         {
-                            var routeValues = new RouteValueDictionary()
-                            {
-                                ["id"] = item.Id,
-                            };
+                            var routeValues = new RouteValueDictionary() { ["id"] = item.Id };
                             return Results.RedirectToRoute(DeliveryRoute, routeValues);
                         }
                     }
@@ -176,7 +181,6 @@ public static class AdminEndpoints
 
                 return Results.RedirectToRoute(DeliveriesRoute, []);
             })
-            .AddEndpointFilter<AntiforgeryFilter>()
             .WithMetadata(admin);
 
         builder
@@ -238,13 +242,21 @@ public static class AdminEndpoints
                     }
                 }
             })
+            .AddEndpointFilter<SetAntiforgeryCookieFilter>()
             .WithName(DeliveryRoute)
             .WithMetadata(admin);
 
         builder.MapPost(
             "/delivery/{id}",
-            async (long id, IGitHubClientForApp client) =>
+            async (long id, IGitHubClientForApp client, HttpContext context, IAntiforgery antiforgery) =>
             {
+                if (!await antiforgery.IsRequestValidAsync(context))
+                {
+                    antiforgery.SetCookieTokenAndHeader(context);
+                    var routeValues = new RouteValueDictionary() { ["id"] = id };
+                    return Results.RedirectToRoute(DeliveryRoute, routeValues);
+                }
+
                 // See https://docs.github.com/en/rest/apps/webhooks#redeliver-a-delivery-for-an-app-webhook
                 var uri = new Uri($"app/hook/deliveries/{id}/attempts", UriKind.Relative);
 
@@ -252,7 +264,7 @@ public static class AdminEndpoints
 
                 return Results.RedirectToRoute(DeliveriesRoute, []);
             })
-            .AddEndpointFilter<AntiforgeryFilter>()
+            .AddEndpointFilter<SetAntiforgeryCookieFilter>()
             .WithMetadata(admin);
 
         const string DependenciesRoute = "Dependencies";
@@ -276,6 +288,7 @@ public static class AdminEndpoints
 
                 return Results.Extensions.RazorSlice<Dependencies, IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<TrustedDependency>>>(model);
             })
+            .AddEndpointFilter<SetAntiforgeryCookieFilter>()
             .WithName(DependenciesRoute)
             .WithMetadata(admin);
 
@@ -286,23 +299,39 @@ public static class AdminEndpoints
                 [FromForm] string id,
                 [FromForm] string version,
                 ITrustStore store,
+                HttpContext context,
+                IAntiforgery antiforgery,
                 CancellationToken cancellationToken) =>
             {
+                if (!await antiforgery.IsRequestValidAsync(context))
+                {
+                    antiforgery.SetCookieTokenAndHeader(context);
+                    return Results.RedirectToRoute(DependenciesRoute);
+                }
+
                 await store.DistrustAsync(ecosystem, id, version, cancellationToken);
                 return Results.RedirectToRoute(DependenciesRoute);
             })
-            .AddEndpointFilter<AntiforgeryFilter>()
             .WithName("DistrustDependencies")
             .WithMetadata(admin);
 
         builder.MapPost(
             "/dependencies/distrust-all",
-            async (ITrustStore store, CancellationToken cancellationToken) =>
+            async (
+                ITrustStore store,
+                HttpContext context,
+                IAntiforgery antiforgery,
+                CancellationToken cancellationToken) =>
             {
+                if (!await antiforgery.IsRequestValidAsync(context))
+                {
+                    antiforgery.SetCookieTokenAndHeader(context);
+                    return Results.RedirectToRoute(DependenciesRoute);
+                }
+
                 await store.DistrustAllAsync(cancellationToken);
                 return Results.RedirectToRoute(DependenciesRoute);
             })
-            .AddEndpointFilter<AntiforgeryFilter>()
             .WithName("DistrustAllDependencies")
             .WithMetadata(admin);
 
@@ -372,7 +401,7 @@ public static class AdminEndpoints
         return cursor;
     }
 
-    private sealed class AntiforgeryFilter : IEndpointFilter
+    private sealed class SetAntiforgeryCookieFilter : IEndpointFilter
     {
         public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
         {
