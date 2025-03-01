@@ -106,8 +106,10 @@ public sealed partial class DeploymentStatusHandler(
         return new ResiliencePipelineBuilder()
             .AddRetry(new()
             {
+                BackoffType = DelayBackoffType.Exponential,
                 Delay = TimeSpan.FromSeconds(2),
                 ShouldHandle = new PredicateBuilder().Handle<ApiValidationException>(),
+                UseJitter = true,
             })
             .Build();
     }

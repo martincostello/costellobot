@@ -91,7 +91,12 @@ public sealed partial class DeploymentProtectionRuleHandler(
     private static ResiliencePipeline CreateResiliencePipeline()
     {
         return new ResiliencePipelineBuilder()
-            .AddRetry(new() { Delay = TimeSpan.FromSeconds(2) })
+            .AddRetry(new()
+            {
+                BackoffType = DelayBackoffType.Exponential,
+                Delay = TimeSpan.FromSeconds(2),
+                UseJitter = true,
+            })
             .Build();
     }
 
