@@ -19,7 +19,7 @@ public sealed class CustomHttpHeadersMiddleware(RequestDelegate next)
         "style-src-elem 'self' cdnjs.cloudflare.com use.fontawesome.com",
         "img-src 'self' data: avatars.githubusercontent.com",
         "font-src 'self' cdnjs.cloudflare.com use.fontawesome.com",
-        "connect-src 'self'",
+        "connect-src 'self' {1}",
         "media-src 'none'",
         "object-src 'none'",
         "child-src 'none'",
@@ -33,7 +33,8 @@ public sealed class CustomHttpHeadersMiddleware(RequestDelegate next)
     public Task Invoke(
         HttpContext context,
         IHostEnvironment environment,
-        IOptions<GitHubAuthenticationOptions> gitHubOptions)
+        IOptions<GitHubAuthenticationOptions> gitHubOptions,
+        IOptions<SiteOptions> siteOptions)
     {
         context.Response.OnStarting(() =>
         {
@@ -42,7 +43,9 @@ public sealed class CustomHttpHeadersMiddleware(RequestDelegate next)
 
             if (environment.IsProduction())
             {
-                context.Response.Headers.ContentSecurityPolicy = ContentSecurityPolicy(gitHubOptions.Value.AuthorizationEndpoint);
+                context.Response.Headers.ContentSecurityPolicy = ContentSecurityPolicy(
+                    gitHubOptions.Value.AuthorizationEndpoint,
+                    siteOptions.Value.TelemetryCollectorUrl);
             }
 
             context.Response.Headers["Cross-Origin-Embedder-Policy"] = "unsafe-none";
@@ -74,12 +77,14 @@ public sealed class CustomHttpHeadersMiddleware(RequestDelegate next)
     }
 
     private static string ContentSecurityPolicy(
-        string gitHubAuthorizationEndpoint)
+        string gitHubAuthorizationEndpoint,
+        string telemetryCollectorEndpoint)
     {
         return string.Format(
             CultureInfo.InvariantCulture,
             ContentSecurityPolicyTemplate,
-            ParseGitHubHost(gitHubAuthorizationEndpoint));
+            ParseGitHubHost(gitHubAuthorizationEndpoint),
+            ParseTelemetryCollector(telemetryCollectorEndpoint));
     }
 
     private static string ParseGitHubHost(string gitHubAuthorizationEndpoint)
@@ -90,5 +95,15 @@ public sealed class CustomHttpHeadersMiddleware(RequestDelegate next)
         }
 
         return "github.com";
+    }
+
+    private static string ParseTelemetryCollector(string telemetryCollectorEndpoint)
+    {
+        if (Uri.TryCreate(telemetryCollectorEndpoint, UriKind.Absolute, out Uri? collector))
+        {
+            return collector.Host;
+        }
+
+        return string.Empty;
     }
 }
