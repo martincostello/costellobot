@@ -17,18 +17,26 @@
         imageUrl = $"https://{domain}/favicon.png";
     }
 
+    string environment = HttpContext.RequestServices.GetRequiredService<IHostEnvironment>().EnvironmentName;
     string repository = "https://github.com/martincostello/costellobot";
     string branch = repository + "/tree/" + GitMetadata.Branch;
     string build = repository + "/actions/runs/" + GitMetadata.BuildId;
     string commit = repository + "/commit/" + GitMetadata.Commit;
+
     var logs = string.Empty;
+    var telemetry = string.Empty;
 
     var user = this.User();
     var authenticated = user.Identity?.IsAuthenticated is true;
 
-    if (authenticated && HttpContext.RequestServices.GetService<IOptions<SiteOptions>>() is { Value: not null } site)
+    if (HttpContext.RequestServices.GetService<IOptions<SiteOptions>>() is { Value: not null } site)
     {
-        logs = site.Value.LogsUrl;
+        telemetry = site.Value.TelemetryCollectorUrl;
+
+        if (authenticated)
+        {
+            logs = site.Value.LogsUrl;
+        }
     }
 
     var tokens = Antiforgery.GetTokens(HttpContext);
@@ -80,6 +88,11 @@
     <link rel="stylesheet" href="@(this.Content("~/static/css/main.css"))" />
     <meta name="x-antiforgery-header" content="@(tokens.HeaderName)" />
     <meta name="x-antiforgery-token" content="@(tokens.RequestToken)" />
+    <meta name="x-telemetry-collector-url" content="@(telemetry)" />
+    <meta name="x-telemetry-sample-rate" content="" />
+    <meta name="x-telemetry-service-environment" content="@(environment)" />
+    <meta name="x-telemetry-service-name" content="@(ApplicationTelemetry.ServiceName)" />
+    <meta name="x-telemetry-service-version" content="@(ApplicationTelemetry.ServiceVersion)" />
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -197,6 +210,7 @@
 </body>
 <!--
     Deployment:    @(build)
+    Environment:   @(environment)
     Commit SHA:    @(GitMetadata.Commit)
     Commit branch: @(GitMetadata.Branch)
     Timestamp:     @(GitMetadata.Timestamp)

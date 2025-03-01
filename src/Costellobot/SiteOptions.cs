@@ -12,4 +12,6 @@ public sealed class SiteOptions
     public IList<string> CrawlerPaths { get; set; } = [];
 
     public string LogsUrl { get; set; } = string.Empty;
+
+    public string TelemetryCollectorUrl { get; set; } = string.Empty;
 }

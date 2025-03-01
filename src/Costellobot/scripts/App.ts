@@ -4,6 +4,7 @@
 import * as signalR from '@microsoft/signalr';
 import moment from 'moment';
 import 'moment/locale/en-gb';
+import { Telemetry } from './Telemetry';
 
 export class App {
     private readonly connection: signalR.HubConnection;
@@ -28,6 +29,8 @@ export class App {
     }
 
     async initialize(): Promise<void> {
+        Telemetry.initialize();
+
         const logsContainer = <HTMLInputElement>document.getElementById('logs');
         const webhookSubmit = document.getElementById('post-webhook');
 

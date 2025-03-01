@@ -39,6 +39,9 @@ updates:
     babel:
       patterns:
         - "@babel/*"
+    faro:
+      patterns:
+        - "@grafana/faro-web-*"
     typescript-eslint:
       patterns:
         - "@typescript-eslint/*"
