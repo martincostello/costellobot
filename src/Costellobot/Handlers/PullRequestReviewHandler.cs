@@ -132,9 +132,12 @@ public sealed partial class PullRequestReviewHandler(
 
             var installationRepositories = await installationClient.GitHubApps.Installation.GetAllRepositoriesForCurrent(new() { PageSize = PageSize });
 
+            var ignored = options.CurrentValue.IgnoreRepositories;
+
             return installationRepositories.Repositories
                 .Where((p) => !p.Archived)
                 .Where((p) => !p.Fork)
+                .Where((p) => !ignored.Contains(p.FullName, StringComparer.OrdinalIgnoreCase))
                 .Select((p) => (p.Owner.Login, p.Name, p.Id))
                 .ToList();
         }) ?? [];

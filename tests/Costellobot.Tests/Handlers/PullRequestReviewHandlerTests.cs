@@ -159,6 +159,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
         (var forkedRepo, var forkedPullMerged) = RegisterPullRequest(driver.Owner, isFork: true);
         (var reviewedPullRepo, var reviewedPullMerged) = RegisterPullRequest(driver.Owner, alreadyReviewed: true);
         (var untrustedPullRepo, var untrustedPullMerged) = RegisterPullRequest(driver.Owner, isTrusted: false);
+        (var ignoredPullRepo, var ignoredPullMerged) = RegisterPullRequest(new("ignored-org"), name: "ignored-repo");
 
         RegisterInstallationRepositories(
         [
@@ -168,6 +169,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
             forkedRepo,
             reviewedPullRepo,
             untrustedPullRepo,
+            ignoredPullRepo,
         ]);
 
         // Act
@@ -183,9 +185,11 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
         await AssertTaskNotRun(forkedPullMerged);
         await AssertTaskNotRun(reviewedPullMerged);
         await AssertTaskNotRun(untrustedPullMerged);
+        await AssertTaskNotRun(ignoredPullMerged);
 
         (RepositoryBuilder Repository, TaskCompletionSource CompletionSource) RegisterPullRequest(
             UserBuilder owner,
+            string? name = null,
             bool alreadyReviewed = false,
             bool isArchived = false,
             bool isFork = false,
@@ -204,6 +208,11 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
             pull.Repository.IsArchived = isArchived;
             pull.Repository.IsFork = isFork;
             pull.Repository.Owner = owner;
+
+            if (name is not null)
+            {
+                pull.Repository.Name = name;
+            }
 
             if (isArchived || isFork)
             {
