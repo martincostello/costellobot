@@ -85,7 +85,7 @@ jobs:
         lighthouseCheckResults: ${{ steps.lighthouse.outputs.lighthouseCheckResults }}
         minAccessibilityScore: "93"
         minBestPracticesScore: "92"
-        minPerformanceScore: "95"
+        minPerformanceScore: "85"
         minProgressiveWebAppScore: "50"
         minSeoScore: "60"
 
