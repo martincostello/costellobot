@@ -5,7 +5,7 @@
     <NoWarn>$(NoWarn);CA1054;CA1308;CA1707;CA1711;CA1812;CA1861;CA2007;CA2234;SA1600</NoWarn>
     <OutputType>Exe</OutputType>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
