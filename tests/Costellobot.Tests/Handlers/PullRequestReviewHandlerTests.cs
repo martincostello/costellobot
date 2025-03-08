@@ -81,7 +81,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
         await trustStoreUpdated.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
-    [Fact(Skip = "https://github.com/justeattakeaway/httpclient-interception/pull/1009")]
+    [Fact]
     public async Task Trust_Store_Is_Updated_For_Owner_Approved_Pull_Request_From_Trusted_User_For_Multiple_Dependencies_From_Diff()
     {
         // Arrange
