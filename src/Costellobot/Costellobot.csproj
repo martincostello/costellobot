@@ -65,7 +65,7 @@
     <None Remove="scripts\ts\**\*.ts" />
     <TypeScriptCompile Include="scripts\ts\**\*.ts" />
   </ItemGroup>
-  <Target Name="BundleAssets" BeforeTargets="BeforeBuild" AfterTargets="RestoreNpmPackages">
+  <Target Name="BundleAssets" BeforeTargets="BeforeBuild" DependsOnTargets="RestoreNpmPackages">
     <Exec Command="npm run build" Condition=" !Exists('$(MSBuildThisFileDirectory)\wwwroot\static\js\main.js') " />
   </Target>
 </Project>
