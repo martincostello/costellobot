@@ -4,7 +4,6 @@
     <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
     <InvariantGlobalization>false</InvariantGlobalization>
-    <IsPackable>false</IsPackable>
     <PublishSelfContained>true</PublishSelfContained>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
     <TargetFramework>net9.0</TargetFramework>
@@ -12,7 +11,7 @@
     <TypeScriptToolsVersion>latest</TypeScriptToolsVersion>
     <UserSecretsId>Costellobot</UserSecretsId>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(GITHUB_ACTIONS)' != '' AND '$(SENTRY_AUTH_TOKEN)' != '' AND '$(ContainerRegistry)' != '' ">
+  <PropertyGroup Condition=" '$(IsGitHubActions)' == 'true' AND '$(SENTRY_AUTH_TOKEN)' != '' AND '$(ContainerRegistry)' != '' ">
     <SentryOrg>martin-costello</SentryOrg>
     <SentryProject>costellobot</SentryProject>
     <SentryCreateRelease>true</SentryCreateRelease>
@@ -66,19 +65,7 @@
     <None Remove="scripts\ts\**\*.ts" />
     <TypeScriptCompile Include="scripts\ts\**\*.ts" />
   </ItemGroup>
-  <Target Name="BundleAssets" BeforeTargets="BeforeBuild">
-    <Exec Command="npm ci" Condition=" !Exists('$(MSBuildThisFileDirectory)\node_modules') AND '$(GITHUB_ACTIONS)' != '' " />
-    <Exec Command="npm install" Condition=" !Exists('$(MSBuildThisFileDirectory)\node_modules') AND '$(GITHUB_ACTIONS)' == '' " />
+  <Target Name="BundleAssets" BeforeTargets="BeforeBuild" AfterTargets="RestoreNpmPackages">
     <Exec Command="npm run build" Condition=" !Exists('$(MSBuildThisFileDirectory)\wwwroot\static\js\main.js') " />
-  </Target>
-  <Target Name="SetGitHubContainerOutputs" AfterTargets="PublishContainer" Condition=" '$(GITHUB_OUTPUT)' != '' AND '$(ContainerRegistry)' != '' ">
-    <PropertyGroup>
-      <_ContainerImage>$(ContainerRegistry)/$(ContainerRepository)</_ContainerImage>
-      <_ContainerImage>$(_ContainerImage.ToLowerInvariant())</_ContainerImage>
-      <_ContainerTag>$(_ContainerImage):github-$(GITHUB_RUN_NUMBER)</_ContainerTag>
-    </PropertyGroup>
-    <WriteLinesToFile File="$(GITHUB_OUTPUT)" Lines="container-digest=$(GeneratedContainerDigest)" />
-    <WriteLinesToFile File="$(GITHUB_OUTPUT)" Lines="container-image=$(_ContainerImage)" />
-    <WriteLinesToFile File="$(GITHUB_OUTPUT)" Lines="container-tag=$(_ContainerTag)" />
   </Target>
 </Project>
