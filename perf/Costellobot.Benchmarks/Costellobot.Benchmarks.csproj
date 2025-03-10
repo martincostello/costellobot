@@ -3,7 +3,6 @@
     <Description>Benchmarks for Costellobot.</Description>
     <OutputType>Exe</OutputType>
     <RootNamespace>MartinCostello.Costellobot.Benchmarks</RootNamespace>
-    <Summary>$(Description)</Summary>
     <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
