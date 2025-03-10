@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <NoWarn>$(NoWarn);CA1054;CA1707;CA1711;CA1812;CA1861;CA2007;CA2234</NoWarn>
+    <NoWarn>$(NoWarn);CA1054;CA2234</NoWarn>
     <OutputType>Exe</OutputType>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
     <TargetFramework>net9.0</TargetFramework>
