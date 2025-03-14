@@ -5,15 +5,18 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace MartinCostello.Costellobot.Registries;
 
 public sealed partial class NuGetPackageRegistry(
     HttpClient client,
-    IMemoryCache cache,
+    HybridCache cache,
     ILogger<NuGetPackageRegistry> logger) : PackageRegistry(client)
 {
+    private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromHours(1) };
+    private static readonly string[] CacheTags = ["all", "nuget"];
+
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.NuGet;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
@@ -114,14 +117,13 @@ public sealed partial class NuGetPackageRegistry(
         return baseAddress;
     }
 
-    private async Task<ServiceIndex?> GetServiceIndexAsync()
-    {
-        return await cache.GetOrCreateAsync("nuget-service-index", async (entry) =>
-        {
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
-            return await Client.GetFromJsonAsync("/v3/index.json", NuGetJsonSerializerContext.Default.ServiceIndex);
-        });
-    }
+    private async Task<ServiceIndex?> GetServiceIndexAsync() =>
+        await cache.GetOrCreateAsync(
+            "nuget-service-index",
+            Client,
+            static async (client, token) => await client.GetFromJsonAsync("/v3/index.json", NuGetJsonSerializerContext.Default.ServiceIndex, cancellationToken: token),
+            CacheEntryOptions,
+            CacheTags);
 
     [ExcludeFromCodeCoverage]
     private static partial class Log

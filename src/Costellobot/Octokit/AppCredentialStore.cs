@@ -3,7 +3,7 @@
 
 using System.Security.Cryptography;
 using MartinCostello.Costellobot;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -11,27 +11,26 @@ using Microsoft.IdentityModel.Tokens;
 namespace Octokit;
 
 public sealed class AppCredentialStore(
-    IMemoryCache cache,
+    HybridCache cache,
     CryptoProviderFactory cryptoProviderFactory,
     TimeProvider timeProvider,
-    IOptionsMonitor<GitHubOptions> options) : ICredentialStore
+    IOptionsMonitor<GitHubOptions> options) : CredentialStore
 {
-    private static readonly TimeSpan TokenLifetime = TimeSpan.FromMinutes(10);
-    private static readonly TimeSpan TokenSkew = TimeSpan.FromMinutes(1);
     private readonly IOptionsMonitor<GitHubOptions> _options = options;
 
-    public Task<Credentials> GetCredentials()
+    public override async Task<Credentials> GetCredentials()
     {
-        var credentials = cache.GetOrCreate("github:app-credentials", (entry) =>
-        {
-            entry.AbsoluteExpirationRelativeToNow = TokenLifetime - TokenSkew;
-            return CreateJwtForApp();
-        });
+        var token = await cache.GetOrCreateAsync(
+            "github:app-credentials",
+            this,
+            static (self, _) => ValueTask.FromResult(self.CreateJwtForApp()),
+            CacheEntryOptions,
+            CacheTags);
 
-        return Task.FromResult(credentials!);
+        return new Credentials(token, AuthenticationType.Bearer);
     }
 
-    private Credentials CreateJwtForApp()
+    private string CreateJwtForApp()
     {
         // See https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
         var options = _options.CurrentValue;
@@ -49,9 +48,7 @@ public sealed class AppCredentialStore(
         };
 
         var handler = new JsonWebTokenHandler();
-        var appToken = handler.CreateToken(tokenDescriptor);
-
-        return new Credentials(appToken, AuthenticationType.Bearer);
+        return handler.CreateToken(tokenDescriptor);
     }
 
     private SigningCredentials CreateSigningCredentials(RSA algorithm)

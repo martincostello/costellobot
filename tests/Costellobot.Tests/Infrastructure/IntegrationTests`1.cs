@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Net;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Builders;
@@ -44,9 +44,9 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
 
     protected ITestOutputHelper OutputHelper { get; }
 
-    protected virtual TimeSpan ProcessingTimeout { get; } = TimeSpan.FromSeconds(0.5);
+    protected virtual TimeSpan ProcessingTimeout { get; } = Debugger.IsAttached ? TimeSpan.FromMinutes(1) : TimeSpan.FromSeconds(0.5);
 
-    protected virtual TimeSpan ResultTimeout { get; } = TimeSpan.FromSeconds(1);
+    protected virtual TimeSpan ResultTimeout { get; } = Debugger.IsAttached ? TimeSpan.FromMinutes(1) : TimeSpan.FromSeconds(1);
 
     public virtual ValueTask InitializeAsync() => ValueTask.CompletedTask;
 

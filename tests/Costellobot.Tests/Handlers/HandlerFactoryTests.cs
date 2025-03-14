@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using Microsoft.Extensions.Caching.Memory;
+using MartinCostello.Costellobot.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
@@ -35,7 +35,7 @@ public static class HandlerFactoryTests
         var gitHubInstallationClient = Substitute.For<IGitHubClientForInstallation>();
         var gitHubUserClient = Substitute.For<IGitHubClientForUser>();
 
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        using var cache = new ApplicationCache();
         var trustStore = Substitute.For<ITrustStore>();
 
         var commitAnalyzer = new GitCommitAnalyzer(

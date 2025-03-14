@@ -2,7 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using JustEat.HttpClientInterception;
-using Microsoft.Extensions.Caching.Memory;
+using MartinCostello.Costellobot.Infrastructure;
 
 namespace MartinCostello.Costellobot.Registries;
 
@@ -30,7 +30,7 @@ public class NuGetPackageRegistryTests(ITestOutputHelper outputHelper)
         using var client = options.CreateHttpClient();
         client.BaseAddress = new Uri("https://api.nuget.org");
 
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        using var cache = new ApplicationCache();
 
         var target = new NuGetPackageRegistry(client, cache, outputHelper.ToLogger<NuGetPackageRegistry>());
 
