@@ -3,7 +3,7 @@
 
 using MartinCostello.Costellobot.Infrastructure;
 using MartinCostello.Costellobot.Pages;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 
@@ -43,13 +43,7 @@ public abstract class UITests(HttpServerFixture fixture, ITestOutputHelper outpu
 
     protected override async ValueTask DisposeAsync(bool disposing)
     {
-        var cache = Fixture.Services.GetRequiredService<IMemoryCache>();
-
-        if (cache is MemoryCache memoryCache)
-        {
-            memoryCache.Compact(100);
-        }
-
+        await Fixture.Services.GetRequiredService<HybridCache>().RemoveByTagAsync("all");
         await base.DisposeAsync(disposing);
     }
 

@@ -44,7 +44,7 @@ public sealed class AuthenticationTests(AppFixture fixture, ITestOutputHelper ou
         // Arrange
         await Task.Delay(TimeSpan.FromSeconds(1.1), CancellationToken);
 
-        Fixture.ClearCache();
+        await Fixture.ClearCacheAsync();
 
         utcNow = DateTime.UtcNow;
 
@@ -98,7 +98,7 @@ public sealed class AuthenticationTests(AppFixture fixture, ITestOutputHelper ou
         // Arrange
         accessToken.Token = Guid.NewGuid().ToString();
 
-        Fixture.ClearCache();
+        await Fixture.ClearCacheAsync();
 
         // Act
         actual = await target.Connection.CredentialStore.GetCredentials();

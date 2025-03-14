@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
 using Octokit;
 using Octokit.Webhooks;
@@ -16,14 +16,15 @@ public sealed partial class PullRequestReviewHandler(
     IGitHubClientForInstallation installationClient,
     PullRequestAnalyzer pullRequestAnalyzer,
     PullRequestApprover pullRequestApprover,
-    IMemoryCache cache,
+    HybridCache cache,
     ITrustStore trustStore,
     IOptionsMonitor<WebhookOptions> options,
     ILogger<PullRequestReviewHandler> logger) : IHandler
 {
     private const int PageSize = 100;
 
-    private static readonly TimeSpan CacheLifetime = TimeSpan.FromDays(1);
+    private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromDays(1) };
+    private static readonly string[] CacheTags = ["all", "github"];
 
     public async Task HandleAsync(WebhookEvent message)
     {
@@ -112,48 +113,48 @@ public sealed partial class PullRequestReviewHandler(
             review?.State is { Value: Octokit.Webhooks.Models.PullRequestReviewEvent.ReviewState.Approved };
     }
 
-    private async Task<string> GetAppLoginAsync()
-    {
-        var login = await cache.GetOrCreateAsync<string>("github-app-slug", async (entry) =>
-        {
-            entry.AbsoluteExpirationRelativeToNow = CacheLifetime;
+    private async Task<string> GetAppLoginAsync() =>
+        await cache.GetOrCreateAsync(
+            "github-app-slug",
+            appClient.GitHubApps,
+            static async (client, _) =>
+            {
+                var app = await client.GetCurrent();
+                return $"{app.Slug}[bot]";
+            },
+            CacheEntryOptions,
+            CacheTags);
 
-            var app = await appClient.GitHubApps.GetCurrent();
-            return $"{app.Slug}[bot]";
-        });
-        return login!;
-    }
+    private async Task<IReadOnlyList<GitHubInstallationRepository>> GetInstallationRepositoriesAsync() =>
+        await cache.GetOrCreateAsync(
+            "github-app-repositories",
+            async (_) =>
+            {
+                var installationRepositories = await installationClient.GitHubApps.Installation.GetAllRepositoriesForCurrent(new() { PageSize = PageSize });
 
-    private async Task<IReadOnlyList<(string Owner, string Name, long Id)>> GetInstallationRepositoriesAsync()
-    {
-        return await cache.GetOrCreateAsync<IReadOnlyList<(string Owner, string Name, long Id)>>("github-app-repositories", async (entry) =>
-        {
-            entry.AbsoluteExpirationRelativeToNow = CacheLifetime;
+                var ignored = options.CurrentValue.IgnoreRepositories;
 
-            var installationRepositories = await installationClient.GitHubApps.Installation.GetAllRepositoriesForCurrent(new() { PageSize = PageSize });
+                return installationRepositories.Repositories
+                    .Where((p) => !p.Archived)
+                    .Where((p) => !p.Fork)
+                    .Where((p) => !ignored.Contains(p.FullName, StringComparer.OrdinalIgnoreCase))
+                    .Select((p) => new GitHubInstallationRepository(p.Owner.Login, p.Name, p.Id))
+                    .ToList();
+            },
+            CacheEntryOptions,
+            CacheTags);
 
-            var ignored = options.CurrentValue.IgnoreRepositories;
-
-            return installationRepositories.Repositories
-                .Where((p) => !p.Archived)
-                .Where((p) => !p.Fork)
-                .Where((p) => !ignored.Contains(p.FullName, StringComparer.OrdinalIgnoreCase))
-                .Select((p) => (p.Owner.Login, p.Name, p.Id))
-                .ToList();
-        }) ?? [];
-    }
-
-    private async Task<PullRequestMergeMethod> GetRepositoryMergeMethodAsync(long repositoryId)
-    {
-        return await cache.GetOrCreateAsync<PullRequestMergeMethod>($"github-repo-{repositoryId}", async (entry) =>
-        {
-            entry.AbsoluteExpirationRelativeToNow = CacheLifetime;
-
-            var repository = await installationClient.Repository.Get(repositoryId);
-
-            return PullRequestApprover.GetMergeMethod(repository);
-        });
-    }
+    private async Task<PullRequestMergeMethod> GetRepositoryMergeMethodAsync(long repositoryId) =>
+        await cache.GetOrCreateAsync(
+            $"github-repo-{repositoryId}",
+            (repositoryId, installationClient.Repository),
+            static async (state, _) =>
+            {
+                var repository = await state.Repository.Get(state.repositoryId);
+                return PullRequestApprover.GetMergeMethod(repository);
+            },
+            CacheEntryOptions,
+            CacheTags);
 
     private async Task TryApproveOpenDependabotPullRequestsAsync(IssueId triggeringId)
     {
@@ -228,6 +229,8 @@ public sealed partial class PullRequestReviewHandler(
             }
         });
     }
+
+    private sealed record GitHubInstallationRepository(string Owner, string Name, long Id);
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     private static partial class Log

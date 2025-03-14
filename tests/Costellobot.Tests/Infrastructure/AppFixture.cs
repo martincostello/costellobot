@@ -9,7 +9,7 @@ using MartinCostello.Logging.XUnit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -55,15 +55,8 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
         }
     }
 
-    public void ClearCache()
-    {
-        var cache = Services.GetRequiredService<IMemoryCache>();
-
-        if (cache is MemoryCache memoryCache)
-        {
-            memoryCache.Compact(percentage: 100);
-        }
-    }
+    public async Task ClearCacheAsync() =>
+        await Services.GetRequiredService<HybridCache>().RemoveByTagAsync("all");
 
     public virtual HttpClient CreateHttpClientForApp() => CreateDefaultClient();
 

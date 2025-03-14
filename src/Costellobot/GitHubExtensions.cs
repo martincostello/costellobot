@@ -27,7 +27,7 @@ public static class GitHubExtensions
         services.AddHttpClient()
                 .ConfigureHttpClientDefaults((p) => p.AddStandardResilienceHandler());
 
-        services.AddMemoryCache();
+        services.AddHybridCache((p) => p.ReportTagMetrics = true);
         services.AddOptions();
 
         services.Configure<GitHubOptions>(configuration.GetSection("GitHub"));

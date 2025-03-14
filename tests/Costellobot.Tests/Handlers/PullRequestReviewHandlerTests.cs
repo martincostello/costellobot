@@ -6,7 +6,7 @@ using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Builders;
 using MartinCostello.Costellobot.Drivers;
 using MartinCostello.Costellobot.Infrastructure;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
@@ -557,10 +557,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
             trustStore.Count.ShouldBe(0);
         }
 
-        if (Fixture.Services.GetRequiredService<IMemoryCache>() is MemoryCache cache)
-        {
-            cache.Clear();
-        }
+        await Fixture.Services.GetRequiredService<HybridCache>().RemoveByTagAsync("all");
     }
 
     private async Task<HttpResponseMessage> PostWebhookAsync(PullRequestDriver driver, string action = "submitted")
