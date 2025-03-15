@@ -6,7 +6,7 @@
     <InvariantGlobalization>false</InvariantGlobalization>
     <PublishSelfContained>true</PublishSelfContained>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <TypeScriptToolsVersion>latest</TypeScriptToolsVersion>
     <UserSecretsId>Costellobot</UserSecretsId>

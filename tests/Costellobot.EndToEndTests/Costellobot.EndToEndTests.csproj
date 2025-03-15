@@ -3,7 +3,7 @@
     <NoWarn>$(NoWarn);CA1054;CA2234</NoWarn>
     <OutputType>Exe</OutputType>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="GitHubActionsTestLogger" NoWarn="RT0003" />
