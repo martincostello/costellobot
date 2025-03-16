@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using Azure.Monitor.OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 
 namespace MartinCostello.Costellobot;
@@ -23,12 +22,7 @@ public static class ILoggingBuilderExtensions
 
             options.SetResourceBuilder(TelemetryExtensions.ResourceBuilder);
 
-            if (TelemetryExtensions.IsAzureMonitorConfigured())
-            {
-                options.AddAzureMonitorLogExporter();
-            }
-
-            if (TelemetryExtensions.IsOtlpCollectorConfigured())
+            if (ApplicationTelemetry.IsOtlpCollectorConfigured())
             {
                 options.AddOtlpExporter();
             }

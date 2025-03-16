@@ -74,7 +74,7 @@ public sealed partial class GitHubWebhookService(
                 _processor = client.CreateProcessor(options.CurrentValue.QueueName);
 
                 _processor.ProcessErrorAsync += ProcessErrorAsync;
-                _processor.ProcessMessageAsync += ProcessAsync;
+                _processor.ProcessMessageAsync += ProcessMessageAsync;
 
                 await _processor.StartProcessingAsync(stoppingToken);
 
@@ -85,6 +85,10 @@ public sealed partial class GitHubWebhookService(
                 break;
             }
         }
+
+        [System.Diagnostics.StackTraceHidden]
+        Task ProcessMessageAsync(ProcessMessageEventArgs args) =>
+            ApplicationTelemetry.ExecuteWithProfilerAsync(args, ProcessAsync);
     }
 
     public async Task ProcessAsync(ProcessMessageEventArgs args)
