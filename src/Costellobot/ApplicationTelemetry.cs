@@ -44,7 +44,7 @@ public static class ApplicationTelemetry
         }
     }
 
-    internal static Dictionary<string, string>? ExtractK6Baggage()
+    private static Dictionary<string, string>? ExtractK6Baggage()
     {
         if (Baggage.GetBaggage() is not { Count: > 0 } baggage)
         {
