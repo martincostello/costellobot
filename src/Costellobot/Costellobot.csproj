@@ -5,6 +5,7 @@
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
     <InvariantGlobalization>false</InvariantGlobalization>
     <PublishSelfContained>true</PublishSelfContained>
+    <PyroscopeApplicationName>costellobot</PyroscopeApplicationName>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
     <TargetFramework>net9.0</TargetFramework>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
@@ -54,6 +55,7 @@
     <PackageReference Include="OpenTelemetry.Resources.ProcessRuntime" />
     <PackageReference Include="Polly.Extensions" />
     <PackageReference Include="Polly.RateLimiting" />
+    <PackageReference Include="Pyroscope.OpenTelemetry" />
     <PackageReference Include="RazorSlices" />
     <PackageReference Include="Sentry.AspNetCore" />
     <PackageReference Include="YamlDotNet" />
@@ -64,6 +66,7 @@
     <Content Remove="bank-holidays.json" />
     <EmbeddedResource Include="bank-holidays.json" />
     <None Remove="scripts\ts\**\*.ts" />
+    <PyroscopeLabels Include="costellobot" />
     <TypeScriptCompile Include="scripts\ts\**\*.ts" />
   </ItemGroup>
   <Target Name="BundleAssets" BeforeTargets="BeforeBuild" DependsOnTargets="RestoreNpmPackages">

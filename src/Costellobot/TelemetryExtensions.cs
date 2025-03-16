@@ -86,6 +86,11 @@ public static class TelemetryExtensions
                 {
                     builder.AddOtlpExporter();
                 }
+
+                if (Environment.GetEnvironmentVariable("PYROSCOPE_PROFILING_ENABLED") is "1")
+                {
+                    builder.AddProcessor(new Pyroscope.OpenTelemetry.PyroscopeSpanProcessor());
+                }
             });
 
         services.AddOptions<HttpClientTraceInstrumentationOptions>()

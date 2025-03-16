@@ -2,6 +2,7 @@
 .dotnetcli
 .idea
 .metadata
+.pyroscope
 .settings
 .vs
 _ReSharper*
