@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using OpenTelemetry;
+using Pyroscope;
 
 namespace MartinCostello.Costellobot;
 
@@ -17,6 +18,31 @@ public static class ApplicationTelemetry
 
     internal static bool IsPyroscopeConfigured()
         => Environment.GetEnvironmentVariable("PYROSCOPE_PROFILING_ENABLED") is "1";
+
+    internal static async Task ExecuteWithProfilerAsync<T>(T state, Func<T, Task> operation)
+    {
+        if (ApplicationTelemetry.ExtractK6Baggage() is not { Count: > 0 } baggage)
+        {
+            await operation(state);
+            return;
+        }
+
+        try
+        {
+            Profiler.Instance.ClearDynamicTags();
+
+            foreach ((string key, string value) in baggage)
+            {
+                Profiler.Instance.SetDynamicTag(key, value);
+            }
+
+            await operation(state);
+        }
+        finally
+        {
+            Profiler.Instance.ClearDynamicTags();
+        }
+    }
 
     internal static Dictionary<string, string>? ExtractK6Baggage()
     {
