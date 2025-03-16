@@ -3,6 +3,7 @@
 
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Options;
+using Pyroscope;
 
 namespace MartinCostello.Costellobot;
 
@@ -74,7 +75,7 @@ public sealed partial class GitHubWebhookService(
                 _processor = client.CreateProcessor(options.CurrentValue.QueueName);
 
                 _processor.ProcessErrorAsync += ProcessErrorAsync;
-                _processor.ProcessMessageAsync += ProcessAsync;
+                _processor.ProcessMessageAsync += ProcessMessageAsync;
 
                 await _processor.StartProcessingAsync(stoppingToken);
 
@@ -83,6 +84,32 @@ public sealed partial class GitHubWebhookService(
             catch (OperationCanceledException ex) when (ex.CancellationToken == stoppingToken)
             {
                 break;
+            }
+        }
+
+        async Task ProcessMessageAsync(ProcessMessageEventArgs args)
+        {
+            if (ApplicationTelemetry.ExtractK6Baggage() is { Count: > 0 } baggage)
+            {
+                try
+                {
+                    Profiler.Instance.ClearDynamicTags();
+
+                    foreach ((string key, string value) in baggage)
+                    {
+                        Profiler.Instance.SetDynamicTag(key, value);
+                    }
+
+                    await ProcessAsync(args);
+                }
+                finally
+                {
+                    Profiler.Instance.ClearDynamicTags();
+                }
+            }
+            else
+            {
+                await ProcessAsync(args);
             }
         }
     }

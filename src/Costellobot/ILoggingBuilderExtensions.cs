@@ -22,7 +22,7 @@ public static class ILoggingBuilderExtensions
 
             options.SetResourceBuilder(TelemetryExtensions.ResourceBuilder);
 
-            if (TelemetryExtensions.IsOtlpCollectorConfigured())
+            if (ApplicationTelemetry.IsOtlpCollectorConfigured())
             {
                 options.AddOtlpExporter();
             }

@@ -43,7 +43,7 @@ public static class TelemetryExtensions
                        .AddProcessInstrumentation()
                        .AddRuntimeInstrumentation();
 
-                if (IsOtlpCollectorConfigured())
+                if (ApplicationTelemetry.IsOtlpCollectorConfigured())
                 {
                     builder.AddOtlpExporter();
                 }
@@ -65,12 +65,12 @@ public static class TelemetryExtensions
                     builder.SetSampler(new AlwaysOnSampler());
                 }
 
-                if (IsOtlpCollectorConfigured())
+                if (ApplicationTelemetry.IsOtlpCollectorConfigured())
                 {
                     builder.AddOtlpExporter();
                 }
 
-                if (Environment.GetEnvironmentVariable("PYROSCOPE_PROFILING_ENABLED") is "1")
+                if (ApplicationTelemetry.IsPyroscopeConfigured())
                 {
                     builder.AddProcessor(new Pyroscope.OpenTelemetry.PyroscopeSpanProcessor());
                 }
@@ -99,9 +99,6 @@ public static class TelemetryExtensions
                     };
                 });
     }
-
-    internal static bool IsOtlpCollectorConfigured()
-        => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT"));
 
     private static void EnrichHttpActivity(Activity activity, HttpRequestMessage request)
     {

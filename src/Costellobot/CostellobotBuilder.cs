@@ -6,6 +6,7 @@ using Azure.Data.Tables;
 using Azure.Identity;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
+using OpenTelemetry;
 
 namespace MartinCostello.Costellobot;
 
@@ -110,6 +111,11 @@ public static class CostellobotBuilder
 
     public static WebApplication UseCostellobot(this WebApplication app)
     {
+        if (ApplicationTelemetry.IsPyroscopeConfigured())
+        {
+            app.UseMiddleware<PyroscopeK6Middleware>();
+        }
+
         if (app.Environment.IsDevelopment() &&
             app.Services.GetService<TableServiceClient>() is { } tableClient)
         {
