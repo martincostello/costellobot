@@ -20,7 +20,7 @@ public static class ILoggingBuilderExtensions
             options.IncludeFormattedMessage = true;
             options.IncludeScopes = true;
 
-            options.SetResourceBuilder(TelemetryExtensions.ResourceBuilder);
+            options.SetResourceBuilder(ApplicationTelemetry.ResourceBuilder);
 
             if (ApplicationTelemetry.IsOtlpCollectorConfigured())
             {
