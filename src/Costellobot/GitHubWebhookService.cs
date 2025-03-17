@@ -88,7 +88,7 @@ public sealed partial class GitHubWebhookService(
 
         [System.Diagnostics.StackTraceHidden]
         Task ProcessMessageAsync(ProcessMessageEventArgs args) =>
-            ApplicationTelemetry.ExecuteWithProfilerAsync(args, ProcessAsync);
+            ApplicationTelemetry.ProfileAsync(args, ProcessAsync);
     }
 
     public async Task ProcessAsync(ProcessMessageEventArgs args)
