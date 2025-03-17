@@ -27,8 +27,10 @@ public static class ApplicationTelemetry
     internal static bool IsPyroscopeConfigured()
         => Environment.GetEnvironmentVariable("PYROSCOPE_PROFILING_ENABLED") is "1";
 
-    internal static async Task ExecuteWithProfilerAsync<T>(T state, Func<T, Task> operation)
+    [StackTraceHidden]
+    internal static async Task ProfileAsync<T>(T state, Func<T, Task> operation)
     {
+        // Based on https://github.com/grafana/pyroscope-go/blob/8fff2bccb5ed5611fdb09fdbd9a727367ab35f39/x/k6/baggage.go
         if (ExtractK6Baggage() is not { Count: > 0 } baggage)
         {
             await operation(state);
