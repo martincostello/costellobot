@@ -54,6 +54,7 @@
     <PackageReference Include="OpenTelemetry.Resources.ProcessRuntime" />
     <PackageReference Include="Polly.Extensions" />
     <PackageReference Include="Polly.RateLimiting" />
+    <PackageReference Include="Pyroscope" />
     <PackageReference Include="Pyroscope.OpenTelemetry" />
     <PackageReference Include="RazorSlices" />
     <PackageReference Include="Sentry.AspNetCore" />
