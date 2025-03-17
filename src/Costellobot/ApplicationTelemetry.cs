@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using OpenTelemetry;
+using OpenTelemetry.Resources;
 using Pyroscope;
 
 namespace MartinCostello.Costellobot;
@@ -13,6 +14,13 @@ public static class ApplicationTelemetry
     public static readonly string ServiceVersion = GitMetadata.Version.Split('+')[0];
     public static readonly ActivitySource ActivitySource = new(ServiceName, ServiceVersion);
 
+    public static ResourceBuilder ResourceBuilder { get; } = ResourceBuilder.CreateDefault()
+        .AddService(ServiceName, serviceVersion: ServiceVersion)
+        .AddAzureAppServiceDetector()
+        .AddContainerDetector()
+        .AddOperatingSystemDetector()
+        .AddProcessRuntimeDetector();
+
     internal static bool IsOtlpCollectorConfigured()
         => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT"));
 
@@ -21,7 +29,7 @@ public static class ApplicationTelemetry
 
     internal static async Task ExecuteWithProfilerAsync<T>(T state, Func<T, Task> operation)
     {
-        if (ApplicationTelemetry.ExtractK6Baggage() is not { Count: > 0 } baggage)
+        if (ExtractK6Baggage() is not { Count: > 0 } baggage)
         {
             await operation(state);
             return;
