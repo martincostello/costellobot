@@ -2,7 +2,6 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Security.Cryptography;
-using System.Text;
 using Azure;
 using Azure.Data.Tables;
 using MartinCostello.Costellobot.Models;

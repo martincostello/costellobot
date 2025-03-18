@@ -4,12 +4,10 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using AspNet.Security.OAuth.GitHub;
-using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Instrumentation.AspNetCore;
 using OpenTelemetry.Instrumentation.Http;
 using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 namespace MartinCostello.Costellobot;
@@ -23,39 +21,21 @@ public static class TelemetryExtensions
         ["raw.githubusercontent.com"] = "GitHub",
     };
 
-    public static ResourceBuilder ResourceBuilder { get; } = ResourceBuilder.CreateDefault()
-        .AddService(ApplicationTelemetry.ServiceName, serviceVersion: ApplicationTelemetry.ServiceVersion)
-        .AddAzureAppServiceDetector()
-        .AddContainerDetector()
-        .AddOperatingSystemDetector()
-        .AddProcessRuntimeDetector();
-
     public static void AddTelemetry(this IServiceCollection services, IWebHostEnvironment environment)
     {
         ArgumentNullException.ThrowIfNull(services);
-
-        if (IsAzureMonitorConfigured())
-        {
-            services.Configure<AzureMonitorExporterOptions>(
-                (p) => p.ConnectionString = AzureMonitorConnectionString());
-        }
 
         services
             .AddOpenTelemetry()
             .WithMetrics((builder) =>
             {
-                builder.SetResourceBuilder(ResourceBuilder)
+                builder.SetResourceBuilder(ApplicationTelemetry.ResourceBuilder)
                        .AddAspNetCoreInstrumentation()
                        .AddHttpClientInstrumentation()
                        .AddProcessInstrumentation()
                        .AddRuntimeInstrumentation();
 
-                if (IsAzureMonitorConfigured())
-                {
-                    builder.AddAzureMonitorMetricExporter();
-                }
-
-                if (IsOtlpCollectorConfigured())
+                if (ApplicationTelemetry.IsOtlpCollectorConfigured())
                 {
                     builder.AddOtlpExporter();
                 }
@@ -65,7 +45,7 @@ public static class TelemetryExtensions
                 // See https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/Diagnostics.md
                 AppContext.SetSwitch("Azure.Experimental.EnableActivitySource", true);
 
-                builder.SetResourceBuilder(ResourceBuilder)
+                builder.SetResourceBuilder(ApplicationTelemetry.ResourceBuilder)
                        .AddAspNetCoreInstrumentation()
                        .AddHttpClientInstrumentation()
                        .AddSource(ApplicationTelemetry.ServiceName)
@@ -77,14 +57,14 @@ public static class TelemetryExtensions
                     builder.SetSampler(new AlwaysOnSampler());
                 }
 
-                if (IsAzureMonitorConfigured())
-                {
-                    builder.AddAzureMonitorTraceExporter();
-                }
-
-                if (IsOtlpCollectorConfigured())
+                if (ApplicationTelemetry.IsOtlpCollectorConfigured())
                 {
                     builder.AddOtlpExporter();
+                }
+
+                if (ApplicationTelemetry.IsPyroscopeConfigured())
+                {
+                    builder.AddProcessor(new Pyroscope.OpenTelemetry.PyroscopeSpanProcessor());
                 }
             });
 
@@ -111,15 +91,6 @@ public static class TelemetryExtensions
                     };
                 });
     }
-
-    internal static bool IsOtlpCollectorConfigured()
-        => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT"));
-
-    internal static bool IsAzureMonitorConfigured()
-        => !string.IsNullOrEmpty(AzureMonitorConnectionString());
-
-    private static string? AzureMonitorConnectionString()
-        => Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
 
     private static void EnrichHttpActivity(Activity activity, HttpRequestMessage request)
     {

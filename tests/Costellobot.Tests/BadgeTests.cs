@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Security.Cryptography;
-using System.Text;
 using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Infrastructure;
 
