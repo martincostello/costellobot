@@ -156,34 +156,33 @@ public sealed partial class GitCommitAnalyzer(
     {
         string[] commitLines = commitMessage
             .ReplaceLineEndings("\n")
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-        var dependencies = new HashSet<string>(commitLines.Length);
+        var names = new HashSet<string>();
 
-        foreach (string line in commitLines)
+        int start = Array.IndexOf(commitLines, "---");
+        int end = Array.IndexOf(commitLines, "...");
+
+        if (start > -1 && ((end - start) > 1))
         {
-            const string Prefix = "- dependency-name: ";
+            var yaml = string.Join('\n', commitLines[(start + 1)..(end - 1)]);
+            using var reader = new StringReader(yaml);
 
-            if (line.StartsWith(Prefix, StringComparison.Ordinal))
+            var metadata = YamlDeserializer.Deserialize<DependabotMetadata>(reader);
+
+            if (metadata.Dependencies is { Count: > 0 } dependencies)
             {
-                string dependencyName = line[Prefix.Length..];
-
-                if (!string.IsNullOrEmpty(dependencyName))
+                foreach (var dependency in dependencies)
                 {
-                    // Sometimes the dependencies are wrapped with quotes,
-                    // for example "- dependency-name: "@actions/github"".
-                    string trimmed = dependencyName
-                        .Trim()
-                        .Trim('"');
-
-                    dependencies.Add(trimmed);
+                    if (dependency?.DependencyName is { Length: > 0 } name)
+                    {
+                        names.Add(name);
+                    }
                 }
             }
         }
 
-        dependencies.TrimExcess();
-
-        return [.. dependencies];
+        return [.. names];
     }
 
     private static DependencyEcosystem ParseEcosystem(string? reference)
@@ -670,5 +669,29 @@ public sealed partial class GitCommitAnalyzer(
     {
         [YamlMember(Alias = "dependency-name")]
         public string DependencyName { get; set; } = string.Empty;
+    }
+
+    private sealed class DependabotMetadata
+    {
+        [YamlMember(Alias = "updated-dependencies")]
+        public IList<Dependency> Dependencies { get; set; } = [];
+    }
+
+    private sealed class Dependency
+    {
+        [YamlMember(Alias = "dependency-name")]
+        public string DependencyName { get; set; } = string.Empty;
+
+        [YamlMember(Alias = "dependency-version")]
+        public string? DependencyVersion { get; set; }
+
+        [YamlMember(Alias = "dependency-type")]
+        public string DependencyType { get; set; } = string.Empty;
+
+        [YamlMember(Alias = "update-type")]
+        public string UpdateType { get; set; } = string.Empty;
+
+        [YamlMember(Alias = "dependency-group")]
+        public string? DependencyGroup { get; set; }
     }
 }
