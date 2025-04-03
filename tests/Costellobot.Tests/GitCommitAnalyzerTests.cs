@@ -1088,6 +1088,88 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     }
 
     [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Grouped_Package_Update_With_Only_Yaml_Frontmatter_With_Versions()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/nuget/awssdk-b8164d6bd2";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+
+        registry.GetPackageOwnersAsync(repository, "AWSSDK.SecurityToken", "3.7.300.118")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["awsdotnet"]));
+
+        registry.GetPackageOwnersAsync(repository, "AWSSDK.SimpleSystemsManagement", "3.7.305.8")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["awsdotnet"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["awsdotnet"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var sha = "bd2804732332a86c336d1c9308b9dba36f0c2e03";
+        var commitMessage = """
+                            Bump the awssdk group with 2 updates
+                            ---
+                            updated-dependencies:
+                            - dependency-name: AWSSDK.SecurityToken
+                              dependency-version: 3.7.300.118
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: awssdk
+                            - dependency-name: AWSSDK.SimpleSystemsManagement
+                              dependency-version: 3.7.305.8
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: awssdk
+                            ...
+
+                            Signed-off-by: dependabot[bot] <support@github.com>
+                            """;
+
+        var diff = string.Empty;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("AWSSDK.SecurityToken", (true, "3.7.300.118"));
+        trust.ShouldContainKeyAndValue("AWSSDK.SimpleSystemsManagement", (true, "3.7.305.8"));
+        trust.Count.ShouldBe(2);
+    }
+
+    [Fact]
     public async Task Commit_Is_Analyzed_Correctly_With_Mix_Of_Trust_By_Name_And_Publisher()
     {
         // Arrange

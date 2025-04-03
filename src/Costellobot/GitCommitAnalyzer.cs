@@ -152,13 +152,13 @@ public sealed partial class GitCommitAnalyzer(
         return isTrusted;
     }
 
-    private static List<string> ParseDependencies(string commitMessage)
+    private static List<(string Name, string? Version)> ParseDependencies(string commitMessage)
     {
         string[] commitLines = commitMessage
             .ReplaceLineEndings("\n")
             .Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-        var names = new HashSet<string>();
+        var names = new HashSet<(string Name, string? Version)>();
 
         int start = Array.IndexOf(commitLines, "---");
         int end = Array.IndexOf(commitLines, "...");
@@ -176,7 +176,7 @@ public sealed partial class GitCommitAnalyzer(
                 {
                     if (dependency?.DependencyName is { Length: > 0 } name)
                     {
-                        names.Add(name);
+                        names.Add((name, dependency.DependencyVersion));
                     }
                 }
             }
@@ -250,9 +250,9 @@ public sealed partial class GitCommitAnalyzer(
         DependencyEcosystem ecosystem,
         bool stopAfterFirstUntrustedDependency)
     {
-        var dependencyNames = ParseDependencies(commitMessage);
+        var dependencies = ParseDependencies(commitMessage);
 
-        if (dependencyNames.Count < 1)
+        if (dependencies.Count < 1)
         {
             return [];
         }
@@ -261,18 +261,19 @@ public sealed partial class GitCommitAnalyzer(
             logger,
             sha,
             repository,
-            [.. dependencyNames]);
+            [.. dependencies.Select((p) => p.Name)]);
 
         // First do a simple lookup by name
         var trustedDependencies = options.CurrentValue.TrustedEntities.Dependencies;
-        var unknownTrust = (false, (string?)null);
 
-        Dictionary<string, (bool Trusted, string? Version)> dependencyTrust = dependencyNames.ToDictionary((k) => k, (_) => unknownTrust);
+        Dictionary<string, (bool Trusted, string? Version)> dependencyTrust = dependencies.ToDictionary(
+            (k) => k.Name,
+            (v) => (false, v.Version));
 
         var dependenciesToIgnore = await GetIgnoredDependenciesAsync(repository, reference, ecosystem);
         var ignoredDependencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (string dependency in dependencyNames)
+        foreach ((string dependency, string? version) in dependencies)
         {
             bool ignored = dependenciesToIgnore.Any((p) => Regex.IsMatch(dependency, p, RegexOptions.None, RegexTimeout));
 
@@ -291,7 +292,7 @@ public sealed partial class GitCommitAnalyzer(
                     repository,
                     dependency);
 
-                dependencyTrust[dependency] = (true, null);
+                dependencyTrust[dependency] = (true, version);
             }
             else
             {
@@ -304,8 +305,10 @@ public sealed partial class GitCommitAnalyzer(
         }
 
         // If a dependency is not trusted by name alone, determine whether it is trusted through its owner or implicitly
-        foreach (string dependency in dependencyTrust.Where((p) => !p.Value.Trusted).Select((p) => p.Key))
+        foreach ((string dependency, var trust) in dependencyTrust.Where((p) => !p.Value.Trusted))
         {
+            string? version = trust.Version;
+
             if (ignoredDependencies.Contains(dependency))
             {
                 // We only care if all dependencies are trusted, so stop looking on the first ignore
@@ -316,9 +319,10 @@ public sealed partial class GitCommitAnalyzer(
             }
             else
             {
-                (bool trusted, string? version) = await IsTrustedByVersionOrOwnerAsync(
+                (bool trusted, version) = await IsTrustedByVersionOrOwnerAsync(
                     repository,
                     dependency,
+                    version,
                     reference,
                     commitMessage,
                     diff);
@@ -341,6 +345,7 @@ public sealed partial class GitCommitAnalyzer(
         async Task<(bool IsTrusted, string? Version)> IsTrustedByVersionOrOwnerAsync(
             RepositoryId repository,
             string dependency,
+            string? version,
             string? reference,
             string commitMessage,
             string? diff)
@@ -363,7 +368,7 @@ public sealed partial class GitCommitAnalyzer(
                 return (false, null);
             }
 
-            string? version = TryGetDependencyVersion(ecosystem, dependency, commitMessage, diff);
+            version ??= TryGetDependencyVersion(ecosystem, dependency, commitMessage, diff);
 
             if (string.IsNullOrWhiteSpace(version))
             {
