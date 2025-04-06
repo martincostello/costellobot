@@ -127,7 +127,7 @@ internal sealed class AppServer : IAsyncDisposable
 
         do
         {
-            string? solutionPath = Directory.EnumerateFiles(directoryInfo.FullName, "Costellobot.sln").FirstOrDefault();
+            string? solutionPath = Directory.EnumerateFiles(directoryInfo.FullName, "Costellobot.slnx").FirstOrDefault();
 
             if (solutionPath is not null)
             {
