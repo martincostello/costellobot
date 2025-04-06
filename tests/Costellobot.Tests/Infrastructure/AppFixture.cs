@@ -142,7 +142,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
 
         builder.UseEnvironment(Environments.Production);
 
-        builder.UseSolutionRelativeContentRoot(Path.Combine("src", "Costellobot"));
+        builder.UseSolutionRelativeContentRoot(Path.Combine("src", "Costellobot"), "*.slnx");
 
         builder.ConfigureServices((services) =>
         {
