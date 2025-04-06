@@ -60,7 +60,6 @@ jobs:
     steps:
 
     - name: Update agent configuration
-      if: runner.os == 'Windows'
       shell: pwsh
       run: |
         if ($IsWindows) {
