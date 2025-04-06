@@ -67,7 +67,11 @@ jobs:
           "DOTNET_ROOT=D:\tools\dotnet" >> ${env:GITHUB_ENV}
           "NUGET_PACKAGES=D:\.nuget\packages" >> ${env:GITHUB_ENV}
         } else {
-          $nugetHome = Resolve-Path "~/.nuget/packages"
+          $nugetHome = "~/.nuget/packages"
+          if (-Not (Test-Path $nugetHome)) {
+            New-Item -Path $nugetHome -Type Directory -Force | Out-Null
+          }
+          $nugetHome = Resolve-Path $nugetHome
           "NUGET_PACKAGES=$nugetHome" >> ${env:GITHUB_ENV}
         }
 
