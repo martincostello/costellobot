@@ -125,7 +125,7 @@ public sealed partial class PullRequestReviewHandler(
             CacheEntryOptions,
             CacheTags);
 
-    private async Task<IReadOnlyList<GitHubInstallationRepository>> GetInstallationRepositoriesAsync() =>
+    private async Task<IReadOnlyList<(string Owner, string Name, long Id)>> GetInstallationRepositoriesAsync() =>
         await cache.GetOrCreateAsync(
             "github-app-repositories",
             async (_) =>
@@ -138,8 +138,8 @@ public sealed partial class PullRequestReviewHandler(
                     .Where((p) => !p.Archived)
                     .Where((p) => !p.Fork)
                     .Where((p) => !ignored.Contains(p.FullName, StringComparer.OrdinalIgnoreCase))
-                    .Select((p) => new GitHubInstallationRepository(p.Owner.Login, p.Name, p.Id))
-                    .ToList();
+                    .Select((p) => (p.Owner.Login, p.Name, p.Id))
+                    .ToArray();
             },
             CacheEntryOptions,
             CacheTags);
@@ -229,8 +229,6 @@ public sealed partial class PullRequestReviewHandler(
             }
         });
     }
-
-    private sealed record GitHubInstallationRepository(string Owner, string Name, long Id);
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     private static partial class Log
