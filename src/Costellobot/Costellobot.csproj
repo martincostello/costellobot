@@ -13,7 +13,7 @@
     <UserSecretsId>Costellobot</UserSecretsId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(IsGitHubActions)' == 'true' AND '$(SENTRY_AUTH_TOKEN)' != '' AND '$(ContainerRegistry)' != '' ">
-    <SentryOrg>martin-costello</SentryOrg>
+    <SentryOrg>martincostello</SentryOrg>
     <SentryProject>costellobot</SentryProject>
     <SentryCreateRelease>true</SentryCreateRelease>
     <SentrySetCommits>true</SentrySetCommits>
