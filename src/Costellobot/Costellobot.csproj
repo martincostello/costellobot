@@ -7,7 +7,6 @@
     <PublishSelfContained>true</PublishSelfContained>
     <PyroscopeApplicationName>costellobot</PyroscopeApplicationName>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
-    <SentryProject>costellobot</SentryProject>
     <TargetFramework>net9.0</TargetFramework>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <TypeScriptToolsVersion>latest</TypeScriptToolsVersion>
