@@ -7,17 +7,11 @@
     <PublishSelfContained>true</PublishSelfContained>
     <PyroscopeApplicationName>costellobot</PyroscopeApplicationName>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
+    <SentryProject>costellobot</SentryProject>
     <TargetFramework>net9.0</TargetFramework>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <TypeScriptToolsVersion>latest</TypeScriptToolsVersion>
     <UserSecretsId>Costellobot</UserSecretsId>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(IsGitHubActions)' == 'true' AND '$(SENTRY_AUTH_TOKEN)' != '' AND '$(ContainerRegistry)' != '' ">
-    <SentryOrg>martin-costello</SentryOrg>
-    <SentryProject>costellobot</SentryProject>
-    <SentryCreateRelease>true</SentryCreateRelease>
-    <SentrySetCommits>true</SentrySetCommits>
-    <SentryUploadSymbols>true</SentryUploadSymbols>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Azure.Data.Tables" />
