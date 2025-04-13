@@ -58,7 +58,7 @@ public sealed partial class GitHubMessageSerializer
         }
     }
 
-    public static ServiceBusMessage Serialize(string? deliveryId, IDictionary<string, string> headers, string body)
+    public static ServiceBusMessage? Serialize(string? deliveryId, IDictionary<string, string> headers, string body)
     {
         var messageHeaders = new Dictionary<string, string?[]?>(headers.Count);
 
@@ -74,6 +74,12 @@ public sealed partial class GitHubMessageSerializer
         };
 
         (var encoded, var encoding) = Encode(payload);
+
+        if (encoded is null)
+        {
+            return null;
+        }
+
         var message = new ServiceBusMessage(encoded)
         {
             ContentType = GitHubMessage.ContentType,
@@ -92,7 +98,7 @@ public sealed partial class GitHubMessageSerializer
         return message;
     }
 
-    private static (BinaryData Body, string? ContentEncoding) Encode(GitHubMessage payload)
+    private static (BinaryData? Body, string? ContentEncoding) Encode(GitHubMessage payload)
     {
         using var utf8Json = new MemoryStream();
 
@@ -112,6 +118,11 @@ public sealed partial class GitHubMessageSerializer
         }
 
         compressed.Seek(0, SeekOrigin.Begin);
+
+        if (compressed.Length > MaxLength)
+        {
+            return (null, null);
+        }
 
         return (BinaryData.FromStream(compressed), Brotli);
     }
