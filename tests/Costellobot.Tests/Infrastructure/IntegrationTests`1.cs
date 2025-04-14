@@ -16,6 +16,7 @@ using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot.Infrastructure;
 
+[Category("Integration")]
 public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
     where T : AppFixture
 {

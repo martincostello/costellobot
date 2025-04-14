@@ -9,6 +9,7 @@ using Microsoft.Playwright;
 
 namespace MartinCostello.Costellobot;
 
+[Category("UI")]
 [Collection<HttpServerCollection>]
 public abstract class UITests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<HttpServerFixture>(fixture, outputHelper)
 {

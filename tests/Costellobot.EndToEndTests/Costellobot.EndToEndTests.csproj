@@ -6,6 +6,9 @@
     <UseDefaultCodeAnalysisRuleSet>true</UseDefaultCodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\Costellobot.Tests\CategoryAttribute.cs" Link="CategoryAttribute.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="GitHubActionsTestLogger" NoWarn="RT0003" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Microsoft.Playwright" />
