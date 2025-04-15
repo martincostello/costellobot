@@ -25,8 +25,10 @@ public static class GitHubExtensions
     {
         services.AddGitHubAuthentication(configuration);
 
-        services.AddHttpClient()
-                .ConfigureHttpClientDefaults((p) => p.AddStandardResilienceHandler());
+        //// HACK Workaround for https://github.com/dotnet/extensions/issues/6297
+        ////services.AddHttpClient()
+        ////        .ConfigureHttpClientDefaults((p) => p.AddStandardResilienceHandler());
+        services.AddHttpClient();
 
         services.AddHybridCache((p) => p.ReportTagMetrics = true);
         services.AddOptions();
