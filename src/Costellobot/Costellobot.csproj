@@ -35,7 +35,10 @@
     <PackageReference Include="Humanizer" />
     <PackageReference Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" NoWarn="RT0003" />
     <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
+    <!--
+    HACK Workaround for https://github.com/dotnet/extensions/issues/6297
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+    -->
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <PackageReference Include="Microsoft.TypeScript.MSBuild" PrivateAssets="all" />
     <PackageReference Include="NuGet.Versioning" />
