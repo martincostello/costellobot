@@ -136,6 +136,7 @@ jobs:
       if: ${{ !cancelled() }}
       with:
         files: ./tests/Costellobot.EndToEndTests/TestResults/TestResults.xml,./tests/Costellobot.Tests/TestResults/TestResults.xml
+        flags: ${{ matrix.os-name }}
         token: ${{ secrets.CODECOV_TOKEN }}
 
     - name: Docker log in
