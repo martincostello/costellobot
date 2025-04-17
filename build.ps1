@@ -75,7 +75,9 @@ function DotNetTest {
         [string]$TestFilter
     )
 
-    $additionalArgs = @()
+    $additionalArgs = @(
+        "--logger:junit"
+    )
 
     if (-Not [string]::IsNullOrEmpty($TestFilter)) {
         $additionalArgs += "--filter"
@@ -83,8 +85,7 @@ function DotNetTest {
     }
 
     if (-Not [string]::IsNullOrEmpty(${env:GITHUB_SHA})) {
-        $additionalArgs += "--logger"
-        $additionalArgs += "GitHubActions;report-warnings=false"
+        $additionalArgs += "--logger:GitHubActions;report-warnings=false"
     }
 
     & $dotnet test --configuration "Release" $additionalArgs
