@@ -104,11 +104,13 @@ public static class AdminEndpoints
             .MapGet(
                 "/configuration",
                 async (
-                    IGitHubClientForInstallation installationClient,
-                    IGitHubClientForUser userClient,
+                    IGitHubClientFactory clientFactory,
                     IOptions<GitHubOptions> github,
                     IOptions<WebhookOptions> webhook) =>
                 {
+                    var installationClient = clientFactory.CreateForInstallation();
+                    var userClient = clientFactory.CreateForUser();
+
                     var installationLimits = await GetRateLimitsAsync(installationClient);
                     var userLimits = await GetRateLimitsAsync(userClient);
 
@@ -139,8 +141,10 @@ public static class AdminEndpoints
         const string DeliveriesPath = "/deliveries";
 
         builder
-            .MapGet(DeliveriesPath, async (IGitHubClientForApp client) =>
+            .MapGet(DeliveriesPath, async (IGitHubClientFactory factory) =>
             {
+                var client = factory.CreateForApp();
+
                 (var deliveries, _) = await GetDeliveries(client, cursor: null);
                 return Results.Extensions.RazorSlice<Deliveries, IReadOnlyList<WebhookDelivery>>(deliveries);
             })
@@ -150,8 +154,10 @@ public static class AdminEndpoints
 
         builder.MapPost(
             DeliveriesPath,
-            async ([FromForm] Guid? id, IGitHubClientForApp client, HttpContext context, IAntiforgery antiforgery) =>
+            async ([FromForm] Guid? id, IGitHubClientFactory factory, HttpContext context, IAntiforgery antiforgery) =>
             {
+                var client = factory.CreateForApp();
+
                 if (!await antiforgery.IsRequestValidAsync(context))
                 {
                     antiforgery.SetCookieTokenAndHeader(context);
@@ -184,8 +190,10 @@ public static class AdminEndpoints
             .WithMetadata(admin);
 
         builder
-            .MapGet("/delivery/{id}", async (long id, IGitHubClientForApp client) =>
+            .MapGet("/delivery/{id}", async (long id, IGitHubClientFactory factory) =>
             {
+                var client = factory.CreateForApp();
+
                 // See https://docs.github.com/en/rest/apps/webhooks#get-a-delivery-for-an-app-webhook
                 var uri = new Uri($"app/hook/deliveries/{id}", UriKind.Relative);
 
@@ -248,8 +256,10 @@ public static class AdminEndpoints
 
         builder.MapPost(
             "/delivery/{id}",
-            async (long id, IGitHubClientForApp client, HttpContext context, IAntiforgery antiforgery) =>
+            async (long id, IGitHubClientFactory factory, HttpContext context, IAntiforgery antiforgery) =>
             {
+                var client = factory.CreateForApp();
+
                 if (!await antiforgery.IsRequestValidAsync(context))
                 {
                     antiforgery.SetCookieTokenAndHeader(context);

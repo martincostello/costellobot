@@ -2,7 +2,6 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.Caching.Hybrid;
-using Microsoft.Extensions.Options;
 using Octokit;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events.PullRequestReview;
@@ -12,13 +11,11 @@ using PullRequestMergeMethod = Octokit.GraphQL.Model.PullRequestMergeMethod;
 namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class PullRequestReviewHandler(
-    IGitHubClientForApp appClient,
-    IGitHubClientForInstallation installationClient,
+    GitHubWebhookContext context,
     PullRequestAnalyzer pullRequestAnalyzer,
     PullRequestApprover pullRequestApprover,
     HybridCache cache,
     ITrustStore trustStore,
-    IOptionsMonitor<WebhookOptions> options,
     ILogger<PullRequestReviewHandler> logger) : IHandler
 {
     private const int PageSize = 100;
@@ -28,7 +25,7 @@ public sealed partial class PullRequestReviewHandler(
 
     public async Task HandleAsync(WebhookEvent message)
     {
-        if (!options.CurrentValue.ImplicitTrust)
+        if (!context.WebhookOptions.ImplicitTrust)
         {
             // Feature disabled
             return;
@@ -96,7 +93,9 @@ public sealed partial class PullRequestReviewHandler(
             }
         }
 
-        if (trustAdditions > 0 && (options.CurrentValue.Approve || options.CurrentValue.Automerge))
+        var options = context.WebhookOptions;
+
+        if (trustAdditions > 0 && (options.Approve || options.Automerge))
         {
             try
             {
@@ -116,7 +115,7 @@ public sealed partial class PullRequestReviewHandler(
     private async Task<string> GetAppLoginAsync() =>
         await cache.GetOrCreateAsync(
             "github-app-slug",
-            appClient.GitHubApps,
+            context.AppClient.GitHubApps,
             static async (client, _) =>
             {
                 var app = await client.GetCurrent();
@@ -130,9 +129,9 @@ public sealed partial class PullRequestReviewHandler(
             "github-app-repositories",
             async (_) =>
             {
-                var installationRepositories = await installationClient.GitHubApps.Installation.GetAllRepositoriesForCurrent(new() { PageSize = PageSize });
+                var installationRepositories = await context.InstallationClient.GitHubApps.Installation.GetAllRepositoriesForCurrent(new() { PageSize = PageSize });
 
-                var ignored = options.CurrentValue.IgnoreRepositories;
+                var ignored = context.WebhookOptions.IgnoreRepositories;
 
                 return installationRepositories.Repositories
                     .Where((p) => !p.Archived)
@@ -147,7 +146,7 @@ public sealed partial class PullRequestReviewHandler(
     private async Task<PullRequestMergeMethod> GetRepositoryMergeMethodAsync(long repositoryId) =>
         await cache.GetOrCreateAsync(
             $"github-repo-{repositoryId}",
-            (repositoryId, installationClient.Repository),
+            (repositoryId, context.InstallationClient.Repository),
             static async (state, _) =>
             {
                 var repository = await state.Repository.Get(state.repositoryId);
@@ -172,7 +171,7 @@ public sealed partial class PullRequestReviewHandler(
 
         await Parallel.ForEachAsync(repositories, async (repo, _) =>
         {
-            var issues = await installationClient.Issue.GetAllForRepository(repo.Id, request, options);
+            var issues = await context.InstallationClient.Issue.GetAllForRepository(repo.Id, request, options);
 
             var issuesWithPulls = issues
                 .Where((p) => p.PullRequest is { })
@@ -206,7 +205,7 @@ public sealed partial class PullRequestReviewHandler(
                 }
                 else
                 {
-                    var pull = await installationClient.PullRequest.Get(repositoryId.Owner, repositoryId.Name, issue.Number);
+                    var pull = await context.InstallationClient.PullRequest.Get(repositoryId.Owner, repositoryId.Name, issue.Number);
 
                     bool isTrusted = await pullRequestAnalyzer.IsTrustedDependencyUpdateAsync(
                         repositoryId,

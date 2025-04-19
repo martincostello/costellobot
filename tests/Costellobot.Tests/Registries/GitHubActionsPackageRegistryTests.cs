@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using JustEat.HttpClientInterception;
+using MartinCostello.Costellobot.Builders;
 using NSubstitute;
 using Octokit;
 using Octokit.Internal;
@@ -30,7 +31,30 @@ public static class GitHubActionsPackageRegistryTests
         var client = new GitHubClientAdapter(connection);
         var graphConnection = Substitute.For<Octokit.GraphQL.IConnection>();
 
-        var target = new GitHubActionsPackageRegistry(client, graphConnection);
+        var clientFactory = Substitute.For<IGitHubClientFactory>();
+
+        clientFactory.CreateForGraphQL(GitHubFixtures.InstallationId)
+                     .Returns(graphConnection);
+
+        clientFactory.CreateForApp(GitHubFixtures.AppId)
+                     .Returns(client);
+
+        clientFactory.CreateForInstallation(GitHubFixtures.InstallationId)
+                     .Returns(client);
+
+        clientFactory.CreateForUser()
+                     .Returns(client);
+
+        var context = new GitHubWebhookContext(
+            clientFactory,
+            new GitHubOptions().ToMonitor(),
+            new WebhookOptions().ToMonitor())
+        {
+            AppId = GitHubFixtures.AppId,
+            InstallationId = GitHubFixtures.InstallationId,
+        };
+
+        var target = new GitHubActionsPackageRegistry(context);
 
         // Act
         var actual = await target.GetPackageOwnersAsync(

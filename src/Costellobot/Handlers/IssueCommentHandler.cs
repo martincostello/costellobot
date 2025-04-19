@@ -9,7 +9,7 @@ using Octokit.Webhooks.Events.IssueComment;
 namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class IssueCommentHandler(
-    IGitHubClientForInstallation client,
+    GitHubWebhookContext context,
     ILogger<IssueCommentHandler> logger) : IHandler
 {
     public async Task HandleAsync(WebhookEvent message)
@@ -24,6 +24,7 @@ public sealed partial class IssueCommentHandler(
 
         bool ignore = true;
 
+        // TODO This needs additional work to work for costellorg
         const string Prefix = "@costellobot ";
 
         if (string.Equals(message.Action, IssueCommentActionValue.Created, StringComparison.Ordinal) &&
@@ -61,6 +62,7 @@ public sealed partial class IssueCommentHandler(
 
     private async Task RebaseAsync(IssueId issue, long commentId)
     {
+        var client = context.InstallationClient;
         var pull = await client.PullRequest.Get(issue.Owner, issue.Name, issue.Number);
 
         if (pull.State.Value is not ItemState.Open)
