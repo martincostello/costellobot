@@ -5,9 +5,8 @@ using Octokit;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed class GitSubmodulePackageRegistry(
-    IGitHubClientForInstallation client,
-    Octokit.GraphQL.IConnection connection) : GitHubPackageRegistry(client, connection)
+public sealed class GitSubmodulePackageRegistry(GitHubWebhookContext context)
+    : GitHubPackageRegistry(context)
 {
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.GitSubmodule;
 

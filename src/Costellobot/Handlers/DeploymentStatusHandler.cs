@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using Microsoft.Extensions.Options;
 using Octokit;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
@@ -12,11 +11,9 @@ using Polly;
 namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class DeploymentStatusHandler(
-    IGitHubClientForInstallation installationClient,
-    IGitHubClientForUser userClient,
+    GitHubWebhookContext context,
     GitCommitAnalyzer commitAnalyzer,
     PublicHolidayProvider publicHolidayProvider,
-    IOptionsMonitor<WebhookOptions> webhookOptions,
     ILogger<DeploymentStatusHandler> logger) : IHandler
 {
     private static readonly ResiliencePipeline Pipeline = CreateResiliencePipeline();
@@ -37,7 +34,7 @@ public sealed partial class DeploymentStatusHandler(
             return;
         }
 
-        var options = webhookOptions.CurrentValue;
+        var options = context.WebhookOptions;
 
         if (!options.DeployEnvironments.Contains(deploy.Environment))
         {
@@ -72,7 +69,7 @@ public sealed partial class DeploymentStatusHandler(
             return;
         }
 
-        var workflowsClient = installationClient.WorkflowRuns();
+        var workflowsClient = context.InstallationClient.WorkflowRuns();
 
         var pendingDeployments = await workflowsClient.GetPendingDeploymentsAsync(
             repo.Owner.Login,
@@ -121,14 +118,17 @@ public sealed partial class DeploymentStatusHandler(
     {
         // HACK Use OAuth token for user that has permissions to review instead of the app.
         // This can be removed in the future if GitHub Apps can be allowed review deployments.
-        IGitHubClient client = deployment.CurrentUserCanApprove ? installationClient : userClient;
+        IGitHubClient client =
+            deployment.CurrentUserCanApprove ?
+            context.InstallationClient :
+            context.UserClient;
 
         try
         {
             var review = new PendingDeploymentReview(
                 [deployment.Environment.Id],
                 PendingDeploymentReviewState.Approved,
-                webhookOptions.CurrentValue.DeployComment);
+                context.WebhookOptions.DeployComment);
 
             await Pipeline.ExecuteAsync(
                 static async (state, _) => await state.client.Actions.Workflows.Runs.ReviewPendingDeployments(state.repository.Owner, state.repository.Name, state.runId, state.review),
@@ -180,7 +180,7 @@ public sealed partial class DeploymentStatusHandler(
             ["environment"] = environment,
         };
 
-        var connection = new ApiConnection(installationClient.Connection);
+        var connection = new ApiConnection(context.InstallationClient.Connection);
         var deployments = await connection.Get<Octokit.Deployment[]>(
             new Uri($"repos/{repository.FullName}/deployments", UriKind.Relative),
             parameters);
@@ -201,7 +201,7 @@ public sealed partial class DeploymentStatusHandler(
 
         var previousDeployment = previousDeployments[0];
 
-        var previousDeploymentStatuses = await installationClient.Repository.Deployment.Status.GetAll(
+        var previousDeploymentStatuses = await context.InstallationClient.Repository.Deployment.Status.GetAll(
             repository.Owner,
             repository.Name,
             previousDeployment.Id);
@@ -222,7 +222,7 @@ public sealed partial class DeploymentStatusHandler(
 
         foreach (var deployment in previousDeployments.Skip(1))
         {
-            previousDeploymentStatuses = await installationClient.Repository.Deployment.Status.GetAll(
+            previousDeploymentStatuses = await context.InstallationClient.Repository.Deployment.Status.GetAll(
                 repository.Owner,
                 repository.Name,
                 deployment.Id);
@@ -262,7 +262,7 @@ public sealed partial class DeploymentStatusHandler(
         string sha)
     {
         // See https://docs.github.com/en/rest/commits/commits#list-pull-requests-associated-with-a-commit.
-        var pullRequests = await installationClient.Connection.GetResponse<PullRequest[]>(
+        var pullRequests = await context.InstallationClient.Connection.GetResponse<PullRequest[]>(
             new($"repos/{repository.FullName}/commits/{sha}/pulls", UriKind.Relative));
 
         if (pullRequests.Body is { Length: 1 } pulls)
@@ -288,7 +288,7 @@ public sealed partial class DeploymentStatusHandler(
     {
         try
         {
-            return await installationClient.GetDiffAsync(diffUrl);
+            return await context.InstallationClient.GetDiffAsync(diffUrl);
         }
         catch (Exception ex)
         {
@@ -304,7 +304,7 @@ public sealed partial class DeploymentStatusHandler(
     {
         // Diff the active and pending deployment and verify that only trusted dependency
         // changes from trusted users contribute to the changes pending to be deployed.
-        var comparison = await installationClient.Repository.Commit.Compare(
+        var comparison = await context.InstallationClient.Repository.Commit.Compare(
             repository.Owner,
             repository.Name,
             activeDeployment.Sha,
@@ -330,7 +330,7 @@ public sealed partial class DeploymentStatusHandler(
                 continue;
             }
 
-            if (!webhookOptions.CurrentValue.TrustedEntities.Users.Contains(commit.Author.Login))
+            if (!context.WebhookOptions.TrustedEntities.Users.Contains(commit.Author.Login))
             {
                 Log.UntrustedCommitAuthorFound(logger, pendingDeployment.Id, repository, commit.Sha, commit.Author.Login);
                 return false;

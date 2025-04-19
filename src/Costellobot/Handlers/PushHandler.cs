@@ -8,7 +8,7 @@ using Octokit.Webhooks.Events;
 namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class PushHandler(
-    IGitHubClientForInstallation client,
+    GitHubWebhookContext context,
     ILogger<PushHandler> logger) : IHandler
 {
     private const string PrefixForBranchName = "refs/heads/";
@@ -90,7 +90,11 @@ public sealed partial class PushHandler(
             },
         };
 
-        await client.RepositoryDispatchAsync("martincostello", "github-automation", dispatch);
+        // TODO This needs additional work to work for costellorg
+        await context.InstallationClient.RepositoryDispatchAsync(
+            "martincostello",
+            "github-automation",
+            dispatch);
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
