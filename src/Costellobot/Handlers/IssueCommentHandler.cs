@@ -24,6 +24,7 @@ public sealed partial class IssueCommentHandler(
 
         bool ignore = true;
 
+        // TODO This needs additional work to work for costellorg
         const string Prefix = "@costellobot ";
 
         if (string.Equals(message.Action, IssueCommentActionValue.Created, StringComparison.Ordinal) &&

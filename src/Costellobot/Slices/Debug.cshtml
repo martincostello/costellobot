@@ -7,7 +7,7 @@
   <form action="#">
     <div class="mb-3">
       <label for="app-id" class="form-label">App</label>
-      <select id="app-id" class="form-select text-webhook" aria-label="App" aria-describedby="webhook-app-help" disabled>
+      <select id="app-id" class="form-select text-webhook" aria-label="App" aria-describedby="webhook-app-help">
         @foreach ((var index, var app) in Model.Apps.Values.Index())
         {
             if (app.Name is { Length: > 0 } name)
