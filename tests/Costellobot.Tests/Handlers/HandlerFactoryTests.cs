@@ -6,7 +6,6 @@ using MartinCostello.Costellobot.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using Octokit;
 
 namespace MartinCostello.Costellobot.Handlers;
 
@@ -31,11 +30,7 @@ public static class HandlerFactoryTests
     {
         // Arrange
         var options = new WebhookOptions().ToMonitor();
-
         var clientFactory = Substitute.For<IGitHubClientFactory>();
-        var gitHubAppClient = Substitute.For<IGitHubClientForApp>();
-        var gitHubInstallationClient = Substitute.For<IGitHubClientForInstallation>();
-        var gitHubUserClient = Substitute.For<IGitHubClientForUser>();
 
         using var cache = new ApplicationCache();
         var trustStore = Substitute.For<ITrustStore>();
