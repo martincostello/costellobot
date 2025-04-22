@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using Microsoft.Extensions.Options;
 using Octokit;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events.DeploymentProtectionRule;
@@ -10,13 +9,11 @@ using Polly;
 namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class DeploymentProtectionRuleHandler(
-    IGitHubClientForInstallation client,
+    GitHubWebhookContext context,
     PublicHolidayProvider publicHolidayProvider,
-    IOptionsMonitor<WebhookOptions> options,
     ILogger<DeploymentProtectionRuleHandler> logger) : IHandler
 {
     private static readonly ResiliencePipeline Pipeline = CreateResiliencePipeline();
-    private readonly IOptionsMonitor<WebhookOptions> _options = options;
 
     public async Task HandleAsync(WebhookEvent message)
     {
@@ -35,7 +32,7 @@ public sealed partial class DeploymentProtectionRuleHandler(
             body.Deployment.Id,
             body.DeploymentCallbackUrl);
 
-        var options = _options.CurrentValue;
+        var options = context.WebhookOptions;
 
         if (!options.Deploy)
         {
@@ -67,8 +64,8 @@ public sealed partial class DeploymentProtectionRuleHandler(
                 options.DeployComment);
 
             await Pipeline.ExecuteAsync(
-                static async (state, _) => await state.client.WorkflowRuns().ReviewCustomProtectionRuleAsync(state.DeploymentCallbackUrl, state.review),
-                (client, body.DeploymentCallbackUrl, review),
+                static async (state, _) => await state.InstallationClient.WorkflowRuns().ReviewCustomProtectionRuleAsync(state.DeploymentCallbackUrl, state.review),
+                (context.InstallationClient, body.DeploymentCallbackUrl, review),
                 CancellationToken.None);
 
             Log.ApprovedDeployment(

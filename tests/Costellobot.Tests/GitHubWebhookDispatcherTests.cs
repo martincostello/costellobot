@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using MartinCostello.Costellobot.Builders;
 using MartinCostello.Costellobot.Handlers;
 using NSubstitute;
 using Octokit.Webhooks;
@@ -55,12 +56,41 @@ public class GitHubWebhookDispatcherTests(ITestOutputHelper outputHelper)
         IHandlerFactory handlerFactory,
         long installationId)
     {
-        var options = new GitHubOptions() { InstallationId = installationId }.ToMonitor();
+        var app = new GitHubAppOptions()
+        {
+            AppId = "123",
+            ClientId = "456",
+            Name = "Costellobot",
+            PrivateKey = string.Empty,
+        };
+
+        var installation = new GitHubInstallationOptions()
+        {
+            AppId = app.AppId,
+        };
+
+        var options = new GitHubOptions();
+
+        options.Apps[app.AppId] = app;
+        options.Installations[installationId.ToString(CultureInfo.InvariantCulture)] = installation;
+
+        var clientFactory = Substitute.For<IGitHubClientFactory>();
         var logger = outputHelper.ToLogger<GitHubWebhookDispatcher>();
+        var monitor = options.ToMonitor();
+
+        var context = new GitHubWebhookContext(
+            clientFactory,
+            monitor,
+            new WebhookOptions().ToMonitor())
+        {
+            AppId = GitHubFixtures.AppId,
+            InstallationId = GitHubFixtures.InstallationId,
+        };
 
         return new(
+            context,
             handlerFactory,
-            options,
+            monitor,
             logger);
     }
 }

@@ -5,7 +5,6 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using MartinCostello.Costellobot.Registries;
-using Microsoft.Extensions.Options;
 using Octokit;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -13,10 +12,9 @@ using YamlDotNet.Serialization.NamingConventions;
 namespace MartinCostello.Costellobot;
 
 public sealed partial class GitCommitAnalyzer(
-    IGitHubClientForInstallation client,
+    GitHubWebhookContext context,
     IEnumerable<IPackageRegistry> registries,
     ITrustStore trustStore,
-    IOptionsMonitor<WebhookOptions> options,
     ILogger<GitCommitAnalyzer> logger)
 {
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
@@ -264,7 +262,7 @@ public sealed partial class GitCommitAnalyzer(
             [.. dependencies.Select((p) => p.Name)]);
 
         // First do a simple lookup by name
-        var trustedDependencies = options.CurrentValue.TrustedEntities.Dependencies;
+        var trustedDependencies = context.WebhookOptions.TrustedEntities.Dependencies;
 
         Dictionary<string, (bool Trusted, string? Version)> dependencyTrust = dependencies.ToDictionary(
             (k) => k.Name,
@@ -355,7 +353,7 @@ public sealed partial class GitCommitAnalyzer(
                 return (false, null);
             }
 
-            if (!options.CurrentValue.TrustedEntities.Publishers.TryGetValue(ecosystem, out var publishers) ||
+            if (!context.WebhookOptions.TrustedEntities.Publishers.TryGetValue(ecosystem, out var publishers) ||
                 publishers.Count < 1)
             {
                 return (false, null);
@@ -479,7 +477,7 @@ public sealed partial class GitCommitAnalyzer(
 
         try
         {
-            var configuration = await client.Repository.Content.GetRawContentByRef(
+            var configuration = await context.InstallationClient.Repository.Content.GetRawContentByRef(
                 repository.Owner,
                 repository.Name,
                 ".github/dependabot.yml",

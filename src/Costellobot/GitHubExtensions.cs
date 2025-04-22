@@ -4,6 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using MartinCostello.Costellobot.Handlers;
 using MartinCostello.Costellobot.Registries;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -44,11 +45,10 @@ public static class GitHubExtensions
             return new CryptoProviderFactory() { CacheSignatureProviders = false };
         });
 
-        services.AddSingleton<AppCredentialStore>();
-        services.AddSingleton<InstallationCredentialStore>();
-        services.AddSingleton<UserCredentialStore>();
+        services.AddKeyedSingleton<UserCredentialStore>(string.Empty);
 
         services.AddSingleton<ICredentialStore>((provider) => provider.GetRequiredService<AppCredentialStore>());
+        services.AddSingleton<IGitHubClientFactory, GitHubClientFactory>();
         services.AddSingleton<IJsonSerializer, SimpleJsonSerializer>();
 
         services.AddTransient<IHttpClient>((provider) =>
@@ -57,20 +57,49 @@ public static class GitHubExtensions
             return new HttpClientAdapter(httpClientFactory.CreateHandler);
         });
 
-        services.AddTransient<IGitHubClientForApp>((provider) => provider.CreateClient<AppCredentialStore>());
-        services.AddTransient<IGitHubClientForInstallation>((provider) => provider.CreateClient<InstallationCredentialStore>());
-        services.AddTransient<IGitHubClientForUser>((provider) => provider.CreateClient<UserCredentialStore>());
+        services.AddTransient<IGitHubClientForUser>((provider) => provider.CreateClient<UserCredentialStore>(string.Empty));
 
-        services.AddTransient<Octokit.GraphQL.IConnection>((provider) =>
+        var installations = GetInstallations(configuration);
+
+        foreach ((var installationId, var appId) in installations)
         {
-            var productInformation = new Octokit.GraphQL.ProductHeaderValue(UserAgent.Name, UserAgent.Version);
+            services.AddKeyedSingleton(appId, (provider, key) =>
+            {
+                return new AppCredentialStore(
+                    provider.GetRequiredService<HybridCache>(),
+                    provider.GetRequiredService<CryptoProviderFactory>(),
+                    provider.GetRequiredService<TimeProvider>(),
+                    provider.GetRequiredService<IOptionsMonitor<GitHubOptions>>())
+                {
+                    AppId = Convert.ToString(key, CultureInfo.InvariantCulture)!,
+                };
+            });
 
-            var baseAddress = GetGitHubGraphQLUri(provider);
-            var credentialStore = provider.GetRequiredService<InstallationCredentialStore>();
-            var httpClient = provider.GetRequiredService<HttpClient>();
+            services.AddKeyedSingleton(installationId, (provider, key) =>
+            {
+                return new InstallationCredentialStore(
+                    provider.GetRequiredKeyedService<IGitHubClientForApp>(appId),
+                    provider.GetRequiredService<HybridCache>())
+                {
+                    InstallationId = Convert.ToInt64(key, CultureInfo.InvariantCulture),
+                };
+            });
 
-            return new Octokit.GraphQL.Connection(productInformation, baseAddress, credentialStore, httpClient);
-        });
+            services.AddKeyedTransient<IGitHubClientForApp>(appId, (provider, key) => provider.CreateClient<AppCredentialStore>(key));
+            services.AddKeyedTransient<IGitHubClientForInstallation>(installationId, (provider, key) => provider.CreateClient<InstallationCredentialStore>(key));
+
+            services.AddKeyedTransient<Octokit.GraphQL.IConnection>(installationId, (provider, key) =>
+            {
+                var productInformation = new Octokit.GraphQL.ProductHeaderValue(UserAgent.Name, UserAgent.Version);
+
+                var baseAddress = GetGitHubGraphQLUri(provider);
+                var credentialStore = provider.GetRequiredKeyedService<InstallationCredentialStore>(key);
+
+                var httpClient = provider.GetRequiredService<HttpClient>();
+
+                return new Octokit.GraphQL.Connection(productInformation, baseAddress, credentialStore, httpClient);
+            });
+        }
 
         services.TryAddSingleton<ITrustStore, AzureTableTrustStore>();
 
@@ -94,6 +123,7 @@ public static class GitHubExtensions
         services.AddSingleton<BadgeService>();
         services.AddSingleton<PublicHolidayProvider>();
 
+        services.AddScoped<GitHubWebhookContext>();
         services.AddScoped<IHandlerFactory, HandlerFactory>();
         services.AddTransient<CheckSuiteHandler>();
         services.AddTransient<DeploymentProtectionRuleHandler>();
@@ -106,6 +136,23 @@ public static class GitHubExtensions
         services.AddHostedService<GitHubWebhookService>();
 
         return services;
+    }
+
+    private static Dictionary<string, string> GetInstallations(IConfiguration configuration)
+    {
+        var installations = configuration.GetRequiredSection("GitHub:Installations").Get<Dictionary<string, GitHubInstallationOptions>>();
+
+        var result = new Dictionary<string, string>();
+
+        if (installations is not null)
+        {
+            foreach ((var installationId, var app) in installations)
+            {
+                result[installationId] = app.AppId;
+            }
+        }
+
+        return result;
     }
 
     private static void AddPackageRegistry<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IServiceCollection services, string? httpClientName = null)
@@ -131,11 +178,11 @@ public static class GitHubExtensions
         }
     }
 
-    private static Connection CreateConnection<T>(this IServiceProvider provider)
+    private static Connection CreateConnection<T>(this IServiceProvider provider, object key)
         where T : ICredentialStore
     {
         var baseAddress = GetGitHubUri(provider);
-        var credentialStore = provider.GetRequiredService<T>();
+        var credentialStore = provider.GetRequiredKeyedService<T>(key);
         var httpClient = provider.GetRequiredService<IHttpClient>();
         var serializer = provider.GetRequiredService<IJsonSerializer>();
 
@@ -147,10 +194,10 @@ public static class GitHubExtensions
         return new Connection(UserAgent, baseAddress, credentialStore, httpClient, serializer);
     }
 
-    private static GitHubClientAdapter CreateClient<T>(this IServiceProvider provider)
+    private static GitHubClientAdapter CreateClient<T>(this IServiceProvider provider, object key)
         where T : ICredentialStore
     {
-        var connection = provider.CreateConnection<T>();
+        var connection = provider.CreateConnection<T>(key);
         return new GitHubClientAdapter(connection);
     }
 

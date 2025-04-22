@@ -17,19 +17,25 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="settings-tab-webhook" href="#tab-webhook" role="tab" type="button" aria-controls="tab-webhook" aria-current="page" aria-selected="true" data-bs-target="#tab-webhook" data-bs-toggle="pill">
+            <button class="nav-link" id="settings-tab-github-apps" href="#tab-github-apps" role="tab" type="button" aria-controls="tab-github-apps" aria-current="page" data-bs-target="#tab-github-apps" data-bs-toggle="pill">
+                GitHub Apps
+                <span class="fa-brands fa-github" aria-hidden="true"></span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="settings-tab-webhook" href="#tab-webhook" role="tab" type="button" aria-controls="tab-webhook" aria-current="page" data-bs-target="#tab-webhook" data-bs-toggle="pill">
                 Webhook
                 <span class="fa-solid fa-bolt" aria-hidden="true"></span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="settings-tab-trusted-entities" href="#tab-trusted-entities" role="tab" type="button" aria-controls="tab-trusted-entities" aria-current="page" aria-selected="true" data-bs-target="#tab-trusted-entities" data-bs-toggle="pill">
+            <button class="nav-link" id="settings-tab-trusted-entities" href="#tab-trusted-entities" role="tab" type="button" aria-controls="tab-trusted-entities" aria-current="page" data-bs-target="#tab-trusted-entities" data-bs-toggle="pill">
                 Trusted Entities
                 <span class="fa-solid fa-certificate" aria-hidden="true"></span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="settings-tab-rate-limits" href="#tab-rate-limits" role="tab" type="button" aria-controls="tab-rate-limits" aria-current="page" aria-selected="true" data-bs-target="#tab-rate-limits" data-bs-toggle="pill">
+            <button class="nav-link" id="settings-tab-rate-limits" href="#tab-rate-limits" role="tab" type="button" aria-controls="tab-rate-limits" aria-current="page" data-bs-target="#tab-rate-limits" data-bs-toggle="pill">
                 Rate Limits
                 <span class="fa-solid fa-gauge-high" aria-hidden="true"></span>
             </button>
@@ -51,20 +57,6 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>App ID</td>
-                                <td>
-                                    <a href="https://github.com/settings/apps/costellobot" target="_blank" rel="noopener">
-                                        <code id="app-id">@(Model.GitHub.AppId)</code>
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>App Private Key</td>
-                                <td>
-                                    <code id="private-key-hash">@(GetPrivateKeyThumbprint())</code>
-                                </td>
-                            </tr>
-                            <tr>
                                 <td>Badges Key</td>
                                 <td>
                                     <code id="badges-key-hash">@(HashSecret(Model.GitHub.BadgesKey))</code>
@@ -77,11 +69,23 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td>Installation ID</td>
+                                <td>Installations</td>
                                 <td>
-                                    <a href="https://github.com/settings/installations/@(Model.GitHub.InstallationId)" target="_blank" rel="noopener">
-                                        <code id="installation-id">@(Model.GitHub.InstallationId.ToString(CultureInfo.InvariantCulture))</code>
-                                    </a>
+                                    <ul>
+                                        @foreach ((var installationId, var installation) in Model.GitHub.Installations)
+                                        {
+                                            var app = Model.GitHub.Apps[installation.AppId];
+                                            var installationUrl =
+                                                installation.Organization is { Length: > 0 } organization ?
+                                                $"https://github.com/organizations/{organization}/settings/installations/{installationId}" :
+                                                $"https://github.com/settings/installations/{installationId}";
+                                            <li>
+                                                <a href="@(installationUrl)" target="_blank" rel="noopener">
+                                                    <code class="installation-id">@(app.Name)</code>
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
                                 </td>
                             </tr>
                             <tr>
@@ -115,6 +119,82 @@
                             The Costellobot GitHub configuration options.
                         </caption>
                     </table>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="tab-github-apps" role="tabpanel" aria-labelledby="settings-tab-github-apps">
+            <div class="card my-2">
+                <div class="card-header card-title">
+                    GitHub Apps
+                </div>
+                <div class="card-body">
+                    <p class="card-text font-weight-light">
+                        The configured GitHub Apps.
+                    </p>
+                    <hr />
+                    <div class="align-items-start d-flex">
+                        <div class="flex-column me-3 nav nav-fill nav-pills" role="tablist" aria-orientation="vertical">
+                            @foreach ((var index, var app) in Model.GitHub.Apps.Values.Index())
+                            {
+                                <button class="nav-link text-start @(index is 0 ? "active" : null)" id="settings-tab-github-apps-@(app.AppId)" role="tab" type="button" aria-controls="tab-github-apps-@(app.AppId)" aria-selected="@(index is 0)" data-bs-target="#tab-github-apps-@(app.AppId)" data-bs-toggle="pill">
+                                    @(app.Name)
+                                </button>
+                            }
+                        </div>
+                        <div class="tab-content w-75" id="tab-content-github-apps">
+                            @foreach ((var index, var app) in Model.GitHub.Apps.Values.Index())
+                            {
+                                <div class="tab-pane fade show @(index is 0 ? "active" : null)" id="tab-github-apps-@(app.AppId)" role="tabpanel" aria-labelledby="settings-tab-github-apps-@(app.AppId)">
+                                    <div class="card my-2">
+                                        <div class="card-header card-title">
+                                            @(app.Name)
+                                        </div>
+                                        <div class="card-body">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">Option</th>
+                                                        <th scope="col">Value</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>App ID</td>
+                                                        <td>
+                                                            @{
+                                                                var appUrl =
+                                                                    app.Organization is { Length: > 0 } organization ?
+                                                                    $"https://github.com/organizations/{organization}/settings/apps/{app.Name}" :
+                                                                    $"https://github.com/settings/apps/{app.Name}";
+                                                            }
+                                                            <a href="@(appUrl)" target="_blank" rel="noopener">
+                                                                <code class="app-id">@(app.AppId)</code>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>App Client ID</td>
+                                                        <td>
+                                                            <code class="client-id">@(app.ClientId)</code>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>App Private Key</td>
+                                                        <td>
+                                                            <code class="private-key-hash">@(GetPrivateKeyThumbprint(app))</code>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                                <caption class="font-weight-light">
+                                                    The @(app.Name) GitHub app configuration options.
+                                                </caption>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -327,10 +407,15 @@
 @functions {
     public LayoutModel LayoutModel => new("Configuration");
 
-    private string GetPrivateKeyThumbprint()
+    private string GetPrivateKeyThumbprint(GitHubAppOptions app)
     {
+        if (app.PrivateKey is not { Length: > 0 } privateKey)
+        {
+            return string.Empty;
+        }
+
         using var algorithm = RSA.Create();
-        algorithm.ImportFromPem(Model.GitHub.PrivateKey);
+        algorithm.ImportFromPem(privateKey);
 
         var publicKey = algorithm.ExportSubjectPublicKeyInfo();
 

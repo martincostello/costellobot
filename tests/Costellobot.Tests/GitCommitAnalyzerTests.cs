@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using MartinCostello.Costellobot.Builders;
 using MartinCostello.Costellobot.Infrastructure;
 using MartinCostello.Costellobot.Registries;
 using Microsoft.Extensions.DependencyInjection;
@@ -1672,7 +1673,9 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         Action<IRepositoryContentsClient>? configureActionsClient = null)
     {
         registries ??= serviceProvider.GetServices<IPackageRegistry>();
-        var optionsMonitor = options?.ToMonitor() ?? serviceProvider.GetRequiredService<IOptionsMonitor<WebhookOptions>>();
+
+        var githubOptions = serviceProvider.GetRequiredService<IOptionsMonitor<GitHubOptions>>();
+        var webhookOptions = options?.ToMonitor() ?? serviceProvider.GetRequiredService<IOptionsMonitor<WebhookOptions>>();
         var logger = serviceProvider.GetRequiredService<ILogger<GitCommitAnalyzer>>();
 
         var contents = Substitute.For<IRepositoryContentsClient>();
@@ -1685,6 +1688,17 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         configureActionsClient?.Invoke(contents);
 
-        return new(client, registries, trustStore, optionsMonitor, logger);
+        var clientFactory = Substitute.For<IGitHubClientFactory>();
+
+        clientFactory.CreateForInstallation(GitHubFixtures.InstallationId)
+                     .Returns(client);
+
+        var context = new GitHubWebhookContext(clientFactory, githubOptions, webhookOptions)
+        {
+            AppId = GitHubFixtures.AppId,
+            InstallationId = GitHubFixtures.InstallationId,
+        };
+
+        return new(context, registries, trustStore, logger);
     }
 }

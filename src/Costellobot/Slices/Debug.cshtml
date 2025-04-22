@@ -3,8 +3,23 @@
 
 @using WebhookEventType = Octokit.Webhooks.WebhookEventType;
 
-<div id="debug-content" app-id="@(Model.AppId)">
+<div id="debug-content">
   <form action="#">
+    <div class="mb-3">
+      <label for="app-id" class="form-label">App</label>
+      <select id="app-id" class="form-select text-webhook" aria-label="App" aria-describedby="webhook-app-help" disabled>
+        @foreach ((var index, var app) in Model.Apps.Values.Index())
+        {
+            if (app.Name is { Length: > 0 } name)
+            {
+                <option value="@(app.AppId)" @(index is 0 ? "selected" : null)>@(name)</option>
+            }
+        }
+      </select>
+      <div id="webhook-app-help" class="form-text">
+        The name of the GitHub app to deliver the payload to.
+      </div>
+    </div>
     <div class="mb-3">
       <label for="webhook-event" class="form-label">Event</label>
       <select id="webhook-event" class="form-select text-webhook" autofocus="autofocus" aria-label="Event" aria-describedby="webhook-event-help">
