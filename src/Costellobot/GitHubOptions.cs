@@ -7,7 +7,7 @@ public sealed class GitHubOptions
 {
     public string AccessToken { get; set; } = string.Empty;
 
-    public string AppId { get; set; } = string.Empty;
+    public Dictionary<string, GitHubAppOptions> Apps { get; set; } = [];
 
     public string BadgesKey { get; set; } = string.Empty;
 
@@ -17,11 +17,9 @@ public sealed class GitHubOptions
 
     public string EnterpriseDomain { get; set; } = string.Empty;
 
-    public long InstallationId { get; set; }
+    public Dictionary<string, GitHubInstallationOptions> Installations { get; set; } = [];
 
     public string OAuthId { get; set; } = string.Empty;
-
-    public string PrivateKey { get; set; } = string.Empty;
 
     public IList<string> Scopes { get; set; } = [];
 

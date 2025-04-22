@@ -9,7 +9,7 @@ using Octokit;
 namespace MartinCostello.Costellobot;
 
 public sealed partial class BadgeService(
-    IGitHubClientForInstallation client,
+    IGitHubClientFactory factory,
     IOptionsMonitor<GitHubOptions> options,
     ILogger<BadgeService> logger)
 {
@@ -66,6 +66,8 @@ public sealed partial class BadgeService(
 
     private async Task<string?> LatestReleaseBadgeAsync(RepositoryId repository)
     {
+        var client = factory.CreateForInstallation();
+
         Release? release = null;
 
         try
@@ -104,6 +106,8 @@ public sealed partial class BadgeService(
 
     private async Task<string?> SecurityAlertsAsync(RepositoryId repository)
     {
+        var client = factory.CreateForInstallation();
+
         int count = 0;
 
         foreach (var type in AlertTypes)

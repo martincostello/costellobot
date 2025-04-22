@@ -29,8 +29,6 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         OutputHelper = outputHelper;
         Fixture.SetOutputHelper(OutputHelper);
         _scope = Fixture.Interceptor.BeginScope();
-
-        // TODO Fix scope disposal removing the existing bundle
         Fixture.Interceptor.RegisterBundle(Path.Combine("Bundles", "oauth-http-bundle.json"));
     }
 
@@ -309,7 +307,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         client.DefaultRequestHeaders.Add("X-GitHub-Delivery", delivery ?? Guid.NewGuid().ToString());
         client.DefaultRequestHeaders.Add("X-GitHub-Event", @event);
         client.DefaultRequestHeaders.Add("X-GitHub-Hook-ID", "109948940");
-        client.DefaultRequestHeaders.Add("X-GitHub-Hook-Installation-Target-ID", "42");
+        client.DefaultRequestHeaders.Add("X-GitHub-Hook-Installation-Target-ID", AppId);
         client.DefaultRequestHeaders.Add("X-GitHub-Hook-Installation-Target-Type", "integration");
         client.DefaultRequestHeaders.Add("X-Hub-Signature", signature);
         client.DefaultRequestHeaders.Add("X-Hub-Signature-256", signature);

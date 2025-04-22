@@ -10,6 +10,8 @@ namespace MartinCostello.Costellobot.Builders;
 
 public static class GitHubFixtures
 {
+    public const string AppId = "183256";
+
     public const string AuthorizationHeader = "Token ghs_secret-access-token";
 
     public const string DependabotBotName = "app/dependabot";
@@ -18,7 +20,7 @@ public static class GitHubFixtures
 
     public const string GitHubActionsBotName = "app/github-actions";
 
-    public const string InstallationId = "42";
+    public const string InstallationId = "24364748";
 
     public static CheckRunBuilder CreateCheckRun(
         PullRequestBuilder pullRequest,

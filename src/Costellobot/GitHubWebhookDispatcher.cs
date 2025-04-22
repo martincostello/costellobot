@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 namespace MartinCostello.Costellobot;
 
 public sealed partial class GitHubWebhookDispatcher(
+    GitHubWebhookContext context,
     IHandlerFactory handlerFactory,
     IOptionsMonitor<GitHubOptions> options,
     ILogger<GitHubWebhookDispatcher> logger)
@@ -26,6 +27,16 @@ public sealed partial class GitHubWebhookDispatcher(
 
             try
             {
+                if (message.Headers.HookInstallationTargetId is { Length: > 0 } appId)
+                {
+                    context.AppId = appId;
+                }
+
+                if (message.Event.Installation?.Id is { } installationId)
+                {
+                    context.InstallationId = Convert.ToString(installationId, CultureInfo.InvariantCulture);
+                }
+
                 var handler = handlerFactory.Create(message.Headers.Event);
                 await handler.HandleAsync(message.Event);
 
@@ -48,7 +59,11 @@ public sealed partial class GitHubWebhookDispatcher(
             _ => message.Event.Installation?.Id,
         };
 
-        return installationId == options.CurrentValue.InstallationId;
+        return
+            installationId is { } id &&
+            options.CurrentValue.Installations.TryGetValue(id.ToString(CultureInfo.InvariantCulture), out var install) &&
+            install?.AppId is { Length: > 0 } appId &&
+            options.CurrentValue.Apps.ContainsKey(appId);
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]

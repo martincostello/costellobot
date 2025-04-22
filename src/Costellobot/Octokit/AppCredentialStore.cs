@@ -18,10 +18,12 @@ public sealed class AppCredentialStore(
 {
     private readonly IOptionsMonitor<GitHubOptions> _options = options;
 
+    public required string AppId { get; init; }
+
     public override async Task<Credentials> GetCredentials()
     {
         var token = await cache.GetOrCreateAsync(
-            "github:app-credentials",
+            $"github:app-credentials:{AppId}",
             this,
             static (self, _) => ValueTask.FromResult(self.CreateJwtForApp()),
             CacheEntryOptions,
@@ -33,17 +35,17 @@ public sealed class AppCredentialStore(
     private string CreateJwtForApp()
     {
         // See https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
-        var options = _options.CurrentValue;
+        var app = _options.CurrentValue.Apps[AppId];
         var utcNow = timeProvider.GetUtcNow().UtcDateTime;
 
         using var algorithm = RSA.Create();
-        algorithm.ImportFromPem(options.PrivateKey);
+        algorithm.ImportFromPem(app.PrivateKey);
 
         var tokenDescriptor = new SecurityTokenDescriptor()
         {
             Expires = utcNow.Add(TokenLifetime),
             IssuedAt = utcNow.Add(-TokenSkew),
-            Issuer = options.AppId,
+            Issuer = app.AppId,
             SigningCredentials = CreateSigningCredentials(algorithm),
         };
 

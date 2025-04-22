@@ -2,7 +2,6 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Options;
 using Octokit;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
@@ -13,12 +12,10 @@ using CheckRunPullRequest = Octokit.Webhooks.Models.CheckRunEvent.CheckRunPullRe
 namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class CheckSuiteHandler(
-    IGitHubClientForInstallation client,
-    IOptionsMonitor<WebhookOptions> options,
+    GitHubWebhookContext context,
     ILogger<CheckSuiteHandler> logger) : IHandler
 {
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
-    private readonly IOptionsMonitor<WebhookOptions> _options = options;
 
     public async Task HandleAsync(WebhookEvent message)
     {
@@ -50,7 +47,7 @@ public sealed partial class CheckSuiteHandler(
         }
 
         // Is the check suite associated with a GitHub Actions workflow?
-        var workflows = await client.Actions.Workflows.Runs.List(
+        var workflows = await context.InstallationClient.Actions.Workflows.Runs.List(
             body.Repository.Owner.Login,
             body.Repository.Name,
             new() { CheckSuiteId = checkSuiteId });
@@ -85,7 +82,7 @@ public sealed partial class CheckSuiteHandler(
             return false;
         }
 
-        var options = _options.CurrentValue;
+        var options = context.WebhookOptions;
 
         if (options.RerunFailedChecksAttempts < 1)
         {
@@ -110,7 +107,7 @@ public sealed partial class CheckSuiteHandler(
 
     private async Task<bool> CanRerunCheckSuiteAsync(RepositoryId repository, long checkSuiteId)
     {
-        var checkRuns = await client.Check.Run.GetAllForCheckSuite(
+        var checkRuns = await context.InstallationClient.Check.Run.GetAllForCheckSuite(
             repository.Owner,
             repository.Name,
             checkSuiteId,
@@ -138,7 +135,7 @@ public sealed partial class CheckSuiteHandler(
             repository,
             [.. failedRuns.Select((p) => p.Name).Distinct()]);
 
-        var options = _options.CurrentValue;
+        var options = context.WebhookOptions;
 
         var retryEligibleRuns = failedRuns
             .Where((p) => options.RerunFailedChecks.Any((pattern) => Regex.IsMatch(p.Name, pattern, RegexOptions.None, RegexTimeout)))
@@ -161,7 +158,7 @@ public sealed partial class CheckSuiteHandler(
         // In this scenario without this check, it would be seen that the check suite failed and
         // that build only failed once, so the build would be retried even though the check run that
         // is causing the check suite to fail is the "publish" check run.
-        var latestCheckSuites = await client.Check.Run.GetAllForCheckSuite(repository.Owner, repository.Name, checkSuiteId);
+        var latestCheckSuites = await context.InstallationClient.Check.Run.GetAllForCheckSuite(repository.Owner, repository.Name, checkSuiteId);
 
         var latestFailingCheckRuns = latestCheckSuites.CheckRuns
             .Where((p) => retryEligibleRuns.Any((group) => group.Key == p.Name))
@@ -196,11 +193,11 @@ public sealed partial class CheckSuiteHandler(
         long checkSuiteId,
         CheckRunPullRequest pull)
     {
-        var connection = new ApiConnection(client.Connection);
+        var connection = new ApiConnection(context.InstallationClient.Connection);
 
         var author = await connection.Get<PullRequestAuthorAssociation>(new Uri(pull.Url));
 
-        var options = _options.CurrentValue;
+        var options = context.WebhookOptions;
 
         if (options.TrustedEntities.Users.Contains(author.User.Login, StringComparer.Ordinal))
         {
@@ -226,7 +223,7 @@ public sealed partial class CheckSuiteHandler(
     {
         try
         {
-            _ = await client.Check.Suite.Rerequest(repository.Owner, repository.Name, checkSuiteId);
+            _ = await context.InstallationClient.Check.Suite.Rerequest(repository.Owner, repository.Name, checkSuiteId);
             Log.RerequestedCheckSuite(logger, checkSuiteId, repository);
         }
         catch (Exception ex)
@@ -241,7 +238,7 @@ public sealed partial class CheckSuiteHandler(
     {
         try
         {
-            await client.Actions.Workflows.Runs.RerunFailedJobs(repository.Owner, repository.Name, run.Id);
+            await context.InstallationClient.Actions.Workflows.Runs.RerunFailedJobs(repository.Owner, repository.Name, run.Id);
 
             Log.RerunningFailedJobs(logger, run.Name, run.Id, repository);
         }

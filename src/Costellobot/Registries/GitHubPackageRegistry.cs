@@ -7,13 +7,13 @@ using IConnection = Octokit.GraphQL.IConnection;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public abstract class GitHubPackageRegistry(IGitHubClientForInstallation client, IConnection connection) : IPackageRegistry
+public abstract class GitHubPackageRegistry(GitHubWebhookContext context) : IPackageRegistry
 {
     public abstract DependencyEcosystem Ecosystem { get; }
 
-    protected IConnection GraphQLClient { get; } = connection;
+    protected IConnection GraphQLClient => context.GraphQLClient;
 
-    protected IGitHubClient RestClient { get; } = client;
+    protected IGitHubClient RestClient => context.InstallationClient;
 
     public virtual async Task<bool> AreOwnersTrustedAsync(IReadOnlyList<string> owners)
     {

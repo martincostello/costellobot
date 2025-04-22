@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using MartinCostello.Costellobot.Builders;
 using MartinCostello.Costellobot.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -31,6 +32,7 @@ public static class HandlerFactoryTests
         // Arrange
         var options = new WebhookOptions().ToMonitor();
 
+        var clientFactory = Substitute.For<IGitHubClientFactory>();
         var gitHubAppClient = Substitute.For<IGitHubClientForApp>();
         var gitHubInstallationClient = Substitute.For<IGitHubClientForInstallation>();
         var gitHubUserClient = Substitute.For<IGitHubClientForUser>();
@@ -38,23 +40,28 @@ public static class HandlerFactoryTests
         using var cache = new ApplicationCache();
         var trustStore = Substitute.For<ITrustStore>();
 
+        var context = new GitHubWebhookContext(
+            clientFactory,
+            new GitHubOptions().ToMonitor(),
+            options)
+        {
+            AppId = GitHubFixtures.AppId,
+            InstallationId = GitHubFixtures.InstallationId,
+        };
+
         var commitAnalyzer = new GitCommitAnalyzer(
-            gitHubInstallationClient,
+            context,
             [],
             trustStore,
-            options,
             NullLoggerFactory.Instance.CreateLogger<GitCommitAnalyzer>());
 
         var pullRequestAnalyzer = new PullRequestAnalyzer(
-            gitHubInstallationClient,
+            context,
             commitAnalyzer,
-            options,
             NullLoggerFactory.Instance.CreateLogger<PullRequestAnalyzer>());
 
         var pullRequestApprover = new PullRequestApprover(
-            gitHubInstallationClient,
-            Substitute.For<Octokit.GraphQL.IConnection>(),
-            options,
+            context,
             NullLoggerFactory.Instance.CreateLogger<PullRequestApprover>());
 
         var publicHolidayProvider = new PublicHolidayProvider(
@@ -67,8 +74,7 @@ public static class HandlerFactoryTests
             .Returns((_) =>
             {
                 return new CheckSuiteHandler(
-                    gitHubInstallationClient,
-                    options,
+                    context,
                     NullLoggerFactory.Instance.CreateLogger<CheckSuiteHandler>());
             });
 
@@ -76,9 +82,8 @@ public static class HandlerFactoryTests
             .Returns((_) =>
             {
                 return new DeploymentProtectionRuleHandler(
-                    gitHubInstallationClient,
+                    context,
                     publicHolidayProvider,
-                    options,
                     NullLoggerFactory.Instance.CreateLogger<DeploymentProtectionRuleHandler>());
             });
 
@@ -86,11 +91,9 @@ public static class HandlerFactoryTests
             .Returns((_) =>
             {
                 return new DeploymentStatusHandler(
-                    gitHubInstallationClient,
-                    gitHubUserClient,
+                    context,
                     commitAnalyzer,
                     publicHolidayProvider,
-                    options,
                     NullLoggerFactory.Instance.CreateLogger<DeploymentStatusHandler>());
             });
 
@@ -98,7 +101,7 @@ public static class HandlerFactoryTests
             .Returns((_) =>
             {
                 return new IssueCommentHandler(
-                    gitHubInstallationClient,
+                    context,
                     NullLoggerFactory.Instance.CreateLogger<IssueCommentHandler>());
             });
 
@@ -116,13 +119,11 @@ public static class HandlerFactoryTests
             .Returns((_) =>
             {
                 return new PullRequestReviewHandler(
-                    gitHubAppClient,
-                    gitHubInstallationClient,
+                    context,
                     pullRequestAnalyzer,
                     pullRequestApprover,
                     cache,
                     trustStore,
-                    options,
                     NullLoggerFactory.Instance.CreateLogger<PullRequestReviewHandler>());
             });
 
@@ -130,7 +131,7 @@ public static class HandlerFactoryTests
             .Returns((_) =>
             {
                 return new PushHandler(
-                    gitHubInstallationClient,
+                    context,
                     NullLoggerFactory.Instance.CreateLogger<PushHandler>());
             });
 

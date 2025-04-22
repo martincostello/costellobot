@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using Microsoft.Extensions.Options;
 using Octokit;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Models;
@@ -9,20 +8,17 @@ using Octokit.Webhooks.Models;
 namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class PullRequestAnalyzer(
-    IGitHubClientForInstallation client,
+    GitHubWebhookContext context,
     GitCommitAnalyzer commitAnalyzer,
-    IOptionsMonitor<WebhookOptions> options,
     ILogger<PullRequestAnalyzer> logger)
 {
-    private readonly IOptionsMonitor<WebhookOptions> _options = options;
-
     public async Task<(DependencyEcosystem Ecosystem, IDictionary<string, (bool Trusted, string? Version)> Dependencies)> GetDependencyTrustAsync(
         RepositoryId repository,
         string pullRequestHeadRef,
         string pullRequestHeadSha,
         string pullRequestUrl)
     {
-        var commit = await client.Repository.Commit.Get(
+        var commit = await context.InstallationClient.Repository.Commit.Get(
             repository.Owner,
             repository.Name,
             pullRequestHeadSha);
@@ -38,7 +34,7 @@ public sealed partial class PullRequestAnalyzer(
 
     public async Task<bool> HasValidApprovalAsync(IssueId id, string authorLogin)
     {
-        var reviews = await client.PullRequest.Review.GetAll(
+        var reviews = await context.InstallationClient.PullRequest.Review.GetAll(
             id.Repository.Owner,
             id.Repository.Name,
             id.Number);
@@ -48,7 +44,7 @@ public sealed partial class PullRequestAnalyzer(
             return false;
         }
 
-        var options = _options.CurrentValue;
+        var options = context.WebhookOptions;
 
         return reviews.Any((p) =>
             p.State is { Value: PullRequestReviewState.Approved } &&
@@ -58,7 +54,7 @@ public sealed partial class PullRequestAnalyzer(
 
     public async Task<bool> IsApprovedByAsync(IssueId id, string authorLogin)
     {
-        var reviews = await client.PullRequest.Review.GetAll(
+        var reviews = await context.InstallationClient.PullRequest.Review.GetAll(
             id.Repository.Owner,
             id.Repository.Name,
             id.Number);
@@ -67,7 +63,7 @@ public sealed partial class PullRequestAnalyzer(
     }
 
     public async Task<bool> IsFromCollaboratorAsync(IssueId id, string login)
-        => await client.Repository.Collaborator.IsCollaborator(
+        => await context.InstallationClient.Repository.Collaborator.IsCollaborator(
             id.Repository.Owner,
             id.Repository.Name,
             login);
@@ -87,7 +83,7 @@ public sealed partial class PullRequestAnalyzer(
         string pullRequestHeadSha,
         string pullRequestUrl)
     {
-        var commit = await client.Repository.Commit.Get(
+        var commit = await context.InstallationClient.Repository.Commit.Get(
             repository.Owner,
             repository.Name,
             pullRequestHeadSha);
@@ -105,7 +101,7 @@ public sealed partial class PullRequestAnalyzer(
     {
         try
         {
-            return await client.GetDiffAsync(diffUrl);
+            return await context.InstallationClient.GetDiffAsync(diffUrl);
         }
         catch (Exception ex)
         {
@@ -116,7 +112,7 @@ public sealed partial class PullRequestAnalyzer(
 
     private bool IsFromTrustedUser(IssueId id, string authorLogin, bool isDraft)
     {
-        var options = _options.CurrentValue;
+        var options = context.WebhookOptions;
 
         if (options.IgnoreRepositories.Contains(id.Repository.FullName, StringComparer.OrdinalIgnoreCase))
         {

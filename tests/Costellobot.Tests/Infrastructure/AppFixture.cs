@@ -16,7 +16,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot.Infrastructure;
 
@@ -111,14 +110,13 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 KeyValuePair.Create<string, string?>("ConnectionStrings:AzureBlobStorage", string.Empty),
                 KeyValuePair.Create<string, string?>("ConnectionStrings:AzureKeyVault", string.Empty),
                 KeyValuePair.Create<string, string?>("GitHub:AccessToken", "gho_github-access-token"),
-                KeyValuePair.Create<string, string?>("GitHub:AppId", "123"),
+                KeyValuePair.Create<string, string?>($"GitHub:Apps:{Builders.GitHubFixtures.AppId}:ClientId", "github-app-client-id"),
+                KeyValuePair.Create<string, string?>($"GitHub:Apps:{Builders.GitHubFixtures.AppId}:PrivateKey", testKey),
                 KeyValuePair.Create<string, string?>("GitHub:BadgesKey", "badges-key"),
                 KeyValuePair.Create<string, string?>("GitHub:ClientId", "github-id"),
                 KeyValuePair.Create<string, string?>("GitHub:ClientSecret", "github-secret"),
                 KeyValuePair.Create<string, string?>("GitHub:EnterpriseDomain", string.Empty),
-                KeyValuePair.Create<string, string?>("GitHub:InstallationId", InstallationId),
                 KeyValuePair.Create<string, string?>("GitHub:OAuthId", "github-oauth"),
-                KeyValuePair.Create<string, string?>("GitHub:PrivateKey", testKey),
                 KeyValuePair.Create<string, string?>("GitHub:WebhookSecret", "github-webhook-secret"),
                 KeyValuePair.Create<string, string?>("HostOptions:ShutdownTimeout", "00:00:01"),
                 KeyValuePair.Create<string, string?>("Site:AdminUsers:0", "john-smith"),

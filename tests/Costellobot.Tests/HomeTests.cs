@@ -112,11 +112,11 @@ public class HomeTests(HttpServerFixture fixture, ITestOutputHelper outputHelper
                 },
                 updated_at = "2022-03-23T23:13:43Z",
                 created_at = "2022-03-23T23:13:43Z",
-                app_id = 349596565,
+                app_id = Builders.GitHubFixtures.AppId,
                 deliveries_url = "https://api.github.com/app/hook/deliveries",
                 installation = new
                 {
-                    id = 42,
+                    id = long.Parse(Builders.GitHubFixtures.InstallationId, CultureInfo.InvariantCulture),
                 },
             };
 

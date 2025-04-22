@@ -1,23 +1,16 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using Microsoft.Extensions.Options;
-using Octokit;
 using Octokit.GraphQL;
 using Octokit.GraphQL.Model;
-using IConnection = Octokit.GraphQL.IConnection;
 using PullRequestMergeMethod = Octokit.GraphQL.Model.PullRequestMergeMethod;
 
 namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class PullRequestApprover(
-    IGitHubClientForInstallation client,
-    IConnection connection,
-    IOptionsMonitor<WebhookOptions> options,
+    GitHubWebhookContext context,
     ILogger<PullRequestApprover> logger)
 {
-    private readonly IOptionsMonitor<WebhookOptions> _options = options;
-
     public static PullRequestMergeMethod GetMergeMethod(Octokit.Repository repo)
         => GetMergeMethod((repo.AllowMergeCommit, repo.AllowSquashMerge, repo.AllowRebaseMerge));
 
@@ -26,7 +19,7 @@ public sealed partial class PullRequestApprover(
 
     public async Task ApproveAndMergeAsync(IssueId pull, string nodeId, PullRequestMergeMethod mergeMethod)
     {
-        var options = _options.CurrentValue;
+        var options = context.WebhookOptions;
 
         if (options.Approve)
         {
@@ -64,7 +57,7 @@ public sealed partial class PullRequestApprover(
 
     private async Task ApproveAsync(IssueId pull)
     {
-        var body = new StringBuilder(_options.CurrentValue.ApproveComment);
+        var body = new StringBuilder(context.WebhookOptions.ApproveComment);
 
         if (body.Length > 0)
         {
@@ -75,7 +68,7 @@ public sealed partial class PullRequestApprover(
                 .Append(" of Costellobot -->");
         }
 
-        await client.PullRequest.Review.Create(
+        await context.InstallationClient.PullRequest.Review.Create(
             pull.Owner,
             pull.Name,
             pull.Number,
@@ -106,7 +99,7 @@ public sealed partial class PullRequestApprover(
 
         try
         {
-            await connection.Run(mutation);
+            await context.GraphQLClient.Run(mutation);
             Log.AutoMergeEnabled(logger, pull);
         }
         catch (Octokit.GraphQL.Core.Deserializers.ResponseDeserializerException ex) when (ex.Message.Contains("Pull request Pull request is in clean status", StringComparison.OrdinalIgnoreCase))
@@ -114,7 +107,7 @@ public sealed partial class PullRequestApprover(
             try
             {
                 // If auto-merge failed as the PR is ready to merge, then just merge it
-                var response = await client.PullRequest.Merge(pull.Owner, pull.Name, pull.Number, new()
+                var response = await context.InstallationClient.PullRequest.Merge(pull.Owner, pull.Name, pull.Number, new()
                 {
                     MergeMethod = Enum.Parse<Octokit.PullRequestMergeMethod>(mergeMethod.ToString()),
                 });
