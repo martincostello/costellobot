@@ -66,7 +66,8 @@ public sealed partial class BadgeService(
 
     private async Task<string?> LatestReleaseBadgeAsync(RepositoryId repository)
     {
-        var client = factory.CreateForInstallation();
+        var installationId = GetInstallationId(repository.Owner);
+        var client = factory.CreateForInstallation(installationId);
 
         Release? release = null;
 
@@ -106,7 +107,8 @@ public sealed partial class BadgeService(
 
     private async Task<string?> SecurityAlertsAsync(RepositoryId repository)
     {
-        var client = factory.CreateForInstallation();
+        var installationId = GetInstallationId(repository.Owner);
+        var client = factory.CreateForInstallation(installationId);
 
         int count = 0;
 
@@ -140,6 +142,24 @@ public sealed partial class BadgeService(
 
             return 0;
         }
+    }
+
+    private string GetInstallationId(string owner)
+    {
+        string? installationId = null;
+
+        foreach ((var id, var installation) in options.CurrentValue.Installations)
+        {
+            if (string.Equals(installation.Organization, owner, StringComparison.Ordinal))
+            {
+                installationId = id;
+                break;
+            }
+        }
+
+        installationId ??= options.CurrentValue.Installations.First((p) => p.Value.Organization is null).Key;
+
+        return installationId;
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]

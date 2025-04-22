@@ -223,7 +223,7 @@ public sealed partial class GitCommitAnalyzer(
         string commitMessage,
         string? diff)
     {
-        // HACK https://github.com/dependabot/dependabot-core/issues/8217
+        // See https://github.com/dependabot/dependabot-core/issues/8217.
         // Use the Git diff for the commit and try to parse it to get
         // the version of the dependency that was updated if it could not
         // otherwise be determined.

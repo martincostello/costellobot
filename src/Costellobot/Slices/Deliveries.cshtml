@@ -1,10 +1,10 @@
-@inherits RazorSliceHttpResult<IReadOnlyList<WebhookDelivery>>
+@inherits RazorSliceHttpResult<DeliveriesModel>
 @implements IUsesLayout<_Layout, LayoutModel>
 
 <div id="deliveries-content">
   <h1>
     <span class="fa-solid fa-truck-ramp-box" aria-hidden="true"></span>
-    @(LayoutModel.Title)
+    @(LayoutModel.Title) for @(Model.AppName)
   </h1>
   <form method="post">
     @{
@@ -24,7 +24,7 @@
   <hr />
   <table class="table">
     <caption class="caption-top">
-      The last @(Model.Count) webhook deliveries.
+      The last @(Model.Deliveries.Count) webhook deliveries for @(Model.AppName).
     </caption>
     <thead>
       <tr>
@@ -37,7 +37,7 @@
       </tr>
     </thead>
     <tbody>
-      @foreach (var delivery in Model)
+      @foreach (var delivery in Model.Deliveries)
       {
         <tr class="webhook-delivery">
           <td>
@@ -49,7 +49,7 @@
                   "fa-triangle-exclamation text-danger";
               }
               <span class="fa-solid @(classes)" title="@(delivery.StatusCode) - @(delivery.Status)"></span>
-              <a href="@(this.RouteUrl($"~/delivery/{delivery.Id}"))" class="delivery-id">@(delivery.Id)</a>
+              <a href="@(this.RouteUrl($"~/delivery/{Model.AppName}/{delivery.Id}"))" class="delivery-id">@(delivery.Id)</a>
             </code>
           </td>
           <td>

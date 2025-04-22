@@ -105,16 +105,23 @@ public static class AdminEndpoints
                 "/configuration",
                 async (
                     IGitHubClientFactory clientFactory,
-                    IOptions<GitHubOptions> github,
-                    IOptions<WebhookOptions> webhook) =>
+                    IOptionsMonitor<GitHubOptions> github,
+                    IOptionsMonitor<WebhookOptions> webhook) =>
                 {
-                    var installationClient = clientFactory.CreateForInstallation();
-                    var userClient = clientFactory.CreateForUser();
+                    var options = github.CurrentValue;
+                    var installationLimits = new Dictionary<string, MiscellaneousRateLimit?>();
 
-                    var installationLimits = await GetRateLimitsAsync(installationClient);
+                    foreach ((var id, var installation) in options.Installations)
+                    {
+                        var app = options.Apps[installation.AppId];
+                        var installationClient = clientFactory.CreateForInstallation(id);
+                        installationLimits[app.Name] = await GetRateLimitsAsync(installationClient);
+                    }
+
+                    var userClient = clientFactory.CreateForUser();
                     var userLimits = await GetRateLimitsAsync(userClient);
 
-                    var model = new ConfigurationModel(github.Value, webhook.Value, installationLimits, userLimits);
+                    var model = new ConfigurationModel(options, webhook.CurrentValue, installationLimits, userLimits);
                     return Results.Extensions.RazorSlice<Configuration, ConfigurationModel>(model);
 
                     static async Task<MiscellaneousRateLimit?> GetRateLimitsAsync(IGitHubClient client)
@@ -138,30 +145,53 @@ public static class AdminEndpoints
 
         const string DeliveryRoute = "Delivery";
         const string DeliveriesRoute = "Deliveries";
-        const string DeliveriesPath = "/deliveries";
 
         builder
-            .MapGet(DeliveriesPath, async (IGitHubClientFactory factory) =>
+            .MapGet(
+            "/deliveries/{app}",
+            async (
+                string app,
+                IGitHubClientFactory factory,
+                IOptionsMonitor<GitHubOptions> options) =>
             {
-                var client = factory.CreateForApp();
+                if (options.CurrentValue.TryGetAppId(app) is not { } appId)
+                {
+                    return Results.NotFound();
+                }
+
+                var client = factory.CreateForApp(appId);
 
                 (var deliveries, _) = await GetDeliveries(client, cursor: null);
-                return Results.Extensions.RazorSlice<Deliveries, IReadOnlyList<WebhookDelivery>>(deliveries);
+
+                var model = new DeliveriesModel(app, deliveries);
+
+                return Results.Extensions.RazorSlice<Deliveries, DeliveriesModel>(model);
             })
             .AddEndpointFilter<SetAntiforgeryCookieFilter>()
             .WithName(DeliveriesRoute)
             .WithMetadata(admin);
 
         builder.MapPost(
-            DeliveriesPath,
-            async ([FromForm] Guid? id, IGitHubClientFactory factory, HttpContext context, IAntiforgery antiforgery) =>
+            "/deliveries/{app}",
+            async (
+                string app,
+                [FromForm] Guid? id,
+                IGitHubClientFactory factory,
+                HttpContext context,
+                IAntiforgery antiforgery,
+                IOptionsMonitor<GitHubOptions> options) =>
             {
-                var client = factory.CreateForApp();
+                if (options.CurrentValue.TryGetAppId(app) is not { } appId)
+                {
+                    return Results.NotFound();
+                }
+
+                var routeValues = new RouteValueDictionary() { ["app"] = app };
 
                 if (!await antiforgery.IsRequestValidAsync(context))
                 {
                     antiforgery.SetCookieTokenAndHeader(context);
-                    return Results.LocalRedirect(DeliveriesPath);
+                    return Results.RedirectToRoute(DeliveriesRoute, routeValues);
                 }
 
                 const int MaxPages = 20;
@@ -171,6 +201,8 @@ public static class AdminEndpoints
 
                 if (deliveryId is { } guid)
                 {
+                    var client = factory.CreateForApp(appId);
+
                     for (int i = 0; i < MaxPages; i++)
                     {
                         (var deliveries, cursor) = await GetDeliveries(client, cursor);
@@ -179,20 +211,27 @@ public static class AdminEndpoints
 
                         if (item is not null)
                         {
-                            var routeValues = new RouteValueDictionary() { ["id"] = item.Id };
+                            routeValues["id"] = item.Id;
                             return Results.RedirectToRoute(DeliveryRoute, routeValues);
                         }
                     }
                 }
 
-                return Results.RedirectToRoute(DeliveriesRoute, []);
+                return Results.RedirectToRoute(DeliveriesRoute, routeValues);
             })
             .WithMetadata(admin);
 
         builder
-            .MapGet("/delivery/{id}", async (long id, IGitHubClientFactory factory) =>
+            .MapGet("/delivery/{app}/{id}", async (
+                string app,
+                long id,
+                IGitHubClientFactory factory,
+                IOptionsMonitor<GitHubOptions> options) =>
             {
-                var client = factory.CreateForApp();
+                if (options.CurrentValue.TryGetAppId(app) is not { } appId)
+                {
+                    return Results.NotFound();
+                }
 
                 // See https://docs.github.com/en/rest/apps/webhooks#get-a-delivery-for-an-app-webhook
                 var uri = new Uri($"app/hook/deliveries/{id}", UriKind.Relative);
@@ -201,6 +240,7 @@ public static class AdminEndpoints
 
                 try
                 {
+                    var client = factory.CreateForApp(appId);
                     apiResponse = await client.Connection.GetRawStream(uri, null);
                 }
                 catch (NotFoundException)
@@ -255,15 +295,32 @@ public static class AdminEndpoints
             .WithMetadata(admin);
 
         builder.MapPost(
-            "/delivery/{id}",
-            async (long id, IGitHubClientFactory factory, HttpContext context, IAntiforgery antiforgery) =>
+            "/delivery/{app}/{id}",
+            async (
+                string app,
+                long id,
+                IGitHubClientFactory factory,
+                HttpContext context,
+                IAntiforgery antiforgery,
+                IOptionsMonitor<GitHubOptions> options) =>
             {
-                var client = factory.CreateForApp();
+                if (options.CurrentValue.TryGetAppId(app) is not { } appId)
+                {
+                    return Results.NotFound();
+                }
+
+                var client = factory.CreateForApp(appId);
 
                 if (!await antiforgery.IsRequestValidAsync(context))
                 {
                     antiforgery.SetCookieTokenAndHeader(context);
-                    var routeValues = new RouteValueDictionary() { ["id"] = id };
+
+                    var routeValues = new RouteValueDictionary()
+                    {
+                        ["app"] = app,
+                        ["id"] = id,
+                    };
+
                     return Results.RedirectToRoute(DeliveryRoute, routeValues);
                 }
 
@@ -272,7 +329,7 @@ public static class AdminEndpoints
 
                 await client.Connection.Post(uri);
 
-                return Results.RedirectToRoute(DeliveriesRoute, []);
+                return Results.RedirectToRoute(DeliveriesRoute, new() { ["app"] = app });
             })
             .AddEndpointFilter<SetAntiforgeryCookieFilter>()
             .WithMetadata(admin);
@@ -368,20 +425,27 @@ public static class AdminEndpoints
             parameters["cursor"] = cursor;
         }
 
-        var response = await client.Connection.Get<List<WebhookDelivery>>(
-            uri,
-            parameters,
-            "application/vnd.github+json");
+        try
+        {
+            var response = await client.Connection.Get<List<WebhookDelivery>>(
+                uri,
+                parameters,
+                "application/vnd.github+json");
 
-        if (response.HttpResponse.StatusCode is not HttpStatusCode.OK)
+            if (response.HttpResponse.StatusCode is not HttpStatusCode.OK)
+            {
+                return ([], null);
+            }
+
+            var deliveries = response.Body;
+            var next = ExtractCursor(response.HttpResponse.Headers);
+
+            return (deliveries, next);
+        }
+        catch (NotFoundException)
         {
             return ([], null);
         }
-
-        var deliveries = response.Body;
-        var next = ExtractCursor(response.HttpResponse.Headers);
-
-        return (deliveries, next);
     }
 
     private static string? ExtractCursor(IReadOnlyDictionary<string, string> headers)

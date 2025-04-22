@@ -27,7 +27,7 @@ public class WebhookDeliveryBuilder(
 
     public string? Action { get; set; } = action;
 
-    public long? InstallationId { get; set; } = installationId;
+    public long? InstallationId { get; set; } = installationId ?? long.Parse(GitHubFixtures.InstallationId, CultureInfo.InvariantCulture);
 
     public long? RepositoryId { get; set; } = repositoryId;
 

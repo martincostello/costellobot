@@ -11,12 +11,16 @@ namespace MartinCostello.Costellobot;
 [Collection<HttpServerCollection>]
 public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : UITests(fixture, outputHelper)
 {
+    private long InstallationIdNumber { get; } = long.Parse(GitHubFixtures.InstallationId, CultureInfo.InvariantCulture);
+
+    private string InstallationIdString { get; } = GitHubFixtures.InstallationId;
+
     [Fact]
     public async Task Can_View_Webhook_Deliveries()
     {
         // Arrange
         var first = new WebhookDeliveryBuilder("status");
-        var second = new WebhookDeliveryBuilder("issues", "opened", 123, 456);
+        var second = new WebhookDeliveryBuilder("issues", "opened", InstallationIdNumber, 456);
         var third = second.AsRedelivery();
 
         RegisterWebhookDeliveriesForApp(third, second, first);
@@ -59,7 +63,7 @@ public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHel
     public async Task Can_Find_Webhook_Delivery()
     {
         // Arrange
-        var item = new WebhookDeliveryBuilder("issues", "opened", 123, 456);
+        var item = new WebhookDeliveryBuilder("issues", "opened", InstallationIdNumber, 456);
 
         RegisterWebhookDeliveriesForApp(item);
 
@@ -73,7 +77,7 @@ public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHel
             await deliveries.WaitForContentAsync();
             await deliveries.WaitForWebhookCountAsync(1);
 
-            var wanted = new WebhookDeliveryBuilder("pull_request", "opened", 123, 456);
+            var wanted = new WebhookDeliveryBuilder("pull_request", "opened", item.InstallationId, item.RepositoryId);
             var payload = wanted.AsPayload();
 
             RegisterWebhookDeliveriesForApp([item], null, "v1_abc123");
@@ -91,7 +95,7 @@ public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHel
     public async Task Can_View_Webhook_Delivery()
     {
         // Arrange
-        var delivery = new WebhookDeliveryBuilder("pull_request", "closed", 274, 21693);
+        var delivery = new WebhookDeliveryBuilder("pull_request", "closed", InstallationIdNumber, 21693);
         var other1 = new WebhookDeliveryBuilder("status");
         var other2 = new WebhookDeliveryBuilder("status");
 
@@ -103,7 +107,7 @@ public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHel
         payload.RequestHeaders["X-GitHub-Delivery"] = delivery.Guid.ToString();
         payload.RequestHeaders["X-GitHub-Event"] = delivery.Event;
         payload.RequestHeaders["X-GitHub-Hook-ID"] = "1234";
-        payload.RequestHeaders["X-GitHub-Hook-Installation-Target-ID"] = "123";
+        payload.RequestHeaders["X-GitHub-Hook-Installation-Target-ID"] = InstallationIdString;
         payload.RequestHeaders["X-GitHub-Hook-Installation-Target-Type"] = "integration";
         payload.RequestHeaders["X-Hub-Signature"] = "sha1=cb134d106fbcb5159d75ad99c1d583f83e284206";
         payload.RequestHeaders["X-Hub-Signature-256"] = "sha256=923baf7522b4180d17d0d4309ecad4d886a89fe1cc4c53ca5796d57f7ad61227";

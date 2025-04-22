@@ -80,8 +80,8 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
 
     [Theory]
     [InlineData("/")]
-    [InlineData("/deliveries")]
-    [InlineData("/delivery/1")]
+    [InlineData("/deliveries/costellobot")]
+    [InlineData("/delivery/costellobot/2")]
     [InlineData("/github-webhook")]
     public async Task Cannot_Get_Resource_Unauthenticated(string requestUri)
     {
@@ -95,6 +95,21 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
         response.Headers.Location.ShouldNotBeNull();
         response.Headers.Location.PathAndQuery.ShouldBe($"/sign-in?ReturnUrl={Uri.EscapeDataString(requestUri)}");
+    }
+
+    [Theory]
+    [InlineData("/deliveries/foo")]
+    [InlineData("/delivery/foo/2")]
+    public async Task Cannot_Get_Invalid_Resource(string requestUri)
+    {
+        // Arrange
+        using var client = await CreateAuthenticatedClientAsync();
+
+        // Act
+        using var response = await client.GetAsync(requestUri, CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]

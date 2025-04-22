@@ -366,26 +366,33 @@
                     <hr />
                     <div class="align-items-start d-flex">
                         <div class="flex-column me-3 nav nav-fill nav-pills" role="tablist" aria-orientation="vertical">
-                            <button class="nav-link text-start active" id="settings-tab-rate-limits-installation" role="tab" type="button" aria-controls="tab-rate-limits-installation" aria-selected="true" data-bs-target="#tab-rate-limits-installation" data-bs-toggle="pill">
-                                <span class="fa-solid fa-robot" aria-hidden="true"></span>
-                                Installation
-                            </button>
+                            @foreach ((var index, var rateLimits) in Model.InstallationRateLimits.Index())
+                            {
+                                var first = index is 0;
+                                <button class="nav-link text-start @(first ? "active" : null)" id="settings-tab-rate-limits-installation-@(rateLimits.Key)" role="tab" type="button" aria-controls="tab-rate-limits-installation-@(rateLimits.Key)" aria-selected="@(first)" data-bs-target="#tab-rate-limits-installation-@(rateLimits.Key)" data-bs-toggle="pill">
+                                    <span class="fa-solid fa-robot" aria-hidden="true"></span>
+                                    @(rateLimits.Key) Installation
+                                </button>
+                            }
                             <button class="nav-link text-start" id="settings-tab-rate-limits-user" role="tab" type="button" aria-controls="tab-rate-limits-user" aria-selected="true" data-bs-target="#tab-rate-limits-user" data-bs-toggle="pill">
                                 <span class="fa-solid fa-user" aria-hidden="true"></span>
                                 User
                             </button>
                         </div>
                         <div class="tab-content w-75" id="tab-content-rate-limits">
-                            <div class="tab-pane fade show active" id="tab-rate-limits-installation" role="tabpanel" aria-labelledby="settings-tab-rate-limits-installation">
-                                <div class="card my-2">
-                                    <div class="card-header card-title">
-                                        GitHub Installation
-                                    </div>
-                                    <div class="card-body">
-                                        @(RateLimitTable("Installation", Model.InstallationRateLimits))
+                            @foreach ((var index, var rateLimits) in Model.InstallationRateLimits.Index())
+                            {
+                                <div class="tab-pane fade @(index is 0 ? "show active" : null)" id="tab-rate-limits-installation-@(rateLimits.Key)" role="tabpanel" aria-labelledby="settings-tab-rate-limits-installation-@(rateLimits.Key)">
+                                    <div class="card my-2">
+                                        <div class="card-header card-title">
+                                            GitHub Installation for @(rateLimits.Key)
+                                        </div>
+                                        <div class="card-body">
+                                            @(RateLimitTable($"{rateLimits.Key} Installation", rateLimits.Value))
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            }
                             <div class="tab-pane fade" id="tab-rate-limits-user" role="tabpanel" aria-labelledby="settings-tab-rate-limits-user">
                                 <div class="card my-2">
                                     <div class="card-header card-title">

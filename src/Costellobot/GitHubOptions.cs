@@ -24,4 +24,9 @@ public sealed class GitHubOptions
     public IList<string> Scopes { get; set; } = [];
 
     public string WebhookSecret { get; set; } = string.Empty;
+
+    public string? TryGetAppId(string name) =>
+        Apps.Values.Where((p) => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase))
+                   .Select((p) => p.AppId)
+                   .FirstOrDefault();
 }
