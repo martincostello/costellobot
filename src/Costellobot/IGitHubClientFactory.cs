@@ -8,9 +8,9 @@ namespace MartinCostello.Costellobot;
 
 public interface IGitHubClientFactory
 {
-    IGitHubClientForApp CreateForApp(string? appId = null);
+    IGitHubClientForApp CreateForApp(string appId);
 
-    IGitHubClientForInstallation CreateForInstallation(string? installationId = null);
+    IGitHubClientForInstallation CreateForInstallation(string installationId);
 
     IConnection CreateForGraphQL(string installationId);
 
