@@ -22,8 +22,8 @@
   "dependencies": {
     "@babel/core": "^7.26.10",
     "@babel/preset-env": "^7.26.9",
-    "@grafana/faro-web-sdk": "^1.17.0",
-    "@grafana/faro-web-tracing": "^1.17.0",
+    "@grafana/faro-web-sdk": "^1.17.1",
+    "@grafana/faro-web-tracing": "^1.17.1",
     "@microsoft/signalr": "^8.0.7",
     "@stylistic/eslint-plugin": "^4.2.0",
     "@typescript-eslint/eslint-plugin": "^8.31.0",
