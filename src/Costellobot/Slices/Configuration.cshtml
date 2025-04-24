@@ -306,8 +306,20 @@
                                             {
                                                 foreach (var publisher in publishers)
                                                 {
+                                                    (var name, var url, var icon) = DependencyHelpers.GetPublisherMetadata(ecosystem, publisher);
+
                                                     <li>
-                                                        <code class="trusted-publisher">@($"{ecosystem}:{publisher}")</code>
+                                                        <span class="dependency-ecosystem @(icon)" title="@(name)" aria-hidden="true"></span>
+                                                        <code class="trusted-publisher">
+                                                            @if (url is { Length: > 0 })
+                                                            {
+                                                                <a href="@(url)" target="_blank" rel="noopener">@(publisher)</a>
+                                                            }
+                                                            else
+                                                            {
+                                                                @(publisher)
+                                                            }
+                                                        </code>
                                                     </li>
                                                 }
                                             }

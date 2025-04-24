@@ -36,11 +36,11 @@
                     {
                         foreach (var dependency in dependencies.OrderBy((p) => p.Id).ThenByDescending((p) => p.Version))
                         {
-                            (var name, var url, var icon) = GetMetadata(ecosystem, dependency.Id, dependency.Version);
+                            (var name, var url, var icon) = DependencyHelpers.GetPackageMetadata(ecosystem, dependency.Id, dependency.Version);
 
                             <tr class="trusted-dependency">
                                 <td>
-                                    <span class="dependency-ecosystem @(icon)" title="@(name)"></span>
+                                    <span class="dependency-ecosystem @(icon)" title="@(name)" aria-hidden="true"></span>
                                 </td>
                                 <td>
                                     <code class="dependency-id">
@@ -104,34 +104,4 @@
 
 @functions {
     public LayoutModel LayoutModel { get; } = new("Dependencies");
-
-    private static (string Name, string Url, string CssClasses) GetMetadata(DependencyEcosystem ecosystem, string id, string version)
-    {
-        return ecosystem switch
-        {
-            DependencyEcosystem.GitHubActions => ("GitHub Actions", GitHubUrl(id), "fa-brands fa-square-github text-dark"),
-            DependencyEcosystem.Npm => ("npm", NpmUrl(id), "fa-brands fa-npm text-danger"),
-            DependencyEcosystem.NuGet => ("NuGet", NuGetUrl(id), "fa-solid fa-cube text-dotnet"),
-            _ => (ecosystem.ToString(), string.Empty, "fa-solid fa-cube")
-        };
-
-        static string GitHubUrl(string repository)
-            => BuildUrl("github.com", repository);
-
-        static string NpmUrl(string id)
-            => BuildUrl("www.npmjs.com", $"/package/{id}");
-
-        static string NuGetUrl(string id)
-            => BuildUrl("www.nuget.org", $"/packages/{id}");
-
-        static string BuildUrl(string hostname, string path)
-        {
-            return new UriBuilder()
-            {
-                Host = hostname,
-                Path = path,
-                Scheme = Uri.UriSchemeHttps,
-            }.ToString();
-        }
-    }
 }
