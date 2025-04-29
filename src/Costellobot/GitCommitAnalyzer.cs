@@ -150,13 +150,13 @@ public sealed partial class GitCommitAnalyzer(
         return isTrusted;
     }
 
-    private static List<(string Name, string? Version)> ParseDependencies(string commitMessage)
+    private static List<(string Name, string? Version, string? UpdateType)> ParseDependencies(string commitMessage)
     {
         string[] commitLines = commitMessage
             .ReplaceLineEndings("\n")
             .Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-        var names = new HashSet<(string Name, string? Version)>();
+        var names = new HashSet<(string Name, string? Version, string? UpdateType)>();
 
         int start = Array.IndexOf(commitLines, "---");
         int end = Array.IndexOf(commitLines, "...");
@@ -174,7 +174,7 @@ public sealed partial class GitCommitAnalyzer(
                 {
                     if (dependency?.DependencyName is { Length: > 0 } name)
                     {
-                        names.Add((name, dependency.DependencyVersion));
+                        names.Add((name, dependency.DependencyVersion, dependency.UpdateType));
                     }
                 }
             }
@@ -271,9 +271,12 @@ public sealed partial class GitCommitAnalyzer(
         var dependenciesToIgnore = await GetIgnoredDependenciesAsync(repository, reference, ecosystem);
         var ignoredDependencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach ((string dependency, string? version) in dependencies)
+        foreach ((string dependency, string? version, string? updateType) in dependencies)
         {
-            bool ignored = dependenciesToIgnore.Any((p) => Regex.IsMatch(dependency, p, RegexOptions.None, RegexTimeout));
+            bool ignored = dependenciesToIgnore
+                .Any((p) =>
+                    Regex.IsMatch(dependency, p.Name, RegexOptions.None, RegexTimeout) &&
+                    (p.UpdateType is null || string.Equals(updateType, p.UpdateType, StringComparison.Ordinal)));
 
             if (ignored)
             {
@@ -468,12 +471,12 @@ public sealed partial class GitCommitAnalyzer(
         }
     }
 
-    private async Task<IReadOnlyList<string>> GetIgnoredDependenciesAsync(
+    private async Task<IReadOnlyList<(string Name, string? UpdateType)>> GetIgnoredDependenciesAsync(
         RepositoryId repository,
         string? reference,
         DependencyEcosystem ecosystem)
     {
-        IReadOnlyList<string> dependencies = [];
+        IReadOnlyList<(string Name, string? UpdateType)> dependencies = [];
 
         try
         {
@@ -497,7 +500,7 @@ public sealed partial class GitCommitAnalyzer(
                 dependencies = [.. config.Updates
                     .Where((p) => string.Equals(p.PackageEcosystem, normalized, StringComparison.OrdinalIgnoreCase))
                     .SelectMany((p) => p.Ignore)
-                    .Select((p) => p.DependencyName)];
+                    .Select((p) => (p.DependencyName, p.UpdateTypes?.FirstOrDefault()))];
             }
         }
         catch (NotFoundException)
@@ -672,6 +675,9 @@ public sealed partial class GitCommitAnalyzer(
     {
         [YamlMember(Alias = "dependency-name")]
         public string DependencyName { get; set; } = string.Empty;
+
+        [YamlMember(Alias = "update-types")]
+        public IList<string>? UpdateTypes { get; set; }
     }
 
     private sealed class DependabotMetadata

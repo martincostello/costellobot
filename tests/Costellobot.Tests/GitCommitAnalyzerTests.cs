@@ -1470,6 +1470,189 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         trust.Count.ShouldBe(4);
     }
 
+    [Theory]
+    [InlineData("version-update:semver-patch", "8.2.1", "version-update:semver-patch", false)]
+    [InlineData("version-update:semver-patch", "8.3.0", "version-update:semver-minor", true)]
+    [InlineData("version-update:semver-minor", "8.3.0", "version-update:semver-minor", false)]
+    [InlineData("version-update:semver-patch", "9.0.0", "version-update:semver-major", true)]
+    [InlineData("version-update:semver-major", "9.0.0", "version-update:semver-major", false)]
+    public async Task Commit_Is_Analyzed_Correctly_With_Ignored_Packages_In_Dependabot_Configuration_For_Specific_Update_Type(
+        string dependabotUpdateTypes,
+        string dependencyVersion,
+        string dependencyUpdateType,
+        bool expected)
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/nuget/aspnet-security-oauth-b2c2f7560d";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+
+        registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", dependencyVersion)
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["AzureAD", "Microsoft"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies = ["^AspNet.Security.OAuth\\..*$"],
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["Microsoft"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+
+        var dependabotConfiguration =
+            $"""
+             version: 2
+             updates:
+             - package-ecosystem: "github-actions"
+               directory: "/"
+               schedule:
+                 interval: daily
+                 time: "05:30"
+                 timezone: Europe/London
+               reviewers:
+                 - "octocat"
+             - package-ecosystem: nuget
+               directory: "/"
+               groups:
+                 Microsoft.OpenApi:
+                   patterns:
+                     - Microsoft.OpenApi*
+                 xunit:
+                   patterns:
+                     - Verify.Xunit
+                     - xunit*
+               schedule:
+                 interval: daily
+                 time: "05:30"
+                 timezone: Europe/London
+               reviewers:
+                 - "octocat"
+               open-pull-requests-limit: 99
+               ignore:
+                 - dependency-name: "Microsoft.IdentityModel.*"
+                   update-types: ["{dependabotUpdateTypes}"]
+             """;
+
+        var target = CreateTarget(
+            scope.ServiceProvider,
+            options,
+            [registry],
+            (client) =>
+            {
+                client.GetRawContentByRef(
+                    repository.Owner,
+                    repository.Name,
+                    ".github/dependabot.yml",
+                    reference)
+                    .Returns(Task.FromResult(Encoding.UTF8.GetBytes(dependabotConfiguration)));
+            });
+
+        var sha = "815aad7927000ff23a2a61f2c640dad01a88658c";
+        var commitMessage = $"""
+                             Bump the aspnet-security-oauth group with 4 updates
+                             Bumps the aspnet-security-oauth group with 4 updates: [AspNet.Security.OAuth.Amazon](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers), [AspNet.Security.OAuth.Apple](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers), [Microsoft.IdentityModel.JsonWebTokens](https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet) and [AspNet.Security.OAuth.GitHub](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers).
+                             
+                             
+                             Updates `AspNet.Security.OAuth.Amazon` from 9.0.0-rc.2.24554.41 to 9.0.0-rc.2.24557.45
+                             - [Release notes](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers/releases)
+                             - [Commits](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers/commits)
+                             
+                             Updates `AspNet.Security.OAuth.Apple` from 9.0.0-rc.2.24554.41 to 9.0.0-rc.2.24557.45
+                             - [Release notes](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers/releases)
+                             - [Commits](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers/commits)
+                             
+                             Updates `Microsoft.IdentityModel.JsonWebTokens` from 8.2.0 to {dependencyVersion}
+                             - [Release notes](https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/releases)
+                             - [Changelog](https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/blob/dev/CHANGELOG.md)
+                             - [Commits](AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet@8.2.0...{dependencyVersion})
+                             
+                             Updates `AspNet.Security.OAuth.GitHub` from 9.0.0-rc.2.24554.41 to 9.0.0-rc.2.24557.45
+                             - [Release notes](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers/releases)
+                             - [Commits](https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers/commits)
+                             
+                             ---
+                             updated-dependencies:
+                             - dependency-name: AspNet.Security.OAuth.Amazon
+                               dependency-type: direct:production
+                               update-type: version-update:semver-patch
+                               dependency-group: aspnet-security-oauth
+                             - dependency-name: AspNet.Security.OAuth.Apple
+                               dependency-type: direct:production
+                               update-type: version-update:semver-patch
+                               dependency-group: aspnet-security-oauth
+                             - dependency-name: Microsoft.IdentityModel.JsonWebTokens
+                               dependency-type: direct:production
+                               update-type: {dependencyUpdateType}
+                               dependency-group: aspnet-security-oauth
+                             - dependency-name: AspNet.Security.OAuth.GitHub
+                               dependency-type: direct:production
+                               update-type: version-update:semver-patch
+                               dependency-group: aspnet-security-oauth
+                             ...
+                             
+                             Signed-off-by: dependabot[bot] <support@github.com>
+                             """;
+
+        var diff =
+            """
+            diff --git a/Directory.Packages.props b/Directory.Packages.props
+            index ead99a216..44207d0d1 100644
+            --- a/Directory.Packages.props
+            +++ b/Directory.Packages.props
+            @@ -11,9 +11,9 @@
+                 <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="9.0.0-rc.1.24511.1" />
+                 <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="9.0.0-rc.1.24511.1" />
+                 <PackageVersion Include="Aspire.Microsoft.Azure.Cosmos" Version="9.0.0-rc.1.24511.1" />
+            -    <PackageVersion Include="AspNet.Security.OAuth.Amazon" Version="9.0.0-rc.2.24554.41" />
+            -    <PackageVersion Include="AspNet.Security.OAuth.Apple" Version="9.0.0-rc.2.24554.41" />
+            -    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="9.0.0-rc.2.24554.41" />
+            +    <PackageVersion Include="AspNet.Security.OAuth.Amazon" Version="9.0.0-rc.2.24557.45" />
+            +    <PackageVersion Include="AspNet.Security.OAuth.Apple" Version="9.0.0-rc.2.24557.45" />
+            +    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="9.0.0-rc.2.24557.45" />
+                 <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.3.2" />
+                 <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" Version="1.3.4" />
+                 <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.2.4" />
+            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBe(expected);
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.Amazon", (true, null));
+        trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.Apple", (true, null));
+        trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.GitHub", (true, null));
+        trust.ShouldContainKeyAndValue("Microsoft.IdentityModel.JsonWebTokens", (expected, expected ? dependencyVersion : null));
+        trust.Count.ShouldBe(4);
+    }
+
     [Fact]
     public async Task Commit_Is_Analyzed_Correctly_With_Duplicated_Dependency_Names()
     {
