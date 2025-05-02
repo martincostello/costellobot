@@ -264,9 +264,12 @@ public sealed partial class GitCommitAnalyzer(
         // First do a simple lookup by name
         var trustedDependencies = context.WebhookOptions.TrustedEntities.Dependencies;
 
-        Dictionary<string, (bool Trusted, string? Version)> dependencyTrust = dependencies.ToDictionary(
-            (k) => k.Name,
-            (v) => (false, v.Version));
+        Dictionary<string, (bool Trusted, string? Version)> dependencyTrust = new(dependencies.Count);
+
+        foreach (var dependency in dependencies)
+        {
+            dependencyTrust[dependency.Name] = (false, dependency.Version);
+        }
 
         var dependenciesToIgnore = await GetIgnoredDependenciesAsync(repository, reference, ecosystem);
         var ignoredDependencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
