@@ -19,7 +19,13 @@ public sealed class GitHubWebhookContext(
 
     public string AppId { get; set; } = string.Empty;
 
+    public string AppName { get; set; } = string.Empty;
+
+    public string AppSlug { get; set; } = string.Empty;
+
     public string InstallationId { get; set; } = string.Empty;
+
+    public string InstallationOrganization { get; set; } = string.Empty;
 
     public IGitHubClientForApp AppClient => _appClient ??= clientFactory.CreateForApp(AppId);
 
