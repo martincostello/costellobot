@@ -61,7 +61,7 @@ public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppF
     }
 
     [Fact]
-    public async Task Deployment_Is_Not_Approved_On_Public_Holiday()
+    public async Task Deployment_Is_Approved_On_Public_Holiday()
     {
         // Arrange
         Fixture.ChangeClock(new(2023, 12, 25, 12, 00, 00, TimeSpan.Zero));
@@ -79,7 +79,7 @@ public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppF
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await AssertTaskNotRun(deploymentApproved);
+        await deploymentApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
     [Fact]
