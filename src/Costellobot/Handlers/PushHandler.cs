@@ -44,7 +44,8 @@ public sealed partial class PushHandler(
             }
         }
 
-        if (DependencyFileChanged(filesChanged))
+        // costellorg does not have a repository to dispatch to yet
+        if (DependencyFileChanged(filesChanged) && string.IsNullOrWhiteSpace(context.InstallationOrganization))
         {
             Log.CreatedRepositoryDispatchForPush(logger, repository, push.Ref);
             await CreateDispatchAsync(repository, push.Ref, push.After);
@@ -90,10 +91,7 @@ public sealed partial class PushHandler(
             },
         };
 
-        await context.InstallationClient.RepositoryDispatchAsync(
-            "martincostello",
-            "github-automation",
-            dispatch);
+        await context.InstallationClient.RepositoryDispatchAsync("martincostello", "github-automation", dispatch);
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]

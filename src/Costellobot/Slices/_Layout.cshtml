@@ -113,11 +113,20 @@
                     </li>
                     @if (authenticated)
                     {
-                        <li class="nav-item">
-                            <a class="nav-link" href="@(this.RouteUrl("~/deliveries/costellobot"))" title="Webhook deliveries" id="deliveries-link">
+                        var github = HttpContext.RequestServices.GetRequiredService<IOptionsMonitor<GitHubOptions>>()!.CurrentValue;
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="deliveries-link" role="button" title="Webhook deliveries" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Deliveries
                                 <span class="fa-solid fa-truck-ramp-box fa-fw" aria-hidden="true"></span>
                             </a>
+                            <div class="dropdown-menu" aria-labelledby="navbar-dropdown">
+                                @foreach (var app in github.Apps.Values.Where((p) => p.Name is { Length: > 0 }))
+                                {
+                                    <a class="dropdown-item" href="@(this.RouteUrl($"~/deliveries/{app.Name}"))" title="@(app.Name) deliveries">
+                                        @(app.Name)
+                                    </a>
+                                }
+                            </div>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="@(this.RouteUrl("~/dependencies"))" title="Dependencies" id="dependencies-link">

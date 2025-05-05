@@ -45,8 +45,10 @@ public sealed partial class IssueCommentHandler(
 
         Log.ReceivedComment(logger, issueId, command);
 
+        // costellorg does not have a repository to dispatch to yet
         if (issue.PullRequest is not null &&
-            string.Equals(command, "rebase", StringComparison.OrdinalIgnoreCase))
+            string.Equals(command, "rebase", StringComparison.OrdinalIgnoreCase) &&
+            string.IsNullOrWhiteSpace(context.InstallationOrganization))
         {
             try
             {

@@ -15,9 +15,11 @@ public abstract class AppPage(IPage page)
         return new(Page);
     }
 
-    public async Task<DeliveriesPage> DeliveriesAsync()
+    public async Task<DeliveriesPage> DeliveriesAsync(string appName)
     {
         await Page.ClickAsync(Selectors.DeliveriesLink);
+        await Page.Locator(".dropdown-item").Locator($"text={appName}").ClickAsync();
+
         return new(Page);
     }
 

@@ -29,12 +29,24 @@ public sealed partial class GitHubWebhookDispatcher(
             {
                 if (message.Headers.HookInstallationTargetId is { Length: > 0 } appId)
                 {
+                    if (options.CurrentValue.Apps.TryGetValue(appId, out var app))
+                    {
+                        context.AppSlug = $"{app.Name}[bot]";
+                        context.AppName = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(app.Name);
+                    }
+
                     context.AppId = appId;
                 }
 
                 if (message.Event.Installation?.Id is { } installationId)
                 {
                     context.InstallationId = Convert.ToString(installationId, CultureInfo.InvariantCulture);
+
+                    if (options.CurrentValue.Installations.TryGetValue(context.InstallationId, out var installation) &&
+                        installation.Organization is { Length: > 0 } organization)
+                    {
+                        context.InstallationOrganization = organization;
+                    }
                 }
 
                 var handler = handlerFactory.Create(message.Headers.Event);

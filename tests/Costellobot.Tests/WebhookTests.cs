@@ -11,6 +11,8 @@ namespace MartinCostello.Costellobot;
 [Collection<HttpServerCollection>]
 public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : UITests(fixture, outputHelper)
 {
+    private string AppName { get; } = "costellobot";
+
     private long InstallationIdNumber { get; } = long.Parse(GitHubFixtures.InstallationId, CultureInfo.InvariantCulture);
 
     private string InstallationIdString { get; } = GitHubFixtures.InstallationId;
@@ -31,7 +33,7 @@ public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHel
             var app = await SignInAsync(page);
 
             // Act
-            var deliveries = await app.DeliveriesAsync();
+            var deliveries = await app.DeliveriesAsync(AppName);
 
             // Assert
             await deliveries.WaitForContentAsync();
@@ -72,7 +74,7 @@ public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHel
         {
             var app = await SignInAsync(page);
 
-            var deliveries = await app.DeliveriesAsync();
+            var deliveries = await app.DeliveriesAsync(AppName);
 
             await deliveries.WaitForContentAsync();
             await deliveries.WaitForWebhookCountAsync(1);
@@ -138,7 +140,7 @@ public class WebhookTests(HttpServerFixture fixture, ITestOutputHelper outputHel
         {
             var app = await SignInAsync(page);
 
-            var deliveries = await app.DeliveriesAsync();
+            var deliveries = await app.DeliveriesAsync(AppName);
 
             await deliveries.WaitForContentAsync();
             await deliveries.WaitForWebhookCountAsync(3);
