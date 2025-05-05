@@ -7,7 +7,7 @@ public sealed class AccessTokenBuilder : ResponseBuilder
 {
     public string Token { get; set; } = "ghs_" + RandomString();
 
-    public DateTimeOffset ExpiresAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset ExpiresAt { get; set; } = DateTimeOffset.UtcNow.AddHours(1);
 
     public override object Build()
     {
