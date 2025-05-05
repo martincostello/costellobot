@@ -78,7 +78,6 @@ public static class HandlerFactoryTests
             {
                 return new DeploymentProtectionRuleHandler(
                     context,
-                    publicHolidayProvider,
                     NullLoggerFactory.Instance.CreateLogger<DeploymentProtectionRuleHandler>());
             });
 

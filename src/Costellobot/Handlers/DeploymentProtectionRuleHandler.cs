@@ -10,7 +10,6 @@ namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class DeploymentProtectionRuleHandler(
     GitHubWebhookContext context,
-    PublicHolidayProvider publicHolidayProvider,
     ILogger<DeploymentProtectionRuleHandler> logger) : IHandler
 {
     private static readonly ResiliencePipeline Pipeline = CreateResiliencePipeline();
@@ -37,17 +36,6 @@ public sealed partial class DeploymentProtectionRuleHandler(
         if (!options.Deploy)
         {
             Log.DeploymentProtectionRuleApprovalIsDisabled(
-                logger,
-                repository,
-                body.Environment,
-                body.Deployment.Id);
-
-            return;
-        }
-
-        if (publicHolidayProvider.IsPublicHoliday())
-        {
-            Log.TodayIsAPublicHoliday(
                 logger,
                 repository,
                 body.Environment,
@@ -137,16 +125,6 @@ public sealed partial class DeploymentProtectionRuleHandler(
            Level = LogLevel.Information,
            Message = "Ignoring deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId} as deployment approval is disabled.")]
         public static partial void DeploymentProtectionRuleApprovalIsDisabled(
-            ILogger logger,
-            RepositoryId repository,
-            string? environmentName,
-            long deploymentId);
-
-        [LoggerMessage(
-           EventId = 5,
-           Level = LogLevel.Information,
-           Message = "Ignoring deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId} as it is a public holiday.")]
-        public static partial void TodayIsAPublicHoliday(
             ILogger logger,
             RepositoryId repository,
             string? environmentName,
