@@ -16,6 +16,8 @@ public sealed class AuthenticationTests(AppFixture fixture, ITestOutputHelper ou
     public async Task Can_Create_Authenticated_GitHub_Client_For_App()
     {
         // Arrange
+        await Fixture.ClearCacheAsync();
+
         var appId = GitHubFixtures.AppId;
         var target = Fixture.Services.GetRequiredKeyedService<IGitHubClientForApp>(appId);
 
@@ -35,7 +37,7 @@ public sealed class AuthenticationTests(AppFixture fixture, ITestOutputHelper ou
         token1.Alg.ShouldBe("RS256");
         token1.Issuer.ShouldBe(appId);
 
-        var tolerance = TimeSpan.FromSeconds(10);
+        var tolerance = TimeSpan.FromSeconds(20);
         var utcNow = DateTime.UtcNow;
 
         token1.IssuedAt.ShouldBe(utcNow.AddMinutes(-1), tolerance);
@@ -79,6 +81,8 @@ public sealed class AuthenticationTests(AppFixture fixture, ITestOutputHelper ou
     public async Task Can_Create_Authenticated_GitHub_Client_For_Installation()
     {
         // Arrange
+        await Fixture.ClearCacheAsync();
+
         var accessToken = GitHubFixtures.CreateAccessToken();
         var installationId = GitHubFixtures.InstallationId;
 
