@@ -71,6 +71,12 @@ public sealed partial class GitHubWebhookDispatcher(
             _ => message.Event.Installation?.Id,
         };
 
+        if (installationId is null &&
+            long.TryParse(message.Headers.HookInstallationTargetId, CultureInfo.InvariantCulture, out var installationTargetId))
+        {
+            installationId = installationTargetId;
+        }
+
         return
             installationId is { } id &&
             options.CurrentValue.Installations.TryGetValue(id.ToString(CultureInfo.InvariantCulture), out var install) &&
