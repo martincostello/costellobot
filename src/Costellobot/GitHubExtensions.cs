@@ -25,8 +25,10 @@ public static class GitHubExtensions
     {
         services.AddGitHubAuthentication(configuration);
 
-        services.AddHttpClient()
-                .ConfigureHttpClientDefaults((p) => p.AddStandardResilienceHandler());
+        //// HACK Workaround for https://github.com/dotnet/extensions/issues/6297
+        ////services.AddHttpClient()
+        ////        .ConfigureHttpClientDefaults((p) => p.AddStandardResilienceHandler());
+        services.AddHttpClient();
 
         services.AddHybridCache((p) => p.ReportTagMetrics = true);
         services.AddOptions();
@@ -178,7 +180,7 @@ public static class GitHubExtensions
         }
     }
 
-    private static Connection CreateConnection<T>(this IServiceProvider provider, object key)
+    private static Connection CreateConnection<T>(this IServiceProvider provider, object? key)
         where T : ICredentialStore
     {
         var baseAddress = GetGitHubUri(provider);
@@ -194,7 +196,7 @@ public static class GitHubExtensions
         return new Connection(UserAgent, baseAddress, credentialStore, httpClient, serializer);
     }
 
-    private static GitHubClientAdapter CreateClient<T>(this IServiceProvider provider, object key)
+    private static GitHubClientAdapter CreateClient<T>(this IServiceProvider provider, object? key)
         where T : ICredentialStore
     {
         var connection = provider.CreateConnection<T>(key);
