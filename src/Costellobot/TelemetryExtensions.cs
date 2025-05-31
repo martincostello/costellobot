@@ -33,7 +33,7 @@ public static class TelemetryExtensions
                        .AddAspNetCoreInstrumentation()
                        .AddHttpClientInstrumentation()
                        .AddProcessInstrumentation()
-                       .AddRuntimeInstrumentation();
+                       .AddMeter("System.Runtime");
 
                 if (ApplicationTelemetry.IsOtlpCollectorConfigured())
                 {
