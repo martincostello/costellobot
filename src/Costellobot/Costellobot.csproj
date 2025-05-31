@@ -64,4 +64,8 @@
   <Target Name="BundleAssets" BeforeTargets="BeforeBuild" DependsOnTargets="RestoreNpmPackages">
     <Exec Command="npm run build" Condition=" !Exists('$(MSBuildThisFileDirectory)\wwwroot\static\js\main.js') " />
   </Target>
+  <!-- See https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/Diagnostics.md -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="Azure.Experimental.EnableActivitySource" Value="true" />
+  </ItemGroup>
 </Project>
