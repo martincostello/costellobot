@@ -42,9 +42,6 @@ public static class TelemetryExtensions
             })
             .WithTracing((builder) =>
             {
-                // See https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/Diagnostics.md
-                AppContext.SetSwitch("Azure.Experimental.EnableActivitySource", true);
-
                 builder.SetResourceBuilder(ApplicationTelemetry.ResourceBuilder)
                        .AddAspNetCoreInstrumentation()
                        .AddHttpClientInstrumentation()
