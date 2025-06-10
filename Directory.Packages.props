@@ -29,12 +29,12 @@
     <PackageVersion Include="JunitXml.TestLogger" Version="6.1.0" />
     <PackageVersion Include="JustEat.HttpClientInterception" Version="5.1.1" />
     <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.6.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="9.0.5" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.5" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="9.5.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="9.6.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.6" />
-    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.5.0" />
-    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.5.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.6.0" />
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.6.0" />
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.12.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.52.0" />
@@ -54,8 +54,8 @@
     <PackageVersion Include="OpenTelemetry.Resources.Container" Version="1.12.0-beta.1" />
     <PackageVersion Include="OpenTelemetry.Resources.OperatingSystem" Version="1.12.0-beta.1" />
     <PackageVersion Include="OpenTelemetry.Resources.ProcessRuntime" Version="1.12.0-beta.1" />
-    <PackageVersion Include="Polly.Extensions" Version="8.5.2" />
-    <PackageVersion Include="Polly.RateLimiting" Version="8.5.2" />
+    <PackageVersion Include="Polly.Extensions" Version="8.6.0" />
+    <PackageVersion Include="Polly.RateLimiting" Version="8.6.0" />
     <PackageVersion Include="Pyroscope" Version="0.10.0" />
     <PackageVersion Include="Pyroscope.OpenTelemetry" Version="0.3.0" />
     <PackageVersion Include="RazorSlices" Version="0.9.1" />
