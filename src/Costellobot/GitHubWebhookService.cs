@@ -131,13 +131,16 @@ public sealed partial class GitHubWebhookService(
 
     private Task ProcessErrorAsync(ProcessErrorEventArgs args)
     {
-        Log.ProcessingFailed(
-            logger,
-            args.Exception,
-            args.Identifier,
-            args.ErrorSource.ToString(),
-            args.EntityPath,
-            args.FullyQualifiedNamespace);
+        if (logger.IsEnabled(LogLevel.Error))
+        {
+            Log.ProcessingFailed(
+                logger,
+                args.Exception,
+                args.Identifier,
+                args.ErrorSource,
+                args.EntityPath,
+                args.FullyQualifiedNamespace);
+        }
 
         return Task.CompletedTask;
     }
@@ -146,45 +149,46 @@ public sealed partial class GitHubWebhookService(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Warning,
-           Message = "Failed to stop messaging job.")]
+            EventId = 1,
+            Level = LogLevel.Warning,
+            Message = "Failed to stop messaging job.")]
         public static partial void FailedToStopJob(ILogger logger, Exception exception);
 
         [LoggerMessage(
-           EventId = 2,
-           Level = LogLevel.Debug,
-           Message = "Received message with identifier {Identifier}.")]
+            EventId = 2,
+            Level = LogLevel.Debug,
+            Message = "Received message with identifier {Identifier}.")]
         public static partial void ReceivedMessage(ILogger logger, string identifier);
 
         [LoggerMessage(
-           EventId = 3,
-           Level = LogLevel.Debug,
-           Message = "Processing message with identifier {Identifier}.")]
+            EventId = 3,
+            Level = LogLevel.Debug,
+            Message = "Processing message with identifier {Identifier}.")]
         public static partial void ProcessingMessage(ILogger logger, string identifier);
 
         [LoggerMessage(
-           EventId = 4,
-           Level = LogLevel.Debug,
-           Message = "Completed message with identifier {Identifier}.")]
+            EventId = 4,
+            Level = LogLevel.Debug,
+            Message = "Completed message with identifier {Identifier}.")]
         public static partial void CompletedMessage(ILogger logger, string identifier);
 
         [LoggerMessage(
-           EventId = 5,
-           Level = LogLevel.Error,
-           Message = "Failed to process message with identifier {Identifier} from source {ErrorSource} for entity {EntityPath} of namespace {FullyQualifiedNamespace}.")]
+            EventId = 5,
+            Level = LogLevel.Error,
+            SkipEnabledCheck = true,
+            Message = "Failed to process message with identifier {Identifier} from source {ErrorSource} for entity {EntityPath} of namespace {FullyQualifiedNamespace}.")]
         public static partial void ProcessingFailed(
             ILogger logger,
             Exception exception,
             string identifier,
-            string errorSource,
+            ServiceBusErrorSource errorSource,
             string entityPath,
             string fullyQualifiedNamespace);
 
         [LoggerMessage(
-           EventId = 6,
-           Level = LogLevel.Warning,
-           Message = "Failed to complete message with identifier {Identifier} for entity {EntityPath} of namespace {FullyQualifiedNamespace}.")]
+            EventId = 6,
+            Level = LogLevel.Warning,
+            Message = "Failed to complete message with identifier {Identifier} for entity {EntityPath} of namespace {FullyQualifiedNamespace}.")]
         public static partial void CompleteFailed(
             ILogger logger,
             Exception exception,
