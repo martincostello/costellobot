@@ -5,14 +5,14 @@
     <GlobalPackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <PackageVersion Include="Aspire.Azure.Data.Tables" Version="9.3.0" />
-    <PackageVersion Include="Aspire.Azure.Messaging.ServiceBus" Version="9.3.0" />
-    <PackageVersion Include="Aspire.Azure.Security.KeyVault" Version="9.3.0" />
-    <PackageVersion Include="Aspire.Azure.Storage.Blobs" Version="9.3.0" />
-    <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.3.0" />
-    <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="9.3.0" />
-    <PackageVersion Include="Aspire.Hosting.Azure.ServiceBus" Version="9.3.0" />
-    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="9.3.0" />
+    <PackageVersion Include="Aspire.Azure.Data.Tables" Version="9.3.1" />
+    <PackageVersion Include="Aspire.Azure.Messaging.ServiceBus" Version="9.3.1" />
+    <PackageVersion Include="Aspire.Azure.Security.KeyVault" Version="9.3.1" />
+    <PackageVersion Include="Aspire.Azure.Storage.Blobs" Version="9.3.1" />
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.3.1" />
+    <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="9.3.1" />
+    <PackageVersion Include="Aspire.Hosting.Azure.ServiceBus" Version="9.3.1" />
+    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="9.3.1" />
     <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="9.4.0" />
     <PackageVersion Include="Azure.Data.Tables" Version="12.11.0" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
@@ -21,7 +21,7 @@
     <PackageVersion Include="Azure.Identity" Version="1.14.0" />
     <PackageVersion Include="Azure.Security.KeyVault.Secrets" Version="4.7.0" />
     <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.19.0" />
-    <PackageVersion Include="Azure.Storage.Blobs" Version="12.24.0" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.24.1" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.1" />
     <PackageVersion Include="coverlet.msbuild" Version="6.0.4" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
