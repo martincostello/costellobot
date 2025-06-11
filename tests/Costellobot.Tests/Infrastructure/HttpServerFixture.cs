@@ -8,7 +8,12 @@ namespace MartinCostello.Costellobot.Infrastructure;
 
 public sealed class HttpServerFixture : AppFixture
 {
-    public HttpServerFixture() => UseKestrel(0);
+    public HttpServerFixture()
+    {
+        // HACK Ensure the Kestrel port will eventually be used
+        ClientOptions.BaseAddress = new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions().BaseAddress;
+        UseKestrel(0);
+    }
 
     public string ServerAddress
     {
