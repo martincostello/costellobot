@@ -1,5 +1,5 @@
 ARG VARIANT="9.0"
-FROM mcr.microsoft.com/vscode/devcontainers/dotnet:latest@sha256:6e5d9440418393a00b05d306bf45bbab97d4bb9771f2b5d52f5f2304e393cc2f
+FROM mcr.microsoft.com/vscode/devcontainers/dotnet:latest@sha256:d99e4e4a3de2bf9249b985e7cb05024d9227361bd346611c0b7f352360c4dc3b
 
 ARG INSTALL_NODE="true"
 ARG NODE_VERSION="lts/*"
