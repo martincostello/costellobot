@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
+  "id": "nuget-search",
+  "version": 1,
+  "comment": "HTTP bundle for Ruby Gems.",
+  "items": [
+    {
+      "comment": "The owners of the rack gem.",
+      "uri": "https://rubygems.org/api/v1/gems/rack/owners.json",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": [
+        {
+          "id": 31711,
+          "handle": "chneukirchen"
+        },
+        {
+          "id": 264,
+          "handle": "raggi"
+        },
+        {
+          "id": 207,
+          "handle": "tenderlove"
+        },
+        {
+          "id": 96878,
+          "handle": "eileencodes"
+        },
+        {
+          "id": 47349,
+          "handle": "rafaelfranca"
+        },
+        {
+          "id": 44200,
+          "handle": "ioquatix",
+          "email": "samuel@ruby-lang.org"
+        }
+      ]
+    },
+    {
+      "comment": "A Ruby gem that does not exist",
+      "uri": "https://rubygems.org/api/v1/gems/foo/owners.json",
+      "method": "GET",
+      "status": "404",
+      "contentFormat": "string",
+      "contentString": "This rubygem could not be found."
+    }
+  ]
+}
