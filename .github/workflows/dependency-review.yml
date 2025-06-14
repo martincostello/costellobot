@@ -24,3 +24,5 @@ jobs:
 
       - name: Review dependencies
         uses: actions/dependency-review-action@da24556b548a50705dd671f47852072ea4c105d9 # v4.7.1
+        with:
+          allow-licenses: '(MIT AND BSD-3-Clause),(MIT AND Zlib),(MIT OR Apache-2.0),(MIT OR CC0-1.0),0BSD,Apache-2.0,BlueOak-1.0.0,BSD-2-Clause,BSD-3-Clause,CC-BY-4.0,CC0-1.0,ISC,MIT,MIT-0,Python-2.0,Unlicense'
