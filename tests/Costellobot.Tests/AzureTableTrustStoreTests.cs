@@ -38,9 +38,11 @@ public class AzureTableTrustStoreTests
     }
 
     [Theory]
+    [InlineData(DependencyEcosystem.Docker, "devcontainers/dotnet", "latest", "DOCKER", "DEVCONTAINERS~DOTNET@LATEST")]
     [InlineData(DependencyEcosystem.GitHubActions, "martincostello/rebaser", "2.0.1", "GITHUBACTIONS", "MARTINCOSTELLO~REBASER@2.0.1")]
     [InlineData(DependencyEcosystem.Npm, "@octokit/request", "9.2.2", "NPM", "@OCTOKIT~REQUEST@9.2.2")]
     [InlineData(DependencyEcosystem.NuGet, "Polly.Core", "8.5.2", "NUGET", "POLLY.CORE@8.5.2")]
+    [InlineData(DependencyEcosystem.Ruby, "rack", "3.1.16", "RUBY", "RACK@3.1.16")]
     public async Task DistrustAsync_Distrusts_Entity(
         DependencyEcosystem ecosystem,
         string id,

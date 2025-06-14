@@ -15,6 +15,7 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
         // Arrange
         var trustStore = Fixture.Services.GetRequiredService<ITrustStore>();
 
+        await trustStore.TrustAsync(DependencyEcosystem.Docker, "devcontainers/dotnet", "latest", CancellationToken);
         await trustStore.TrustAsync(DependencyEcosystem.GitHubActions, "DavidAnson/markdownlint-cli2-action", "19.1.0", CancellationToken);
         await trustStore.TrustAsync(DependencyEcosystem.Npm, "@stylistic/eslint-plugin", "4.0.1", CancellationToken);
         await trustStore.TrustAsync(DependencyEcosystem.NuGet, "Verify.ImageMagick", "3.5.0", CancellationToken);
@@ -22,6 +23,7 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
         await trustStore.TrustAsync(DependencyEcosystem.NuGet, "Verify.Playwright", "3.0.0", CancellationToken);
         await trustStore.TrustAsync(DependencyEcosystem.NuGet, "Verify.XunitV3", "28.10.1", CancellationToken);
         await trustStore.TrustAsync(DependencyEcosystem.NuGet, "Verify.XunitV3", "28.11.0", CancellationToken);
+        await trustStore.TrustAsync(DependencyEcosystem.Ruby, "rack", "3.1.16", CancellationToken);
 
         var browser = new BrowserFixture(OutputHelper);
         await browser.WithPageAsync(async (page) =>
@@ -31,72 +33,64 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
             // Act
             var dependencies = await app.DependenciesAsync();
 
+            var expected = new[]
+            {
+                ("Docker", "devcontainers/dotnet", "latest"),
+                ("GitHub Actions", "DavidAnson/markdownlint-cli2-action", "19.1.0"),
+                ("npm", "@stylistic/eslint-plugin", "4.0.1"),
+                ("NuGet", "Verify.ImageMagick", "3.6.0"),
+                ("NuGet", "Verify.ImageMagick", "3.5.0"),
+                ("NuGet", "Verify.Playwright", "3.0.0"),
+                ("NuGet", "Verify.XunitV3", "28.11.0"),
+                ("NuGet", "Verify.XunitV3", "28.10.1"),
+                ("Ruby", "rack", "3.1.16"),
+            };
+
             // Assert
             await dependencies.WaitForContentAsync();
-            await dependencies.WaitForDependenciesCountAsync(7);
+            await dependencies.WaitForDependenciesCountAsync(expected.Length);
 
             var items = await dependencies.GetDependenciesAsync();
 
-            await items[0].EcosystemAsync().ShouldBe("GitHub Actions");
-            await items[0].IdAsync().ShouldBe("DavidAnson/markdownlint-cli2-action");
-            await items[0].VersionAsync().ShouldBe("19.1.0");
+            foreach ((var index, var item) in expected.Index())
+            {
+                (var ecosystem, var id, var version) = item;
 
-            await items[1].EcosystemAsync().ShouldBe("npm");
-            await items[1].IdAsync().ShouldBe("@stylistic/eslint-plugin");
-            await items[1].VersionAsync().ShouldBe("4.0.1");
+                await items[index].EcosystemAsync().ShouldBe(ecosystem);
+                await items[index].IdAsync().ShouldBe(id);
+                await items[index].VersionAsync().ShouldBe(version);
+            }
 
-            await items[2].EcosystemAsync().ShouldBe("NuGet");
-            await items[2].IdAsync().ShouldBe("Verify.ImageMagick");
-            await items[2].VersionAsync().ShouldBe("3.6.0");
-
-            await items[3].EcosystemAsync().ShouldBe("NuGet");
-            await items[3].IdAsync().ShouldBe("Verify.ImageMagick");
-            await items[3].VersionAsync().ShouldBe("3.5.0");
-
-            await items[4].EcosystemAsync().ShouldBe("NuGet");
-            await items[4].IdAsync().ShouldBe("Verify.Playwright");
-            await items[4].VersionAsync().ShouldBe("3.0.0");
-
-            await items[5].EcosystemAsync().ShouldBe("NuGet");
-            await items[5].IdAsync().ShouldBe("Verify.XunitV3");
-            await items[5].VersionAsync().ShouldBe("28.11.0");
-
-            await items[6].EcosystemAsync().ShouldBe("NuGet");
-            await items[6].IdAsync().ShouldBe("Verify.XunitV3");
-            await items[6].VersionAsync().ShouldBe("28.10.1");
+            // Arrange
+            expected =
+            [
+                ("Docker", "devcontainers/dotnet", "latest"),
+                ("GitHub Actions", "DavidAnson/markdownlint-cli2-action", "19.1.0"),
+                ("npm", "@stylistic/eslint-plugin", "4.0.1"),
+                ("NuGet", "Verify.ImageMagick", "3.6.0"),
+                ("NuGet", "Verify.Playwright", "3.0.0"),
+                ("NuGet", "Verify.XunitV3", "28.11.0"),
+                ("NuGet", "Verify.XunitV3", "28.10.1"),
+                ("Ruby", "rack", "3.1.16"),
+            ];
 
             // Act
-            await items[3].DistrustAsync();
+            await items[4].DistrustAsync();
 
             // Assert
             await dependencies.WaitForContentAsync();
-            await dependencies.WaitForDependenciesCountAsync(6);
+            await dependencies.WaitForDependenciesCountAsync(expected.Length);
 
             items = await dependencies.GetDependenciesAsync();
 
-            await items[0].EcosystemAsync().ShouldBe("GitHub Actions");
-            await items[0].IdAsync().ShouldBe("DavidAnson/markdownlint-cli2-action");
-            await items[0].VersionAsync().ShouldBe("19.1.0");
+            foreach ((var index, var item) in expected.Index())
+            {
+                (var ecosystem, var id, var version) = item;
 
-            await items[1].EcosystemAsync().ShouldBe("npm");
-            await items[1].IdAsync().ShouldBe("@stylistic/eslint-plugin");
-            await items[1].VersionAsync().ShouldBe("4.0.1");
-
-            await items[2].EcosystemAsync().ShouldBe("NuGet");
-            await items[2].IdAsync().ShouldBe("Verify.ImageMagick");
-            await items[2].VersionAsync().ShouldBe("3.6.0");
-
-            await items[3].EcosystemAsync().ShouldBe("NuGet");
-            await items[3].IdAsync().ShouldBe("Verify.Playwright");
-            await items[3].VersionAsync().ShouldBe("3.0.0");
-
-            await items[4].EcosystemAsync().ShouldBe("NuGet");
-            await items[4].IdAsync().ShouldBe("Verify.XunitV3");
-            await items[4].VersionAsync().ShouldBe("28.11.0");
-
-            await items[5].EcosystemAsync().ShouldBe("NuGet");
-            await items[5].IdAsync().ShouldBe("Verify.XunitV3");
-            await items[5].VersionAsync().ShouldBe("28.10.1");
+                await items[index].EcosystemAsync().ShouldBe(ecosystem);
+                await items[index].IdAsync().ShouldBe(id);
+                await items[index].VersionAsync().ShouldBe(version);
+            }
 
             // Act
             await dependencies.DistrustAllAsync();

@@ -7,8 +7,10 @@ public enum DependencyEcosystem
 {
     Unknown = 0,
     Unsupported,
+    Docker,
     GitHubActions,
     Npm,
     NuGet,
     GitSubmodule,
+    Ruby,
 }
