@@ -341,9 +341,11 @@ public static class AdminEndpoints
             {
                 DependencyEcosystem[] ecosystems =
                 [
+                    DependencyEcosystem.Docker,
                     DependencyEcosystem.GitHubActions,
                     DependencyEcosystem.Npm,
                     DependencyEcosystem.NuGet,
+                    DependencyEcosystem.Ruby,
                 ];
 
                 var model = new Dictionary<DependencyEcosystem, IReadOnlyList<TrustedDependency>>();

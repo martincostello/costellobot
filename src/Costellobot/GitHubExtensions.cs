@@ -115,10 +115,12 @@ public static class GitHubExtensions
         services.AddTransient<PullRequestAnalyzer>();
         services.AddTransient<PullRequestApprover>();
 
+        services.AddPackageRegistry<DockerPackageRegistry>("MicrosoftArtifactRegistry");
         services.AddPackageRegistry<GitHubActionsPackageRegistry>();
         services.AddPackageRegistry<GitSubmodulePackageRegistry>();
         services.AddPackageRegistry<NpmPackageRegistry>("Npm");
         services.AddPackageRegistry<NuGetPackageRegistry>("NuGet");
+        services.AddPackageRegistry<RubyGemsPackageRegistry>("RubyGems");
 
         services.AddSingleton<BadgeService>();
         services.AddSingleton<PublicHolidayProvider>();
