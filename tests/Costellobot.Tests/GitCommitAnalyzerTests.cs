@@ -190,6 +190,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     [InlineData("python-dotenv", "dependabot/pip/python-dotenv-0.17.1", "0.17.1", DependencyEcosystem.Unsupported, new string[0], false)]
     [InlineData("src/submodules/dependabot-helper", "dependabot/submodules/src/submodules/dependabot-helper-697aaa7", "697aaa7", DependencyEcosystem.GitSubmodule, new[] { "https://github.com/martincostello" }, true)]
     [InlineData("typescript", "dependabot/npm_and_yarn/typescript-5.0.1", "5.0.1", DependencyEcosystem.Npm, new[] { "typescript-bot" }, true)]
+    [InlineData("rack", "dependabot/bundler/rack-3.1.16", "3.1.16", DependencyEcosystem.Ruby, new[] { "tenderlove", "raggi", "chneukirchen", "ioquatix", "rafaelfranca", "eileencodes" }, true)]
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers(
         string dependency,
         string reference,
@@ -216,10 +217,12 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
+                    [DependencyEcosystem.Docker] = ["devcontainers/dotnet"],
                     [DependencyEcosystem.GitHubActions] = ["actions"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
                     [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
+                    [DependencyEcosystem.Ruby] = ["tenderlove", "raggi", "chneukirchen", "ioquatix", "rafaelfranca", "eileencodes"],
                 },
             },
         };
@@ -259,6 +262,75 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         }
     }
 
+    [Theory]
+    [InlineData("devcontainers/dotnet", "dependabot/docker/dot-devcontainer/devcontainers/dotnet-d99e4e4", "latest", DependencyEcosystem.Docker, new[] { "devcontainers/dotnet" }, true)]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_With_Yaml_Metadata(
+        string dependency,
+        string reference,
+        string version,
+        DependencyEcosystem ecosystem,
+        string[] owners,
+        bool expected)
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(ecosystem);
+
+        registry.GetPackageOwnersAsync(repository, dependency, version)
+                .Returns(Task.FromResult<IReadOnlyList<string>>(owners));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.Docker] = ["devcontainers/dotnet"],
+                    [DependencyEcosystem.GitHubActions] = ["actions"],
+                    [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
+                    [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
+                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
+                    [DependencyEcosystem.Ruby] = ["tenderlove", "raggi", "chneukirchen", "ioquatix", "rafaelfranca", "eileencodes"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
+        var commitMessage = """
+                            Bump devcontainers/dotnet from bdced67 to d99e4e4 in /.devcontainer
+                            Bumps devcontainers/dotnet from `bdced67` to `d99e4e4`.
+                            
+                            ---
+                            updated-dependencies:
+                            - dependency-name: devcontainers/dotnet
+                              dependency-version: latest
+                              dependency-type: direct:production
+                            ...
+                            
+                            Signed-off-by: dependabot[bot] <support@github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBe(expected);
+    }
+
     [Fact]
     public async Task Commit_Is_Analyzed_Correctly_With_Untrusted_Publisher()
     {
@@ -269,10 +341,12 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
+                    [DependencyEcosystem.Docker] = ["mcr.microsoft.com"],
                     [DependencyEcosystem.GitHubActions] = ["actions"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
                     [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
+                    [DependencyEcosystem.Ruby] = [],
                 },
             },
         };
