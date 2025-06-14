@@ -15,7 +15,7 @@ internal static class DependencyHelpers
         return ecosystem switch
         {
             DependencyEcosystem.GitHubActions => ("GitHub Actions", GitHubUrl(id), GitHubStyles),
-            DependencyEcosystem.Npm => ("npm", $"/package/{id}/v/{version}", NpmStyles),
+            DependencyEcosystem.Npm => ("npm", NpmUrl($"/package/{id}/v/{version}"), NpmStyles),
             DependencyEcosystem.NuGet => ("NuGet", NuGetUrl($"/packages/{id}/{version}"), NuGetStyles),
             _ => (ecosystem.ToString(), string.Empty, DefaultStyles),
         };
