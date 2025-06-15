@@ -589,6 +589,53 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         await Should.NotThrowAsync(() => target.HandleAsync(message));
     }
 
+    [Fact]
+    public async Task Pull_Request_Is_Approved_For_Trusted_User_And_Dependency_Name_From_Renovate()
+    {
+        // Arrange
+        Fixture.ApprovePullRequests();
+
+        var driver = PullRequestDriver.ForRenovate()
+            .WithCommitMessage(TrustedCommitMessageForRenovate());
+
+        RegisterGetAccessToken();
+        RegisterCommitAndDiff(driver);
+
+        var pullRequestApproved = RegisterReview(driver);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
+    }
+
+    [Fact]
+    public async Task Pull_Request_Is_Approved_For_Trusted_User_And_Dependency_Owner_From_Renovate()
+    {
+        // Arrange
+        Fixture.ApprovePullRequests();
+        await Fixture.Interceptor.RegisterBundleAsync(Path.Combine("Bundles", "nuget-search.json"), cancellationToken: CancellationToken);
+
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(TrustedCommitMessageForRenovate("Newtonsoft.Json", "13.0.1"));
+
+        RegisterGetAccessToken();
+        RegisterCommitAndDiff(driver);
+
+        var pullRequestApproved = RegisterReview(driver);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
+    }
+
     private async Task<HttpResponseMessage> PostWebhookAsync(PullRequestDriver driver, string action = "opened")
     {
         var value = driver.CreateWebhook(action);

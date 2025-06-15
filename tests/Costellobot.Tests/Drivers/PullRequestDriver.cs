@@ -36,6 +36,9 @@ public class PullRequestDriver
     public static PullRequestDriver ForDependabot()
         => new(DependabotCommitter);
 
+    public static PullRequestDriver ForRenovate()
+        => new(RenovateCommitter);
+
     public PullRequestDriver WithCommitMessage(string message)
     {
         Commit.Message = message;

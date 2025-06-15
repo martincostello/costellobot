@@ -1923,6 +1923,426 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         trust.Count.ShouldBe(5);
     }
 
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_DotNet_Monorepo()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/nuget/dotnet-monorepo";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+
+        registry.GetPackageOwnersAsync(repository, "Microsoft.AspNetCore.AzureAppServices.HostingStartup", "9.0.6")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["aspnet", "dotnetframework", "Microsoft"]));
+
+        registry.GetPackageOwnersAsync(repository, "Microsoft.AspNetCore.Mvc.Testing", "9.0.6")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["aspnet", "dotnetframework", "Microsoft"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies = ["^dotnet-sdk$"],
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["aspnet", "dotnetframework", "Microsoft"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "1a754959e71bc656091654ec43db02c0f8e9dc78";
+        var commitMessage = """
+                            Update dotnet monorepo
+                            | datasource     | package                                              | from    | to      |
+                            | -------------- | ---------------------------------------------------- | ------- | ------- |
+                            | nuget          | Microsoft.AspNetCore.AzureAppServices.HostingStartup | 9.0.5   | 9.0.6   |
+                            | nuget          | Microsoft.AspNetCore.Mvc.Testing                     | 9.0.5   | 9.0.6   |
+                            | dotnet-version | dotnet-sdk                                           | 9.0.300 | 9.0.301 |
+
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("dotnet-sdk", (true, "9.0.301"));
+        trust.ShouldContainKeyAndValue("Microsoft.AspNetCore.AzureAppServices.HostingStartup", (true, "9.0.6"));
+        trust.ShouldContainKeyAndValue("Microsoft.AspNetCore.Mvc.Testing", (true, "9.0.6"));
+        trust.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Git_Submodule_Dependency()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/git-submodules/src/submodules/dependabot-helper";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.GitSubmodule);
+
+        registry.GetPackageOwnersAsync(repository, "src/submodules/dependabot-helper", "aca93c2")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["https://github.com/martincostello"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "638ea75cc488b0041fa751c6bbb1b2ca9f536ace";
+        var commitMessage = @"""
+                            Update dependency src/submodules/dependabot-helper to aca93c2
+                            | datasource | package                          | from    | to      |
+                            | ---------- | -------------------------------- | ------- | ------- |
+                            | git-refs   | src/submodules/dependabot-helper | 697aaa7 | aca93c2 |
+                            
+                            
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.GitSubmodule);
+
+        trust.ShouldContainKeyAndValue("src/submodules/dependabot-helper", (true, "aca93c2"));
+        trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_GitHub_Dependency()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/github-actions/github-codeql-action-3.x";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.GitHubActions);
+
+        registry.GetPackageOwnersAsync(repository, "github/codeql-action", "3.29.0")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["github"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.GitHubActions] = ["github"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "638ea75cc488b0041fa751c6bbb1b2ca9f536ace";
+        var commitMessage = """
+                            Update github/codeql-action action to v3.29.0
+                            | datasource  | package              | from     | to      |
+                            | ----------- | -------------------- | -------- | ------- |
+                            | github-tags | github/codeql-action | v3.28.18 | v3.29.0 |
+
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.GitHubActions);
+
+        trust.ShouldContainKeyAndValue("github/codeql-action", (true, "3.29.0"));
+        trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Npm_Dependency()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/npm/typescript-eslint-monorepo";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.Npm);
+
+        registry.GetPackageOwnersAsync(repository, "@typescript-eslint/eslint-plugin", "8.34.0")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["bradzacher", "jameshenry"]));
+
+        registry.GetPackageOwnersAsync(repository, "@typescript-eslint/parser", "8.34.0")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["bradzacher", "jameshenry"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies =
+                [
+                    "^@typescript-eslint/eslint-plugin$",
+                    "^@typescript-eslint/parser$"
+                ],
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "104bf2e56a705de0d2a7444c1315b121faef4b4e";
+        var commitMessage = """
+                            Update typescript-eslint monorepo to v8.34.0
+                            | datasource | package                          | from   | to     |
+                            | ---------- | -------------------------------- | ------ | ------ |
+                            | npm        | @typescript-eslint/eslint-plugin | 8.32.1 | 8.34.0 |
+                            | npm        | @typescript-eslint/parser        | 8.32.1 | 8.34.0 |
+
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.Npm);
+
+        trust.ShouldContainKeyAndValue("@typescript-eslint/eslint-plugin", (true, "8.34.0"));
+        trust.ShouldContainKeyAndValue("@typescript-eslint/parser", (true, "8.34.0"));
+        trust.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Untrusted_Npm_Dependency_For_Renovate()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/npm/eslint-stylistic-monorepo";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.Npm);
+
+        registry.GetPackageOwnersAsync(repository, "@stylistic/eslint-plugin", "4.4.1")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["eslint-stylistic-bot"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies =
+                [
+                    "^@typescript-eslint/eslint-plugin$",
+                    "^@typescript-eslint/parser$"
+                ],
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "327fa8d2154d84370e2282b3b5913902d2548150";
+        var commitMessage = """
+                            Update dependency @stylistic/eslint-plugin to v4.4.1
+                            | datasource | package                  | from  | to    |
+                            | ---------- | ------------------------ | ----- | ----- |
+                            | npm        | @stylistic/eslint-plugin | 4.2.0 | 4.4.1 |
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBeFalse();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.Npm);
+
+        trust.ShouldContainKeyAndValue("@stylistic/eslint-plugin", (false, "4.4.1"));
+        trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_NuGet_Dependency()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/nuget/vstest-monorepo";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+
+        registry.GetPackageOwnersAsync(repository, "Microsoft.NET.Test.Sdk", "17.14.1")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "vstest"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "045a799fc8ffe8423e4d0e7326811a91a5f63216";
+        var commitMessage = """
+                            Update dependency Microsoft.NET.Test.Sdk to 17.14.1
+                            | datasource | package                | from    | to      |
+                            | ---------- | ---------------------- | ------- | ------- |
+                            | nuget      | Microsoft.NET.Test.Sdk | 17.14.0 | 17.14.1 |
+
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+
+        trust.ShouldContainKeyAndValue("Microsoft.NET.Test.Sdk", (true, "17.14.1"));
+        trust.Count.ShouldBe(1);
+    }
+
     private static GitCommitAnalyzer CreateTarget(
         IServiceProvider serviceProvider,
         WebhookOptions? options = null,

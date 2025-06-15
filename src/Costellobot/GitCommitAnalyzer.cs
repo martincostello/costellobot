@@ -4,10 +4,15 @@
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using Markdig;
+using Markdig.Extensions.Tables;
+using Markdig.Syntax;
 using MartinCostello.Costellobot.Registries;
+using NuGet.Versioning;
 using Octokit;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using DependencyUpdate = (string Name, string? Version, string? UpdateType);
 
 namespace MartinCostello.Costellobot;
 
@@ -150,20 +155,40 @@ public sealed partial class GitCommitAnalyzer(
         return isTrusted;
     }
 
-    private static List<(string Name, string? Version, string? UpdateType)> ParseDependencies(string commitMessage)
+    private static List<DependencyUpdate> ParseDependencies(string commitMessage)
     {
         string[] commitLines = commitMessage
             .ReplaceLineEndings("\n")
             .Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-        var names = new HashSet<(string Name, string? Version, string? UpdateType)>();
+        var updates = new HashSet<DependencyUpdate>();
 
+        // Look for dependabot YAML metadata in the commit message
         int start = Array.IndexOf(commitLines, "---");
         int end = Array.IndexOf(commitLines, "...");
 
         if (start > -1 && ((end - start) > 1))
         {
             var yaml = string.Join('\n', commitLines[(start + 1)..(end - 1)]);
+            ParseDependabotYaml(yaml, updates);
+        }
+        else
+        {
+            // Look for renovate Markdown metadata in the commit message.
+            start = commitMessage.IndexOf('|', StringComparison.Ordinal);
+            end = commitMessage.LastIndexOf('|');
+
+            if (start > -1 && ((end - start) > 1))
+            {
+                var markdown = commitMessage.Substring(start, end - start + 1);
+                ParseRenovateMarkdown(markdown, updates);
+            }
+        }
+
+        return [.. updates];
+
+        static void ParseDependabotYaml(string yaml, HashSet<DependencyUpdate> updates)
+        {
             using var reader = new StringReader(yaml);
 
             var metadata = YamlDeserializer.Deserialize<DependabotMetadata>(reader);
@@ -174,13 +199,73 @@ public sealed partial class GitCommitAnalyzer(
                 {
                     if (dependency?.DependencyName is { Length: > 0 } name)
                     {
-                        names.Add((name, dependency.DependencyVersion, dependency.UpdateType));
+                        updates.Add((name, dependency.DependencyVersion, dependency.UpdateType));
                     }
                 }
             }
         }
 
-        return [.. names];
+        static void ParseRenovateMarkdown(string markdown, HashSet<DependencyUpdate> updates)
+        {
+            var pipeline = new MarkdownPipelineBuilder()
+                .UsePipeTables()
+                .Build();
+
+            var document = Markdown.Parse(markdown, pipeline);
+
+            // Find the first table in the document
+            if (document.Descendants<Table>().FirstOrDefault() is { } table)
+            {
+                // | datasource | package                   | from  | to    |
+                // | ---------- | ------------------------- | ----- | ----- |
+                // | nuget      | xunit.runner.visualstudio | 3.1.0 | 3.1.1 |
+                // | nuget      | xunit.v3                  | 2.0.2 | 2.0.3 |
+                foreach (var row in table.Descendants<TableRow>().Where((p) => !p.IsHeader))
+                {
+                    if (row.Descendants<TableCell>().ToArray() is not { Length: 4 } cells)
+                    {
+                        continue;
+                    }
+
+                    if (GetCellValue(cells, 1, markdown) is { Length: > 0 } name)
+                    {
+                        string? updateType = null;
+
+                        string from = GetCellValue(cells, 2, markdown);
+                        string to = GetCellValue(cells, 3, markdown);
+
+                        if (NuGetVersion.TryParse(from.TrimStart('v'), out var versionFrom) &&
+                            NuGetVersion.TryParse(to.TrimStart('v'), out var versionTo))
+                        {
+                            to = versionTo.ToString();
+
+                            if (versionFrom.Major < versionTo.Major)
+                            {
+                                updateType = "version-update:semver-major";
+                            }
+                            else if (versionFrom.Minor < versionTo.Minor)
+                            {
+                                updateType = "version-update:semver-minor";
+                            }
+                            else
+                            {
+                                updateType = "version-update:semver-patch";
+                            }
+                        }
+
+                        updates.Add((name, to, updateType));
+                    }
+                }
+            }
+        }
+
+        static string GetCellValue(TableCell[] cells, int index, string markdown)
+        {
+            var cell = cells[index];
+            var range = new System.Range(cell.Span.Start, cell.Span.End);
+
+            return markdown[range].Trim();
+        }
     }
 
     private static DependencyEcosystem ParseEcosystem(string? reference)
@@ -202,7 +287,8 @@ public sealed partial class GitCommitAnalyzer(
 
         if (parts is null ||
             parts.Length < 3 ||
-            !string.Equals(parts[0], "dependabot", StringComparison.Ordinal))
+            !(string.Equals(parts[0], "dependabot", StringComparison.Ordinal) ||
+              string.Equals(parts[0], "renovate", StringComparison.Ordinal)))
         {
             return DependencyEcosystem.Unknown;
         }
@@ -210,11 +296,11 @@ public sealed partial class GitCommitAnalyzer(
         return parts[1] switch
         {
             "bundler" => DependencyEcosystem.Ruby,
-            "docker" => DependencyEcosystem.Docker,
-            "github_actions" => DependencyEcosystem.GitHubActions,
-            "npm_and_yarn" => DependencyEcosystem.Npm,
+            "docker" or "dockerfile" => DependencyEcosystem.Docker,
+            "github-actions" or "github_actions" => DependencyEcosystem.GitHubActions,
+            "npm" or "npm_and_yarn" => DependencyEcosystem.Npm,
             "nuget" => DependencyEcosystem.NuGet,
-            "submodules" => DependencyEcosystem.GitSubmodule,
+            "git-submodules" or "submodules" => DependencyEcosystem.GitSubmodule,
             _ => DependencyEcosystem.Unsupported,
         };
     }
@@ -358,27 +444,27 @@ public sealed partial class GitCommitAnalyzer(
         {
             if (ecosystem is DependencyEcosystem.Unknown or DependencyEcosystem.Unsupported)
             {
-                return (false, null);
+                return (false, version);
             }
 
             if (!context.WebhookOptions.TrustedEntities.Publishers.TryGetValue(ecosystem, out var publishers) ||
                 publishers.Count < 1)
             {
-                return (false, null);
+                return (false, version);
             }
 
             var registry = _registries.FirstOrDefault((p) => p.Ecosystem == ecosystem);
 
             if (registry is null)
             {
-                return (false, null);
+                return (false, version);
             }
 
             version ??= TryGetDependencyVersion(ecosystem, dependency, commitMessage, diff);
 
             if (string.IsNullOrWhiteSpace(version))
             {
-                return (false, null);
+                return (false, version);
             }
 
             if (await IsTrustedDependencyOwnerAsync(repository, dependency, version, publishers, registry))
