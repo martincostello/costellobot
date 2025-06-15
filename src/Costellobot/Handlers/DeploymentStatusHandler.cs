@@ -270,11 +270,16 @@ public sealed partial class DeploymentStatusHandler(
             var pullRequest = pulls[0];
             string reference = pullRequest.Head.Ref;
 
-            Log.FoundReferenceForCommitPullRequest(
-                logger,
-                sha,
-                reference,
-                new IssueId(repository, pullRequest.Number));
+#pragma warning disable CA1873
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                Log.FoundReferenceForCommitPullRequest(
+                    logger,
+                    sha,
+                    reference,
+                    new IssueId(repository, pullRequest.Number));
+            }
+#pragma warning restore CA1873
 
             var diff = await GetDiffAsync(pullRequest.Url);
 
@@ -360,9 +365,9 @@ public sealed partial class DeploymentStatusHandler(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Debug,
-           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} for action {Action}.")]
+            EventId = 1,
+            Level = LogLevel.Debug,
+            Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} for action {Action}.")]
         public static partial void IgnoringDeploymentStatusAction(
             ILogger logger,
             long deploymentStatusId,
@@ -370,9 +375,9 @@ public sealed partial class DeploymentStatusHandler(
             string? action);
 
         [LoggerMessage(
-           EventId = 2,
-           Level = LogLevel.Debug,
-           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} with state {State}.")]
+            EventId = 2,
+            Level = LogLevel.Debug,
+            Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} with state {State}.")]
         public static partial void IgnoringDeploymentStatusAsNotWaiting(
             ILogger logger,
             long deploymentStatusId,
@@ -380,9 +385,9 @@ public sealed partial class DeploymentStatusHandler(
             DeploymentStatusState state);
 
         [LoggerMessage(
-           EventId = 3,
-           Level = LogLevel.Debug,
-           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} as auto-deploy is not enabled for the {Environment} environment.")]
+            EventId = 3,
+            Level = LogLevel.Debug,
+            Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} as auto-deploy is not enabled for the {Environment} environment.")]
         public static partial void IgnoringDeploymentStatusAsEnvironmentNotEnabled(
             ILogger logger,
             long deploymentStatusId,
@@ -390,54 +395,54 @@ public sealed partial class DeploymentStatusHandler(
             string environment);
 
         [LoggerMessage(
-           EventId = 4,
-           Level = LogLevel.Debug,
-           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} as deployment approval is disabled.")]
+            EventId = 4,
+            Level = LogLevel.Debug,
+            Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} as deployment approval is disabled.")]
         public static partial void AutomatedDeploymentApprovalIsDisabled(
             ILogger logger,
             long deploymentStatusId,
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 5,
-           Level = LogLevel.Information,
-           Message = "No previous deployments found for deployment ID {DeploymentId} for {Repository}.")]
+            EventId = 5,
+            Level = LogLevel.Information,
+            Message = "No previous deployments found for deployment ID {DeploymentId} for {Repository}.")]
         public static partial void NoPreviousDeploymentsFound(
             ILogger logger,
             long deploymentId,
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 6,
-           Level = LogLevel.Information,
-           Message = "No previous deployment statuses found for deployment ID {DeploymentId} for {Repository}.")]
+            EventId = 6,
+            Level = LogLevel.Information,
+            Message = "No previous deployment statuses found for deployment ID {DeploymentId} for {Repository}.")]
         public static partial void NoDeploymentStatusesFound(
             ILogger logger,
             long deploymentId,
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 7,
-           Level = LogLevel.Information,
-           Message = "Deployment ID {DeploymentId} for {Repository} is currently active.")]
+            EventId = 7,
+            Level = LogLevel.Information,
+            Message = "Deployment ID {DeploymentId} for {Repository} is currently active.")]
         public static partial void FoundActiveDeployment(
             ILogger logger,
             long deploymentId,
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 8,
-           Level = LogLevel.Information,
-           Message = "No active deployment found for deployment ID {DeploymentId} for {Repository}.")]
+            EventId = 8,
+            Level = LogLevel.Information,
+            Message = "No active deployment found for deployment ID {DeploymentId} for {Repository}.")]
         public static partial void NoActiveDeploymentFound(
             ILogger logger,
             long deploymentId,
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 9,
-           Level = LogLevel.Information,
-           Message = "No commits found between active deployment ID {ActiveDeploymentId} and pending deployment ID {PendingDeploymentId} for {Repository}.")]
+            EventId = 9,
+            Level = LogLevel.Information,
+            Message = "No commits found between active deployment ID {ActiveDeploymentId} and pending deployment ID {PendingDeploymentId} for {Repository}.")]
         public static partial void NoCommitsFoundForPendingDeployment(
             ILogger logger,
             long activeDeploymentId,
@@ -445,9 +450,9 @@ public sealed partial class DeploymentStatusHandler(
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 10,
-           Level = LogLevel.Debug,
-           Message = "Deployment ID {DeploymentId} for {Repository} cannot be auto-deployed as it contains commit {Sha} from untrusted author {Login}.")]
+            EventId = 10,
+            Level = LogLevel.Debug,
+            Message = "Deployment ID {DeploymentId} for {Repository} cannot be auto-deployed as it contains commit {Sha} from untrusted author {Login}.")]
         public static partial void UntrustedCommitAuthorFound(
             ILogger logger,
             long deploymentId,
@@ -456,9 +461,9 @@ public sealed partial class DeploymentStatusHandler(
             string login);
 
         [LoggerMessage(
-           EventId = 11,
-           Level = LogLevel.Debug,
-           Message = "Deployment ID {DeploymentId} for {Repository} cannot be auto-deployed as it contains commit {Sha} that is not a trusted dependency update.")]
+            EventId = 11,
+            Level = LogLevel.Debug,
+            Message = "Deployment ID {DeploymentId} for {Repository} cannot be auto-deployed as it contains commit {Sha} that is not a trusted dependency update.")]
         public static partial void IgnoringCommitThatIsNotATrustedCommit(
             ILogger logger,
             long deploymentId,
@@ -466,9 +471,9 @@ public sealed partial class DeploymentStatusHandler(
             string sha);
 
         [LoggerMessage(
-           EventId = 12,
-           Level = LogLevel.Information,
-           Message = "Did not find exactly one pending deployment for workflow run ID {RunId} for environment {EnvironmentName} for {Repository}; found {Count}.")]
+            EventId = 12,
+            Level = LogLevel.Information,
+            Message = "Did not find exactly one pending deployment for workflow run ID {RunId} for environment {EnvironmentName} for {Repository}; found {Count}.")]
         public static partial void NoSinglePendingDeploymentFound(
             ILogger logger,
             long runId,
@@ -477,9 +482,9 @@ public sealed partial class DeploymentStatusHandler(
             int count);
 
         [LoggerMessage(
-           EventId = 13,
-           Level = LogLevel.Warning,
-           Message = "Failed to approve workflow run ID {RunId} for {Repository}.")]
+            EventId = 13,
+            Level = LogLevel.Warning,
+            Message = "Failed to approve workflow run ID {RunId} for {Repository}.")]
         public static partial void FailedToApproveDeployment(
             ILogger logger,
             Exception exception,
@@ -487,9 +492,10 @@ public sealed partial class DeploymentStatusHandler(
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 14,
-           Level = LogLevel.Debug,
-           Message = "Commit {Sha} is associated with reference {Reference} from pull request {PullRequest}.")]
+            EventId = 14,
+            Level = LogLevel.Debug,
+            SkipEnabledCheck = true,
+            Message = "Commit {Sha} is associated with reference {Reference} from pull request {PullRequest}.")]
         public static partial void FoundReferenceForCommitPullRequest(
             ILogger logger,
             string sha,
@@ -497,9 +503,9 @@ public sealed partial class DeploymentStatusHandler(
             IssueId pullRequest);
 
         [LoggerMessage(
-           EventId = 15,
-           Level = LogLevel.Debug,
-           Message = "The pending deployment ID {PendingDeploymentId} for {Repository} is {Count} commits behind.")]
+            EventId = 15,
+            Level = LogLevel.Debug,
+            Message = "The pending deployment ID {PendingDeploymentId} for {Repository} is {Count} commits behind.")]
         public static partial void PendingDeploymentIsBehindTheActiveDeployment(
             ILogger logger,
             long pendingDeploymentId,
@@ -507,18 +513,18 @@ public sealed partial class DeploymentStatusHandler(
             int count);
 
         [LoggerMessage(
-           EventId = 16,
-           Level = LogLevel.Information,
-           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} as it is a public holiday.")]
+            EventId = 16,
+            Level = LogLevel.Information,
+            Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} as it is a public holiday.")]
         public static partial void TodayIsAPublicHoliday(
             ILogger logger,
             long deploymentStatusId,
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 17,
-           Level = LogLevel.Warning,
-           Message = "Failed to get Git diff from URL {GitDiffUrl}.")]
+            EventId = 17,
+            Level = LogLevel.Warning,
+            Message = "Failed to get Git diff from URL {GitDiffUrl}.")]
         public static partial void GetDiffFailed(
             ILogger logger,
             Exception exception,

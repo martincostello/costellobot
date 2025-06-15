@@ -255,11 +255,16 @@ public sealed partial class GitCommitAnalyzer(
             return [];
         }
 
-        Log.CommitUpdatesDependencies(
-            logger,
-            sha,
-            repository,
-            [.. dependencies.Select((p) => p.Name)]);
+#pragma warning disable CA1873
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            Log.CommitUpdatesDependencies(
+                logger,
+                sha,
+                repository,
+                [.. dependencies.Select((p) => p.Name)]);
+        }
+#pragma warning restore CA1873
 
         // First do a simple lookup by name
         var trustedDependencies = context.WebhookOptions.TrustedEntities.Dependencies;
@@ -419,7 +424,7 @@ public sealed partial class GitCommitAnalyzer(
                         reference,
                         repository,
                         dependency,
-                        registry.Ecosystem.ToString());
+                        registry.Ecosystem);
 
                     return true;
                 }
@@ -454,7 +459,7 @@ public sealed partial class GitCommitAnalyzer(
                         repository,
                         dependency,
                         version,
-                        ecosystem.ToString());
+                        ecosystem);
 
                     return true;
                 }
@@ -522,9 +527,10 @@ public sealed partial class GitCommitAnalyzer(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Information,
-           Message = "Commit {Sha} for {Repository} updates the following dependencies: {Dependencies}.")]
+            EventId = 1,
+            Level = LogLevel.Information,
+            SkipEnabledCheck = true,
+            Message = "Commit {Sha} for {Repository} updates the following dependencies: {Dependencies}.")]
         public static partial void CommitUpdatesDependencies(
             ILogger logger,
             string sha,
@@ -532,9 +538,9 @@ public sealed partial class GitCommitAnalyzer(
             string[] dependencies);
 
         [LoggerMessage(
-           EventId = 2,
-           Level = LogLevel.Debug,
-           Message = "Commit {Sha} for {Repository} updates dependency {Dependency} which is not trusted by its name.")]
+            EventId = 2,
+            Level = LogLevel.Debug,
+            Message = "Commit {Sha} for {Repository} updates dependency {Dependency} which is not trusted by its name.")]
         public static partial void UntrustedDependencyNameUpdated(
             ILogger logger,
             string sha,
@@ -542,9 +548,9 @@ public sealed partial class GitCommitAnalyzer(
             string dependency);
 
         [LoggerMessage(
-           EventId = 3,
-           Level = LogLevel.Information,
-           Message = "Commit {Sha} for {Repository} updates {Count} trusted dependencies.")]
+            EventId = 3,
+            Level = LogLevel.Information,
+            Message = "Commit {Sha} for {Repository} updates {Count} trusted dependencies.")]
         public static partial void TrustedDependenciesUpdated(
             ILogger logger,
             string sha,
@@ -552,9 +558,9 @@ public sealed partial class GitCommitAnalyzer(
             int count);
 
         [LoggerMessage(
-           EventId = 4,
-           Level = LogLevel.Error,
-           Message = "Failed to query owners for package {PackageId} version {PackageVersion} from the {Ecosystem} ecosystem.")]
+            EventId = 4,
+            Level = LogLevel.Error,
+            Message = "Failed to query owners for package {PackageId} version {PackageVersion} from the {Ecosystem} ecosystem.")]
         public static partial void FailedToQueryPackageRegistry(
             ILogger logger,
             string packageId,
@@ -563,9 +569,9 @@ public sealed partial class GitCommitAnalyzer(
             Exception exception);
 
         [LoggerMessage(
-           EventId = 5,
-           Level = LogLevel.Debug,
-           Message = "Reference {Reference} for {Repository} updates dependency {Dependency} which is not trusted by its owner.")]
+            EventId = 5,
+            Level = LogLevel.Debug,
+            Message = "Reference {Reference} for {Repository} updates dependency {Dependency} which is not trusted by its owner.")]
         public static partial void UntrustedDependencyOwnerUpdated(
             ILogger logger,
             string? reference,
@@ -573,9 +579,9 @@ public sealed partial class GitCommitAnalyzer(
             string dependency);
 
         [LoggerMessage(
-           EventId = 6,
-           Level = LogLevel.Information,
-           Message = "Commit {Sha} for {Repository} updates dependency {Dependency} which is trusted by its name.")]
+            EventId = 6,
+            Level = LogLevel.Information,
+            Message = "Commit {Sha} for {Repository} updates dependency {Dependency} which is trusted by its name.")]
         public static partial void TrustedDependencyNameUpdated(
             ILogger logger,
             string sha,
@@ -583,9 +589,9 @@ public sealed partial class GitCommitAnalyzer(
             string dependency);
 
         [LoggerMessage(
-           EventId = 7,
-           Level = LogLevel.Information,
-           Message = "Reference {Reference} for {Repository} updates dependency {Dependency} which is trusted through its owner.")]
+            EventId = 7,
+            Level = LogLevel.Information,
+            Message = "Reference {Reference} for {Repository} updates dependency {Dependency} which is trusted through its owner.")]
         public static partial void TrustedDependencyOwnerUpdated(
             ILogger logger,
             string? reference,
@@ -593,29 +599,29 @@ public sealed partial class GitCommitAnalyzer(
             string dependency);
 
         [LoggerMessage(
-           EventId = 8,
-           Level = LogLevel.Information,
-           Message = "Reference {Reference} for {Repository} updates dependency {Dependency} whose owner is trusted by its registry {Registry}.")]
+            EventId = 8,
+            Level = LogLevel.Information,
+            Message = "Reference {Reference} for {Repository} updates dependency {Dependency} whose owner is trusted by its registry {Registry}.")]
         public static partial void TrustedDependencyOwnerViaRegistryUpdated(
             ILogger logger,
             string? reference,
             RepositoryId repository,
             string dependency,
-            string registry);
+            DependencyEcosystem registry);
 
         [LoggerMessage(
-           EventId = 9,
-           Level = LogLevel.Warning,
-           Message = "Failed to parse dependabot configuration for repository {Repository}.")]
+            EventId = 9,
+            Level = LogLevel.Warning,
+            Message = "Failed to parse dependabot configuration for repository {Repository}.")]
         public static partial void FailedToParseDependabotConfiguration(
             ILogger logger,
             RepositoryId repository,
             Exception exception);
 
         [LoggerMessage(
-           EventId = 10,
-           Level = LogLevel.Information,
-           Message = "Reference {Reference} for {Repository} updates dependency {Dependency} which is ignored by the dependabot configuration.")]
+            EventId = 10,
+            Level = LogLevel.Information,
+            Message = "Reference {Reference} for {Repository} updates dependency {Dependency} which is ignored by the dependabot configuration.")]
         public static partial void UpdateToDependencyIsIgnoredByDependabot(
             ILogger logger,
             string? reference,
@@ -623,21 +629,21 @@ public sealed partial class GitCommitAnalyzer(
             string dependency);
 
         [LoggerMessage(
-           EventId = 11,
-           Level = LogLevel.Information,
-           Message = "Reference {Reference} for {Repository} updates dependency {Dependency} version {Version} for the {Registry} registry which is implicitly trusted.")]
+            EventId = 11,
+            Level = LogLevel.Information,
+            Message = "Reference {Reference} for {Repository} updates dependency {Dependency} version {Version} for the {Registry} registry which is implicitly trusted.")]
         public static partial void ImplicitlyTrustedDependencyUpdated(
             ILogger logger,
             string? reference,
             RepositoryId repository,
             string dependency,
             string version,
-            string registry);
+            DependencyEcosystem registry);
 
         [LoggerMessage(
-           EventId = 12,
-           Level = LogLevel.Debug,
-           Message = "Reference {Reference} for {Repository} updates dependency {Dependency} which is not implicitly trusted.")]
+            EventId = 12,
+            Level = LogLevel.Debug,
+            Message = "Reference {Reference} for {Repository} updates dependency {Dependency} which is not implicitly trusted.")]
         public static partial void DependencyNotImplicitlyTrusted(
             ILogger logger,
             string? reference,
@@ -645,9 +651,9 @@ public sealed partial class GitCommitAnalyzer(
             string dependency);
 
         [LoggerMessage(
-           EventId = 13,
-           Level = LogLevel.Error,
-           Message = "Failed to query trust store for package {PackageId} version {PackageVersion} from the {Ecosystem} ecosystem.")]
+            EventId = 13,
+            Level = LogLevel.Error,
+            Message = "Failed to query trust store for package {PackageId} version {PackageVersion} from the {Ecosystem} ecosystem.")]
         public static partial void FailedToQueryTrustStore(
             ILogger logger,
             string packageId,
