@@ -14,13 +14,13 @@ public static class GitHubFixtures
 
     public const string AuthorizationHeader = "Token ghs_secret-access-token";
 
-    public const string DependabotBotName = "app/dependabot";
-
     public const string DependabotCommitter = "dependabot[bot]";
 
     public const string GitHubActionsBotName = "app/github-actions";
 
     public const string InstallationId = "24364748";
+
+    public const string RenovateCommitter = "renovate[bot]";
 
     public static CheckRunBuilder CreateCheckRun(
         PullRequestBuilder pullRequest,
@@ -235,4 +235,13 @@ updated-dependencies:
 ...
 
 Signed-off-by: dependabot[bot] <support@github.com>";
+
+    public static string TrustedCommitMessageForRenovate(string dependency = "NodaTime.Testing", string version = "3.0.10") => $@"
+Update dependency {dependency} to {version}
+| datasource | package      | from  | to        |
+| ---------- | ------------ | ----- | --------- |
+| nuget      | {dependency} | 0.0.0 | {version} |
+
+
+Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>";
 }
