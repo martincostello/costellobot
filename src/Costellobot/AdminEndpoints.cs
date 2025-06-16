@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
+using NuGet.Versioning;
 using Octokit;
 using Activity = System.Diagnostics.Activity;
 
@@ -350,9 +351,24 @@ public static class AdminEndpoints
 
                 var model = new Dictionary<DependencyEcosystem, IReadOnlyList<TrustedDependency>>();
 
+                var comparer = Comparer<string>.Create(static (x, y) =>
+                {
+                    if (NuGetVersion.TryParse(x, out var versionX) &&
+                        NuGetVersion.TryParse(y, out var versionY))
+                    {
+                        return versionX.CompareTo(versionY);
+                    }
+
+                    return string.Compare(x, y, StringComparison.Ordinal);
+                });
+
                 foreach (var ecosystem in ecosystems)
                 {
-                    model[ecosystem] = await store.GetTrustAsync(ecosystem, cancellationToken);
+                    var dependencies = await store.GetTrustAsync(ecosystem, cancellationToken);
+
+                    model[ecosystem] = [.. dependencies
+                        .OrderBy((p) => p.Id)
+                        .ThenByDescending((p) => p.Version, comparer)];
                 }
 
                 return Results.Extensions.RazorSlice<Dependencies, IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<TrustedDependency>>>(model);
