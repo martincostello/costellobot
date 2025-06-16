@@ -34,7 +34,7 @@
                 <tbody>
                     @foreach ((var ecosystem, var dependencies) in Model)
                     {
-                        foreach (var dependency in dependencies.OrderBy((p) => p.Id).ThenByDescending((p) => p.Version))
+                        foreach (var dependency in dependencies)
                         {
                             (var name, var url, var icon) = DependencyHelpers.GetPackageMetadata(ecosystem, dependency.Id, dependency.Version);
 
