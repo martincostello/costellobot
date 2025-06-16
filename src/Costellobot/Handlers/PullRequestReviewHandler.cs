@@ -22,6 +22,7 @@ public sealed partial class PullRequestReviewHandler(
 
     private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromDays(1) };
     private static readonly string[] CacheTags = ["all", "github"];
+    private static readonly string[] PullRequestCreators = ["app/dependabot", "app/renovate"];
 
     public async Task HandleAsync(WebhookEvent message)
     {
@@ -99,11 +100,11 @@ public sealed partial class PullRequestReviewHandler(
         {
             try
             {
-                await TryApproveOpenDependabotPullRequestsAsync(id);
+                await TryApproveOpenBotPullRequestsAsync(id);
             }
             catch (Exception ex)
             {
-                Log.FailedToApproveDependabotPullRequests(logger, ex);
+                Log.FailedToApprovePullRequests(logger, ex);
             }
         }
 
@@ -155,78 +156,81 @@ public sealed partial class PullRequestReviewHandler(
             CacheEntryOptions,
             CacheTags);
 
-    private async Task TryApproveOpenDependabotPullRequestsAsync(IssueId triggeringId)
+    private async Task TryApproveOpenBotPullRequestsAsync(IssueId triggeringId)
     {
         var repositories = await GetInstallationRepositoriesAsync();
 
-        Log.SearchingInstallationRepositories(logger, repositories.Count);
-
-        var options = new ApiOptions() { PageSize = PageSize };
-        var request = new RepositoryIssueRequest()
+        foreach (var creator in PullRequestCreators)
         {
-            Creator = "app/dependabot",
-            Filter = IssueFilter.Created,
-            State = ItemStateFilter.Open,
-        };
+            Log.SearchingInstallationRepositories(logger, repositories.Count, creator);
 
-        await Parallel.ForEachAsync(repositories, async (repo, _) =>
-        {
-            var issues = await context.InstallationClient.Issue.GetAllForRepository(repo.Id, request, options);
-
-            var issuesWithPulls = issues
-                .Where((p) => p.PullRequest is { })
-                .ToArray();
-
-            var repositoryId = new RepositoryId(repo.Owner, repo.Name);
-
-            Log.FoundDependabotPullRequests(logger, repositoryId, issuesWithPulls.Length);
-
-            if (issuesWithPulls.Length < 1)
+            var options = new ApiOptions() { PageSize = PageSize };
+            var request = new RepositoryIssueRequest()
             {
-                return;
-            }
+                Creator = creator,
+                Filter = IssueFilter.Created,
+                State = ItemStateFilter.Open,
+            };
 
-            PullRequestMergeMethod? mergeMethod = default;
-
-            foreach (var issue in issuesWithPulls)
+            await Parallel.ForEachAsync(repositories, async (repo, _) =>
             {
-                var pullId = new IssueId(repositoryId, issue.Number);
+                var issues = await context.InstallationClient.Issue.GetAllForRepository(repo.Id, request, options);
 
-                if (pullId == triggeringId)
+                var issuesWithPulls = issues
+                    .Where((p) => p.PullRequest is { })
+                    .ToArray();
+
+                var repositoryId = new RepositoryId(repo.Owner, repo.Name);
+
+                Log.FoundPullRequests(logger, issuesWithPulls.Length, creator, repositoryId);
+
+                if (issuesWithPulls.Length < 1)
                 {
-                    continue;
+                    return;
                 }
 
-                var appLogin = await GetAppLoginAsync();
+                PullRequestMergeMethod? mergeMethod = default;
 
-                if (await pullRequestAnalyzer.IsApprovedByAsync(pullId, appLogin))
+                foreach (var issue in issuesWithPulls)
                 {
-                    Log.PullRequestAlreadyApproved(logger, pullId, appLogin);
-                }
-                else
-                {
-                    var pull = await context.InstallationClient.PullRequest.Get(repositoryId.Owner, repositoryId.Name, issue.Number);
+                    var pullId = new IssueId(repositoryId, issue.Number);
 
-                    bool isTrusted = await pullRequestAnalyzer.IsTrustedDependencyUpdateAsync(
-                        repositoryId,
-                        pull.Head.Ref,
-                        pull.Head.Sha,
-                        pull.Url);
-
-                    if (isTrusted)
+                    if (pullId == triggeringId)
                     {
-                        mergeMethod ??= await GetRepositoryMergeMethodAsync(repo.Id);
+                        continue;
+                    }
 
-                        await pullRequestApprover.ApproveAndMergeAsync(
-                            pullId,
-                            pull.NodeId,
-                            mergeMethod.GetValueOrDefault());
+                    var appLogin = await GetAppLoginAsync();
 
-                        Log.PullRequestApprovedAfterImplicitTrust(logger, pullId);
+                    if (await pullRequestAnalyzer.IsApprovedByAsync(pullId, appLogin))
+                    {
+                        Log.PullRequestAlreadyApproved(logger, pullId, appLogin);
+                    }
+                    else
+                    {
+                        var pull = await context.InstallationClient.PullRequest.Get(repositoryId.Owner, repositoryId.Name, issue.Number);
+
+                        bool isTrusted = await pullRequestAnalyzer.IsTrustedDependencyUpdateAsync(
+                            repositoryId,
+                            pull.Head.Ref,
+                            pull.Head.Sha,
+                            pull.Url);
+
+                        if (isTrusted)
+                        {
+                            mergeMethod ??= await GetRepositoryMergeMethodAsync(repo.Id);
+
+                            await pullRequestApprover.ApproveAndMergeAsync(
+                                pullId,
+                                pull.NodeId,
+                                mergeMethod.GetValueOrDefault());
+
+                            Log.PullRequestApprovedAfterImplicitTrust(logger, pullId);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -256,27 +260,29 @@ public sealed partial class PullRequestReviewHandler(
         [LoggerMessage(
            EventId = 3,
            Level = LogLevel.Warning,
-           Message = "Failed to approve open pull requests from Dependabot.")]
-        public static partial void FailedToApproveDependabotPullRequests(
+           Message = "Failed to approve open pull requests.")]
+        public static partial void FailedToApprovePullRequests(
             ILogger logger,
             Exception exception);
 
         [LoggerMessage(
            EventId = 4,
            Level = LogLevel.Debug,
-           Message = "Searching {Count} installation repositories for pull requests from dependabot.")]
+           Message = "Searching {Count} installation repositories for pull requests from {Creator}.")]
         public static partial void SearchingInstallationRepositories(
             ILogger logger,
-            int count);
+            int count,
+            string creator);
 
         [LoggerMessage(
            EventId = 5,
            Level = LogLevel.Debug,
-           Message = "Found {Count} dependabot pull requests in repository {Repository}.")]
-        public static partial void FoundDependabotPullRequests(
+           Message = "Found {Count} pull requests created by {Creator} in repository {Repository}.")]
+        public static partial void FoundPullRequests(
             ILogger logger,
-            RepositoryId repository,
-            int count);
+            int count,
+            string creator,
+            RepositoryId repository);
 
         [LoggerMessage(
            EventId = 6,

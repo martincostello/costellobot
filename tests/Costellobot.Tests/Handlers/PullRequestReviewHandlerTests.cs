@@ -238,7 +238,8 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
 
             RegisterCommitAndDiff(pull);
             RegisterDependabotConfiguration(pull.Repository, pull.PullRequest.RefHead);
-            RegisterDependabotIssues(pull.Repository, [pull.PullRequest.ToIssue()]);
+            RegisterIssues(pull.Repository, "app/dependabot", [pull.PullRequest.ToIssue()]);
+            RegisterIssues(pull.Repository, "app/renovate", []);
             RegisterRepository(pull.Repository);
             RegisterReviews(pull, reviews);
 
@@ -535,7 +536,8 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
         RegisterCollaborator(driver, driver.Sender.Login, isCollaborator);
         RegisterCommitAndDiff(driver);
         RegisterDependabotConfiguration(driver.Repository, driver.PullRequest.RefHead);
-        RegisterDependabotIssues(driver.Repository, [driver.PullRequest.ToIssue()]);
+        RegisterIssues(driver.Repository, "app/dependabot", [driver.PullRequest.ToIssue()]);
+        RegisterIssues(driver.Repository, "app/renovate", []);
         RegisterGitHubApp(driver.Owner);
         RegisterInstallationRepositories(installationRepositories ?? [driver.Repository]);
         RegisterRepository(driver.Repository);
@@ -566,12 +568,12 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
         return await PostWebhookAsync("pull_request_review", value);
     }
 
-    private void RegisterDependabotIssues(RepositoryBuilder repository, IEnumerable<IssueBuilder> issues)
+    private void RegisterIssues(RepositoryBuilder repository, string creator, IEnumerable<IssueBuilder> issues)
     {
         CreateDefaultBuilder()
             .Requests()
             .ForPath($"/repositories/{repository.Id}/issues")
-            .ForQuery("creator=app%2Fdependabot&filter=created&state=open&sort=created&direction=desc&per_page=100")
+            .ForQuery($"creator={Uri.EscapeDataString(creator)}&filter=created&state=open&sort=created&direction=desc&per_page=100")
             .Responds()
             .WithJsonContent(issues)
             .RegisterWith(Fixture.Interceptor);
