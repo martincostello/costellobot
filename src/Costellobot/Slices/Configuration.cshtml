@@ -337,7 +337,9 @@
                                             @foreach (var user in Model.Webhook.TrustedEntities.Reviewers)
                                             {
                                                 <li>
-                                                    <code class="trusted-reviewer">@(user)</code>
+                                                    <a href="@(GitHubUserUrl(user))" target="_blank" rel="noopener">
+                                                        <code class="trusted-reviewer">@(user)</code>
+                                                    </a>
                                                 </li>
                                             }
                                         </ul>
@@ -354,7 +356,9 @@
                                             @foreach (var user in Model.Webhook.TrustedEntities.Users)
                                             {
                                                 <li>
-                                                    <code class="trusted-user">@(user)</code>
+                                                    <a href="@(GitHubUserUrl(user))" target="_blank" rel="noopener">
+                                                        <code class="trusted-user">@(user)</code>
+                                                    </a>
                                                 </li>
                                             }
                                         </ul>
@@ -510,4 +514,11 @@
 
         return HtmlString.Empty;
     }
+}
+
+@functions {
+    private string GitHubUserUrl(string login)
+        => login.EndsWith("[bot]", StringComparison.Ordinal)
+           ? $"https://github.com/apps/{login[0..^5]}"
+           : $"https://github.com/{login}";
 }
