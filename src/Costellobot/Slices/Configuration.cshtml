@@ -337,7 +337,7 @@
                                             @foreach (var user in Model.Webhook.TrustedEntities.Reviewers)
                                             {
                                                 <li>
-                                                    <a href="@(GitHubUserUrl(user))" target="_blank" rel="noopener">
+                                                    <a href="@(GitHubUserUrl(user))" target="_blank" rel="noopener" aria-label="View @(user)'s GitHub profile">
                                                         <code class="trusted-reviewer">@(user)</code>
                                                     </a>
                                                 </li>
@@ -356,7 +356,7 @@
                                             @foreach (var user in Model.Webhook.TrustedEntities.Users)
                                             {
                                                 <li>
-                                                    <a href="@(GitHubUserUrl(user))" target="_blank" rel="noopener">
+                                                    <a href="@(GitHubUserUrl(user))" target="_blank" rel="noopener" aria-label="View @(user)'s GitHub profile">
                                                         <code class="trusted-user">@(user)</code>
                                                     </a>
                                                 </li>
