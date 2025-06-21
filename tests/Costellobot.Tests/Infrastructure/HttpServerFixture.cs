@@ -3,23 +3,23 @@
 
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace MartinCostello.Costellobot.Infrastructure;
 
 public sealed class HttpServerFixture : AppFixture
 {
-    private bool _disposed;
-    private IHost? _host;
+    public HttpServerFixture()
+    {
+        // HACK Ensure the Kestrel port will eventually be used
+        ClientOptions.BaseAddress = new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions().BaseAddress;
+        UseKestrel(0);
+    }
 
     public string ServerAddress
     {
         get
         {
-            EnsureServer();
+            StartServer();
             return ServerUri.ToString();
         }
     }
@@ -28,17 +28,8 @@ public sealed class HttpServerFixture : AppFixture
     {
         get
         {
-            EnsureServer();
+            StartServer();
             return base.ServerUri;
-        }
-    }
-
-    public override IServiceProvider Services
-    {
-        get
-        {
-            EnsureServer();
-            return _host!.Services!;
         }
     }
 
@@ -63,51 +54,5 @@ public sealed class HttpServerFixture : AppFixture
         builder.ConfigureKestrel(
             (serverOptions) => serverOptions.ConfigureHttpsDefaults(
                 (httpsOptions) => httpsOptions.ServerCertificate = X509CertificateLoader.LoadPkcs12FromFile("localhost-dev.pfx", "Pa55w0rd!")));
-
-        builder.UseUrls("https://127.0.0.1:0");
-    }
-
-    protected override IHost CreateHost(IHostBuilder builder)
-    {
-        var testHost = builder.Build();
-
-        builder.ConfigureWebHost((webHostBuilder) => webHostBuilder.UseKestrel());
-
-        _host = builder.Build();
-        _host.Start();
-
-        var server = _host.Services.GetRequiredService<IServer>();
-        var addresses = server.Features.Get<IServerAddressesFeature>();
-
-        ClientOptions.BaseAddress = addresses!.Addresses
-            .Select((p) => new Uri(p))
-            .Last();
-
-        return testHost;
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-
-        if (!_disposed)
-        {
-            if (disposing)
-            {
-                _host?.Dispose();
-            }
-
-            _disposed = true;
-        }
-    }
-
-    private void EnsureServer()
-    {
-        if (_host is null)
-        {
-            using (CreateDefaultClient())
-            {
-            }
-        }
     }
 }
