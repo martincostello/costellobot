@@ -25,7 +25,7 @@
     "@grafana/faro-web-sdk": "^1.18.2",
     "@grafana/faro-web-tracing": "^1.18.2",
     "@microsoft/signalr": "^8.0.7",
-    "@stylistic/eslint-plugin": "^4.4.1",
+    "@stylistic/eslint-plugin": "^5.0.0",
     "@typescript-eslint/eslint-plugin": "^8.34.1",
     "@typescript-eslint/parser": "^8.32.1",
     "css-loader": "^7.1.2",
