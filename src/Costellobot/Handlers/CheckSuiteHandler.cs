@@ -128,12 +128,17 @@ public sealed partial class CheckSuiteHandler(
             return false;
         }
 
-        Log.FailedCheckRunsFound(
-            logger,
-            failedRuns.Count,
-            checkSuiteId,
-            repository,
-            [.. failedRuns.Select((p) => p.Name).Distinct()]);
+#pragma warning disable CA1873
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            Log.FailedCheckRunsFound(
+                logger,
+                failedRuns.Count,
+                checkSuiteId,
+                repository,
+                [.. failedRuns.Select((p) => p.Name).Distinct()]);
+        }
+#pragma warning restore CA1873
 
         var options = context.WebhookOptions;
 
@@ -172,12 +177,17 @@ public sealed partial class CheckSuiteHandler(
             return false;
         }
 
-        Log.EligibileFailedCheckRunsFound(
-            logger,
-            retryEligibleRuns.Count,
-            checkSuiteId,
-            repository,
-            [.. retryEligibleRuns.Select((p) => p.Key)]);
+#pragma warning disable CA1873
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            Log.EligibileFailedCheckRunsFound(
+                logger,
+                retryEligibleRuns.Count,
+                checkSuiteId,
+                repository,
+                [.. retryEligibleRuns.Select((p) => p.Key)]);
+        }
+#pragma warning restore CA1873
 
         if (retryEligibleRuns.Any((p) => p.Count() > options.RerunFailedChecksAttempts))
         {
@@ -252,9 +262,9 @@ public sealed partial class CheckSuiteHandler(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Debug,
-           Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} for action {Action}.")]
+            EventId = 1,
+            Level = LogLevel.Debug,
+            Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} for action {Action}.")]
         public static partial void IgnoringCheckRunAction(
             ILogger logger,
             long? checkSuiteId,
@@ -262,54 +272,55 @@ public sealed partial class CheckSuiteHandler(
             string? action);
 
         [LoggerMessage(
-           EventId = 2,
-           Level = LogLevel.Debug,
-           Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} which did not fail.")]
+            EventId = 2,
+            Level = LogLevel.Debug,
+            Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} which did not fail.")]
         public static partial void IgnoringCheckRunThatDidNotFail(
             ILogger logger,
             long checkSuiteId,
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 3,
-           Level = LogLevel.Debug,
-           Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as retries are not enabled.")]
+            EventId = 3,
+            Level = LogLevel.Debug,
+            Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as retries are not enabled.")]
         public static partial void RetriesAreNotEnabled(
             ILogger logger,
             long checkSuiteId,
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 4,
-           Level = LogLevel.Debug,
-           Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as it cannot be retried.")]
+            EventId = 4,
+            Level = LogLevel.Debug,
+            Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as it cannot be retried.")]
         public static partial void CannotRetryCheckSuite(
             ILogger logger,
             long checkSuiteId,
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 5,
-           Level = LogLevel.Debug,
-           Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as no check runs are configured to be retried.")]
+            EventId = 5,
+            Level = LogLevel.Debug,
+            Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as no check runs are configured to be retried.")]
         public static partial void NoChecksConfiguredForRetry(
             ILogger logger,
             long checkSuiteId,
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 6,
-           Level = LogLevel.Debug,
-           Message = "No failed runs found for check suite ID {CheckSuiteId} in {Repository}.")]
+            EventId = 6,
+            Level = LogLevel.Debug,
+            Message = "No failed runs found for check suite ID {CheckSuiteId} in {Repository}.")]
         public static partial void NoFailedCheckRunsFound(
             ILogger logger,
             long checkSuiteId,
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 7,
-           Level = LogLevel.Information,
-           Message = "Found {Count} failed runs for check suite ID {CheckSuiteId} in {Repository}: {FailedCheckRuns}.")]
+            EventId = 7,
+            Level = LogLevel.Information,
+            SkipEnabledCheck = true,
+            Message = "Found {Count} failed runs for check suite ID {CheckSuiteId} in {Repository}: {FailedCheckRuns}.")]
         public static partial void FailedCheckRunsFound(
             ILogger logger,
             int count,
@@ -318,18 +329,19 @@ public sealed partial class CheckSuiteHandler(
             string[] failedCheckRuns);
 
         [LoggerMessage(
-           EventId = 8,
-           Level = LogLevel.Debug,
-           Message = "No failed runs found for check suite ID {CheckSuiteId} in {Repository} that are eligible to be retried.")]
+            EventId = 8,
+            Level = LogLevel.Debug,
+            Message = "No failed runs found for check suite ID {CheckSuiteId} in {Repository} that are eligible to be retried.")]
         public static partial void NoEligibleFailedCheckRunsFound(
             ILogger logger,
             long checkSuiteId,
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 9,
-           Level = LogLevel.Information,
-           Message = "Found {Count} total failed runs for check suite ID {CheckSuiteId} in {Repository} that are eligible to be retried: {EligibileCheckRuns}.")]
+            EventId = 9,
+            Level = LogLevel.Information,
+            SkipEnabledCheck = true,
+            Message = "Found {Count} total failed runs for check suite ID {CheckSuiteId} in {Repository} that are eligible to be retried: {EligibileCheckRuns}.")]
         public static partial void EligibileFailedCheckRunsFound(
             ILogger logger,
             int count,
@@ -338,9 +350,9 @@ public sealed partial class CheckSuiteHandler(
             string[] eligibileCheckRuns);
 
         [LoggerMessage(
-           EventId = 10,
-           Level = LogLevel.Information,
-           Message = "Cannot retry check suite ID {CheckSuiteId} in {Repository} as there is at least one run that has been retried at least {MaximumRetries} times.")]
+            EventId = 10,
+            Level = LogLevel.Information,
+            Message = "Cannot retry check suite ID {CheckSuiteId} in {Repository} as there is at least one run that has been retried at least {MaximumRetries} times.")]
         public static partial void TooManyRetries(
             ILogger logger,
             long checkSuiteId,
@@ -348,18 +360,18 @@ public sealed partial class CheckSuiteHandler(
             int maximumRetries);
 
         [LoggerMessage(
-           EventId = 11,
-           Level = LogLevel.Information,
-           Message = "Check suite ID {CheckSuiteId} in {Repository} has been re-requested.")]
+            EventId = 11,
+            Level = LogLevel.Information,
+            Message = "Check suite ID {CheckSuiteId} in {Repository} has been re-requested.")]
         public static partial void RerequestedCheckSuite(
             ILogger logger,
             long checkSuiteId,
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 12,
-           Level = LogLevel.Warning,
-           Message = "Failed to re-request check suite ID {CheckSuiteId} in {Repository}.")]
+            EventId = 12,
+            Level = LogLevel.Warning,
+            Message = "Failed to re-request check suite ID {CheckSuiteId} in {Repository}.")]
         public static partial void FailedToRerequestCheckSuite(
             ILogger logger,
             Exception exception,
@@ -367,9 +379,9 @@ public sealed partial class CheckSuiteHandler(
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 13,
-           Level = LogLevel.Information,
-           Message = "Re-running failed jobs for workflow {Name} with run ID {RunId} in {Repository}.")]
+            EventId = 13,
+            Level = LogLevel.Information,
+            Message = "Re-running failed jobs for workflow {Name} with run ID {RunId} in {Repository}.")]
         public static partial void RerunningFailedJobs(
             ILogger logger,
             string name,
@@ -377,9 +389,9 @@ public sealed partial class CheckSuiteHandler(
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 14,
-           Level = LogLevel.Error,
-           Message = "Failed to re-run failed jobs for workflow {Name} with run ID {RunId} in {Repository}.")]
+            EventId = 14,
+            Level = LogLevel.Error,
+            Message = "Failed to re-run failed jobs for workflow {Name} with run ID {RunId} in {Repository}.")]
         public static partial void FailedToRerunFailedJobs(
             ILogger logger,
             Exception exception,
@@ -388,9 +400,9 @@ public sealed partial class CheckSuiteHandler(
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 15,
-           Level = LogLevel.Debug,
-           Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as it is associated with a pull request from untrusted user {Login}.")]
+            EventId = 15,
+            Level = LogLevel.Debug,
+            Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as it is associated with a pull request from untrusted user {Login}.")]
         public static partial void IgnoringUntrustedUser(
             ILogger logger,
             long checkSuiteId,
