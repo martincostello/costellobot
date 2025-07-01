@@ -2,6 +2,8 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Calendar.v3;
 using MartinCostello.Costellobot.DeploymentRules;
 using MartinCostello.Costellobot.Handlers;
 using MartinCostello.Costellobot.Registries;
@@ -13,6 +15,7 @@ using Octokit;
 using Octokit.Internal;
 using Octokit.Webhooks;
 using Octokit.Webhooks.AspNetCore;
+using GoogleHttpClientFactory = Google.Apis.Http.IHttpClientFactory;
 
 namespace MartinCostello.Costellobot;
 
@@ -29,11 +32,37 @@ public static class GitHubExtensions
         services.AddHttpClient()
                 .ConfigureHttpClientDefaults((p) => p.AddStandardResilienceHandler());
 
+        services.AddSingleton<GoogleHttpClientFactory, GoogleHttpClientFactoryAdapter>();
+        services.AddSingleton((p) =>
+        {
+            var httpClientFactory = p.GetRequiredService<GoogleHttpClientFactory>();
+            var options = p.GetRequiredService<IOptionsMonitor<GoogleOptions>>().CurrentValue;
+
+            var initializer = new ServiceAccountCredential.Initializer(options.ClientEmail)
+            {
+                HttpClientFactory = httpClientFactory,
+                KeyId = options.PrivateKeyId,
+                ProjectId = options.ProjectId,
+            };
+
+            initializer.FromPrivateKey(options.PrivateKey);
+
+            return new CalendarService(new()
+            {
+                ApplicationName = "Costellobot",
+                HttpClientInitializer = new ServiceAccountCredential(initializer)
+                {
+                    Scopes = options.Scopes,
+                },
+            });
+        });
+
         services.AddHybridCache((p) => p.ReportTagMetrics = true);
         services.AddOptions();
 
         services.Configure<GitHubOptions>(configuration.GetSection("GitHub"));
         services.Configure<GitHubWebhookOptions>((p) => p.Secret = configuration["GitHub:WebhookSecret"]);
+        services.Configure<GoogleOptions>(configuration.GetSection("Google"));
         services.Configure<SiteOptions>(configuration.GetSection("Site"));
         services.Configure<WebhookOptions>(configuration.GetSection("Webhook"));
 
@@ -126,8 +155,10 @@ public static class GitHubExtensions
         services.AddSingleton<BadgeService>();
         services.AddSingleton<PublicHolidayProvider>();
 
+        // Deployment rules are sorted by priority from most to least important.
         services.AddSingleton<IDeploymentRule, ConfigurationDeploymentRule>();
         services.AddSingleton<IDeploymentRule, PublicHolidayDeploymentRule>();
+        services.AddSingleton<IDeploymentRule, CalendarDeploymentRule>();
 
         services.AddScoped<GitHubWebhookContext>();
         services.AddScoped<IHandlerFactory, HandlerFactory>();

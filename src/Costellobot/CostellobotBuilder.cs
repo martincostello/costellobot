@@ -6,7 +6,6 @@ using Azure.Data.Tables;
 using Azure.Identity;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
-using OpenTelemetry;
 
 namespace MartinCostello.Costellobot;
 
