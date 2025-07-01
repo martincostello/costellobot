@@ -1,0 +1,57 @@
+{
+  "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
+  "id": "google",
+  "version": 1,
+  "comment": "HTTP bundle for Google APIs.",
+  "items": [
+    {
+      "comment": "https://developers.google.com/identity/protocols/oauth2/web-server#exchange-authorization-code",
+      "uri": "https://oauth2.googleapis.com/token",
+      "method": "POST",
+      "contentFormat": "json",
+      "contentJson": {
+        "access_token": "1/fFAGRNJru1FTz70BzhT3Zg",
+        "expires_in": 3920,
+        "token_type": "Bearer",
+        "scope": "https://www.googleapis.com/auth/calendar.readonly",
+        "refresh_token": "1//xEoDL4iW3cxlI7yDbSRFYNG01kVKM2C-259HOF2aQbI"
+      }
+    },
+    {
+      "comment": "https://developers.google.com/workspace/calendar/api/v3/reference/events/list",
+      "uri": "https://www.googleapis.com/calendar/v3/calendars/google-calendar-id/events?singleEvents=true&timeMax=2023-09-02T00%3A00%3A00Z&timeMin=2023-09-01T00%3A00%3A00Z&fields=items%28start%2Cend%2Csummary%2Ctransparency%29",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "kind": "calendar#events",
+        "etag": "etag",
+        "summary": "A calendar",
+        "description": "The calendar for a Google user",
+        "updated": "2023-09-02T09:00:00Z",
+        "timeZone": "Europe/London",
+        "accessRole": "reader",
+        "defaultReminders": [],
+        "nextSyncToken": "next-sync-token",
+        "items": []
+      }
+    },
+    {
+      "comment": "https://developers.google.com/workspace/calendar/api/v3/reference/events/list",
+      "uri": "https://www.googleapis.com/calendar/v3/calendars/google-calendar-id/events?singleEvents=true&timeMax=2023-12-26T00%3A00%3A00Z&timeMin=2023-12-25T00%3A00%3A00Z&fields=items%28start%2Cend%2Csummary%2Ctransparency%29",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "kind": "calendar#events",
+        "etag": "etag",
+        "summary": "A calendar",
+        "description": "The calendar for a Google user",
+        "updated": "2023-09-02T09:00:00Z",
+        "timeZone": "Europe/London",
+        "accessRole": "reader",
+        "defaultReminders": [],
+        "nextSyncToken": "next-sync-token",
+        "items": []
+      }
+    }
+  ]
+}

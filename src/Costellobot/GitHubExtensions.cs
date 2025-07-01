@@ -50,6 +50,7 @@ public static class GitHubExtensions
             return new CalendarService(new()
             {
                 ApplicationName = "Costellobot",
+                HttpClientFactory = httpClientFactory,
                 HttpClientInitializer = new ServiceAccountCredential(initializer)
                 {
                     Scopes = options.Scopes,
