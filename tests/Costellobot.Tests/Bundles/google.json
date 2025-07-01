@@ -27,12 +27,97 @@
         "etag": "etag",
         "summary": "A calendar",
         "description": "The calendar for a Google user",
-        "updated": "2023-09-02T09:00:00Z",
+        "updated": "2023-09-01T09:00:00Z",
         "timeZone": "Europe/London",
         "accessRole": "reader",
         "defaultReminders": [],
         "nextSyncToken": "next-sync-token",
         "items": []
+      }
+    },
+    {
+      "comment": "https://developers.google.com/workspace/calendar/api/v3/reference/events/list",
+      "uri": "https://www.googleapis.com/calendar/v3/calendars/google-calendar-id/events?singleEvents=true&timeMax=2023-09-03T00%3A00%3A00Z&timeMin=2023-09-02T00%3A00%3A00Z&fields=items%28start%2Cend%2Csummary%2Ctransparency%29",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "kind": "calendar#events",
+        "etag": "etag",
+        "summary": "A calendar",
+        "description": "The calendar for a busy Google user",
+        "updated": "2023-09-02T09:00:00Z",
+        "timeZone": "Europe/London",
+        "accessRole": "reader",
+        "defaultReminders": [],
+        "nextSyncToken": "next-sync-token",
+        "items": [
+          {
+            "kind": "calendar#event",
+            "etag": "etag",
+            "id": "string",
+            "status": "confirmed",
+            "htmlLink": "https://calendar.google.com/calendar/event/event-id",
+            "created": "2023-09-01T09:30:00Z",
+            "updated": "2023-09-02T09:00:00Z",
+            "summary": "Busy",
+            "description": "Doing things",
+            "location": "Somewhere fun",
+            "creator": {
+              "id": "user-id",
+              "email": "someone@google.local",
+              "displayName": "Organizer",
+              "self": true
+            },
+            "organizer": {
+              "id": "user-id",
+              "email": "someone@google.local",
+              "displayName": "Organizer",
+              "self": true
+            },
+            "start": {
+              "date": "2023-09-02",
+              "timeZone": "Europe/London"
+            },
+            "end": {
+              "date": "2023-09-02",
+              "timeZone": "Europe/London"
+            },
+            "endTimeUnspecified": false,
+            "transparency": "opaque",
+            "visibility": "public",
+            "iCalUID": "UID:19960401T080045Z-4000F192713-0052@example.com",
+            "sequence": 1,
+            "attendees": [
+              {
+                "id": "user-id",
+                "email": "someone@google.local",
+                "displayName": "Organizer",
+                "organizer": true,
+                "self": true,
+                "resource": false,
+                "optional": false,
+                "responseStatus": "accepted"
+              }
+            ],
+            "extendedProperties": {
+              "private": {},
+              "shared": {}
+            },
+            "hangoutLink": "https://meet.google.com/hangout-id",
+            "anyoneCanAddSelf": false,
+            "locked": false,
+            "reminders": {
+              "useDefault": true,
+              "overrides": []
+            },
+            "source": {
+              "url": "https://calendar.google.com",
+              "title": "Calendar"
+            },
+            "attachments": [],
+            "eventType": "outOfOffice"
+          }
+        ]
       }
     },
     {
@@ -45,7 +130,7 @@
         "etag": "etag",
         "summary": "A calendar",
         "description": "The calendar for a Google user",
-        "updated": "2023-09-02T09:00:00Z",
+        "updated": "2023-12-25T09:00:00Z",
         "timeZone": "Europe/London",
         "accessRole": "reader",
         "defaultReminders": [],
