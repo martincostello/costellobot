@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using MartinCostello.Costellobot.DeploymentRules;
 using MartinCostello.Costellobot.Handlers;
 using MartinCostello.Costellobot.Registries;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -124,6 +125,9 @@ public static class GitHubExtensions
 
         services.AddSingleton<BadgeService>();
         services.AddSingleton<PublicHolidayProvider>();
+
+        services.AddSingleton<IDeploymentRule, ConfigurationDeploymentRule>();
+        services.AddSingleton<IDeploymentRule, PublicHolidayDeploymentRule>();
 
         services.AddScoped<GitHubWebhookContext>();
         services.AddScoped<IHandlerFactory, HandlerFactory>();

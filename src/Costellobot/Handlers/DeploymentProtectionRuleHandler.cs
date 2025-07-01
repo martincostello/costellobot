@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using MartinCostello.Costellobot.DeploymentRules;
 using Octokit;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events.DeploymentProtectionRule;
@@ -10,6 +11,7 @@ namespace MartinCostello.Costellobot.Handlers;
 
 public sealed partial class DeploymentProtectionRuleHandler(
     GitHubWebhookContext context,
+    IEnumerable<IDeploymentRule> deploymentRules,
     ILogger<DeploymentProtectionRuleHandler> logger) : IHandler
 {
     private static readonly ResiliencePipeline Pipeline = CreateResiliencePipeline();
@@ -31,17 +33,19 @@ public sealed partial class DeploymentProtectionRuleHandler(
             body.Deployment.Id,
             body.DeploymentCallbackUrl);
 
-        var options = context.WebhookOptions;
-
-        if (!options.Deploy)
+        foreach (var rule in deploymentRules.Where((p) => p.IsEnabled))
         {
-            Log.DeploymentProtectionRuleApprovalIsDisabled(
-                logger,
-                repository,
-                body.Environment,
-                body.Deployment.Id);
+            if (!await rule.EvaluateAsync(message, CancellationToken.None))
+            {
+                Log.DeploymentNotApproved(
+                    logger,
+                    repository,
+                    body.Environment,
+                    body.Deployment.Id,
+                    rule.Name);
 
-            return;
+                return;
+            }
         }
 
         try
@@ -49,7 +53,7 @@ public sealed partial class DeploymentProtectionRuleHandler(
             var review = new ReviewDeploymentProtectionRule(
                 body.Environment,
                 PendingDeploymentReviewState.Approved,
-                options.DeployComment);
+                context.WebhookOptions.DeployComment);
 
             await Pipeline.ExecuteAsync(
                 static async (state, _) => await state.InstallationClient.WorkflowRuns().ReviewCustomProtectionRuleAsync(state.DeploymentCallbackUrl, state.review),
@@ -123,11 +127,12 @@ public sealed partial class DeploymentProtectionRuleHandler(
         [LoggerMessage(
            EventId = 4,
            Level = LogLevel.Information,
-           Message = "Ignoring deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId} as deployment approval is disabled.")]
-        public static partial void DeploymentProtectionRuleApprovalIsDisabled(
+           Message = "Ignoring deployment protection rule check for {Repository} in environment {EnvironmentName} for deployment {DeploymentId} as deployment was not approved when evaluating rule {RuleName}.")]
+        public static partial void DeploymentNotApproved(
             ILogger logger,
             RepositoryId repository,
             string? environmentName,
-            long deploymentId);
+            long deploymentId,
+            string ruleName);
     }
 }

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using MartinCostello.Costellobot.DeploymentRules;
 using Octokit;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
@@ -13,7 +14,7 @@ namespace MartinCostello.Costellobot.Handlers;
 public sealed partial class DeploymentStatusHandler(
     GitHubWebhookContext context,
     GitCommitAnalyzer commitAnalyzer,
-    PublicHolidayProvider publicHolidayProvider,
+    IEnumerable<IDeploymentRule> deploymentRules,
     ILogger<DeploymentStatusHandler> logger) : IHandler
 {
     private static readonly ResiliencePipeline Pipeline = CreateResiliencePipeline();
@@ -42,16 +43,13 @@ public sealed partial class DeploymentStatusHandler(
             return;
         }
 
-        if (!options.Deploy)
+        foreach (var rule in deploymentRules.Where((p) => p.IsEnabled))
         {
-            Log.AutomatedDeploymentApprovalIsDisabled(logger, body.DeploymentStatus.Id, repository);
-            return;
-        }
-
-        if (publicHolidayProvider.IsPublicHoliday())
-        {
-            Log.TodayIsAPublicHoliday(logger, body.DeploymentStatus.Id, repository);
-            return;
+            if (!await rule.EvaluateAsync(message, CancellationToken.None))
+            {
+                Log.DeploymentNotApproved(logger, body.DeploymentStatus.Id, repository, rule.Name);
+                return;
+            }
         }
 
         var activeDeployment = await GetActiveDeploymentAsync(
@@ -391,12 +389,13 @@ public sealed partial class DeploymentStatusHandler(
 
         [LoggerMessage(
            EventId = 4,
-           Level = LogLevel.Debug,
-           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} as deployment approval is disabled.")]
-        public static partial void AutomatedDeploymentApprovalIsDisabled(
+           Level = LogLevel.Information,
+           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} as deployment was not approved when evaluating rule {RuleName}.")]
+        public static partial void DeploymentNotApproved(
             ILogger logger,
             long deploymentStatusId,
-            RepositoryId repository);
+            RepositoryId repository,
+            string ruleName);
 
         [LoggerMessage(
            EventId = 5,
@@ -508,15 +507,6 @@ public sealed partial class DeploymentStatusHandler(
 
         [LoggerMessage(
            EventId = 16,
-           Level = LogLevel.Information,
-           Message = "Ignoring deployment status ID {DeploymentStatusId} for {Repository} as it is a public holiday.")]
-        public static partial void TodayIsAPublicHoliday(
-            ILogger logger,
-            long deploymentStatusId,
-            RepositoryId repository);
-
-        [LoggerMessage(
-           EventId = 17,
            Level = LogLevel.Warning,
            Message = "Failed to get Git diff from URL {GitDiffUrl}.")]
         public static partial void GetDiffFailed(

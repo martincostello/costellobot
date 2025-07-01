@@ -50,6 +50,8 @@ public static class HandlerFactoryTests
             trustStore,
             NullLoggerFactory.Instance.CreateLogger<GitCommitAnalyzer>());
 
+        var deploymentRules = Array.Empty<DeploymentRules.IDeploymentRule>();
+
         var pullRequestAnalyzer = new PullRequestAnalyzer(
             context,
             commitAnalyzer,
@@ -58,10 +60,6 @@ public static class HandlerFactoryTests
         var pullRequestApprover = new PullRequestApprover(
             context,
             NullLoggerFactory.Instance.CreateLogger<PullRequestApprover>());
-
-        var publicHolidayProvider = new PublicHolidayProvider(
-            TimeProvider.System,
-            NullLoggerFactory.Instance.CreateLogger<PublicHolidayProvider>());
 
         var serviceProvider = Substitute.For<IServiceProvider>();
 
@@ -78,6 +76,7 @@ public static class HandlerFactoryTests
             {
                 return new DeploymentProtectionRuleHandler(
                     context,
+                    deploymentRules,
                     NullLoggerFactory.Instance.CreateLogger<DeploymentProtectionRuleHandler>());
             });
 
@@ -87,7 +86,7 @@ public static class HandlerFactoryTests
                 return new DeploymentStatusHandler(
                     context,
                     commitAnalyzer,
-                    publicHolidayProvider,
+                    deploymentRules,
                     NullLoggerFactory.Instance.CreateLogger<DeploymentStatusHandler>());
             });
 
