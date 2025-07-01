@@ -25,6 +25,7 @@
     <PackageReference Include="Azure.Identity" />
     <PackageReference Include="Azure.Messaging.ServiceBus" />
     <PackageReference Include="Azure.Storage.Blobs" />
+    <PackageReference Include="Google.Apis.Calendar.v3" />
     <PackageReference Include="Humanizer" />
     <PackageReference Include="Markdig" />
     <PackageReference Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" NoWarn="RT0003" />
