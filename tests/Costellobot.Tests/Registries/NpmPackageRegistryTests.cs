@@ -19,7 +19,7 @@ public static class NpmPackageRegistryTests
 
         var options = await new HttpClientInterceptorOptions()
             .ThrowsOnMissingRegistration()
-            .RegisterBundleAsync(Path.Combine("Bundles", "npm-registry.json"), cancellationToken: TestContext.Current.CancellationToken);
+            .RegisterBundleAsync(Path.Join("Bundles", "npm-registry.json"), cancellationToken: TestContext.Current.CancellationToken);
 
         using var client = options.CreateHttpClient();
         client.BaseAddress = new Uri("https://registry.npmjs.org");

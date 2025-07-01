@@ -17,7 +17,7 @@ public class RubyGemsPackageRegistryTests
 
         var options = await new HttpClientInterceptorOptions()
             .ThrowsOnMissingRegistration()
-            .RegisterBundleAsync(Path.Combine("Bundles", "ruby-gems.json"), cancellationToken: TestContext.Current.CancellationToken);
+            .RegisterBundleAsync(Path.Join("Bundles", "ruby-gems.json"), cancellationToken: TestContext.Current.CancellationToken);
 
         using var client = options.CreateHttpClient();
         client.BaseAddress = new Uri("https://rubygems.org");

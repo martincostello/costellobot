@@ -147,7 +147,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
 
         builder.UseEnvironment(Environments.Production);
 
-        builder.UseSolutionRelativeContentRoot(Path.Combine("src", "Costellobot"), "*.slnx");
+        builder.UseSolutionRelativeContentRoot(Path.Join("src", "Costellobot"), "*.slnx");
 
         builder.ConfigureServices((services) =>
         {
@@ -165,7 +165,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
             services.AddSingleton<ServiceBusClient, InMemoryServiceBusClient>();
         });
 
-        Interceptor.RegisterBundle(Path.Combine("Bundles", "oauth-http-bundle.json"));
+        Interceptor.RegisterBundle(Path.Join("Bundles", "oauth-http-bundle.json"));
     }
 
     private static string? CreateSigningCertificate()

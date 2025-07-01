@@ -20,7 +20,7 @@ public static class GitSubmodulePackageRegistryTests
 
         var options = await new HttpClientInterceptorOptions()
             .ThrowsOnMissingRegistration()
-            .RegisterBundleAsync(Path.Combine("Bundles", "github-submodules.json"), cancellationToken: TestContext.Current.CancellationToken);
+            .RegisterBundleAsync(Path.Join("Bundles", "github-submodules.json"), cancellationToken: TestContext.Current.CancellationToken);
 
         using var adapter = new Octokit.Internal.HttpClientAdapter(options.CreateHttpMessageHandler);
         var connection = new Connection(new("costellobot", "1.0.0"), adapter);

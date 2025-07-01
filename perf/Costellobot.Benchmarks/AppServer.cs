@@ -93,7 +93,7 @@ internal sealed class AppServer : IAsyncDisposable
             "ConnectionStrings:AzureServiceBus",
             "costellobot.servicebus.windows.local");
 
-        var testKeyPath = Path.Combine(
+        var testKeyPath = Path.Join(
             GetRepositoryPath() ?? Environment.CurrentDirectory,
             "tests",
             "Costellobot.Tests",
@@ -145,7 +145,7 @@ internal sealed class AppServer : IAsyncDisposable
     {
         if (GetRepositoryPath() is { } repoPath)
         {
-            return Path.GetFullPath(Path.Combine(repoPath, "src", "Costellobot"));
+            return Path.GetFullPath(Path.Join(repoPath, "src", "Costellobot"));
         }
 
         return string.Empty;
