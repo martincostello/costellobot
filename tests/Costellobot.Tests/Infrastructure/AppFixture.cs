@@ -2,6 +2,8 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using AspNet.Security.OAuth.GitHub;
 using Azure.Messaging.ServiceBus;
 using JustEat.HttpClientInterception;
@@ -118,6 +120,11 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 KeyValuePair.Create<string, string?>("GitHub:EnterpriseDomain", string.Empty),
                 KeyValuePair.Create<string, string?>("GitHub:OAuthId", "github-oauth"),
                 KeyValuePair.Create<string, string?>("GitHub:WebhookSecret", "github-webhook-secret"),
+                KeyValuePair.Create<string, string?>("Google:CalendarId", "google-calendar-id"),
+                KeyValuePair.Create<string, string?>("Google:ClientEmail", "costellobot@google.local"),
+                KeyValuePair.Create<string, string?>("Google:PrivateKey", CreateSigningCertificate()),
+                KeyValuePair.Create<string, string?>("Google:PrivateKeyId", "github-app-client-id"),
+                KeyValuePair.Create<string, string?>("Google:ProjectId", "google-project-id"),
                 KeyValuePair.Create<string, string?>("HostOptions:ShutdownTimeout", "00:00:01"),
                 KeyValuePair.Create<string, string?>("Site:AdminUsers:0", "john-smith"),
                 KeyValuePair.Create<string, string?>("Webhook:DeployEnvironments:0", "production"),
@@ -159,6 +166,18 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
         });
 
         Interceptor.RegisterBundle(Path.Combine("Bundles", "oauth-http-bundle.json"));
+    }
+
+    private static string? CreateSigningCertificate()
+    {
+        var notBefore = DateTimeOffset.UtcNow;
+        var notAfter = notBefore.AddHours(1);
+
+        using var key = RSA.Create();
+        var request = new CertificateRequest("CN=google-cloud-certificate", key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+        using var certificate = request.CreateSelfSigned(notBefore, notAfter);
+        return certificate.GetRSAPrivateKey()?.ExportPkcs8PrivateKeyPem();
     }
 
     private void ReloadConfiguration()
