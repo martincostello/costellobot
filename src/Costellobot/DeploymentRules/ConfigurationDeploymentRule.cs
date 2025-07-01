@@ -8,13 +8,13 @@ namespace MartinCostello.Costellobot.DeploymentRules;
 
 public sealed partial class ConfigurationDeploymentRule(
     IOptionsMonitor<WebhookOptions> options,
-    ILogger<ConfigurationDeploymentRule> logger) : IDeploymentRule
+    ILogger<ConfigurationDeploymentRule> logger) : DeploymentRule
 {
     /// <inheritdoc/>
-    public string Name => "Enabled-By-Application-Configuration";
+    public override string Name => "Enabled-By-Application-Configuration";
 
     /// <inheritdoc/>
-    public Task<bool> EvaluateAsync(WebhookEvent message, CancellationToken cancellationToken)
+    public override Task<bool> EvaluateAsync(WebhookEvent message, CancellationToken cancellationToken)
     {
         var result = options.CurrentValue.Deploy;
 

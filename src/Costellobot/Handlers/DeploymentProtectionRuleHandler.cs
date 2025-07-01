@@ -33,19 +33,18 @@ public sealed partial class DeploymentProtectionRuleHandler(
             body.Deployment.Id,
             body.DeploymentCallbackUrl);
 
-        foreach (var rule in deploymentRules.Where((p) => p.IsEnabled))
-        {
-            if (!await rule.EvaluateAsync(message, CancellationToken.None))
-            {
-                Log.DeploymentNotApproved(
-                    logger,
-                    repository,
-                    body.Environment,
-                    body.Deployment.Id,
-                    rule.Name);
+        (var approved, var ruleName) = await DeploymentRule.EvaluateAsync(deploymentRules, message, CancellationToken.None);
 
-                return;
-            }
+        if (!approved)
+        {
+            Log.DeploymentNotApproved(
+                logger,
+                repository,
+                body.Environment,
+                body.Deployment.Id,
+                ruleName);
+
+            return;
         }
 
         try
@@ -133,6 +132,6 @@ public sealed partial class DeploymentProtectionRuleHandler(
             RepositoryId repository,
             string? environmentName,
             long deploymentId,
-            string ruleName);
+            string? ruleName);
     }
 }
