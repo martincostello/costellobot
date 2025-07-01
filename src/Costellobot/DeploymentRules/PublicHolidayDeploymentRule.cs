@@ -7,13 +7,13 @@ namespace MartinCostello.Costellobot.DeploymentRules;
 
 public sealed partial class PublicHolidayDeploymentRule(
     PublicHolidayProvider provider,
-    ILogger<PublicHolidayDeploymentRule> logger) : IDeploymentRule
+    ILogger<PublicHolidayDeploymentRule> logger) : DeploymentRule
 {
     /// <inheritdoc/>
-    public string Name => "Not-A-UK-Public-Holiday";
+    public override string Name => "Not-A-UK-Public-Holiday";
 
     /// <inheritdoc/>
-    public Task<bool> EvaluateAsync(WebhookEvent message, CancellationToken cancellationToken)
+    public override Task<bool> EvaluateAsync(WebhookEvent message, CancellationToken cancellationToken)
     {
         if (message is Octokit.Webhooks.Events.DeploymentProtectionRule.DeploymentProtectionRuleRequestedEvent)
         {

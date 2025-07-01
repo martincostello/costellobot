@@ -43,13 +43,12 @@ public sealed partial class DeploymentStatusHandler(
             return;
         }
 
-        foreach (var rule in deploymentRules.Where((p) => p.IsEnabled))
+        (var approved, var ruleName) = await DeploymentRule.EvaluateAsync(deploymentRules, message, CancellationToken.None);
+
+        if (!approved)
         {
-            if (!await rule.EvaluateAsync(message, CancellationToken.None))
-            {
-                Log.DeploymentNotApproved(logger, body.DeploymentStatus.Id, repository, rule.Name);
-                return;
-            }
+            Log.DeploymentNotApproved(logger, body.DeploymentStatus.Id, repository, ruleName);
+            return;
         }
 
         var activeDeployment = await GetActiveDeploymentAsync(
@@ -395,7 +394,7 @@ public sealed partial class DeploymentStatusHandler(
             ILogger logger,
             long deploymentStatusId,
             RepositoryId repository,
-            string ruleName);
+            string? ruleName);
 
         [LoggerMessage(
            EventId = 5,
