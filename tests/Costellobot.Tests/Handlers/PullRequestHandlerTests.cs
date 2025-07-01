@@ -42,7 +42,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     {
         // Arrange
         Fixture.ApprovePullRequests();
-        await Fixture.Interceptor.RegisterBundleAsync(Path.Combine("Bundles", "nuget-search.json"), cancellationToken: CancellationToken);
+        await Fixture.Interceptor.RegisterBundleAsync(Path.Join("Bundles", "nuget-search.json"), cancellationToken: CancellationToken);
 
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(TrustedCommitMessage("Newtonsoft.Json", "13.0.1"));
@@ -617,7 +617,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     {
         // Arrange
         Fixture.ApprovePullRequests();
-        await Fixture.Interceptor.RegisterBundleAsync(Path.Combine("Bundles", "nuget-search.json"), cancellationToken: CancellationToken);
+        await Fixture.Interceptor.RegisterBundleAsync(Path.Join("Bundles", "nuget-search.json"), cancellationToken: CancellationToken);
 
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(TrustedCommitMessageForRenovate("Newtonsoft.Json", "13.0.1"));

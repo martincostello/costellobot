@@ -11,7 +11,7 @@ public class BrowserFixture(
     ITestOutputHelper outputHelper)
 {
     private const string VideosDirectory = "videos";
-    private static readonly string AssetsDirectory = Path.Combine("..", "..", "..");
+    private static readonly string AssetsDirectory = Path.Join("..", "..", "..");
 
     public BrowserFixture(ITestOutputHelper outputHelper)
         : this(new(), outputHelper)
@@ -65,7 +65,7 @@ public class BrowserFixture(
             if (Options.CaptureTrace)
             {
                 string traceName = GenerateFileName(activeTestName, ".zip");
-                string path = Path.Combine(AssetsDirectory, "traces", traceName);
+                string path = Path.Join(AssetsDirectory, "traces", traceName);
 
                 await context.Tracing.StopAsync(new() { Path = path });
             }
@@ -143,7 +143,7 @@ public class BrowserFixture(
         try
         {
             string fileName = GenerateFileName(testName, ".png");
-            string path = Path.Combine(AssetsDirectory, "screenshots", fileName);
+            string path = Path.Join(AssetsDirectory, "screenshots", fileName);
 
             await page.ScreenshotAsync(new() { Path = path });
 
@@ -165,7 +165,7 @@ public class BrowserFixture(
         try
         {
             string fileName = GenerateFileName(testName, ".webm");
-            string path = Path.Combine(AssetsDirectory, VideosDirectory, fileName);
+            string path = Path.Join(AssetsDirectory, VideosDirectory, fileName);
 
             await page.CloseAsync();
             await page.Video.SaveAsAsync(path);

@@ -9,8 +9,8 @@ namespace MartinCostello.Costellobot.DeploymentRules;
 
 public sealed partial class CalendarDeploymentRule(
     CalendarService calendar,
-    IOptionsMonitor<GoogleOptions> options,
     TimeProvider timeProvider,
+    IOptionsMonitor<GoogleOptions> options,
     ILogger<CalendarDeploymentRule> logger) : DeploymentRule
 {
     /// <inheritdoc/>

@@ -24,7 +24,7 @@ public static class GitHubActionsPackageRegistryTests
 
         var options = await new HttpClientInterceptorOptions()
             .ThrowsOnMissingRegistration()
-            .RegisterBundleAsync(Path.Combine("Bundles", "github-refs.json"), cancellationToken: TestContext.Current.CancellationToken);
+            .RegisterBundleAsync(Path.Join("Bundles", "github-refs.json"), cancellationToken: TestContext.Current.CancellationToken);
 
         using var httpClient = new HttpClientAdapter(options.CreateHttpMessageHandler);
         var connection = new Connection(new("costellobot", "1.0.0"), httpClient);

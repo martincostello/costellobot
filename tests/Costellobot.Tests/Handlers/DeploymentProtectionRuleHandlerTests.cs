@@ -17,7 +17,7 @@ public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppF
         : base(fixture, outputHelper)
     {
         Fixture.ChangeClock(new(2023, 09, 01, 12, 34, 56, TimeSpan.Zero));
-        Fixture.Interceptor.RegisterBundle(Path.Combine("Bundles", "google.json"));
+        Fixture.Interceptor.RegisterBundle(Path.Join("Bundles", "google.json"));
     }
 
     [Fact]
