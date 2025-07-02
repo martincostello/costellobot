@@ -2343,6 +2343,82 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         trust.Count.ShouldBe(1);
     }
 
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Digest_Update()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/dockerfile/dotnet-monorepo";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.Docker);
+
+        registry.GetPackageOwnersAsync(repository, "mcr.microsoft.com/dotnet/sdk", "9.0.301-b768b444028d3c531de90a356836047e48658cd1e26ba07a539a6f1a052a35d9")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["mcr.microsoft.com"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.Docker] = ["mcr.microsoft.com"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var sha = "6a0f84a513fe5490d1699b98a593e439cd6cbecd";
+
+        var diff = """
+                   diff --git a/Dockerfile b/Dockerfile
+                   index 882d5ae..32ec3c5 100644
+                   --- a/Dockerfile
+                   +++ b/Dockerfile
+                   @@ -1,4 +1,4 @@
+                   -FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:9.0.301@sha256:faa2daf2b72cbe787ee1882d9651fa4ef3e938ee56792b8324516f5a448f3abe AS build
+                   +FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:9.0.301@sha256:b768b444028d3c531de90a356836047e48658cd1e26ba07a539a6f1a052a35d9 AS build
+                    ARG TARGETARCH
+
+                    COPY . /source
+                   """;
+
+        var commitMessage = """
+                            Bump mcr.microsoft.com/dotnet/sdk:9.0.301 Docker digest to b768b44
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.Docker);
+
+        trust.ShouldContainKeyAndValue("mcr.microsoft.com/dotnet/sdk", (true, "9.0.301-b768b444028d3c531de90a356836047e48658cd1e26ba07a539a6f1a052a35d9"));
+        trust.Count.ShouldBe(1);
+    }
+
     private static GitCommitAnalyzer CreateTarget(
         IServiceProvider serviceProvider,
         WebhookOptions? options = null,

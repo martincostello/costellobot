@@ -4,12 +4,13 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using NuGet.Versioning;
 
 namespace MartinCostello.Costellobot;
 
-public static class GitDiffParser
+public static partial class GitDiffParser
 {
     private const char Added = '+';
     private const char Removed = '-';
@@ -103,7 +104,8 @@ public static class GitDiffParser
             var minimum = previous.Min()!;
             var maximum = updated.Max()!;
 
-            if (minimum < maximum)
+            if (minimum < maximum ||
+                (minimum.Version == maximum.Version && minimum.Release != maximum.Release))
             {
                 packages[package] = (minimum.ToString(), maximum.ToString());
             }
@@ -133,7 +135,7 @@ public static class GitDiffParser
             {
                 inHunk = true;
             }
-            else if (inHunk)
+            else if (inHunk && line.Length > 0)
             {
                 char prefix = line[0];
 
@@ -182,16 +184,57 @@ public static class GitDiffParser
 
         var fragmentText = line[1..];
         var fragmentTrimmed = fragmentText.Trim();
+        var fileName = Path.GetFileName(path);
 
         if (fragmentTrimmed.StartsWith('<'))
         {
             return TryParseXml(fragmentTrimmed, out package);
         }
-        else if (fragmentTrimmed.StartsWith('"') && Path.GetFileName(path) is "package.json")
+        else if (fragmentTrimmed.StartsWith('"') && fileName is "package.json")
         {
             return TryParseJson(fragmentTrimmed, out package);
         }
+        else if (fragmentTrimmed.StartsWith("FROM", StringComparison.OrdinalIgnoreCase) &&
+                 fileName?.Contains("dockerfile", StringComparison.OrdinalIgnoreCase) is true)
+        {
+            return TryParseDockerfile(fragmentTrimmed, out package);
+        }
 
+        return false;
+    }
+
+    private static bool TryParseDockerfile(
+        string text,
+        [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
+    {
+        package = null;
+
+        var match = DockerImage().Match(text);
+
+        if (match.Success)
+        {
+            var image = match.Groups["image"].Value;
+            var tag = match.Groups["tag"].Value;
+            var digest = match.Groups["digest"].Value;
+
+            if (!string.IsNullOrEmpty(image) && !string.IsNullOrEmpty(tag))
+            {
+                var versionString = tag;
+
+                if (!string.IsNullOrEmpty(digest))
+                {
+                    versionString += $"-{digest}";
+                }
+
+                if (NuGetVersion.TryParse(versionString, out var version))
+                {
+                    package = (image, version);
+                    return true;
+                }
+            }
+        }
+
+        // TODO
         return false;
     }
 
@@ -287,4 +330,7 @@ public static class GitDiffParser
             return NuGetVersion.TryParse(versionString, out version);
         }
     }
+
+    [GeneratedRegex(@"^(?i)FROM(?-i) ((?<platform>--platform=[\$\w]+)\s)?(?<image>[\w\.\/\-]+)(:(?<tag>[\w\-\.]+)(@sha256:(?<digest>[0-9a-f{64}]+))?)?(\s(?<name>(?i)AS(?-i) [\S]+))?$")]
+    private static partial Regex DockerImage();
 }
