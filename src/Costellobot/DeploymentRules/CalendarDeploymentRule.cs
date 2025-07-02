@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using Google.Apis.Calendar.v3;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
 using Octokit.Webhooks;
 
@@ -9,10 +10,14 @@ namespace MartinCostello.Costellobot.DeploymentRules;
 
 public sealed partial class CalendarDeploymentRule(
     CalendarService calendar,
+    HybridCache cache,
     TimeProvider timeProvider,
     IOptionsMonitor<GoogleOptions> options,
     ILogger<CalendarDeploymentRule> logger) : DeploymentRule
 {
+    private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromHours(3) };
+    private static readonly string[] CacheTags = ["all", "calendar"];
+
     /// <inheritdoc/>
     public override string Name => "Not-Busy-Calendar";
 
@@ -22,17 +27,29 @@ public sealed partial class CalendarDeploymentRule(
         if (options.CurrentValue.CalendarId is { Length: > 0 } calendarId)
         {
             var today = timeProvider.GetUtcNow().Date;
-            var minTime = new DateTimeOffset(today, TimeSpan.Zero);
-            var maxTime = minTime.AddDays(1);
 
-            var request = calendar.Events.List(calendarId);
+            var events = await cache.GetOrCreateAsync(
+                CacheKey(today, calendarId),
+                (calendar, today, calendarId),
+                static async (state, cancellationToken) =>
+                {
+                    var (calendar, today, calendarId) = state;
 
-            request.Fields = "items(start,end,summary,transparency)";
-            request.SingleEvents = true;
-            request.TimeMinDateTimeOffset = minTime;
-            request.TimeMaxDateTimeOffset = maxTime;
+                    var minTime = new DateTimeOffset(today, TimeSpan.Zero);
+                    var maxTime = minTime.AddDays(1);
 
-            var events = await request.ExecuteAsync(cancellationToken);
+                    var request = calendar.Events.List(calendarId);
+
+                    request.Fields = "items(start,end,summary,transparency)";
+                    request.SingleEvents = true;
+                    request.TimeMinDateTimeOffset = minTime;
+                    request.TimeMaxDateTimeOffset = maxTime;
+
+                    return await request.ExecuteAsync(cancellationToken);
+                },
+                CacheEntryOptions,
+                CacheTags,
+                cancellationToken);
 
             // Filter for all-day events that are marked as busy
             var @event = events.Items.FirstOrDefault(
@@ -48,6 +65,12 @@ public sealed partial class CalendarDeploymentRule(
         }
 
         return true;
+
+        static string CacheKey(DateTime date, string calendarId)
+        {
+            var hash = calendarId.GetHashCode(StringComparison.Ordinal);
+            return FormattableString.Invariant($"calendar:{date:d}:{hash}");
+        }
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
