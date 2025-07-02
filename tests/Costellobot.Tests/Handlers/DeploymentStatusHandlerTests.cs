@@ -659,33 +659,42 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_If_Calendar_Has_Busy_All_Day_Event()
     {
         // Arrange
-        Fixture.ChangeClock(new(2023, 09, 02, 12, 34, 56, TimeSpan.Zero));
-        Fixture.ApproveDeployments();
+        await Fixture.ClearCacheAsync();
 
-        var driver = new DeploymentStatusDriver(
-            (repo) => repo.CreateCommit(),
-            CreateTrustedCommit);
+        try
+        {
+            Fixture.ChangeClock(new(2023, 09, 02, 12, 34, 56, TimeSpan.Zero));
+            Fixture.ApproveDeployments();
 
-        driver.WithPendingDeployment(CreateDeployment);
+            var driver = new DeploymentStatusDriver(
+                (repo) => repo.CreateCommit(),
+                CreateTrustedCommit);
 
-        driver.WithActiveDeployment();
-        driver.WithInactiveDeployment();
+            driver.WithPendingDeployment(CreateDeployment);
 
-        RegisterGetAccessToken();
+            driver.WithActiveDeployment();
+            driver.WithInactiveDeployment();
 
-        RegisterAllDeployments(driver);
-        RegisterCommitComparison(driver);
-        RegisterPullRequestForCommit(driver.HeadCommit);
+            RegisterGetAccessToken();
 
-        var deploymentApproved = RegisterApprovePendingDeployment(driver);
+            RegisterAllDeployments(driver);
+            RegisterCommitComparison(driver);
+            RegisterPullRequestForCommit(driver.HeadCommit);
 
-        // Act
-        using var response = await PostWebhookAsync(driver);
+            var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            // Act
+            using var response = await PostWebhookAsync(driver);
 
-        await AssertTaskNotRun(deploymentApproved);
+            // Assert
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+            await AssertTaskNotRun(deploymentApproved);
+        }
+        finally
+        {
+            await Fixture.ClearCacheAsync();
+        }
     }
 
     [Fact]
