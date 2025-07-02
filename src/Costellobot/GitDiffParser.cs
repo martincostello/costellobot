@@ -234,7 +234,6 @@ public static partial class GitDiffParser
             }
         }
 
-        // TODO
         return false;
     }
 
