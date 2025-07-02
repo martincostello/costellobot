@@ -155,6 +155,30 @@ public sealed partial class GitCommitAnalyzer(
         return isTrusted;
     }
 
+    private static string? GetUpdateType(string from, string to)
+    {
+        string? updateType = null;
+
+        if (NuGetVersion.TryParse(from, out var versionFrom) &&
+            NuGetVersion.TryParse(to, out var versionTo))
+        {
+            if (versionFrom.Major < versionTo.Major)
+            {
+                updateType = "version-update:semver-major";
+            }
+            else if (versionFrom.Minor < versionTo.Minor)
+            {
+                updateType = "version-update:semver-minor";
+            }
+            else
+            {
+                updateType = "version-update:semver-patch";
+            }
+        }
+
+        return updateType;
+    }
+
     private static List<DependencyUpdate> ParseDependencies(string commitMessage)
     {
         string[] commitLines = commitMessage
@@ -229,29 +253,10 @@ public sealed partial class GitCommitAnalyzer(
 
                     if (GetCellValue(cells, 1, markdown) is { Length: > 0 } name)
                     {
-                        string? updateType = null;
+                        string from = GetCellValue(cells, 2, markdown).TrimStart('v');
+                        string to = GetCellValue(cells, 3, markdown).TrimStart('v');
 
-                        string from = GetCellValue(cells, 2, markdown);
-                        string to = GetCellValue(cells, 3, markdown);
-
-                        if (NuGetVersion.TryParse(from.TrimStart('v'), out var versionFrom) &&
-                            NuGetVersion.TryParse(to.TrimStart('v'), out var versionTo))
-                        {
-                            to = versionTo.ToString();
-
-                            if (versionFrom.Major < versionTo.Major)
-                            {
-                                updateType = "version-update:semver-major";
-                            }
-                            else if (versionFrom.Minor < versionTo.Minor)
-                            {
-                                updateType = "version-update:semver-minor";
-                            }
-                            else
-                            {
-                                updateType = "version-update:semver-patch";
-                            }
-                        }
+                        string? updateType = GetUpdateType(from, to);
 
                         updates.Add((name, to, updateType));
                     }
@@ -337,6 +342,15 @@ public sealed partial class GitCommitAnalyzer(
         bool stopAfterFirstUntrustedDependency)
     {
         var dependencies = ParseDependencies(commitMessage);
+
+        // Renovate updates for just the digest do not contain any commit metadata
+        if (dependencies.Count < 1 &&
+            diff is not null &&
+            ecosystem is DependencyEcosystem.Docker &&
+            GitDiffParser.TryParseUpdatedPackages(diff, out var updates))
+        {
+            dependencies = [.. updates.Select((p) => new DependencyUpdate(p.Key, p.Value.To, GetUpdateType(p.Value.From, p.Value.To)))];
+        }
 
         if (dependencies.Count < 1)
         {
