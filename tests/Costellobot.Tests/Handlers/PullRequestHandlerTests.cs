@@ -124,7 +124,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     [Theory]
     [InlineData("dependencies")]
     [InlineData("merge-approved")]
-    public async Task Pull_Request_Is_Approved_And_Automerge_Is_Enabled_For_Trusted_User_With_Untusted_Dependency_When_Labelled_By_Collaborator(
+    public async Task Pull_Request_Is_Approved_And_Automerge_Is_Enabled_For_Trusted_User_With_Untrusted_Dependency_When_Labelled_By_Collaborator(
         string label)
     {
         // Arrange
@@ -161,7 +161,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     [Theory]
     [InlineData("dependencies")]
     [InlineData("merge-approved")]
-    public async Task Pull_Request_Is_Approved_And_Merged_For_Trusted_User_With_Untusted_Dependency_When_Labelled_By_Collaborator(
+    public async Task Pull_Request_Is_Approved_And_Merged_For_Trusted_User_With_Untrusted_Dependency_When_Labelled_By_Collaborator(
         string label)
     {
         // Arrange
@@ -256,7 +256,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     }
 
     [Fact]
-    public async Task Pull_Request_Is_Not_Approved_For_Trusted_User_But_Untusted_Dependency()
+    public async Task Pull_Request_Is_Not_Approved_For_Trusted_User_But_Untrusted_Dependency()
     {
         // Arrange
         Fixture.ApprovePullRequests();
@@ -414,7 +414,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     }
 
     [Fact]
-    public async Task Pull_Request_Is_Not_Approved_For_Trusted_User_With_Untusted_Dependency_When_Not_Labelled_By_Collaborator()
+    public async Task Pull_Request_Is_Not_Approved_For_Trusted_User_With_Untrusted_Dependency_When_Not_Labelled_By_Collaborator()
     {
         // Arrange
         Fixture.ApprovePullRequests();
@@ -446,7 +446,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     }
 
     [Fact]
-    public async Task Pull_Request_Is_Not_Approved_For_Trusted_User_With_Untusted_Dependency_When_Invalid_Label()
+    public async Task Pull_Request_Is_Not_Approved_For_Trusted_User_With_Untrusted_Dependency_When_Invalid_Label()
     {
         // Arrange
         Fixture.ApprovePullRequests();
@@ -480,7 +480,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     [Theory]
     [InlineData("dependencies")]
     [InlineData("merge-approved")]
-    public async Task Pull_Request_Is_Not_Approved_For_Trusted_User_With_Untusted_Dependency_When_Required_Label_Missing(string label)
+    public async Task Pull_Request_Is_Not_Approved_For_Trusted_User_With_Untrusted_Dependency_When_Required_Label_Missing(string label)
     {
         // Arrange
         Fixture.ApprovePullRequests();
