@@ -5,6 +5,7 @@ using Google.Apis.Calendar.v3;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
 using Octokit.Webhooks;
+using Event = Google.Apis.Calendar.v3.Data.Event;
 
 namespace MartinCostello.Costellobot.DeploymentRules;
 
@@ -24,43 +25,42 @@ public sealed partial class CalendarDeploymentRule(
     /// <inheritdoc/>
     public override async Task<bool> EvaluateAsync(WebhookEvent message, CancellationToken cancellationToken)
     {
-        if (options.CurrentValue.CalendarId is { Length: > 0 } calendarId)
+        if (options.CurrentValue.CalendarIds is { Count: > 0 } calendarIds)
         {
             var today = timeProvider.GetUtcNow().Date;
 
-            var events = await cache.GetOrCreateAsync(
-                CacheKey(today, calendarId),
-                (calendar, today, calendarId),
-                static async (state, cancellationToken) =>
-                {
-                    var (calendar, today, calendarId) = state;
-
-                    var minTime = new DateTimeOffset(today, TimeSpan.Zero);
-                    var maxTime = minTime.AddDays(1);
-
-                    var request = calendar.Events.List(calendarId);
-
-                    request.Fields = "items(start,end,summary,transparency)";
-                    request.SingleEvents = true;
-                    request.TimeMinDateTimeOffset = minTime;
-                    request.TimeMaxDateTimeOffset = maxTime;
-
-                    return await request.ExecuteAsync(cancellationToken);
-                },
-                CacheEntryOptions,
-                CacheTags,
-                cancellationToken);
-
-            // Filter for all-day events that are marked as busy
-            var @event = events.Items.FirstOrDefault(
-                (p) => p.Start.Date is not null &&
-                       p.End.Date is not null &&
-                       p.Transparency is not "transparent");
-
-            if (@event is not null)
+            foreach (var calendarId in calendarIds)
             {
-                Log.CalendarOwnerIsBusy(logger, @event.Summary ?? "unknown");
-                return false;
+                var events = await cache.GetOrCreateAsync(
+                    CacheKey(today, calendarId),
+                    (calendar, today, calendarId),
+                    static async (state, cancellationToken) =>
+                    {
+                        var (calendar, today, calendarId) = state;
+
+                        var minTime = new DateTimeOffset(today, TimeSpan.Zero);
+                        var maxTime = minTime.AddDays(1);
+
+                        var request = calendar.Events.List(calendarId);
+
+                        request.Fields = "items(start,end,summary,transparency)";
+                        request.SingleEvents = true;
+                        request.TimeMinDateTimeOffset = minTime;
+                        request.TimeMaxDateTimeOffset = maxTime;
+
+                        return await request.ExecuteAsync(cancellationToken);
+                    },
+                    CacheEntryOptions,
+                    CacheTags,
+                    cancellationToken);
+
+                var @event = events.Items.FirstOrDefault(IsBusy);
+
+                if (@event is not null)
+                {
+                    Log.CalendarOwnerIsBusy(logger, @event.Summary ?? "unknown");
+                    return false;
+                }
             }
         }
 
@@ -70,6 +70,13 @@ public sealed partial class CalendarDeploymentRule(
         {
             var hash = calendarId.GetHashCode(StringComparison.Ordinal);
             return FormattableString.Invariant($"calendar:{date:d}:{hash}");
+        }
+
+        static bool IsBusy(Event @event)
+        {
+            return @event.Start.Date is not null &&
+                   @event.End.Date is not null &&
+                   @event.Transparency is not "transparent";
         }
     }
 
