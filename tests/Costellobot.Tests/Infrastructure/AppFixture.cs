@@ -120,7 +120,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 KeyValuePair.Create<string, string?>("GitHub:EnterpriseDomain", string.Empty),
                 KeyValuePair.Create<string, string?>("GitHub:OAuthId", "github-oauth"),
                 KeyValuePair.Create<string, string?>("GitHub:WebhookSecret", "github-webhook-secret"),
-                KeyValuePair.Create<string, string?>("Google:CalendarId", "google-calendar-id"),
+                KeyValuePair.Create<string, string?>("Google:CalendarIds:0", "google-calendar-id"),
                 KeyValuePair.Create<string, string?>("Google:ClientEmail", "costellobot@google.local"),
                 KeyValuePair.Create<string, string?>("Google:PrivateKey", CreateSigningCertificate()),
                 KeyValuePair.Create<string, string?>("Google:PrivateKeyId", "github-app-client-id"),

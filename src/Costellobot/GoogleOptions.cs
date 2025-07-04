@@ -5,7 +5,7 @@ namespace MartinCostello.Costellobot;
 
 public sealed class GoogleOptions
 {
-    public string CalendarId { get; set; } = string.Empty;
+    public IList<string> CalendarIds { get; set; } = [];
 
     public string ClientEmail { get; set; } = string.Empty;
 
