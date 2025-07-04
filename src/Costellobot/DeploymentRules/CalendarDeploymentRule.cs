@@ -18,6 +18,7 @@ public sealed partial class CalendarDeploymentRule(
 {
     private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromHours(3) };
     private static readonly string[] CacheTags = ["all", "calendar"];
+    private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
 
     /// <inheritdoc/>
     public override string Name => "Not-Busy-Calendar";
@@ -43,7 +44,7 @@ public sealed partial class CalendarDeploymentRule(
 
                         var request = calendar.Events.List(calendarId);
 
-                        request.Fields = "items(start,end,summary,transparency)";
+                        request.Fields = "items(start,end,summary,transparency,eventType)";
                         request.SingleEvents = true;
                         request.TimeMinDateTimeOffset = minTime;
                         request.TimeMaxDateTimeOffset = maxTime;
@@ -74,9 +75,17 @@ public sealed partial class CalendarDeploymentRule(
 
         static bool IsBusy(Event @event)
         {
-            return @event.Start.Date is not null &&
-                   @event.End.Date is not null &&
-                   @event.Transparency is not "transparent";
+            var isAllDayEvent =
+                (@event.Start.Date is not null && @event.End.Date is not null) ||
+                ((@event.End.DateTimeDateTimeOffset - @event.Start.DateTimeDateTimeOffset) == OneDay);
+
+            if (!isAllDayEvent)
+            {
+                return false;
+            }
+
+            return @event.Transparency is not "transparent" ||
+                   @event.EventType is "outOfOffice";
         }
     }
 
