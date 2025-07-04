@@ -655,15 +655,17 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         await AssertTaskNotRun(deploymentApproved);
     }
 
-    [Fact]
-    public async Task Deployment_Is_Not_Approved_If_Calendar_Has_Busy_All_Day_Event()
+    [Theory]
+    [InlineData("24-hour-event")]
+    [InlineData("all-day-event")]
+    public async Task Deployment_Is_Not_Approved_If_Calendar_Is_Busy(string calendarId)
     {
         // Arrange
         await Fixture.ClearCacheAsync();
+        Fixture.OverrideConfiguration("Google:CalendarIds:0", calendarId);
 
         try
         {
-            Fixture.ChangeClock(new(2023, 09, 02, 12, 34, 56, TimeSpan.Zero));
             Fixture.ApproveDeployments();
 
             var driver = new DeploymentStatusDriver(
