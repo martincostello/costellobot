@@ -63,10 +63,8 @@ public sealed partial class PushHandler(
                 ".csproj" => true,
                 _ => Path.GetFileName(path) switch
                 {
-                    "Directory.Packages.props" => IsFileInRepositoryRoot(path),
-                    "global.json" => IsFileInRepositoryRoot(path),
-                    "package.json" => true,
-                    "package-lock.json" => true,
+                    "Directory.Packages.props" or "Dockerfile" or "global.json" => IsFileInRepositoryRoot(path),
+                    "package.json" or "package-lock.json" => true,
                     _ => false,
                 },
             };

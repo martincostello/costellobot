@@ -15,7 +15,7 @@ public class PushHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper
 {
     [Theory]
     [InlineData("main", "refs/heads/main", new string[0], new[] { "Directory.Packages.props" })]
-    [InlineData("main", "refs/heads/main", new[] { "Directory.Packages.props" }, new string[0])]
+    [InlineData("main", "refs/heads/main", new[] { "Dockerfile" }, new string[0])]
     [InlineData("main", "refs/heads/main", new string[0], new[] { "global.json" })]
     [InlineData("dotnet-vnext", "refs/heads/dotnet-vnext", new string[0], new[] { "Directory.Packages.props" })]
     [InlineData("dotnet-vnext", "refs/heads/dotnet-vnext", new[] { "Directory.Packages.props" }, new string[0])]
@@ -29,8 +29,8 @@ public class PushHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper
     [InlineData("main", "refs/heads/main", new[] { "package-lock.json" }, new string[0])]
     [InlineData("main", "refs/heads/main", new string[0], new[] { "src/project/package-lock.json" })]
     [InlineData("main", "refs/heads/main", new[] { "src/project/package-lock.json" }, new string[0])]
-    [InlineData("main", "refs/heads/main", new[] { "Directory.Packages.props", "global.json", "src/project/package.json", "src/project/package-lock.json" }, new string[0])]
-    [InlineData("main", "refs/heads/main", new string[0], new[] { "Directory.Packages.props", "global.json", "src/project/package.json", "src/project/package-lock.json" })]
+    [InlineData("main", "refs/heads/main", new[] { "Directory.Packages.props", "Dockerfile", "global.json", "src/project/package.json", "src/project/package-lock.json" }, new string[0])]
+    [InlineData("main", "refs/heads/main", new string[0], new[] { "Directory.Packages.props", "Dockerfile", "global.json", "src/project/package.json", "src/project/package-lock.json" })]
     public async Task Repository_Dispatch_Is_Created_If_DotNet_Dependency_File_Added_Or_Modified_On_Supported_Branch(
         string branch,
         string reference,
