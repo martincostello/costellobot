@@ -11,11 +11,12 @@ namespace MartinCostello.Costellobot;
 public static class ApplicationTelemetry
 {
     public static readonly string ServiceName = "Costellobot";
+    public static readonly string ServiceNamespace = "Costellobot";
     public static readonly string ServiceVersion = GitMetadata.Version.Split('+')[0];
     public static readonly ActivitySource ActivitySource = new(ServiceName, ServiceVersion);
 
     public static ResourceBuilder ResourceBuilder { get; } = ResourceBuilder.CreateDefault()
-        .AddService(ServiceName, serviceVersion: ServiceVersion)
+        .AddService(ServiceName, ServiceNamespace, ServiceVersion)
         .AddAzureAppServiceDetector()
         .AddContainerDetector()
         .AddHostDetector()
