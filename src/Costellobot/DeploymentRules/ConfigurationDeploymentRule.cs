@@ -30,9 +30,9 @@ public sealed partial class ConfigurationDeploymentRule(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Information,
-           Message = "Deployment is not approved as it is disabled in application configuration.")]
+            EventId = 1,
+            Level = LogLevel.Information,
+            Message = "Deployment is not approved as it is disabled in application configuration.")]
         public static partial void DeploymentApprovalIsDisabled(ILogger logger);
     }
 }

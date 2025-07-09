@@ -129,9 +129,9 @@ public sealed partial class NuGetPackageRegistry(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Warning,
-           Message = "The version string \"{Version}\" is not a valid NuGet package version.")]
+            EventId = 1,
+            Level = LogLevel.Warning,
+            Message = "The version string \"{Version}\" is not a valid NuGet package version.")]
         public static partial void InvalidNuGetPackageVersion(ILogger logger, string version);
     }
 

@@ -115,18 +115,18 @@ public sealed partial class PullRequestHandler(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Debug,
-           Message = "Ignoring pull request {PullRequest} for action {Action}.")]
+            EventId = 1,
+            Level = LogLevel.Debug,
+            Message = "Ignoring pull request {PullRequest} for action {Action}.")]
         public static partial void IgnoringPullRequestAction(
             ILogger logger,
             IssueId pullRequest,
             string? action);
 
         [LoggerMessage(
-           EventId = 2,
-           Level = LogLevel.Information,
-           Message = "Pull request {PullRequest} was manually approved by {Actor}.")]
+            EventId = 2,
+            Level = LogLevel.Information,
+            Message = "Pull request {PullRequest} was manually approved by {Actor}.")]
         public static partial void PullRequestManuallyApproved(
             ILogger logger,
             IssueId pullRequest,

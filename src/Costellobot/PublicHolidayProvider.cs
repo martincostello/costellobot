@@ -45,9 +45,9 @@ public sealed partial class PublicHolidayProvider(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Information,
-           Message = "Today is the {BankHolidayTitle} bank holiday in England and Wales.")]
+            EventId = 1,
+            Level = LogLevel.Information,
+            Message = "Today is the {BankHolidayTitle} bank holiday in England and Wales.")]
         public static partial void TodayIsBankHoliday(ILogger logger, string bankHolidayTitle);
     }
 

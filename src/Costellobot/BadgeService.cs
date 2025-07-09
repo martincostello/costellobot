@@ -166,9 +166,9 @@ public sealed partial class BadgeService(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Warning,
-           Message = "Failed to generate badge of type {BadgeType} for {Repository}.")]
+            EventId = 1,
+            Level = LogLevel.Warning,
+            Message = "Failed to generate badge of type {BadgeType} for {Repository}.")]
         public static partial void FailedToGenerateBadge(
             ILogger logger,
             Exception exception,

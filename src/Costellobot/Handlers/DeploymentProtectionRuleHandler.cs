@@ -92,9 +92,9 @@ public sealed partial class DeploymentProtectionRuleHandler(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Information,
-           Message = "Received deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId} with deployment callback {DeploymentCallbackUrl}.")]
+            EventId = 1,
+            Level = LogLevel.Information,
+            Message = "Received deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId} with deployment callback {DeploymentCallbackUrl}.")]
         public static partial void DeploymentProtectionRuleRequested(
             ILogger logger,
             RepositoryId repository,
@@ -103,9 +103,9 @@ public sealed partial class DeploymentProtectionRuleHandler(
             string? deploymentCallbackUrl);
 
         [LoggerMessage(
-           EventId = 2,
-           Level = LogLevel.Information,
-           Message = "Approved deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId}.")]
+            EventId = 2,
+            Level = LogLevel.Information,
+            Message = "Approved deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId}.")]
         public static partial void ApprovedDeployment(
             ILogger logger,
             RepositoryId repository,
@@ -113,9 +113,9 @@ public sealed partial class DeploymentProtectionRuleHandler(
             long deploymentId);
 
         [LoggerMessage(
-           EventId = 3,
-           Level = LogLevel.Warning,
-           Message = "Failed to approve deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId}.")]
+            EventId = 3,
+            Level = LogLevel.Warning,
+            Message = "Failed to approve deployment protection rule check for {Repository} for environment {EnvironmentName} for deployment {DeploymentId}.")]
         public static partial void FailedToApproveDeployment(
             ILogger logger,
             Exception exception,
@@ -124,9 +124,9 @@ public sealed partial class DeploymentProtectionRuleHandler(
             long deploymentId);
 
         [LoggerMessage(
-           EventId = 4,
-           Level = LogLevel.Information,
-           Message = "Ignoring deployment protection rule check for {Repository} in environment {EnvironmentName} for deployment {DeploymentId} as deployment was not approved when evaluating rule {RuleName}.")]
+            EventId = 4,
+            Level = LogLevel.Information,
+            Message = "Ignoring deployment protection rule check for {Repository} in environment {EnvironmentName} for deployment {DeploymentId} as deployment was not approved when evaluating rule {RuleName}.")]
         public static partial void DeploymentNotApproved(
             ILogger logger,
             RepositoryId repository,

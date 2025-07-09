@@ -135,25 +135,25 @@ public sealed partial class PullRequestApprover(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Information,
-           Message = "Approved pull request {PullRequest}.")]
+            EventId = 1,
+            Level = LogLevel.Information,
+            Message = "Approved pull request {PullRequest}.")]
         public static partial void PullRequestApproved(
             ILogger logger,
             IssueId pullRequest);
 
         [LoggerMessage(
-           EventId = 2,
-           Level = LogLevel.Information,
-           Message = "Enabled auto-merge for pull request {PullRequest}.")]
+            EventId = 2,
+            Level = LogLevel.Information,
+            Message = "Enabled auto-merge for pull request {PullRequest}.")]
         public static partial void AutoMergeEnabled(
             ILogger logger,
             IssueId pullRequest);
 
         [LoggerMessage(
-           EventId = 3,
-           Level = LogLevel.Warning,
-           Message = "Failed to enable auto-merge for pull request {PullRequest} with node ID {NodeId}.")]
+            EventId = 3,
+            Level = LogLevel.Warning,
+            Message = "Failed to enable auto-merge for pull request {PullRequest} with node ID {NodeId}.")]
         public static partial void EnableAutoMergeFailed(
             ILogger logger,
             Exception exception,
@@ -161,17 +161,17 @@ public sealed partial class PullRequestApprover(
             string nodeId);
 
         [LoggerMessage(
-           EventId = 4,
-           Level = LogLevel.Information,
-           Message = "Pull request {PullRequest} merged.")]
+            EventId = 4,
+            Level = LogLevel.Information,
+            Message = "Pull request {PullRequest} merged.")]
         public static partial void PullRequestMerged(
             ILogger logger,
             IssueId pullRequest);
 
         [LoggerMessage(
-           EventId = 5,
-           Level = LogLevel.Warning,
-           Message = "Failed to merge pull request {PullRequest}.")]
+            EventId = 5,
+            Level = LogLevel.Warning,
+            Message = "Failed to merge pull request {PullRequest}.")]
         public static partial void MergeFailed(
             ILogger logger,
             Exception exception,

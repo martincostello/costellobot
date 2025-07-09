@@ -69,27 +69,27 @@ public sealed partial class GitHubEventHandler(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Error,
-           Message = "Failed to publish message for webhook with ID {HookId}.")]
+            EventId = 1,
+            Level = LogLevel.Error,
+            Message = "Failed to publish message for webhook with ID {HookId}.")]
         public static partial void PublishFailed(ILogger logger, Exception exception, string? hookId);
 
         [LoggerMessage(
-           EventId = 2,
-           Level = LogLevel.Debug,
-           Message = "Ignoring GitHub webhook with ID {HookId} for event {Event}:{Action}.")]
+            EventId = 2,
+            Level = LogLevel.Debug,
+            Message = "Ignoring GitHub webhook with ID {HookId} for event {Event}:{Action}.")]
         public static partial void IgnoringEvent(ILogger logger, string? hookId, string? @event, string? action);
 
         [LoggerMessage(
-           EventId = 3,
-           Level = LogLevel.Warning,
-           Message = "Cannot publish message for webhook with ID {HookId} as the payload is too large.")]
+            EventId = 3,
+            Level = LogLevel.Warning,
+            Message = "Cannot publish message for webhook with ID {HookId} as the payload is too large.")]
         public static partial void PublishSkippedPayloadTooLarge(ILogger logger, string? hookId);
 
         [LoggerMessage(
-           EventId = 4,
-           Level = LogLevel.Warning,
-           Message = "Failed to publish message for webhook with ID {HookId} as the payload is too large.")]
+            EventId = 4,
+            Level = LogLevel.Warning,
+            Message = "Failed to publish message for webhook with ID {HookId} as the payload is too large.")]
         public static partial void PublishFailedPayloadTooLarge(ILogger logger, Exception exception, string? hookId);
     }
 }

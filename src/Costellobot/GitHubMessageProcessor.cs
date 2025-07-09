@@ -70,15 +70,15 @@ public sealed partial class GitHubMessageProcessor(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Debug,
-           Message = "Received webhook with ID {HookId}.")]
+            EventId = 1,
+            Level = LogLevel.Debug,
+            Message = "Received webhook with ID {HookId}.")]
         public static partial void ReceivedWebhook(ILogger logger, string? hookId);
 
         [LoggerMessage(
-           EventId = 2,
-           Level = LogLevel.Error,
-           Message = "Failed to process webhook with ID {HookId}.")]
+            EventId = 2,
+            Level = LogLevel.Error,
+            Message = "Failed to process webhook with ID {HookId}.")]
         public static partial void ProcessingFailed(ILogger logger, Exception exception, string? hookId);
     }
 }
