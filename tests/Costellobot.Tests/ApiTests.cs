@@ -105,7 +105,7 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
     public async Task Can_Get_Version()
     {
         // Arrange
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
 
         // Act
         var actual = await client.GetFromJsonAsync<JsonElement>("/version", CancellationToken);
@@ -125,7 +125,7 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         string? contentType)
     {
         // Arrange
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
         using var request = new HttpRequestMessage(new(method), "/foo");
 
         if (accept is not null)
