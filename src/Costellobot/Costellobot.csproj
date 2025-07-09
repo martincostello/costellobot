@@ -5,7 +5,7 @@
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
     <InvariantGlobalization>false</InvariantGlobalization>
     <PublishSelfContained>true</PublishSelfContained>
-    <PyroscopeApplicationName>costellobot</PyroscopeApplicationName>
+    <PyroscopeApplicationName>Costellobot</PyroscopeApplicationName>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
     <TargetFramework>net9.0</TargetFramework>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
