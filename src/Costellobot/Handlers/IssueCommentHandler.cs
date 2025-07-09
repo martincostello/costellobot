@@ -102,33 +102,33 @@ public sealed partial class IssueCommentHandler(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Debug,
-           Message = "Ignoring comment on issue {Issue} for action {Action}.")]
+            EventId = 1,
+            Level = LogLevel.Debug,
+            Message = "Ignoring comment on issue {Issue} for action {Action}.")]
         public static partial void IgnoringCommentAction(ILogger logger, IssueId issue, string? action);
 
         [LoggerMessage(
-           EventId = 2,
-           Level = LogLevel.Debug,
-           Message = "Received comment on issue {Issue}: {Content}.")]
+            EventId = 2,
+            Level = LogLevel.Debug,
+            Message = "Received comment on issue {Issue}: {Content}.")]
         public static partial void ReceivedComment(ILogger logger, IssueId issue, string? content);
 
         [LoggerMessage(
-           EventId = 3,
-           Level = LogLevel.Information,
-           Message = "Requested rebase for pull request {PullRequest}.")]
+            EventId = 3,
+            Level = LogLevel.Information,
+            Message = "Requested rebase for pull request {PullRequest}.")]
         public static partial void RebaseRequested(ILogger logger, IssueId pullRequest);
 
         [LoggerMessage(
-           EventId = 4,
-           Level = LogLevel.Warning,
-           Message = "Failed to rebase pull request {PullRequest}.")]
+            EventId = 4,
+            Level = LogLevel.Warning,
+            Message = "Failed to rebase pull request {PullRequest}.")]
         public static partial void RebaseFailed(ILogger logger, Exception exception, IssueId pullRequest);
 
         [LoggerMessage(
-           EventId = 5,
-           Level = LogLevel.Warning,
-           Message = "Failed to react to comment {CommentId} in pull request {PullRequest}.")]
+            EventId = 5,
+            Level = LogLevel.Warning,
+            Message = "Failed to react to comment {CommentId} in pull request {PullRequest}.")]
         public static partial void ReactionFailed(ILogger logger, Exception exception, long commentId, IssueId pullRequest);
     }
 }

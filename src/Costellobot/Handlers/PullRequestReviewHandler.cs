@@ -237,9 +237,9 @@ public sealed partial class PullRequestReviewHandler(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Debug,
-           Message = "Dependency with Id {Dependency} and version {Version} from ecosystem {Ecosystem} was implicitly trusted.")]
+            EventId = 1,
+            Level = LogLevel.Debug,
+            Message = "Dependency with Id {Dependency} and version {Version} from ecosystem {Ecosystem} was implicitly trusted.")]
         public static partial void DependencyImplicitlyTrusted(
             ILogger logger,
             DependencyEcosystem ecosystem,
@@ -247,9 +247,9 @@ public sealed partial class PullRequestReviewHandler(
             string version);
 
         [LoggerMessage(
-           EventId = 2,
-           Level = LogLevel.Warning,
-           Message = "Failed to implicitly trust dependency with Id {Dependency} and version {Version} from ecosystem {Ecosystem}.")]
+            EventId = 2,
+            Level = LogLevel.Warning,
+            Message = "Failed to implicitly trust dependency with Id {Dependency} and version {Version} from ecosystem {Ecosystem}.")]
         public static partial void FailedToImplicitlyTrustDependency(
             ILogger logger,
             Exception exception,
@@ -258,26 +258,26 @@ public sealed partial class PullRequestReviewHandler(
             string version);
 
         [LoggerMessage(
-           EventId = 3,
-           Level = LogLevel.Warning,
-           Message = "Failed to approve open pull requests.")]
+            EventId = 3,
+            Level = LogLevel.Warning,
+            Message = "Failed to approve open pull requests.")]
         public static partial void FailedToApprovePullRequests(
             ILogger logger,
             Exception exception);
 
         [LoggerMessage(
-           EventId = 4,
-           Level = LogLevel.Debug,
-           Message = "Searching {Count} installation repositories for pull requests from {Creator}.")]
+            EventId = 4,
+            Level = LogLevel.Debug,
+            Message = "Searching {Count} installation repositories for pull requests from {Creator}.")]
         public static partial void SearchingInstallationRepositories(
             ILogger logger,
             int count,
             string creator);
 
         [LoggerMessage(
-           EventId = 5,
-           Level = LogLevel.Debug,
-           Message = "Found {Count} pull requests created by {Creator} in repository {Repository}.")]
+            EventId = 5,
+            Level = LogLevel.Debug,
+            Message = "Found {Count} pull requests created by {Creator} in repository {Repository}.")]
         public static partial void FoundPullRequests(
             ILogger logger,
             int count,
@@ -285,18 +285,18 @@ public sealed partial class PullRequestReviewHandler(
             RepositoryId repository);
 
         [LoggerMessage(
-           EventId = 6,
-           Level = LogLevel.Debug,
-           Message = "Pull request {PullRequest} was already approved by {Actor}.")]
+            EventId = 6,
+            Level = LogLevel.Debug,
+            Message = "Pull request {PullRequest} was already approved by {Actor}.")]
         public static partial void PullRequestAlreadyApproved(
             ILogger logger,
             IssueId pullRequest,
             string actor);
 
         [LoggerMessage(
-           EventId = 7,
-           Level = LogLevel.Debug,
-           Message = "Pull request {PullRequest} was approved after dependencies were implicitly trusted.")]
+            EventId = 7,
+            Level = LogLevel.Debug,
+            Message = "Pull request {PullRequest} was approved after dependencies were implicitly trusted.")]
         public static partial void PullRequestApprovedAfterImplicitTrust(
             ILogger logger,
             IssueId pullRequest);

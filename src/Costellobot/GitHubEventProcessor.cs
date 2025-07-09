@@ -89,15 +89,15 @@ public sealed partial class GitHubEventProcessor(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Debug,
-           Message = "Received webhook with ID {HookId}.")]
+            EventId = 1,
+            Level = LogLevel.Debug,
+            Message = "Received webhook with ID {HookId}.")]
         public static partial void ReceivedWebhook(ILogger logger, string? hookId);
 
         [LoggerMessage(
-           EventId = 2,
-           Level = LogLevel.Debug,
-           Message = "Processed webhook with ID {HookId}.")]
+            EventId = 2,
+            Level = LogLevel.Debug,
+            Message = "Processed webhook with ID {HookId}.")]
         public static partial void ProcessedWebhook(ILogger logger, string? hookId);
     }
 }

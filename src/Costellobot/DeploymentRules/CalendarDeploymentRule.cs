@@ -93,9 +93,9 @@ public sealed partial class CalendarDeploymentRule(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Information,
-           Message = "Deployment is not approved as calendar suggests owner is busy all day with {EventName} event.")]
+            EventId = 1,
+            Level = LogLevel.Information,
+            Message = "Deployment is not approved as calendar suggests owner is busy all day with {EventName} event.")]
         public static partial void CalendarOwnerIsBusy(ILogger logger, string eventName);
     }
 }

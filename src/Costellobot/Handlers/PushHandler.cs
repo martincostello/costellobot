@@ -96,9 +96,9 @@ public sealed partial class PushHandler(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Information,
-           Message = "Creating repository dispatch for push to {Repository} for ref {Reference}.")]
+            EventId = 1,
+            Level = LogLevel.Information,
+            Message = "Creating repository dispatch for push to {Repository} for ref {Reference}.")]
         public static partial void CreatedRepositoryDispatchForPush(
             ILogger logger,
             RepositoryId repository,

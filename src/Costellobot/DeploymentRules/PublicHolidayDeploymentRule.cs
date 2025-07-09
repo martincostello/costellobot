@@ -34,9 +34,9 @@ public sealed partial class PublicHolidayDeploymentRule(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Information,
-           Message = "Deployment is not approved as today is a public holiday.")]
+            EventId = 1,
+            Level = LogLevel.Information,
+            Message = "Deployment is not approved as today is a public holiday.")]
         public static partial void TodayIsAPublicHoliday(ILogger logger);
     }
 }

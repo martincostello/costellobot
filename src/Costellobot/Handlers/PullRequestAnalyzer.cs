@@ -142,34 +142,34 @@ public sealed partial class PullRequestAnalyzer(
     private static partial class Log
     {
         [LoggerMessage(
-           EventId = 1,
-           Level = LogLevel.Debug,
-           Message = "Ignoring pull request {PullRequest} as it is a draft.")]
+            EventId = 1,
+            Level = LogLevel.Debug,
+            Message = "Ignoring pull request {PullRequest} as it is a draft.")]
         public static partial void IgnoringPullRequestDraft(
             ILogger logger,
             IssueId pullRequest);
 
         [LoggerMessage(
-           EventId = 2,
-           Level = LogLevel.Debug,
-           Message = "Ignoring pull request {PullRequest} from {Login} as it is not from a trusted user.")]
+            EventId = 2,
+            Level = LogLevel.Debug,
+            Message = "Ignoring pull request {PullRequest} from {Login} as it is not from a trusted user.")]
         public static partial void IgnoringPullRequestFromUntrustedUser(
             ILogger logger,
             IssueId pullRequest,
             string? login);
 
         [LoggerMessage(
-           EventId = 3,
+            EventId = 3,
            Level = LogLevel.Debug,
-           Message = "Ignoring pull request {PullRequest} as the repository is configured to be ignored.")]
+            Message = "Ignoring pull request {PullRequest} as the repository is configured to be ignored.")]
         public static partial void IgnoringPullRequestAsRepositoryIgnored(
             ILogger logger,
             IssueId pullRequest);
 
         [LoggerMessage(
-           EventId = 4,
-           Level = LogLevel.Warning,
-           Message = "Failed to get Git diff from URL {GitDiffUrl}.")]
+            EventId = 4,
+            Level = LogLevel.Warning,
+            Message = "Failed to get Git diff from URL {GitDiffUrl}.")]
         public static partial void GetDiffFailed(
             ILogger logger,
             Exception exception,
