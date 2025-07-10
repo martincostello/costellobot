@@ -17,8 +17,7 @@ internal static class DependencyHelpers
     {
         return ecosystem switch
         {
-            //// TODO Need to determine if the image is from the Microsoft Artifact Registry or not
-            ////DependencyEcosystem.Docker => ("Docker", MicrosoftArtifactRegistryUrl($"/artifact/mar/{id}/tags"), MicrosoftStyles),
+            DependencyEcosystem.Docker when id.StartsWith("dotnet/", StringComparison.Ordinal) => ("Docker", MicrosoftArtifactRegistryUrl($"/artifact/mar/{id}/tags"), MicrosoftStyles),
             DependencyEcosystem.Docker => ("Docker", DockerHubUrl($"/r/{id}/tags"), DockerStyles),
             DependencyEcosystem.GitHubActions => ("GitHub Actions", GitHubUrl(id), GitHubStyles),
             DependencyEcosystem.Npm => ("npm", NpmUrl($"/package/{id}/v/{version}"), NpmStyles),
