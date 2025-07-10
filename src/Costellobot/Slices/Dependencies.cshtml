@@ -34,48 +34,51 @@
                 <tbody>
                     @foreach ((var ecosystem, var dependencies) in Model)
                     {
-                        foreach ((var index, var dependency) in dependencies.Index())
+                        foreach (var group in dependencies.GroupBy((p) => p.Id))
                         {
-                            (var name, var url, var icon) = DependencyHelpers.GetPackageMetadata(ecosystem, dependency.Id, dependency.Version);
+                            foreach ((var index, var dependency) in group.Index())
+                            {
+                                (var name, var url, var icon) = DependencyHelpers.GetPackageMetadata(ecosystem, dependency.Id, dependency.Version);
 
-                            <tr class="trusted-dependency @(index is not 0 ? "table-light" : null)">
-                                <td>
-                                    <span class="dependency-ecosystem @(icon)" title="@(name)" aria-hidden="true"></span>
-                                </td>
-                                <td>
-                                    <code class="dependency-id">
-                                        @if (url is { Length: > 0 })
-                                        {
-                                            <a href="@(url)" target="_blank" rel="noopener">@(dependency.Id)</a>
-                                        }
-                                        else
-                                        {
-                                            @(dependency.Id)
-                                        }
-                                    </code>
-                                </td>
-                                <td>
-                                    <code class="dependency-version">@(dependency.Version)</code>
-                                </td>
-                                <td>
-                                    <div class="dependency-timestamp" title="@(dependency.TrustedAt?.ToString("u", CultureInfo.InvariantCulture))">
-                                        @(dependency.TrustedAt?.Humanize())
-                                    </div>
-                                </td>
-                                <td>
-                                    <form action="dependencies/distrust" method="post">
-                                        <input type="hidden" name="@(tokens.FormFieldName)" value="@(tokens.RequestToken)">
-                                        <input type="hidden" name="ecosystem" value="@(ecosystem)">
-                                        <input type="hidden" name="id" value="@(dependency.Id)">
-                                        <input type="hidden" name="version" value="@(dependency.Version)">
-                                        <div class="d-grid">
-                                            <button class="btn btn-danger btn-sm distrust-dependency" title="Distrust @(dependency.Id) @(dependency.Version)" type="submit">
-                                                <span class="fa-solid fa-ban" aria-hidden="true"></span>
-                                            </button>
+                                <tr class="trusted-dependency @(index is not 0 ? "table-light" : null)">
+                                    <td>
+                                        <span class="dependency-ecosystem @(icon)" title="@(name)" aria-hidden="true"></span>
+                                    </td>
+                                    <td>
+                                        <code class="dependency-id">
+                                            @if (url is { Length: > 0 })
+                                            {
+                                                <a href="@(url)" target="_blank" rel="noopener">@(dependency.Id)</a>
+                                            }
+                                            else
+                                            {
+                                                @(dependency.Id)
+                                            }
+                                        </code>
+                                    </td>
+                                    <td>
+                                        <code class="dependency-version">@(dependency.Version)</code>
+                                    </td>
+                                    <td>
+                                        <div class="dependency-timestamp" title="@(dependency.TrustedAt?.ToString("u", CultureInfo.InvariantCulture))">
+                                            @(dependency.TrustedAt?.Humanize())
                                         </div>
-                                    </form>
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td>
+                                        <form action="dependencies/distrust" method="post">
+                                            <input type="hidden" name="@(tokens.FormFieldName)" value="@(tokens.RequestToken)">
+                                            <input type="hidden" name="ecosystem" value="@(ecosystem)">
+                                            <input type="hidden" name="id" value="@(dependency.Id)">
+                                            <input type="hidden" name="version" value="@(dependency.Version)">
+                                            <div class="d-grid">
+                                                <button class="btn btn-danger btn-sm distrust-dependency" title="Distrust @(dependency.Id) @(dependency.Version)" type="submit">
+                                                    <span class="fa-solid fa-ban" aria-hidden="true"></span>
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
                         }
                     }
                     <tr>
