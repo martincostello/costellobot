@@ -5,6 +5,7 @@ using System.Diagnostics;
 using OpenTelemetry.Instrumentation.AspNetCore;
 using OpenTelemetry.Instrumentation.Http;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 namespace MartinCostello.Costellobot;
@@ -17,10 +18,18 @@ public static class TelemetryExtensions
 
         services
             .AddOpenTelemetry()
+            .ConfigureResource((builder) =>
+            {
+                builder.AddService(ApplicationTelemetry.ServiceName, ApplicationTelemetry.ServiceNamespace, ApplicationTelemetry.ServiceVersion)
+                       .AddAzureAppServiceDetector()
+                       .AddContainerDetector()
+                       .AddHostDetector()
+                       .AddOperatingSystemDetector()
+                       .AddProcessRuntimeDetector();
+            })
             .WithMetrics((builder) =>
             {
-                builder.SetResourceBuilder(ApplicationTelemetry.ResourceBuilder)
-                       .AddAspNetCoreInstrumentation()
+                builder.AddAspNetCoreInstrumentation()
                        .AddHttpClientInstrumentation()
                        .AddProcessInstrumentation()
                        .AddMeter("System.Runtime");
@@ -32,8 +41,7 @@ public static class TelemetryExtensions
             })
             .WithTracing((builder) =>
             {
-                builder.SetResourceBuilder(ApplicationTelemetry.ResourceBuilder)
-                       .AddAspNetCoreInstrumentation()
+                builder.AddAspNetCoreInstrumentation()
                        .AddHttpClientInstrumentation()
                        .AddSource(ApplicationTelemetry.ServiceName)
                        .AddSource("Azure.*")
