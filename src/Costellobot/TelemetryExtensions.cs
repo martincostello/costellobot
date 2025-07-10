@@ -56,7 +56,7 @@ public static class TelemetryExtensions
             });
 
         services.AddOptions<HttpClientTraceInstrumentationOptions>()
-                .Configure<IServiceProvider>((options, provider) =>
+                .Configure((options) =>
                 {
                     options.EnrichWithHttpRequestMessage = EnrichHttpActivity;
                     options.EnrichWithHttpResponseMessage = EnrichHttpActivity;
@@ -64,7 +64,7 @@ public static class TelemetryExtensions
                 });
 
         services.AddOptions<AspNetCoreTraceInstrumentationOptions>()
-                .Configure<IServiceProvider>((options, provider) =>
+                .Configure((options) =>
                 {
                     options.EnrichWithHttpResponse = static (activity, response) =>
                     {
