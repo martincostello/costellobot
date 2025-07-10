@@ -34,11 +34,11 @@
                 <tbody>
                     @foreach ((var ecosystem, var dependencies) in Model)
                     {
-                        foreach (var dependency in dependencies)
+                        foreach ((var index, var dependency) in dependencies.Index())
                         {
                             (var name, var url, var icon) = DependencyHelpers.GetPackageMetadata(ecosystem, dependency.Id, dependency.Version);
 
-                            <tr class="trusted-dependency">
+                            <tr class="trusted-dependency @(index is not 0 ? "table-light" : null)">
                                 <td>
                                     <span class="dependency-ecosystem @(icon)" title="@(name)" aria-hidden="true"></span>
                                 </td>
