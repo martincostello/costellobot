@@ -8,8 +8,7 @@ on:
       - dotnet-nightly
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
 
 env:
   APPLICATION_URL: 'https://localhost:50001'
@@ -23,6 +22,9 @@ jobs:
   lighthouse:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    permissions:
+      contents: read
 
     steps:
 
