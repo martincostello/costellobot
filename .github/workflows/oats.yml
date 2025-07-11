@@ -14,6 +14,10 @@ on:
       - dotnet-nightly
   workflow_dispatch:
 
+env:
+  FORCE_COLOR: 3
+  TERM: xterm
+
 permissions: {}
 
 jobs:
