@@ -13,6 +13,7 @@ Backup*/
 BenchmarkDotNet.Artifacts/
 bin
 Bin
+build/
 coverage
 coverage.*
 junit.xml

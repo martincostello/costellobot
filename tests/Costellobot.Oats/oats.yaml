@@ -1,0 +1,39 @@
+docker-compose:
+  files:
+    - ./docker-compose.yaml
+input:
+  - path: /version
+interval: 500ms
+expected:
+  logs:
+    - logql: '{ service_name="Costellobot" } |~ `Application started.`'
+      contains:
+        - 'Application started'
+  metrics:
+    - promql: http_client_request_duration_seconds_count{}
+      value: '>= 0'
+  traces:
+    - traceql: '{ span.http.route =~ "/version" }'
+      spans:
+        - name: 'GET /version'
+          attributes:
+            cloud.provider: azure
+            container.id: regex:.+
+            host.name: regex:.+
+            http.request.method: GET
+            http.response.status_code: 200
+            os.build_id: regex:.+
+            os.description: regex:.+
+            os.name: Ubuntu
+            os.type: linux
+            os.version: regex:.+
+            process.runtime.description: regex:.NET.+
+            process.runtime.name: .NET
+            process.runtime.version: regex:.+
+            service.instance.id: regex:.+
+            service.name: Costellobot
+            service.namespace: Costellobot
+            service.version: regex:1.0.\d+
+            telemetry.sdk.language: dotnet
+            telemetry.sdk.name: opentelemetry
+            telemetry.sdk.version: regex:.+

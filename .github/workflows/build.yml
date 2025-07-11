@@ -26,8 +26,7 @@ env:
   NUGET_XMLDOC_MODE: skip
   TERM: xterm
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   build:
@@ -318,6 +317,9 @@ jobs:
     needs: deploy
     runs-on: ubuntu-latest
     concurrency: production_environment
+
+    permissions:
+      contents: read
 
     steps:
 
