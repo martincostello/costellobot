@@ -38,13 +38,13 @@ public sealed partial class RepositoryDispatchHandler(
 
         if (body.Action is "deployment_started")
         {
+            string application = payload.application;
             string environment = payload.environment;
             string repository = payload.repository;
             string runAttempt = payload.runAttempt;
             string runId = payload.runId;
             string runNumber = payload.runNumber;
             string serverUrl = payload.serverUrl;
-            string service = payload.service;
             string sha = payload.sha;
             long timestamp = payload.timestamp;
 
@@ -60,7 +60,7 @@ public sealed partial class RepositoryDispatchHandler(
                 [
                     "deployment",
                     $"environment:{environment}",
-                    $"service:{service}",
+                    $"service:{application}",
                 ],
                 Text = text,
                 Time = timestamp,
