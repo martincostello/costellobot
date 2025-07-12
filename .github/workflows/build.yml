@@ -361,14 +361,14 @@ jobs:
         } | ConvertTo-Json
 
         try {
-          $_ = Invoke-RestMethod -Uri "${env:TELEMETRY_URL}/api/annotations/${env:ANNOTATION_ID}" `
+          Invoke-RestMethod -Uri "${env:TELEMETRY_URL}/api/annotations/${env:ANNOTATION_ID}" `
             -Method Patch `
             -Headers @{
               "Accept" = "application/json";
               "Authorization" = "Bearer ${env:TELEMETRY_TOKEN}";
               "Content-Type" = "application/json";
             } `
-            -Body $body
+            -Body $body | Out-Null
 
           Write-Output "Updated deployment annotation ${env:ANNOTATION_ID}"
         } catch {
