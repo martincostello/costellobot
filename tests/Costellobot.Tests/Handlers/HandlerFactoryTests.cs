@@ -26,10 +26,11 @@ public static class HandlerFactoryTests
     [InlineData("pull_request", typeof(PullRequestHandler))]
     [InlineData("pull_request_review", typeof(PullRequestReviewHandler))]
     [InlineData("push", typeof(PushHandler))]
+    [InlineData("repository_dispatch", typeof(RepositoryDispatchHandler))]
     public static void Create_Creates_Correct_Handler_Type(string? eventType, Type expected)
     {
         // Arrange
-        var options = new WebhookOptions().ToMonitor();
+        var webhookOptions = new WebhookOptions().ToMonitor();
         var clientFactory = Substitute.For<IGitHubClientFactory>();
 
         using var cache = new ApplicationCache();
@@ -38,7 +39,7 @@ public static class HandlerFactoryTests
         var context = new GitHubWebhookContext(
             clientFactory,
             new GitHubOptions().ToMonitor(),
-            options)
+            webhookOptions)
         {
             AppId = GitHubFixtures.AppId,
             InstallationId = GitHubFixtures.InstallationId,
@@ -104,7 +105,7 @@ public static class HandlerFactoryTests
                 return new PullRequestHandler(
                     pullRequestAnalyzer,
                     pullRequestApprover,
-                    options,
+                    webhookOptions,
                     NullLoggerFactory.Instance.CreateLogger<PullRequestHandler>());
             });
 
@@ -126,6 +127,18 @@ public static class HandlerFactoryTests
                 return new PushHandler(
                     context,
                     NullLoggerFactory.Instance.CreateLogger<PushHandler>());
+            });
+
+        serviceProvider.GetService(typeof(RepositoryDispatchHandler))
+            .Returns((_) =>
+            {
+                var grafanaOptions = new GrafanaOptions().ToMonitor();
+
+                return new RepositoryDispatchHandler(
+                    cache,
+                    new HttpClient(),
+                    grafanaOptions,
+                    NullLoggerFactory.Instance.CreateLogger<RepositoryDispatchHandler>());
             });
 
         var target = new HandlerFactory(serviceProvider);

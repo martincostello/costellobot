@@ -18,8 +18,8 @@ public static class WellKnownGitHubEvents
 {
     private static readonly HashSet<(string? Event, string? Action)> KnownEvents =
     [
-        (WebhookEventType.CheckSuite, CheckSuiteAction.Completed),
-        (WebhookEventType.DeploymentProtectionRule, DeploymentProtectionRuleAction.Requested),
+        (WebhookEventType.CheckSuite, CheckSuiteActionValue.Completed),
+        (WebhookEventType.DeploymentProtectionRule, DeploymentProtectionRuleActionValue.Requested),
         (WebhookEventType.DeploymentStatus, DeploymentStatusActionValue.Created),
         (WebhookEventType.IssueComment, IssueCommentActionValue.Created),
         (WebhookEventType.Ping, null),
@@ -27,6 +27,8 @@ public static class WellKnownGitHubEvents
         (WebhookEventType.PullRequest, PullRequestActionValue.Labeled),
         (WebhookEventType.PullRequest, PullRequestActionValue.Opened),
         (WebhookEventType.PullRequestReview, PullRequestReviewActionValue.Submitted),
+        (WebhookEventType.RepositoryDispatch, "deployment_started"),
+        (WebhookEventType.RepositoryDispatch, "deployment_completed"),
     ];
 
     public static bool IsKnown(GitHubEvent message)
