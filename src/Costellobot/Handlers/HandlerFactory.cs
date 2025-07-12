@@ -18,6 +18,7 @@ public sealed class HandlerFactory(IServiceProvider serviceProvider) : IHandlerF
             WebhookEventType.PullRequest => serviceProvider.GetRequiredService<PullRequestHandler>(),
             WebhookEventType.PullRequestReview => serviceProvider.GetRequiredService<PullRequestReviewHandler>(),
             WebhookEventType.Push => serviceProvider.GetRequiredService<PushHandler>(),
+            WebhookEventType.RepositoryDispatch => serviceProvider.GetRequiredService<RepositoryDispatchHandler>(),
             _ => NullHandler.Instance,
         };
     }
