@@ -64,6 +64,7 @@ public static class GitHubExtensions
         services.Configure<GitHubOptions>(configuration.GetSection("GitHub"));
         services.Configure<GitHubWebhookOptions>((p) => p.Secret = configuration["GitHub:WebhookSecret"]);
         services.Configure<GoogleOptions>(configuration.GetSection("Google"));
+        services.Configure<GrafanaOptions>(configuration.GetSection("Grafana"));
         services.Configure<SiteOptions>(configuration.GetSection("Site"));
         services.Configure<WebhookOptions>(configuration.GetSection("Webhook"));
 
@@ -170,6 +171,7 @@ public static class GitHubExtensions
         services.AddTransient<PullRequestHandler>();
         services.AddTransient<PullRequestReviewHandler>();
         services.AddTransient<PushHandler>();
+        services.AddTransient<RepositoryDispatchHandler>();
 
         services.AddHostedService<GitHubWebhookService>();
 

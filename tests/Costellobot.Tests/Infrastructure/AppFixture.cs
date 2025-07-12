@@ -125,6 +125,8 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 KeyValuePair.Create<string, string?>("Google:PrivateKey", CreateSigningCertificate()),
                 KeyValuePair.Create<string, string?>("Google:PrivateKeyId", "github-app-client-id"),
                 KeyValuePair.Create<string, string?>("Google:ProjectId", "google-project-id"),
+                KeyValuePair.Create<string, string?>("Grafana:Token", "grafana-token"),
+                KeyValuePair.Create<string, string?>("Grafana:Url", "https://grafana.local"),
                 KeyValuePair.Create<string, string?>("HostOptions:ShutdownTimeout", "00:00:01"),
                 KeyValuePair.Create<string, string?>("Site:AdminUsers:0", "john-smith"),
                 KeyValuePair.Create<string, string?>("Webhook:DeployEnvironments:0", "production"),

@@ -27,6 +27,8 @@ public static class WellKnownGitHubEvents
         (WebhookEventType.PullRequest, PullRequestActionValue.Labeled),
         (WebhookEventType.PullRequest, PullRequestActionValue.Opened),
         (WebhookEventType.PullRequestReview, PullRequestReviewActionValue.Submitted),
+        (WebhookEventType.RepositoryDispatch, "deployment_started"),
+        (WebhookEventType.RepositoryDispatch, "deployment_completed"),
     ];
 
     public static bool IsKnown(GitHubEvent message)
