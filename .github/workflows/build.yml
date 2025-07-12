@@ -274,6 +274,7 @@ jobs:
       shell: pwsh
       env:
         APPLICATION_NAME: ${{ env.AZURE_WEBAPP_NAME }}
+        ENVIRONMENT_NAME: production
         TELEMETRY_TOKEN: ${{ secrets.TELEMETRY_TOKEN }}
         TELEMETRY_URL: ${{ vars.TELEMETRY_URL }}
       run: |
@@ -282,7 +283,7 @@ jobs:
         $workflowUrl = "${env:GITHUB_SERVER_URL}/${env:GITHUB_REPOSITORY}/actions/runs/${env:GITHUB_RUN_ID}"
 
         $body = @{
-          tags = @(${env:APPLICATION_NAME});
+          tags = @(${env:APPLICATION_NAME}, ${env:ENVIRONMENT_NAME});
           time = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds();
           text = "Deployed <a href='${workflowUrl}'>#${env:GITHUB_RUN_NUMBER}:${env:GITHUB_RUN_ATTEMPT}</a> with commit <a href='${commitUrl}'>${commitSha}</a>";
         } | ConvertTo-Json
