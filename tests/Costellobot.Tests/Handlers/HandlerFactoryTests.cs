@@ -132,8 +132,6 @@ public static class HandlerFactoryTests
         serviceProvider.GetService(typeof(RepositoryDispatchHandler))
             .Returns((_) =>
             {
-                var grafanaOptions = new GrafanaOptions().ToMonitor();
-
                 return new RepositoryDispatchHandler(
                     cache,
                     new HttpClient(),
