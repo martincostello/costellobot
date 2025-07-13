@@ -203,14 +203,19 @@ public static partial class GitDiffParser
 
         static bool IsDockerImage(string fragment, string? fileName)
         {
+            if (fileName is null)
+            {
+                return false;
+            }
+
             if (fragment.StartsWith("FROM", StringComparison.OrdinalIgnoreCase) &&
-                fileName?.Contains("dockerfile", StringComparison.OrdinalIgnoreCase) is true)
+                fileName.Contains("dockerfile", StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
 
             if (fragment.StartsWith("image:", StringComparison.OrdinalIgnoreCase) &&
-                fileName?.Contains("docker-compose.", StringComparison.OrdinalIgnoreCase) is true)
+                string.Equals(Path.GetFileNameWithoutExtension(fileName), "docker-compose", StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
