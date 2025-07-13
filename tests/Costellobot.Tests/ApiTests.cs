@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot;
 
@@ -30,7 +31,7 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
             },
             installation = new
             {
-                id = 42,
+                id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
             },
         };
 
@@ -47,7 +48,6 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         // Arrange
         var options = Fixture.Services.GetRequiredService<IOptions<GitHubOptions>>().Value;
 
-        // See https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#webhook-payload-example-27
         var value = new
         {
             zen = "Responsive is better than fast.",
@@ -69,7 +69,7 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
             },
             updated_at = "2022-03-23T23:13:43Z",
             created_at = "2022-03-23T23:13:43Z",
-            app_id = 349596565,
+            app_id = long.Parse(AppId, CultureInfo.InvariantCulture),
             deliveries_url = "https://api.github.com/app/hook/deliveries",
         };
 

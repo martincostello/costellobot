@@ -507,7 +507,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                 .Returns(DependencyEcosystem.GitHubActions);
 
         registry.When((p) => p.GetPackageOwnersAsync(repository, "actions/checkout", "3"))
-                .Throw(new InvalidOperationException());
+                .Throw(new InvalidOperationException("Expected exception."));
 
         var options = new WebhookOptions()
         {
