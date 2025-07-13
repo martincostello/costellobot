@@ -15,6 +15,8 @@ public static class ApplicationTelemetry
     public static readonly string ServiceVersion = GitMetadata.Version.Split('+')[0];
     public static readonly ActivitySource ActivitySource = new(ServiceName, ServiceVersion);
 
+    private static string? _serviceName;
+
     public static ResourceBuilder ResourceBuilder { get; } = ResourceBuilder.CreateDefault()
         .AddService(ServiceName, ServiceNamespace, ServiceVersion)
         .AddAzureAppServiceDetector()
@@ -22,6 +24,17 @@ public static class ApplicationTelemetry
         .AddHostDetector()
         .AddOperatingSystemDetector()
         .AddProcessRuntimeDetector();
+
+    public static string EffectiveServiceName()
+    {
+        if (_serviceName is null)
+        {
+            var resource = ApplicationTelemetry.ResourceBuilder.Build();
+            _serviceName = resource.Attributes.FirstOrDefault((a) => a.Key == "service.name").Value?.ToString() ?? ServiceName;
+        }
+
+        return _serviceName;
+    }
 
     internal static bool IsOtlpCollectorConfigured()
         => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT"));
