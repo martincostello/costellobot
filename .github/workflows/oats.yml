@@ -80,9 +80,16 @@ jobs:
           restore-keys: ${{ runner.os }}-nuget-
 
       - name: Build container
-        shell: pwsh
+        id: build
+        run: dotnet publish ./src/Costellobot --arch x64 --os linux -p:PublishProfile=DefaultContainer
+
+      - name: Tag container image
+        env:
+          CONTAINER_IMAGE: ${{ steps.build.outputs.container-image }}
+          CONTAINER_TAG: costellobot:latest
         run: |
-          dotnet publish ./src/Costellobot --arch x64 --os linux -p:PublishProfile=DefaultContainer && docker image inspect costellobot:latest
+          docker tag "${CONTAINER_IMAGE}" "${CONTAINER_TAG}"
+          docker image inspect "${CONTAINER_TAG}"
 
       - name: Install OATS
         env:
