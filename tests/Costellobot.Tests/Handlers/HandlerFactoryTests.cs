@@ -30,7 +30,7 @@ public static class HandlerFactoryTests
     public static void Create_Creates_Correct_Handler_Type(string? eventType, Type expected)
     {
         // Arrange
-        var webhookOptions = new WebhookOptions().ToMonitor();
+        var options = new WebhookOptions().ToMonitor();
         var clientFactory = Substitute.For<IGitHubClientFactory>();
 
         using var cache = new ApplicationCache();
@@ -39,7 +39,7 @@ public static class HandlerFactoryTests
         var context = new GitHubWebhookContext(
             clientFactory,
             new GitHubOptions().ToMonitor(),
-            webhookOptions)
+            options)
         {
             AppId = GitHubFixtures.AppId,
             InstallationId = GitHubFixtures.InstallationId,
@@ -105,7 +105,7 @@ public static class HandlerFactoryTests
                 return new PullRequestHandler(
                     pullRequestAnalyzer,
                     pullRequestApprover,
-                    webhookOptions,
+                    options,
                     NullLoggerFactory.Instance.CreateLogger<PullRequestHandler>());
             });
 
@@ -137,7 +137,6 @@ public static class HandlerFactoryTests
                 return new RepositoryDispatchHandler(
                     cache,
                     new HttpClient(),
-                    grafanaOptions,
                     NullLoggerFactory.Instance.CreateLogger<RepositoryDispatchHandler>());
             });
 
