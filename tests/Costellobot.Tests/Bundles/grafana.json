@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
+  "id": "grafana",
+  "version": 1,
+  "comment": "HTTP bundle for Grafana APIs.",
+  "items": [
+    {
+      "comment": "https://grafana.com/docs/grafana/latest/developers/http_api/annotations/#create-annotation",
+      "uri": "https://grafana.local/api/annotations",
+      "method": "POST",
+      "requestHeaders": {
+        "Accept": [ "application/json" ],
+        "Authorization": [ "Bearer grafana-token" ]
+      },
+      "contentHeaders": {
+        "Content-Type": [ "application/json;charset=utf-8" ]
+      },
+      "contentFormat": "json",
+      "contentJson": {
+        "message": "Annotation added",
+        "id": 42
+      }
+    },
+    {
+      "comment": "https://grafana.com/docs/grafana/latest/developers/http_api/annotations/#patch-annotation",
+      "uri": "https://grafana.local/api/annotations/42",
+      "method": "PATCH",
+      "requestHeaders": {
+        "Accept": [ "application/json" ],
+        "Authorization": [ "Bearer grafana-token" ]
+      },
+      "contentHeaders": {
+        "Content-Type": [ "application/json;charset=utf-8" ]
+      },
+      "contentFormat": "json",
+      "contentJson": {
+        "message": "Annotation patched"
+      }
+    }
+  ]
+}

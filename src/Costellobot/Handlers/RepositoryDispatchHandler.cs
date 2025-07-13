@@ -4,6 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
@@ -23,7 +24,7 @@ public sealed partial class RepositoryDispatchHandler(
 
     public async Task HandleAsync(WebhookEvent message)
     {
-        if (message is not RepositoryDispatchEvent body || body.ClientPayload is not { } payload)
+        if (message is not RepositoryDispatchEvent body || body.ClientPayload is not JsonElement payload)
         {
             return;
         }
@@ -38,15 +39,15 @@ public sealed partial class RepositoryDispatchHandler(
 
         if (body.Action is "deployment_started")
         {
-            string application = payload.application;
-            string environment = payload.environment;
-            string repository = payload.repository;
-            string runAttempt = payload.runAttempt;
-            string runId = payload.runId;
-            string runNumber = payload.runNumber;
-            string serverUrl = payload.serverUrl;
-            string sha = payload.sha;
-            long timestamp = payload.timestamp;
+            string application = GetString(payload, "application");
+            string environment = GetString(payload, "environment");
+            string repository = GetString(payload, "repository");
+            string runAttempt = GetString(payload, "runAttempt");
+            string runId = GetString(payload, "runId");
+            string runNumber = GetString(payload, "runNumber");
+            string serverUrl = GetString(payload, "serverUrl");
+            string sha = GetString(payload, "sha");
+            long timestamp = GetInt64(payload, "timestamp");
 
             string commitSha = sha[0..7];
             string commitUrl = $"{serverUrl}/{repository}/commit/{sha}";
@@ -66,7 +67,7 @@ public sealed partial class RepositoryDispatchHandler(
                 Time = timestamp,
             };
 
-            using var response = await client.PostAsJsonAsync("/api/annotations", request, context.CreateAnnotationRequest);
+            using var response = await client.PostAsJsonAsync("api/annotations", request, context.CreateAnnotationRequest);
 
             if (response.IsSuccessStatusCode)
             {
@@ -87,10 +88,10 @@ public sealed partial class RepositoryDispatchHandler(
         }
         else if (body.Action is "deployment_completed")
         {
-            string repository = payload.repository;
-            string runAttempt = payload.runAttempt;
-            string runNumber = payload.runNumber;
-            long timestamp = payload.timestamp;
+            string repository = GetString(payload, "repository");
+            string runAttempt = GetString(payload, "runAttempt");
+            string runNumber = GetString(payload, "runNumber");
+            long timestamp = GetInt64(payload, "timestamp");
 
             var id = await cache.GetOrCreateAsync<long>(
                 CacheKey(repository, runNumber, runAttempt),
@@ -99,7 +100,7 @@ public sealed partial class RepositoryDispatchHandler(
             if (id is not -1)
             {
                 using var response = await client.PatchAsJsonAsync(
-                    $"/api/annotations/{id}",
+                    $"api/annotations/{id}",
                     new() { TimeEnd = timestamp },
                     GrafanaJsonSerializerContext.Default.UpdateAnnotationRequest);
 
@@ -116,6 +117,12 @@ public sealed partial class RepositoryDispatchHandler(
 
         static string CacheKey(string repository, string runNumber, string runAttempt)
             => $"annotation:{repository}:{runNumber}:{runAttempt}";
+
+        static long GetInt64(JsonElement element, string propertyName)
+            => element.GetProperty(propertyName).GetInt64();
+
+        static string GetString(JsonElement element, string propertyName)
+            => element.GetProperty(propertyName).GetString()!;
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
