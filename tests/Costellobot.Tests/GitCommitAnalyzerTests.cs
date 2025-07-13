@@ -2344,7 +2344,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     }
 
     [Fact]
-    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Digest_Update()
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Digest_Update_For_Dockerfile()
     {
         // Arrange
         var owner = CreateUser();
@@ -2416,6 +2416,85 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         ecosystem.ShouldBe(DependencyEcosystem.Docker);
 
         trust.ShouldContainKeyAndValue("mcr.microsoft.com/dotnet/sdk", (true, "9.0.301-b768b444028d3c531de90a356836047e48658cd1e26ba07a539a6f1a052a35d9"));
+        trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Digest_Update_For_Docker_Compose()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/docker-compose/mcr.microsoft.com-azure-sql-edge-2.0.0";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.Docker);
+
+        registry.GetPackageOwnersAsync(repository, "mcr.microsoft.com/azure-sql-edge", "2.0.0-52605ea3251cbc4a7e03eccd458e775ae8a626a3afb4019bec66520a81e78170")
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["mcr.microsoft.com"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.Docker] = ["mcr.microsoft.com"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var sha = "d41fbea9c7710202b6ce753bb3e1b1af1200c487";
+
+        var diff = """
+                   diff --git a/docker-compose.yml b/docker-compose.yml
+                   index 2947ef712..c5b160fcc 100644
+                   --- a/docker-compose.yml
+                   +++ b/docker-compose.yml
+                   @@ -26,7 +26,7 @@ services:
+                          - MSSQL_SA_PASSWORD=C0st3ll0b0t$
+                          - SQL_SERVER=sql-server:1433
+                      sql-server:
+                   -    image: mcr.microsoft.com/azure-sql-edge:2.0.0@sha256:902628a8be89e35dfb7895ca31d602974c7bafde4d583a0d0873844feb1c42cf
+                   +    image: mcr.microsoft.com/azure-sql-edge:2.0.0@sha256:52605ea3251cbc4a7e03eccd458e775ae8a626a3afb4019bec66520a81e78170
+                        ports:
+                          - '1433:1433'
+                        environment:
+                   """;
+
+        var commitMessage = """
+                            Bump mcr.microsoft.com/azure-sql-edge:2.0.0 Docker digest to 52605ea
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.Docker);
+
+        trust.ShouldContainKeyAndValue("mcr.microsoft.com/azure-sql-edge", (true, "2.0.0-52605ea3251cbc4a7e03eccd458e775ae8a626a3afb4019bec66520a81e78170"));
         trust.Count.ShouldBe(1);
     }
 
