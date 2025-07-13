@@ -301,7 +301,7 @@ public sealed partial class GitCommitAnalyzer(
         return parts[1] switch
         {
             "bundler" => DependencyEcosystem.Ruby,
-            "docker" or "dockerfile" => DependencyEcosystem.Docker,
+            "docker" or "dockerfile" or "docker-compose" => DependencyEcosystem.Docker,
             "github-actions" or "github_actions" => DependencyEcosystem.GitHubActions,
             "npm" or "npm_and_yarn" => DependencyEcosystem.Npm,
             "nuget" => DependencyEcosystem.NuGet,

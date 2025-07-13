@@ -194,16 +194,32 @@ public static partial class GitDiffParser
         {
             return TryParseJson(fragmentTrimmed, out package);
         }
-        else if (fragmentTrimmed.StartsWith("FROM", StringComparison.OrdinalIgnoreCase) &&
-                 fileName?.Contains("dockerfile", StringComparison.OrdinalIgnoreCase) is true)
+        else if (IsDockerImage(fragmentTrimmed, fileName))
         {
-            return TryParseDockerfile(fragmentTrimmed, out package);
+            return TryParseDockerImage(fragmentTrimmed, out package);
         }
 
         return false;
+
+        static bool IsDockerImage(string fragment, string? fileName)
+        {
+            if (fragment.StartsWith("FROM", StringComparison.OrdinalIgnoreCase) &&
+                fileName?.Contains("dockerfile", StringComparison.OrdinalIgnoreCase) is true)
+            {
+                return true;
+            }
+
+            if (fragment.StartsWith("image:", StringComparison.OrdinalIgnoreCase) &&
+                fileName?.Contains("docker-compose.", StringComparison.OrdinalIgnoreCase) is true)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 
-    private static bool TryParseDockerfile(
+    private static bool TryParseDockerImage(
         string text,
         [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
     {
@@ -330,6 +346,6 @@ public static partial class GitDiffParser
         }
     }
 
-    [GeneratedRegex(@"^(?i)FROM(?-i) ((?<platform>--platform=[\$\w]+)\s)?(?<image>[\w\.\/\-]+)(:(?<tag>[\w\-\.]+)(@sha256:(?<digest>[0-9a-f{64}]+))?)?(\s(?<name>(?i)AS(?-i) [\S]+))?$")]
+    [GeneratedRegex(@"^(?i)(FROM|IMAGE:)(?-i) ((?<platform>--platform=[\$\w]+)\s)?(?<image>[\w\.\/\-]+)(:(?<tag>[\w\-\.]+)(@sha256:(?<digest>[0-9a-f{64}]+))?)?(\s(?<name>(?i)AS(?-i) [\S]+))?$")]
     private static partial Regex DockerImage();
 }
