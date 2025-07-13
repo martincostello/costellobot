@@ -27,8 +27,7 @@
   <ItemGroup>
     <AssemblyMetadata Include="DevCertificateFileName" Value="$([System.IO.Path]::GetFileName('$(LocalDevelopmentCertificatePath)'))" />
     <AssemblyMetadata Include="DevCertificatePassword" Value="$(LocalDevelopmentCertificatePassword)" />
-    <Content Include="Bundles\*.json" CopyToOutputDirectory="PreserveNewest" />
-    <EmbeddedResource Include="GitDiffParserTests.*.diff" />
+    <EmbeddedResource Include="Bundles\*.json;GitDiffParserTests.*.diff" />
     <None Update="costellobot-tests.pem" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>

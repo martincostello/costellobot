@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using JustEat.HttpClientInterception;
+using MartinCostello.Costellobot.Infrastructure;
 
 namespace MartinCostello.Costellobot.Registries;
 
@@ -19,7 +20,7 @@ public static class NpmPackageRegistryTests
 
         var options = await new HttpClientInterceptorOptions()
             .ThrowsOnMissingRegistration()
-            .RegisterBundleAsync(Path.Join("Bundles", "npm-registry.json"), cancellationToken: TestContext.Current.CancellationToken);
+            .RegisterBundleFromResourceStreamAsync("npm-registry", cancellationToken: TestContext.Current.CancellationToken);
 
         using var client = options.CreateHttpClient();
         client.BaseAddress = new Uri("https://registry.npmjs.org");

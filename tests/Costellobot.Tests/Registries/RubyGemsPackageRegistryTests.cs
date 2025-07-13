@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using JustEat.HttpClientInterception;
+using MartinCostello.Costellobot.Infrastructure;
 
 namespace MartinCostello.Costellobot.Registries;
 
@@ -17,7 +18,7 @@ public class RubyGemsPackageRegistryTests
 
         var options = await new HttpClientInterceptorOptions()
             .ThrowsOnMissingRegistration()
-            .RegisterBundleAsync(Path.Join("Bundles", "ruby-gems.json"), cancellationToken: TestContext.Current.CancellationToken);
+            .RegisterBundleFromResourceStreamAsync("ruby-gems", cancellationToken: TestContext.Current.CancellationToken);
 
         using var client = options.CreateHttpClient();
         client.BaseAddress = new Uri("https://rubygems.org");

@@ -459,6 +459,46 @@
       }
     },
     {
+      "comment": "NuGet search result for puppeteer",
+      "uri": "https://azuresearch-usnc.nuget.org/query?prerelease=true&q=PackageId%3Apuppeteer&semVerLevel=2.0.0&take=1",
+      "contentFormat": "json",
+      "contentJson": {
+        "@context": {
+          "@vocab": "http://schema.nuget.org/schema#",
+          "@base": "https://api.nuget.org/v3/registration5-gz-semver2/"
+        },
+        "totalHits": 1,
+        "data": [
+          {
+            "@id": "https://api.nuget.org/v3/registration5-gz-semver2/puppeteer/index.json",
+            "@type": "Package",
+            "registration": "https://api.nuget.org/v3/registration5-gz-semver2/13.5.1/index.json",
+            "id": "puppeteer",
+            "version": "13.5.1",
+            "description": "GitHub webhook events toolset for .NET",
+            "summary": "",
+            "title": "puppeteer",
+            "iconUrl": "https://api.nuget.org/v3-flatcontainer/puppeteer/13.5.1/icon",
+            "licenseUrl": "https://www.nuget.org/packages/puppeteer/13.5.1/license",
+            "projectUrl": "https://github.com/octokit/webhooks.net",
+            "tags": [],
+            "authors": [ "JohnDoe" ],
+            "owners": [ "JohnDoe", "JaneDoe" ],
+            "totalDownloads": 1,
+            "verified": false,
+            "packageTypes": [ { "name": "Dependency" } ],
+            "versions": [
+              {
+                "version": "13.5.1",
+                "downloads": 1,
+                "@id": "https://api.nuget.org/v3/registration5-gz-semver2/puppeteer/13.5.1.json"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "comment": "NuGet search result for foo",
       "uri": "https://azuresearch-usnc.nuget.org/query?prerelease=true&q=PackageId%3Afoo&semVerLevel=2.0.0&take=1",
       "contentFormat": "json",

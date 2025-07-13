@@ -25,7 +25,7 @@ public class NuGetPackageRegistryTests(ITestOutputHelper outputHelper)
 
         var options = await new HttpClientInterceptorOptions()
             .ThrowsOnMissingRegistration()
-            .RegisterBundleAsync(Path.Join("Bundles", "nuget-search.json"), cancellationToken: TestContext.Current.CancellationToken);
+            .RegisterNuGetBundleAsync(TestContext.Current.CancellationToken);
 
         using var client = options.CreateHttpClient();
         client.BaseAddress = new Uri("https://api.nuget.org");

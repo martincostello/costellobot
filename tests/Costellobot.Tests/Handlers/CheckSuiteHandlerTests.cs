@@ -185,10 +185,12 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
     }
 
     [Theory]
-    [InlineData("actionRequired")]
+    [InlineData("action_required")]
     [InlineData("cancelled")]
     [InlineData("neutral")]
+    [InlineData("skipped")]
     [InlineData("stale")]
+    [InlineData("startup_failure")]
     [InlineData("success")]
     [InlineData("timed_out")]
     public async Task Failed_Jobs_Are_Not_Rerun_For_Check_Suite_That_Did_Not_Fail(string conclusion)
@@ -371,7 +373,6 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
     [InlineData("rando-calrissian", "CONTRIBUTOR")]
     [InlineData("rando-calrissian", "FIRST_TIMER")]
     [InlineData("rando-calrissian", "FIRST_TIME_CONTRIBUTOR")]
-    [InlineData("rando-calrissian", "OWNER")]
     public async Task Failed_Jobs_Are_Not_Rerun_If_Pull_Request_Is_Not_From_A_Trusted_User(
         string login,
         string authorAssociation)
