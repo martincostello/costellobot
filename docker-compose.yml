@@ -26,7 +26,7 @@ services:
       - MSSQL_SA_PASSWORD=C0st3ll0b0t$
       - SQL_SERVER=sql-server:1433
   sql-server:
-    image: mcr.microsoft.com/azure-sql-edge:2.0.0@sha256:902628a8be89e35dfb7895ca31d602974c7bafde4d583a0d0873844feb1c42cf
+    image: mcr.microsoft.com/azure-sql-edge:2.0.0@sha256:52605ea3251cbc4a7e03eccd458e775ae8a626a3afb4019bec66520a81e78170
     ports:
       - '1433:1433'
     environment:
