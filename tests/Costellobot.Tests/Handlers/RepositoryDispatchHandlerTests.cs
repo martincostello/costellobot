@@ -17,15 +17,6 @@ public sealed class RepositoryDispatchHandlerTests : IntegrationTests<AppFixture
     {
         Fixture.ChangeClock(new(2023, 09, 01, 12, 34, 56, TimeSpan.Zero));
         Fixture.Interceptor.RegisterBundle(Path.Join("Bundles", "grafana.json"));
-
-        Fixture.Interceptor.OnSend = (request) =>
-        {
-            if (request.Method == HttpMethod.Post && request.RequestUri?.AbsolutePath == "/api/annotations")
-            {
-            }
-
-            return Task.CompletedTask;
-        };
     }
 
     [Fact]
