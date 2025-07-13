@@ -88,6 +88,15 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         return ConfigureRateLimit(builder);
     }
 
+    protected void AssertNoErrorsLogged()
+    {
+        var collector = Fixture.Services.GetFakeLogCollector();
+        var snapshot = collector.GetSnapshot();
+
+        snapshot.Where((p) => p.Level >= Microsoft.Extensions.Logging.LogLevel.Warning)
+                .ShouldBeEmpty("One or more errors or warnings were logged.");
+    }
+
     protected async Task AssertTaskNotRun(TaskCompletionSource source)
     {
         try
@@ -325,6 +334,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
     {
         _scope?.Dispose();
         Fixture.ClearConfigurationOverrides();
+        Fixture.Services.GetFakeLogCollector().GetSnapshot(clear: true);
     }
 
     protected virtual ValueTask DisposeAsync(bool disposing)
