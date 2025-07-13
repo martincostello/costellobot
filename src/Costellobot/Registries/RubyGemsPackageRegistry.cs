@@ -14,7 +14,8 @@ public sealed partial class RubyGemsPackageRegistry(HttpClient client) : Package
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         RepositoryId repository,
         string id,
-        string version)
+        string version,
+        CancellationToken cancellationToken)
     {
         var escapedId = Uri.EscapeDataString(id);
 
@@ -25,7 +26,7 @@ public sealed partial class RubyGemsPackageRegistry(HttpClient client) : Package
 
         try
         {
-            owners = await Client.GetFromJsonAsync(uri, RubyGemsJsonSerializerContext.Default.OwnerArray);
+            owners = await Client.GetFromJsonAsync(uri, RubyGemsJsonSerializerContext.Default.OwnerArray, cancellationToken);
         }
         catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound)
         {

@@ -14,7 +14,8 @@ public sealed partial class NpmPackageRegistry(HttpClient client) : PackageRegis
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         RepositoryId repository,
         string id,
-        string version)
+        string version,
+        CancellationToken cancellationToken)
     {
         var escapedId = Uri.EscapeDataString(id);
         var escapedVersion = Uri.EscapeDataString(version);
@@ -26,7 +27,7 @@ public sealed partial class NpmPackageRegistry(HttpClient client) : PackageRegis
 
         try
         {
-            package = await Client.GetFromJsonAsync(uri, NpmJsonSerializerContext.Default.Package);
+            package = await Client.GetFromJsonAsync(uri, NpmJsonSerializerContext.Default.Package, cancellationToken);
         }
         catch (HttpRequestException ex) when (IsNotFound(ex))
         {

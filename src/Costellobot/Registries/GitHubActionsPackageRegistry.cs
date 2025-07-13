@@ -13,7 +13,8 @@ public sealed class GitHubActionsPackageRegistry(GitHubWebhookContext context)
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         RepositoryId repository,
         string id,
-        string version)
+        string version,
+        CancellationToken cancellationToken)
     {
         string[] parts = id.Split('/');
 

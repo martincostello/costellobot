@@ -12,6 +12,6 @@ public static class NullHandlerTests
         var target = NullHandler.Instance;
 
         // Act
-        await Should.NotThrowAsync(() => target.HandleAsync(new Octokit.Webhooks.Events.PingEvent()));
+        await Should.NotThrowAsync(() => target.HandleAsync(new Octokit.Webhooks.Events.PingEvent(), TestContext.Current.CancellationToken));
     }
 }

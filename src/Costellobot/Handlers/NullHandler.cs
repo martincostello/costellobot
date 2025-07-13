@@ -9,5 +9,6 @@ public sealed class NullHandler : IHandler
 {
     public static readonly NullHandler Instance = new();
 
-    public Task HandleAsync(WebhookEvent message) => Task.CompletedTask;
+    public Task HandleAsync(WebhookEvent message, CancellationToken cancellationToken)
+        => Task.CompletedTask;
 }

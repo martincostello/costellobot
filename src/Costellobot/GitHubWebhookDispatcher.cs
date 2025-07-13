@@ -12,7 +12,7 @@ public sealed partial class GitHubWebhookDispatcher(
     IOptionsMonitor<GitHubOptions> options,
     ILogger<GitHubWebhookDispatcher> logger)
 {
-    public async Task DispatchAsync(GitHubEvent message)
+    public async Task DispatchAsync(GitHubEvent message, CancellationToken cancellationToken)
     {
         using (logger.BeginWebhookScope(message.Headers))
         using (logger.BeginWebhookScope(message.Event))
@@ -50,7 +50,7 @@ public sealed partial class GitHubWebhookDispatcher(
                 }
 
                 var handler = handlerFactory.Create(message.Headers.Event);
-                await handler.HandleAsync(message.Event);
+                await handler.HandleAsync(message.Event, cancellationToken);
 
                 Log.ProcessedWebhook(logger, message.Headers.Delivery, message);
             }

@@ -488,7 +488,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
         var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
 
         // Act
-        await Should.NotThrowAsync(() => target.HandleAsync(message));
+        await Should.NotThrowAsync(() => target.HandleAsync(message, TestContext.Current.CancellationToken));
     }
 
     protected override async ValueTask DisposeAsync(bool disposing)

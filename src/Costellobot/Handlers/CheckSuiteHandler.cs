@@ -17,7 +17,7 @@ public sealed partial class CheckSuiteHandler(
 {
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
 
-    public async Task HandleAsync(WebhookEvent message)
+    public async Task HandleAsync(WebhookEvent message, CancellationToken cancellationToken)
     {
         if (message is not CheckSuiteEvent body ||
             body.Repository is null ||

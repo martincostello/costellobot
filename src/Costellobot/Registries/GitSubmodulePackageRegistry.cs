@@ -13,7 +13,8 @@ public sealed class GitSubmodulePackageRegistry(GitHubWebhookContext context)
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         RepositoryId repository,
         string id,
-        string version)
+        string version,
+        CancellationToken cancellationToken)
     {
         IReadOnlyList<RepositoryContent> items;
 

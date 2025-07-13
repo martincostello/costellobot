@@ -84,7 +84,7 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
         var message = new Octokit.Webhooks.Events.PullRequest.PullRequestOpenedEvent();
 
         // Act
-        await Should.NotThrowAsync(() => target.HandleAsync(message));
+        await Should.NotThrowAsync(() => target.HandleAsync(message, TestContext.Current.CancellationToken));
     }
 
     private async Task<HttpResponseMessage> PostWebhookAsync(string action, IssueCommentDriver driver)

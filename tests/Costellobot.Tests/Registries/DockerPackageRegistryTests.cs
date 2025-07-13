@@ -31,7 +31,8 @@ public class DockerPackageRegistryTests
         var actual = await target.GetPackageOwnersAsync(
             repository,
             id,
-            version);
+            version,
+            TestContext.Current.CancellationToken);
 
         // Assert
         actual.ShouldNotBeNull();

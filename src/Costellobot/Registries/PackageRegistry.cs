@@ -12,5 +12,6 @@ public abstract class PackageRegistry(HttpClient client) : IPackageRegistry
     public abstract Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         RepositoryId repository,
         string id,
-        string version);
+        string version,
+        CancellationToken cancellationToken);
 }

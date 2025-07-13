@@ -15,7 +15,7 @@ public sealed partial class PushHandler(
     private const string DefaultBranch = $"{PrefixForBranchName}main";
     private const string DotNetNextBranch = $"{PrefixForBranchName}dotnet-vnext";
 
-    public async Task HandleAsync(WebhookEvent message)
+    public async Task HandleAsync(WebhookEvent message, CancellationToken cancellationToken)
     {
         if (message is not PushEvent push ||
             push.Repository is not { Fork: false, Language: "C#" } repo ||
@@ -48,7 +48,7 @@ public sealed partial class PushHandler(
         if (DependencyFileChanged(filesChanged) && string.IsNullOrWhiteSpace(context.InstallationOrganization))
         {
             Log.CreatedRepositoryDispatchForPush(logger, repository, push.Ref);
-            await CreateDispatchAsync(repository, push.Ref, push.After);
+            await CreateDispatchAsync(repository, push.Ref, push.After, cancellationToken);
         }
     }
 
@@ -74,7 +74,11 @@ public sealed partial class PushHandler(
         }
     }
 
-    private async Task CreateDispatchAsync(RepositoryId repository, string reference, string sha)
+    private async Task CreateDispatchAsync(
+        RepositoryId repository,
+        string reference,
+        string sha,
+        CancellationToken cancellationToken)
     {
         // See https://github.com/martincostello/github-automation/blob/main/.github/workflows/dotnet-dependencies-updated.yml
         var dispatch = new
@@ -89,7 +93,11 @@ public sealed partial class PushHandler(
             },
         };
 
-        await context.InstallationClient.RepositoryDispatchAsync("martincostello", "github-automation", dispatch);
+        await context.InstallationClient.RepositoryDispatchAsync(
+            "martincostello",
+            "github-automation",
+            dispatch,
+            cancellationToken);
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]

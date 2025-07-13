@@ -7,5 +7,5 @@ namespace MartinCostello.Costellobot.Handlers;
 
 public interface IHandler
 {
-    Task HandleAsync(WebhookEvent message);
+    Task HandleAsync(WebhookEvent message, CancellationToken cancellationToken);
 }

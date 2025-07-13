@@ -111,7 +111,7 @@ public sealed partial class GitHubWebhookService(
 
         Log.ProcessingMessage(logger, args.Message.MessageId);
 
-        await processor.ProcessWebhookAsync(headers, body);
+        await processor.ProcessWebhookAsync(headers, body, args.CancellationToken);
 
         try
         {

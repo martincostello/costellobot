@@ -68,14 +68,16 @@ public sealed partial class GitCommitAnalyzer(
         RepositoryId repository,
         string? reference,
         GitHubCommit commit,
-        string? diff)
+        string? diff,
+        CancellationToken cancellationToken)
     {
         return await GetDependencyTrustAsync(
             repository,
             reference,
             commit.Sha,
             commit.Commit.Message,
-            diff);
+            diff,
+            cancellationToken);
     }
 
     public async Task<(DependencyEcosystem Ecosystem, IDictionary<string, (bool Trusted, string? Version)> Dependencies)> GetDependencyTrustAsync(
@@ -83,7 +85,8 @@ public sealed partial class GitCommitAnalyzer(
         string? reference,
         string sha,
         string commitMessage,
-        string? diff)
+        string? diff,
+        CancellationToken cancellationToken)
     {
         var ecosystem = ParseEcosystem(reference);
 
@@ -99,7 +102,8 @@ public sealed partial class GitCommitAnalyzer(
             commitMessage,
             diff,
             ecosystem,
-            stopAfterFirstUntrustedDependency: false);
+            stopAfterFirstUntrustedDependency: false,
+            cancellationToken);
 
         return (ecosystem, dependencies);
     }
@@ -108,14 +112,16 @@ public sealed partial class GitCommitAnalyzer(
         RepositoryId repository,
         string? reference,
         GitHubCommit commit,
-        string? diff)
+        string? diff,
+        CancellationToken cancellationToken)
     {
         return await IsTrustedDependencyUpdateAsync(
             repository,
             reference,
             commit.Sha,
             commit.Commit.Message,
-            diff);
+            diff,
+            cancellationToken);
     }
 
     public async Task<bool> IsTrustedDependencyUpdateAsync(
@@ -123,7 +129,8 @@ public sealed partial class GitCommitAnalyzer(
         string? reference,
         string sha,
         string commitMessage,
-        string? diff)
+        string? diff,
+        CancellationToken cancellationToken)
     {
         var ecosystem = ParseEcosystem(reference);
 
@@ -139,7 +146,8 @@ public sealed partial class GitCommitAnalyzer(
             commitMessage,
             diff,
             ecosystem,
-            stopAfterFirstUntrustedDependency: true);
+            stopAfterFirstUntrustedDependency: true,
+            cancellationToken);
 
         bool isTrusted = dependencies.Count > 0 && dependencies.Values.All((p) => p.Trusted);
 
@@ -339,7 +347,8 @@ public sealed partial class GitCommitAnalyzer(
         string commitMessage,
         string? diff,
         DependencyEcosystem ecosystem,
-        bool stopAfterFirstUntrustedDependency)
+        bool stopAfterFirstUntrustedDependency,
+        CancellationToken cancellationToken)
     {
         var dependencies = ParseDependencies(commitMessage);
 
@@ -436,7 +445,8 @@ public sealed partial class GitCommitAnalyzer(
                     version,
                     reference,
                     commitMessage,
-                    diff);
+                    diff,
+                    cancellationToken);
 
                 dependencyTrust[dependency] = (trusted, version);
 
@@ -459,7 +469,8 @@ public sealed partial class GitCommitAnalyzer(
             string? version,
             string? reference,
             string commitMessage,
-            string? diff)
+            string? diff,
+            CancellationToken cancellationToken)
         {
             if (ecosystem is DependencyEcosystem.Unknown or DependencyEcosystem.Unsupported)
             {
@@ -486,12 +497,18 @@ public sealed partial class GitCommitAnalyzer(
                 return (false, version);
             }
 
-            if (await IsTrustedDependencyOwnerAsync(repository, dependency, version, publishers, registry))
+            if (await IsTrustedDependencyOwnerAsync(
+                    repository,
+                    dependency,
+                    version,
+                    publishers,
+                    registry,
+                    cancellationToken))
             {
                 return (true, version);
             }
 
-            return (await IsTrustedDependencyVersionAsync(repository, ecosystem, dependency, version), version);
+            return (await IsTrustedDependencyVersionAsync(repository, ecosystem, dependency, version, cancellationToken), version);
         }
 
         async Task<bool> IsTrustedDependencyOwnerAsync(
@@ -499,14 +516,16 @@ public sealed partial class GitCommitAnalyzer(
             string dependency,
             string version,
             IList<string> publishers,
-            IPackageRegistry registry)
+            IPackageRegistry registry,
+            CancellationToken cancellationToken)
         {
             try
             {
                 var owners = await registry.GetPackageOwnersAsync(
                     repository,
                     dependency,
-                    version);
+                    version,
+                    cancellationToken);
 
                 if (owners.Any(publishers.Contains))
                 {
@@ -519,7 +538,7 @@ public sealed partial class GitCommitAnalyzer(
                     return true;
                 }
 
-                if (await registry.AreOwnersTrustedAsync(owners))
+                if (await registry.AreOwnersTrustedAsync(owners, cancellationToken))
                 {
                     Log.TrustedDependencyOwnerViaRegistryUpdated(
                         logger,
@@ -549,11 +568,12 @@ public sealed partial class GitCommitAnalyzer(
             RepositoryId repository,
             DependencyEcosystem ecosystem,
             string dependency,
-            string version)
+            string version,
+            CancellationToken cancellationToken)
         {
             try
             {
-                if (await trustStore.IsTrustedAsync(ecosystem, dependency, version))
+                if (await trustStore.IsTrustedAsync(ecosystem, dependency, version, cancellationToken))
                 {
                     Log.ImplicitlyTrustedDependencyUpdated(
                         logger,

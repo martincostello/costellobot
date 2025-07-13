@@ -16,20 +16,22 @@ public sealed partial class PullRequestAnalyzer(
         RepositoryId repository,
         string pullRequestHeadRef,
         string pullRequestHeadSha,
-        string pullRequestUrl)
+        string pullRequestUrl,
+        CancellationToken cancellationToken)
     {
         var commit = await context.InstallationClient.Repository.Commit.Get(
             repository.Owner,
             repository.Name,
             pullRequestHeadSha);
 
-        var diff = await GetDiffAsync(pullRequestUrl);
+        var diff = await GetDiffAsync(pullRequestUrl, cancellationToken);
 
         return await commitAnalyzer.GetDependencyTrustAsync(
             repository,
             pullRequestHeadRef,
             commit,
-            diff);
+            diff,
+            cancellationToken);
     }
 
     public async Task<bool> HasValidApprovalAsync(IssueId id, string authorLogin)
@@ -81,27 +83,31 @@ public sealed partial class PullRequestAnalyzer(
         RepositoryId repository,
         string pullRequestHeadRef,
         string pullRequestHeadSha,
-        string pullRequestUrl)
+        string pullRequestUrl,
+        CancellationToken cancellationToken)
     {
         var commit = await context.InstallationClient.Repository.Commit.Get(
             repository.Owner,
             repository.Name,
             pullRequestHeadSha);
 
-        var diff = await GetDiffAsync(pullRequestUrl);
+        var diff = await GetDiffAsync(pullRequestUrl, cancellationToken);
 
         return await commitAnalyzer.IsTrustedDependencyUpdateAsync(
             repository,
             pullRequestHeadRef,
             commit,
-            diff);
+            diff,
+            cancellationToken);
     }
 
-    private async Task<string?> GetDiffAsync(string diffUrl)
+    private async Task<string?> GetDiffAsync(
+        string diffUrl,
+        CancellationToken cancellationToken)
     {
         try
         {
-            return await context.InstallationClient.GetDiffAsync(diffUrl);
+            return await context.InstallationClient.GetDiffAsync(diffUrl, cancellationToken);
         }
         catch (Exception ex)
         {

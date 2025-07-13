@@ -17,7 +17,7 @@ public class GitHubWebhookHub(ClientLogQueue logs, GitHubWebhookQueue webhooks) 
 
         foreach (var @event in webhooks.History())
         {
-            await Clients.Caller.WebhookAsync(@event.RawHeaders, @event.RawPayload);
+            await Clients.Caller.WebhookAsync(@event.RawHeaders, @event.RawPayload, Context.ConnectionAborted);
         }
     }
 }

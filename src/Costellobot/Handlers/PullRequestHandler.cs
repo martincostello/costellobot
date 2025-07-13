@@ -17,7 +17,7 @@ public sealed partial class PullRequestHandler(
 {
     private readonly IOptionsMonitor<WebhookOptions> _options = options;
 
-    public async Task HandleAsync(WebhookEvent message)
+    public async Task HandleAsync(WebhookEvent message, CancellationToken cancellationToken)
     {
         if (message is not PullRequestEvent body ||
             body.Repository is null ||
@@ -46,13 +46,14 @@ public sealed partial class PullRequestHandler(
                 pull.Repository,
                 pr.Head.Ref,
                 pr.Head.Sha,
-                pr.Url);
+                pr.Url,
+                cancellationToken);
         }
 
         if (isManualApproval || isTrusted)
         {
             var mergeMethod = PullRequestApprover.GetMergeMethod(pr.Base.Repo);
-            await approver.ApproveAndMergeAsync(pull, pr.NodeId, mergeMethod);
+            await approver.ApproveAndMergeAsync(pull, pr.NodeId, mergeMethod, cancellationToken);
         }
     }
 

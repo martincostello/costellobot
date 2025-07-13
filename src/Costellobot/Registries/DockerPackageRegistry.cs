@@ -22,14 +22,16 @@ public sealed partial class DockerPackageRegistry(
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         RepositoryId repository,
         string id,
-        string version)
+        string version,
+        CancellationToken cancellationToken)
     {
         var isMicrosoftImage = await cache.GetOrCreateAsync(
             $"mar:{id}",
             (Client, id),
             static async (context, _) => await IsImageFromMicrosoftArtifactRegistryAsync(context.Client, context.id),
             CacheEntryOptions,
-            CacheTags);
+            CacheTags,
+            cancellationToken);
 
         if (isMicrosoftImage)
         {

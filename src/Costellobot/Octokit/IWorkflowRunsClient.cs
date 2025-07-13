@@ -12,5 +12,6 @@ public interface IWorkflowRunsClient
 
     Task ReviewCustomProtectionRuleAsync(
         string deploymentCallbackUrl,
-        ReviewDeploymentProtectionRule review);
+        ReviewDeploymentProtectionRule review,
+        CancellationToken cancellationToken);
 }
