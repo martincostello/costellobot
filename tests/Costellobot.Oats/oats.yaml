@@ -1,6 +1,6 @@
 docker-compose:
   files:
-    - ./../../docker-compose.yaml
+    - ./../../docker-compose.yml
 input:
   - path: /version
 interval: 500ms
