@@ -20,11 +20,10 @@ export class Telemetry {
 
         const url = getOption('collector-url');
         const environment = getOption('service-environment')?.toLowerCase();
-        const name = getOption('service-name');
         const namespace = getOption('service-namespace');
         const version = getOption('service-version');
 
-        if (!url || !name || !version || !environment) {
+        if (!url || !version || !environment) {
             return;
         }
 
@@ -41,7 +40,6 @@ export class Telemetry {
             url,
             app: {
                 environment,
-                name,
                 namespace,
                 version,
             },
