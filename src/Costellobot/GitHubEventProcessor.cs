@@ -27,7 +27,10 @@ public sealed partial class GitHubEventProcessor(
         "X-Hub-Signature-256",
     ];
 
-    public override async Task ProcessWebhookAsync(IDictionary<string, StringValues> headers, string body)
+    public override async Task ProcessWebhookAsync(
+        IDictionary<string, StringValues> headers,
+        string body,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(headers);
         ArgumentNullException.ThrowIfNull(body);
