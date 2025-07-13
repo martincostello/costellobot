@@ -145,6 +145,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 loggingBuilder.ClearProviders()
                               .AddXUnit(this)
                               .AddSignalR()
+                              .AddFakeLogging()
                               .AddFilter("MartinCostello.Costellobot", (_) => true));
 
         builder.UseEnvironment(Environments.Production);

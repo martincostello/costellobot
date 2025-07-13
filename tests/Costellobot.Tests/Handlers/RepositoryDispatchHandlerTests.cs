@@ -62,6 +62,8 @@ public sealed class RepositoryDispatchHandlerTests : IntegrationTests<AppFixture
         updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         await Task.Delay(ResultTimeout, CancellationToken);
+
+        AssertNoErrorsLogged();
     }
 
     [Fact]
