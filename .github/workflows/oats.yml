@@ -87,9 +87,7 @@ jobs:
         env:
           CONTAINER_TAG: ${{ steps.build.outputs.container-tag }}
           OATS_TAG: costellobot:latest
-        run: |
-          docker tag "${CONTAINER_TAG}" "${OATS_TAG}"
-          docker image inspect "${OATS_TAG}"
+        run: docker tag "${CONTAINER_TAG}" "${OATS_TAG}"
 
       - name: Install OATS
         env:
@@ -98,6 +96,5 @@ jobs:
         run: |
           go install "github.com/grafana/oats@${OATS_VERSION}"
 
-      - name: Run OATS tests
-        run: |
-          oats --timeout=5m ./tests/Costellobot.Oats
+      - name: Run OATS
+        run: oats --timeout=5m ./tests/Costellobot.Oats
