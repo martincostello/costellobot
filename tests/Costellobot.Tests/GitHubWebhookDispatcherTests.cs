@@ -20,7 +20,7 @@ public class GitHubWebhookDispatcherTests(ITestOutputHelper outputHelper)
         var message = Builders.GitHubFixtures.CreateEvent("pull_request", installationId: 99);
 
         // Act and Assert
-        await Should.NotThrowAsync(() => target.DispatchAsync(message));
+        await Should.NotThrowAsync(() => target.DispatchAsync(message, TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -34,7 +34,7 @@ public class GitHubWebhookDispatcherTests(ITestOutputHelper outputHelper)
         var handler = Substitute.For<IHandler>();
         var handlerFactory = Substitute.For<IHandlerFactory>();
 
-        handler.HandleAsync(Arg.Any<WebhookEvent>())
+        handler.HandleAsync(Arg.Any<WebhookEvent>(), TestContext.Current.CancellationToken)
                .Returns(Task.CompletedTask);
 
         handlerFactory.Create(eventName)
@@ -45,11 +45,11 @@ public class GitHubWebhookDispatcherTests(ITestOutputHelper outputHelper)
         var target = CreateTarget(handlerFactory, installationId);
 
         // Act
-        await target.DispatchAsync(message);
+        await target.DispatchAsync(message, TestContext.Current.CancellationToken);
 
         // Assert
         handlerFactory.Received(1).Create(eventName);
-        await handler.Received(1).HandleAsync(Arg.Is<WebhookEvent>((p) => p != null));
+        await handler.Received(1).HandleAsync(Arg.Is<WebhookEvent>((p) => p != null), TestContext.Current.CancellationToken);
     }
 
     private GitHubWebhookDispatcher CreateTarget(

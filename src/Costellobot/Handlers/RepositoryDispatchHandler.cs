@@ -19,18 +19,18 @@ public sealed partial class RepositoryDispatchHandler(
     private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromHours(1) };
     private static readonly string[] CacheTags = ["all", "annotations"];
 
-    public async Task HandleAsync(WebhookEvent message)
+    public async Task HandleAsync(WebhookEvent message, CancellationToken cancellationToken)
     {
         if (message is RepositoryDispatchEvent body && body.ClientPayload is JsonElement payload)
         {
             switch (body.Action)
             {
                 case WellKnownGitHubEvents.RepositoryDispatchActionValue.DeploymentStarted:
-                    await CreateAnnotationAsync(payload);
+                    await CreateAnnotationAsync(payload, cancellationToken);
                     break;
 
                 case WellKnownGitHubEvents.RepositoryDispatchActionValue.DeploymentCompleted:
-                    await UpdateAnnotationAsync(payload);
+                    await UpdateAnnotationAsync(payload, cancellationToken);
                     break;
 
                 default:
@@ -48,7 +48,9 @@ public sealed partial class RepositoryDispatchHandler(
     private static string GetString(JsonElement element, string propertyName)
         => element.GetProperty(propertyName).GetString()!;
 
-    private async Task CreateAnnotationAsync(JsonElement payload)
+    private async Task CreateAnnotationAsync(
+        JsonElement payload,
+        CancellationToken cancellationToken)
     {
         var context = GrafanaJsonSerializerContext.Default;
 
@@ -80,11 +82,17 @@ public sealed partial class RepositoryDispatchHandler(
             Time = timestamp,
         };
 
-        using var response = await client.PostAsJsonAsync("api/annotations", request, context.CreateAnnotationRequest);
+        using var response = await client.PostAsJsonAsync(
+            "api/annotations",
+            request,
+            context.CreateAnnotationRequest,
+            cancellationToken);
 
         if (response.IsSuccessStatusCode)
         {
-            var annotation = await response.Content.ReadFromJsonAsync(context.CreateAnnotationResponse);
+            var annotation = await response.Content.ReadFromJsonAsync(
+                context.CreateAnnotationResponse,
+                cancellationToken);
 
             Log.CreatedAnnotation(logger, annotation!.Id);
 
@@ -92,7 +100,8 @@ public sealed partial class RepositoryDispatchHandler(
                 AnnotationCacheKey(repository, runNumber, runAttempt),
                 annotation.Id,
                 CacheEntryOptions,
-                CacheTags);
+                CacheTags,
+                cancellationToken);
         }
         else
         {
@@ -100,7 +109,9 @@ public sealed partial class RepositoryDispatchHandler(
         }
     }
 
-    private async Task UpdateAnnotationAsync(JsonElement payload)
+    private async Task UpdateAnnotationAsync(
+        JsonElement payload,
+        CancellationToken cancellationToken)
     {
         string repository = GetString(payload, "repository");
         string runAttempt = GetString(payload, "runAttempt");
@@ -109,14 +120,16 @@ public sealed partial class RepositoryDispatchHandler(
 
         var id = await cache.GetOrCreateAsync<long>(
             AnnotationCacheKey(repository, runNumber, runAttempt),
-            (_) => ValueTask.FromResult(-1L));
+            (_) => ValueTask.FromResult(-1L),
+            cancellationToken: cancellationToken);
 
         if (id is not -1)
         {
             using var response = await client.PatchAsJsonAsync(
                 $"api/annotations/{id}",
                 new() { TimeEnd = timestamp },
-                GrafanaJsonSerializerContext.Default.UpdateAnnotationRequest);
+                GrafanaJsonSerializerContext.Default.UpdateAnnotationRequest,
+                cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {

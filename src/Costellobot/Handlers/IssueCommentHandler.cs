@@ -12,7 +12,7 @@ public sealed partial class IssueCommentHandler(
     GitHubWebhookContext context,
     ILogger<IssueCommentHandler> logger) : IHandler
 {
-    public async Task HandleAsync(WebhookEvent message)
+    public async Task HandleAsync(WebhookEvent message, CancellationToken cancellationToken)
     {
         if (message is not IssueCommentEvent body ||
             body.Repository is not { } repo ||
@@ -52,7 +52,7 @@ public sealed partial class IssueCommentHandler(
         {
             try
             {
-                await RebaseAsync(issueId, comment.Id);
+                await RebaseAsync(issueId, comment.Id, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -61,7 +61,10 @@ public sealed partial class IssueCommentHandler(
         }
     }
 
-    private async Task RebaseAsync(IssueId issue, long commentId)
+    private async Task RebaseAsync(
+        IssueId issue,
+        long commentId,
+        CancellationToken cancellationToken)
     {
         var client = context.InstallationClient;
         var pull = await client.PullRequest.Get(issue.Owner, issue.Name, issue.Number);
@@ -84,7 +87,11 @@ public sealed partial class IssueCommentHandler(
             },
         };
 
-        await client.RepositoryDispatchAsync("martincostello", "github-automation", dispatch);
+        await client.RepositoryDispatchAsync(
+            "martincostello",
+            "github-automation",
+            dispatch,
+            cancellationToken);
 
         Log.RebaseRequested(logger, issue);
 

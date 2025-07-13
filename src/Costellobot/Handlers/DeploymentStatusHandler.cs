@@ -19,7 +19,7 @@ public sealed partial class DeploymentStatusHandler(
 {
     private static readonly ResiliencePipeline Pipeline = CreateResiliencePipeline();
 
-    public async Task HandleAsync(WebhookEvent message)
+    public async Task HandleAsync(WebhookEvent message, CancellationToken cancellationToken)
     {
         if (message is not DeploymentStatusEvent body ||
             body.Deployment is not { } deploy ||
@@ -43,7 +43,7 @@ public sealed partial class DeploymentStatusHandler(
             return;
         }
 
-        (var approved, var ruleName) = await DeploymentRule.EvaluateAsync(deploymentRules, message, CancellationToken.None);
+        (var approved, var ruleName) = await DeploymentRule.EvaluateAsync(deploymentRules, message, cancellationToken);
 
         if (!approved)
         {
@@ -61,7 +61,7 @@ public sealed partial class DeploymentStatusHandler(
             return;
         }
 
-        if (!await CanDeployChangesAsync(repository, deploy, activeDeployment))
+        if (!await CanDeployChangesAsync(repository, deploy, activeDeployment, cancellationToken))
         {
             return;
         }
@@ -92,7 +92,7 @@ public sealed partial class DeploymentStatusHandler(
 
         var deployment = pendingDeployments[0];
 
-        await ApproveDeploymentAsync(repository, run.Id, deployment);
+        await ApproveDeploymentAsync(repository, run.Id, deployment, cancellationToken);
     }
 
     private static ResiliencePipeline CreateResiliencePipeline()
@@ -111,7 +111,8 @@ public sealed partial class DeploymentStatusHandler(
     private async Task ApproveDeploymentAsync(
         RepositoryId repository,
         long runId,
-        PendingDeployment deployment)
+        PendingDeployment deployment,
+        CancellationToken cancellationToken)
     {
         // HACK Use OAuth token for user that has permissions to review instead of the app.
         // This can be removed in the future if GitHub Apps can be allowed review deployments.
@@ -130,7 +131,7 @@ public sealed partial class DeploymentStatusHandler(
             await Pipeline.ExecuteAsync(
                 static async (state, _) => await state.client.Actions.Workflows.Runs.ReviewPendingDeployments(state.repository.Owner, state.repository.Name, state.runId, state.review),
                 (client, repository, runId, review),
-                CancellationToken.None);
+                cancellationToken);
         }
         catch (Exception ex)
         {
@@ -256,11 +257,13 @@ public sealed partial class DeploymentStatusHandler(
 
     private async Task<(string? Ref, string? Diff)> GetRefAndDiffForCommitFromPullRequestAsync(
         RepositoryId repository,
-        string sha)
+        string sha,
+        CancellationToken cancellationToken)
     {
         // See https://docs.github.com/en/rest/commits/commits#list-pull-requests-associated-with-a-commit.
         var pullRequests = await context.InstallationClient.Connection.GetResponse<PullRequest[]>(
-            new($"repos/{repository.FullName}/commits/{sha}/pulls", UriKind.Relative));
+            new($"repos/{repository.FullName}/commits/{sha}/pulls", UriKind.Relative),
+            cancellationToken);
 
         if (pullRequests.Body is { Length: 1 } pulls)
         {
@@ -278,7 +281,7 @@ public sealed partial class DeploymentStatusHandler(
             }
 #pragma warning restore CA1873
 
-            var diff = await GetDiffAsync(pullRequest.Url);
+            var diff = await GetDiffAsync(pullRequest.Url, cancellationToken);
 
             return (reference, diff);
         }
@@ -286,11 +289,11 @@ public sealed partial class DeploymentStatusHandler(
         return default;
     }
 
-    private async Task<string?> GetDiffAsync(string diffUrl)
+    private async Task<string?> GetDiffAsync(string diffUrl, CancellationToken cancellationToken)
     {
         try
         {
-            return await context.InstallationClient.GetDiffAsync(diffUrl);
+            return await context.InstallationClient.GetDiffAsync(diffUrl, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -302,7 +305,8 @@ public sealed partial class DeploymentStatusHandler(
     private async Task<bool> CanDeployChangesAsync(
         RepositoryId repository,
         Octokit.Webhooks.Models.DeploymentStatusEvent.Deployment pendingDeployment,
-        Octokit.Deployment activeDeployment)
+        Octokit.Deployment activeDeployment,
+        CancellationToken cancellationToken)
     {
         // Diff the active and pending deployment and verify that only trusted dependency
         // changes from trusted users contribute to the changes pending to be deployed.
@@ -340,13 +344,15 @@ public sealed partial class DeploymentStatusHandler(
 
             (string? reference, string? diff) = await GetRefAndDiffForCommitFromPullRequestAsync(
                 repository,
-                commit.Sha);
+                commit.Sha,
+                cancellationToken);
 
             bool isTrustedCommit = await commitAnalyzer.IsTrustedDependencyUpdateAsync(
                 repository,
                 reference,
                 commit,
-                diff);
+                diff,
+                cancellationToken);
 
             if (!isTrustedCommit)
             {

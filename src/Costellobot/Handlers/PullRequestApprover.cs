@@ -17,7 +17,11 @@ public sealed partial class PullRequestApprover(
     public static PullRequestMergeMethod GetMergeMethod(Octokit.Webhooks.Models.Repository repo)
         => GetMergeMethod((repo.AllowMergeCommit, repo.AllowSquashMerge, repo.AllowRebaseMerge));
 
-    public async Task ApproveAndMergeAsync(IssueId pull, string nodeId, PullRequestMergeMethod mergeMethod)
+    public async Task ApproveAndMergeAsync(
+        IssueId pull,
+        string nodeId,
+        PullRequestMergeMethod mergeMethod,
+        CancellationToken cancellationToken)
     {
         var options = context.WebhookOptions;
 
@@ -31,7 +35,8 @@ public sealed partial class PullRequestApprover(
             await EnableAutoMergeAsync(
                 pull,
                 nodeId,
-                mergeMethod);
+                mergeMethod,
+                cancellationToken);
         }
     }
 
@@ -86,7 +91,8 @@ public sealed partial class PullRequestApprover(
     private async Task EnableAutoMergeAsync(
         IssueId pull,
         string nodeId,
-        PullRequestMergeMethod mergeMethod)
+        PullRequestMergeMethod mergeMethod,
+        CancellationToken cancellationToken)
     {
         var input = new EnablePullRequestAutoMergeInput()
         {
@@ -101,7 +107,10 @@ public sealed partial class PullRequestApprover(
 
         try
         {
-            await context.GraphQLClient.Run(mutation);
+            await context.GraphQLClient.Run(
+                mutation,
+                cancellationToken: cancellationToken);
+
             Log.AutoMergeEnabled(logger, pull);
         }
         catch (Octokit.GraphQL.Core.Deserializers.ResponseDeserializerException ex) when (ex.Message.Contains("Pull request Pull request is in clean status", StringComparison.OrdinalIgnoreCase))

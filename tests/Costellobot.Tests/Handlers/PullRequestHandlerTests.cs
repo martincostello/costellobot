@@ -592,7 +592,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
 
         // Act
-        await Should.NotThrowAsync(() => target.HandleAsync(message));
+        await Should.NotThrowAsync(() => target.HandleAsync(message, TestContext.Current.CancellationToken));
     }
 
     [Fact]

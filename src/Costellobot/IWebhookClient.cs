@@ -12,5 +12,8 @@ public interface IWebhookClient
     Task LogAsync(ClientLogMessage logEntry);
 
     [HubMethodName("webhook-logs")]
-    Task WebhookAsync(IDictionary<string, string> headers, JsonElement webhookEvent);
+    Task WebhookAsync(
+        IDictionary<string, string> headers,
+        JsonElement webhookEvent,
+        CancellationToken cancellationToken);
 }

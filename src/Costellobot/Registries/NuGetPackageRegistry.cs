@@ -22,7 +22,8 @@ public sealed partial class NuGetPackageRegistry(
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         RepositoryId repository,
         string id,
-        string version)
+        string version,
+        CancellationToken cancellationToken)
     {
         if (!NuGet.Versioning.NuGetVersion.TryParse(version, out var _))
         {
@@ -31,7 +32,7 @@ public sealed partial class NuGetPackageRegistry(
         }
 
         // https://docs.microsoft.com/nuget/api/search-query-service-resource#versioning
-        var baseAddress = await GetBaseAddressAsync("SearchQueryService/3.5.0");
+        var baseAddress = await GetBaseAddressAsync("SearchQueryService/3.5.0", cancellationToken);
 
         if (baseAddress is null)
         {
@@ -48,7 +49,7 @@ public sealed partial class NuGetPackageRegistry(
         };
 
         var uri = QueryHelpers.AddQueryString(baseAddress, query);
-        var response = await Client.GetFromJsonAsync(uri, NuGetJsonSerializerContext.Default.SearchResponse);
+        var response = await Client.GetFromJsonAsync(uri, NuGetJsonSerializerContext.Default.SearchResponse, cancellationToken);
 
         if (response is null || response.Data is not { Count: > 0 } data)
         {
@@ -99,9 +100,9 @@ public sealed partial class NuGetPackageRegistry(
             => [.. owners.EnumerateArray().Select((p) => p.GetString()!).Order()];
     }
 
-    private async Task<string?> GetBaseAddressAsync(string type)
+    private async Task<string?> GetBaseAddressAsync(string type, CancellationToken cancellationToken)
     {
-        var index = await GetServiceIndexAsync();
+        var index = await GetServiceIndexAsync(cancellationToken);
 
         var resource = index?.Resources?
             .Where((p) => string.Equals(p.Type, type, StringComparison.Ordinal))
@@ -117,13 +118,14 @@ public sealed partial class NuGetPackageRegistry(
         return baseAddress;
     }
 
-    private async Task<ServiceIndex?> GetServiceIndexAsync() =>
+    private async Task<ServiceIndex?> GetServiceIndexAsync(CancellationToken cancellationToken) =>
         await cache.GetOrCreateAsync(
             "nuget-service-index",
             Client,
             static async (client, token) => await client.GetFromJsonAsync("/v3/index.json", NuGetJsonSerializerContext.Default.ServiceIndex, cancellationToken: token),
             CacheEntryOptions,
-            CacheTags);
+            CacheTags,
+            cancellationToken);
 
     [ExcludeFromCodeCoverage]
     private static partial class Log

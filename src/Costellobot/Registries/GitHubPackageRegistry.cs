@@ -15,22 +15,25 @@ public abstract class GitHubPackageRegistry(GitHubWebhookContext context) : IPac
 
     protected IGitHubClient RestClient => context.InstallationClient;
 
-    public virtual async Task<bool> AreOwnersTrustedAsync(IReadOnlyList<string> owners)
+    public virtual async Task<bool> AreOwnersTrustedAsync(
+        IReadOnlyList<string> owners,
+        CancellationToken cancellationToken)
     {
         if (owners.Count != 1)
         {
             return false;
         }
 
-        return await IsGitHubStarAsync(owners[0]);
+        return await IsGitHubStarAsync(owners[0], cancellationToken);
     }
 
     public abstract Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         RepositoryId repository,
         string id,
-        string version);
+        string version,
+        CancellationToken cancellationToken);
 
-    protected async Task<bool> IsGitHubStarAsync(string login)
+    protected async Task<bool> IsGitHubStarAsync(string login, CancellationToken cancellationToken)
     {
         var query = new Query()
             .User(login)
@@ -39,7 +42,7 @@ public abstract class GitHubPackageRegistry(GitHubWebhookContext context) : IPac
 
         try
         {
-            var result = await GraphQLClient.Run(query);
+            var result = await GraphQLClient.Run(query, cancellationToken: cancellationToken);
             return result.IsGitHubStar;
         }
         catch (Octokit.GraphQL.Core.GraphQLException)

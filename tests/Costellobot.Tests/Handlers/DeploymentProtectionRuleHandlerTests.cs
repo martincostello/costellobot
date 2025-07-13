@@ -91,7 +91,7 @@ public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppF
         var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
 
         // Act
-        await Should.NotThrowAsync(() => target.HandleAsync(message));
+        await Should.NotThrowAsync(() => target.HandleAsync(message, TestContext.Current.CancellationToken));
     }
 
     protected override void Dispose(bool disposing)

@@ -13,7 +13,7 @@ public sealed partial class GitHubEventHandler(
     IOptionsMonitor<WebhookOptions> options,
     ILogger<GitHubEventHandler> logger)
 {
-    public async Task HandleAsync(GitHubEvent payload)
+    public async Task HandleAsync(GitHubEvent payload, CancellationToken cancellationToken)
     {
         if (Activity.Current is { } activity)
         {
@@ -27,7 +27,8 @@ public sealed partial class GitHubEventHandler(
 
         var config = options.CurrentValue;
 
-        using var cts = new CancellationTokenSource(config.PublishTimeout);
+        using var timeout = new CancellationTokenSource(config.PublishTimeout);
+        using var combined = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
 
         try
         {
@@ -44,7 +45,7 @@ public sealed partial class GitHubEventHandler(
                     Activity.Current?.SetTag("messaging.message.id", message.MessageId);
 
                     var sender = client.CreateSender(config.QueueName);
-                    await sender.SendMessageAsync(message, cts.Token);
+                    await sender.SendMessageAsync(message, combined.Token);
                 }
             }
             else

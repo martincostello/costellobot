@@ -16,7 +16,7 @@ public sealed partial class DeploymentProtectionRuleHandler(
 {
     private static readonly ResiliencePipeline Pipeline = CreateResiliencePipeline();
 
-    public async Task HandleAsync(WebhookEvent message)
+    public async Task HandleAsync(WebhookEvent message, CancellationToken cancellationToken)
     {
         if (message is not DeploymentProtectionRuleRequestedEvent body ||
             body.Repository is not { } repo)
@@ -33,7 +33,7 @@ public sealed partial class DeploymentProtectionRuleHandler(
             body.Deployment.Id,
             body.DeploymentCallbackUrl);
 
-        (var approved, var ruleName) = await DeploymentRule.EvaluateAsync(deploymentRules, message, CancellationToken.None);
+        (var approved, var ruleName) = await DeploymentRule.EvaluateAsync(deploymentRules, message, cancellationToken);
 
         if (!approved)
         {
@@ -55,9 +55,9 @@ public sealed partial class DeploymentProtectionRuleHandler(
                 context.WebhookOptions.DeployComment);
 
             await Pipeline.ExecuteAsync(
-                static async (state, _) => await state.InstallationClient.WorkflowRuns().ReviewCustomProtectionRuleAsync(state.DeploymentCallbackUrl, state.review),
+                static async (state, token) => await state.InstallationClient.WorkflowRuns().ReviewCustomProtectionRuleAsync(state.DeploymentCallbackUrl, state.review, token),
                 (context.InstallationClient, body.DeploymentCallbackUrl, review),
-                CancellationToken.None);
+                cancellationToken);
 
             Log.ApprovedDeployment(
                 logger,

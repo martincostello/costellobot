@@ -162,7 +162,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBe(expected);
@@ -173,7 +174,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         trust.ShouldContainKeyAndValue(dependency, (expected, null));
@@ -208,7 +210,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(ecosystem);
 
-        registry.GetPackageOwnersAsync(repository, dependency, version)
+        registry.GetPackageOwnersAsync(repository, dependency, version, CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(owners));
 
         var options = new WebhookOptions()
@@ -240,7 +242,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBe(expected);
@@ -253,7 +256,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                 reference,
                 sha,
                 commitMessage,
-                diff);
+                diff,
+                CancellationToken);
 
             // Assert
             actualEcosystem.ShouldBe(ecosystem);
@@ -281,7 +285,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(ecosystem);
 
-        registry.GetPackageOwnersAsync(repository, dependency, version)
+        registry.GetPackageOwnersAsync(repository, dependency, version, CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(owners));
 
         var options = new WebhookOptions()
@@ -325,7 +329,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBe(expected);
@@ -378,7 +383,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeFalse();
@@ -389,7 +395,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.Unknown);
@@ -420,7 +427,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeFalse();
@@ -431,7 +439,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -471,7 +480,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeFalse();
@@ -482,7 +492,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -506,7 +517,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         registry.Ecosystem
                 .Returns(DependencyEcosystem.GitHubActions);
 
-        registry.When((p) => p.GetPackageOwnersAsync(repository, "actions/checkout", "3"))
+        registry.When((p) => p.GetPackageOwnersAsync(repository, "actions/checkout", "3", CancellationToken))
                 .Throw(new InvalidOperationException("Expected exception."));
 
         var options = new WebhookOptions()
@@ -536,7 +547,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeFalse();
@@ -547,7 +559,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.GitHubActions);
@@ -569,10 +582,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "OpenTelemetry.Instrumentation.AspNetCore", "1.0.0-rc9.12")
+        registry.GetPackageOwnersAsync(repository, "OpenTelemetry.Instrumentation.AspNetCore", "1.0.0-rc9.12", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["OpenTelemetry"]));
 
-        registry.GetPackageOwnersAsync(repository, "OpenTelemetry.Instrumentation.Http", "1.0.0-rc9.12")
+        registry.GetPackageOwnersAsync(repository, "OpenTelemetry.Instrumentation.Http", "1.0.0-rc9.12", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["OpenTelemetry"]));
 
         var options = new WebhookOptions()
@@ -625,7 +638,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -636,7 +650,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -659,7 +674,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "xunit", "2.6.3")
+        registry.GetPackageOwnersAsync(repository, "xunit", "2.6.3", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
 
         var options = new WebhookOptions()
@@ -701,7 +716,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -712,7 +728,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -734,10 +751,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "xunit", "2.6.3")
+        registry.GetPackageOwnersAsync(repository, "xunit", "2.6.3", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
 
-        registry.GetPackageOwnersAsync(repository, "xunit.runner.visualstudio", "2.5.5")
+        registry.GetPackageOwnersAsync(repository, "xunit.runner.visualstudio", "2.5.5", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
 
         var options = new WebhookOptions()
@@ -790,7 +807,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -801,7 +819,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -824,10 +843,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "xunit", "2.9.0")
+        registry.GetPackageOwnersAsync(repository, "xunit", "2.9.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
 
-        registry.GetPackageOwnersAsync(repository, "xunit.runner.visualstudio", "2.8.2")
+        registry.GetPackageOwnersAsync(repository, "xunit.runner.visualstudio", "2.8.2", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
 
         var options = new WebhookOptions()
@@ -876,7 +895,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -887,7 +907,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -911,7 +932,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         registry.Ecosystem
             .Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "Microsoft.TypeScript.MSBuild", "4.9.5")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.TypeScript.MSBuild", "4.9.5", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "TypeScriptTeam"]));
 
         var options = new WebhookOptions()
@@ -951,7 +972,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -962,7 +984,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -984,16 +1007,16 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "Microsoft.Extensions.Configuration.Binder", "7.0.4")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.Extensions.Configuration.Binder", "7.0.4", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "aspnet"]));
 
-        registry.GetPackageOwnersAsync(repository, "Microsoft.Extensions.Http.Polly", "7.0.5")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.Extensions.Http.Polly", "7.0.5", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "aspnet"]));
 
-        registry.GetPackageOwnersAsync(repository, "Microsoft.NET.Test.Sdk", "17.5.0")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.NET.Test.Sdk", "17.5.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "aspnet"]));
 
-        registry.GetPackageOwnersAsync(repository, "System.Text.Json", "7.0.2")
+        registry.GetPackageOwnersAsync(repository, "System.Text.Json", "7.0.2", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "dotnetframework"]));
 
         var options = new WebhookOptions()
@@ -1042,7 +1065,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -1053,7 +1077,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -1078,10 +1103,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "AWSSDK.SecurityToken", "3.7.300.118")
+        registry.GetPackageOwnersAsync(repository, "AWSSDK.SecurityToken", "3.7.300.118", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["awsdotnet"]));
 
-        registry.GetPackageOwnersAsync(repository, "AWSSDK.SimpleSystemsManagement", "3.7.305.8")
+        registry.GetPackageOwnersAsync(repository, "AWSSDK.SimpleSystemsManagement", "3.7.305.8", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["awsdotnet"]));
 
         var options = new WebhookOptions()
@@ -1141,7 +1166,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -1152,7 +1178,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -1175,10 +1202,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "AWSSDK.SecurityToken", "3.7.300.118")
+        registry.GetPackageOwnersAsync(repository, "AWSSDK.SecurityToken", "3.7.300.118", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["awsdotnet"]));
 
-        registry.GetPackageOwnersAsync(repository, "AWSSDK.SimpleSystemsManagement", "3.7.305.8")
+        registry.GetPackageOwnersAsync(repository, "AWSSDK.SimpleSystemsManagement", "3.7.305.8", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["awsdotnet"]));
 
         var options = new WebhookOptions()
@@ -1223,7 +1250,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -1234,7 +1262,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -1257,7 +1286,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", "8.0.0")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", "8.0.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["AzureAD", "Microsoft"]));
 
         var options = new WebhookOptions()
@@ -1348,7 +1377,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -1359,7 +1389,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -1384,7 +1415,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", "8.0.0")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", "8.0.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["AzureAD", "Microsoft"]));
 
         var options = new WebhookOptions()
@@ -1521,7 +1552,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeFalse();
@@ -1532,7 +1564,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -1566,7 +1599,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", dependencyVersion)
+        registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", dependencyVersion, CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["AzureAD", "Microsoft"]));
 
         var options = new WebhookOptions()
@@ -1704,7 +1737,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBe(expected);
@@ -1715,7 +1749,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -1740,7 +1775,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", "8.0.0")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", "8.0.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["AzureAD", "Microsoft"]));
 
         var options = new WebhookOptions()
@@ -1899,7 +1934,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeFalse();
@@ -1910,7 +1946,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -1936,10 +1973,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "Microsoft.AspNetCore.AzureAppServices.HostingStartup", "9.0.6")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.AspNetCore.AzureAppServices.HostingStartup", "9.0.6", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["aspnet", "dotnetframework", "Microsoft"]));
 
-        registry.GetPackageOwnersAsync(repository, "Microsoft.AspNetCore.Mvc.Testing", "9.0.6")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.AspNetCore.Mvc.Testing", "9.0.6", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["aspnet", "dotnetframework", "Microsoft"]));
 
         var options = new WebhookOptions()
@@ -1977,7 +2014,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -1988,7 +2026,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -2012,7 +2051,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.GitSubmodule);
 
-        registry.GetPackageOwnersAsync(repository, "src/submodules/dependabot-helper", "aca93c2")
+        registry.GetPackageOwnersAsync(repository, "src/submodules/dependabot-helper", "aca93c2", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["https://github.com/martincostello"]));
 
         var options = new WebhookOptions()
@@ -2047,7 +2086,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -2058,7 +2098,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.GitSubmodule);
@@ -2080,7 +2121,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.GitHubActions);
 
-        registry.GetPackageOwnersAsync(repository, "github/codeql-action", "3.29.0")
+        registry.GetPackageOwnersAsync(repository, "github/codeql-action", "3.29.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["github"]));
 
         var options = new WebhookOptions()
@@ -2115,7 +2156,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -2126,7 +2168,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.GitHubActions);
@@ -2148,10 +2191,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.Npm);
 
-        registry.GetPackageOwnersAsync(repository, "@typescript-eslint/eslint-plugin", "8.34.0")
+        registry.GetPackageOwnersAsync(repository, "@typescript-eslint/eslint-plugin", "8.34.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["bradzacher", "jameshenry"]));
 
-        registry.GetPackageOwnersAsync(repository, "@typescript-eslint/parser", "8.34.0")
+        registry.GetPackageOwnersAsync(repository, "@typescript-eslint/parser", "8.34.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["bradzacher", "jameshenry"]));
 
         var options = new WebhookOptions()
@@ -2188,7 +2231,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -2199,7 +2243,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.Npm);
@@ -2222,7 +2267,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.Npm);
 
-        registry.GetPackageOwnersAsync(repository, "@stylistic/eslint-plugin", "4.4.1")
+        registry.GetPackageOwnersAsync(repository, "@stylistic/eslint-plugin", "4.4.1", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["eslint-stylistic-bot"]));
 
         var options = new WebhookOptions()
@@ -2255,7 +2300,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeFalse();
@@ -2266,7 +2312,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.Npm);
@@ -2288,7 +2335,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
 
-        registry.GetPackageOwnersAsync(repository, "Microsoft.NET.Test.Sdk", "17.14.1")
+        registry.GetPackageOwnersAsync(repository, "Microsoft.NET.Test.Sdk", "17.14.1", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "vstest"]));
 
         var options = new WebhookOptions()
@@ -2323,7 +2370,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -2334,7 +2382,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.NuGet);
@@ -2356,7 +2405,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.Docker);
 
-        registry.GetPackageOwnersAsync(repository, "mcr.microsoft.com/dotnet/sdk", "9.0.301-b768b444028d3c531de90a356836047e48658cd1e26ba07a539a6f1a052a35d9")
+        registry.GetPackageOwnersAsync(repository, "mcr.microsoft.com/dotnet/sdk", "9.0.301-b768b444028d3c531de90a356836047e48658cd1e26ba07a539a6f1a052a35d9", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["mcr.microsoft.com"]));
 
         var options = new WebhookOptions()
@@ -2399,7 +2448,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -2410,7 +2460,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.Docker);
@@ -2432,7 +2483,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         registry.Ecosystem.Returns(DependencyEcosystem.Docker);
 
-        registry.GetPackageOwnersAsync(repository, "mcr.microsoft.com/azure-sql-edge", "2.0.0-52605ea3251cbc4a7e03eccd458e775ae8a626a3afb4019bec66520a81e78170")
+        registry.GetPackageOwnersAsync(repository, "mcr.microsoft.com/azure-sql-edge", "2.0.0-52605ea3251cbc4a7e03eccd458e775ae8a626a3afb4019bec66520a81e78170", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["mcr.microsoft.com"]));
 
         var options = new WebhookOptions()
@@ -2478,7 +2529,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         actual.ShouldBeTrue();
@@ -2489,7 +2541,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             reference,
             sha,
             commitMessage,
-            diff);
+            diff,
+            CancellationToken);
 
         // Assert
         ecosystem.ShouldBe(DependencyEcosystem.Docker);

@@ -24,7 +24,7 @@ public sealed partial class PullRequestReviewHandler(
     private static readonly string[] CacheTags = ["all", "github"];
     private static readonly string[] PullRequestCreators = ["app/dependabot", "app/renovate"];
 
-    public async Task HandleAsync(WebhookEvent message)
+    public async Task HandleAsync(WebhookEvent message, CancellationToken cancellationToken)
     {
         if (!context.WebhookOptions.ImplicitTrust)
         {
@@ -62,7 +62,8 @@ public sealed partial class PullRequestReviewHandler(
             RepositoryId.Create(repo),
             pr.Head.Ref,
             pr.Head.Sha,
-            pr.Url);
+            pr.Url,
+            cancellationToken);
 
         if (dependencies.Count < 1)
         {
@@ -82,7 +83,7 @@ public sealed partial class PullRequestReviewHandler(
             {
                 // If the pull request was approved by the owner, then any
                 // otherwise untrusted dependencies are now implicitly trusted.
-                await trustStore.TrustAsync(ecosystem, name, version);
+                await trustStore.TrustAsync(ecosystem, name, version, cancellationToken);
 
                 trustAdditions++;
 
@@ -100,7 +101,7 @@ public sealed partial class PullRequestReviewHandler(
         {
             try
             {
-                await TryApproveOpenBotPullRequestsAsync(id);
+                await TryApproveOpenBotPullRequestsAsync(id, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -113,7 +114,7 @@ public sealed partial class PullRequestReviewHandler(
             review?.State is { Value: Octokit.Webhooks.Models.PullRequestReviewEvent.ReviewState.Approved };
     }
 
-    private async Task<string> GetAppLoginAsync() =>
+    private async Task<string> GetAppLoginAsync(CancellationToken cancellationToken) =>
         await cache.GetOrCreateAsync(
             $"github-app-slug-{context.AppId}",
             context.AppClient.GitHubApps,
@@ -123,9 +124,10 @@ public sealed partial class PullRequestReviewHandler(
                 return $"{app.Slug}[bot]";
             },
             CacheEntryOptions,
-            CacheTags);
+            CacheTags,
+            cancellationToken);
 
-    private async Task<IReadOnlyList<(string Owner, string Name, long Id)>> GetInstallationRepositoriesAsync() =>
+    private async Task<IReadOnlyList<(string Owner, string Name, long Id)>> GetInstallationRepositoriesAsync(CancellationToken cancellationToken) =>
         await cache.GetOrCreateAsync(
             $"github-app-repositories-{context.AppId}",
             async (_) =>
@@ -142,9 +144,10 @@ public sealed partial class PullRequestReviewHandler(
                     .ToArray();
             },
             CacheEntryOptions,
-            CacheTags);
+            CacheTags,
+            cancellationToken);
 
-    private async Task<PullRequestMergeMethod> GetRepositoryMergeMethodAsync(long repositoryId) =>
+    private async Task<PullRequestMergeMethod> GetRepositoryMergeMethodAsync(long repositoryId, CancellationToken cancellationToken) =>
         await cache.GetOrCreateAsync(
             $"github-repo-{repositoryId}",
             (repositoryId, context.InstallationClient.Repository),
@@ -154,11 +157,14 @@ public sealed partial class PullRequestReviewHandler(
                 return PullRequestApprover.GetMergeMethod(repository);
             },
             CacheEntryOptions,
-            CacheTags);
+            CacheTags,
+            cancellationToken);
 
-    private async Task TryApproveOpenBotPullRequestsAsync(IssueId triggeringId)
+    private async Task TryApproveOpenBotPullRequestsAsync(
+        IssueId triggeringId,
+        CancellationToken cancellationToken)
     {
-        var repositories = await GetInstallationRepositoriesAsync();
+        var repositories = await GetInstallationRepositoriesAsync(cancellationToken);
 
         foreach (var creator in PullRequestCreators)
         {
@@ -172,7 +178,7 @@ public sealed partial class PullRequestReviewHandler(
                 State = ItemStateFilter.Open,
             };
 
-            await Parallel.ForEachAsync(repositories, async (repo, _) =>
+            await Parallel.ForEachAsync(repositories, cancellationToken, async (repo, token) =>
             {
                 var issues = await context.InstallationClient.Issue.GetAllForRepository(repo.Id, request, options);
 
@@ -200,7 +206,7 @@ public sealed partial class PullRequestReviewHandler(
                         continue;
                     }
 
-                    var appLogin = await GetAppLoginAsync();
+                    var appLogin = await GetAppLoginAsync(token);
 
                     if (await pullRequestAnalyzer.IsApprovedByAsync(pullId, appLogin))
                     {
@@ -214,16 +220,18 @@ public sealed partial class PullRequestReviewHandler(
                             repositoryId,
                             pull.Head.Ref,
                             pull.Head.Sha,
-                            pull.Url);
+                            pull.Url,
+                            token);
 
                         if (isTrusted)
                         {
-                            mergeMethod ??= await GetRepositoryMergeMethodAsync(repo.Id);
+                            mergeMethod ??= await GetRepositoryMergeMethodAsync(repo.Id, token);
 
                             await pullRequestApprover.ApproveAndMergeAsync(
                                 pullId,
                                 pull.NodeId,
-                                mergeMethod.GetValueOrDefault());
+                                mergeMethod.GetValueOrDefault(),
+                                token);
 
                             Log.PullRequestApprovedAfterImplicitTrust(logger, pullId);
                         }

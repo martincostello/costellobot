@@ -7,10 +7,12 @@ public interface IPackageRegistry
 {
     DependencyEcosystem Ecosystem { get; }
 
-    Task<bool> AreOwnersTrustedAsync(IReadOnlyList<string> owners) => Task.FromResult(false);
+    Task<bool> AreOwnersTrustedAsync(IReadOnlyList<string> owners, CancellationToken cancellationToken)
+        => Task.FromResult(false);
 
     Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         RepositoryId repository,
         string id,
-        string version);
+        string version,
+        CancellationToken cancellationToken);
 }

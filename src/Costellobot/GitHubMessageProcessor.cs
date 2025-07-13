@@ -30,7 +30,7 @@ public sealed partial class GitHubMessageProcessor(
             using (logger.BeginWebhookScope(webhookEvent))
             {
                 Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
-                await ProcessAsync(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload));
+                await ProcessAsync(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload), cancellationToken);
             }
         }
     }
@@ -53,14 +53,14 @@ public sealed partial class GitHubMessageProcessor(
         return (webhookHeaders, document.RootElement.Clone());
     }
 
-    private async Task ProcessAsync(GitHubEvent message)
+    private async Task ProcessAsync(GitHubEvent message, CancellationToken cancellationToken)
     {
         try
         {
             await using var scope = serviceProvider.CreateAsyncScope();
 
             var dispatcher = scope.ServiceProvider.GetRequiredService<GitHubWebhookDispatcher>();
-            await dispatcher.DispatchAsync(message);
+            await dispatcher.DispatchAsync(message, cancellationToken);
         }
         catch (Exception ex)
         {

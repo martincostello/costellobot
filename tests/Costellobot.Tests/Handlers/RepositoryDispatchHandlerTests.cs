@@ -73,7 +73,7 @@ public sealed class RepositoryDispatchHandlerTests : IntegrationTests<AppFixture
         var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
 
         // Act
-        await Should.NotThrowAsync(() => target.HandleAsync(message));
+        await Should.NotThrowAsync(() => target.HandleAsync(message, TestContext.Current.CancellationToken));
     }
 
     private async Task<HttpResponseMessage> PostWebhookAsync(RepositoryDispatchDriver driver, string action)

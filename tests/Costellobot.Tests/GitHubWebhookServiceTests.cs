@@ -43,7 +43,7 @@ public class GitHubWebhookServiceTests(ITestOutputHelper outputHelper)
         var args = new ProcessMessageEventArgs(
             message,
             receiver,
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Act and Assert
         await Should.ThrowAsync<InvalidOperationException>(() => target.ProcessAsync(args));

@@ -35,7 +35,7 @@ public sealed partial class GitHubEventProcessor(
         ArgumentNullException.ThrowIfNull(headers);
         ArgumentNullException.ThrowIfNull(body);
 
-        (var rawHeaders, var rawPayload) = await BroadcastLogAsync(headers, body);
+        (var rawHeaders, var rawPayload) = await BroadcastLogAsync(headers, body, cancellationToken);
 
         var webhookHeaders = WebhookHeaders.Parse(headers);
 
@@ -49,7 +49,7 @@ public sealed partial class GitHubEventProcessor(
 
                 var payload = new GitHubEvent(webhookHeaders, webhookEvent, rawHeaders, rawPayload);
 
-                await handler.HandleAsync(payload);
+                await handler.HandleAsync(payload, cancellationToken);
 
                 Log.ProcessedWebhook(logger, webhookHeaders.Delivery);
             }
@@ -58,7 +58,8 @@ public sealed partial class GitHubEventProcessor(
 
     private async Task<(IDictionary<string, string> Headers, JsonElement Payload)> BroadcastLogAsync(
         IDictionary<string, StringValues> headers,
-        string body)
+        string body,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -77,7 +78,7 @@ public sealed partial class GitHubEventProcessor(
                 }
             }
 
-            await hub.Clients.All.WebhookAsync(webhookHeaders, document.RootElement);
+            await hub.Clients.All.WebhookAsync(webhookHeaders, document.RootElement, cancellationToken);
 
             return (webhookHeaders, document.RootElement.Clone());
         }
