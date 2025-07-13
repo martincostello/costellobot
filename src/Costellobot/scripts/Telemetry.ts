@@ -19,7 +19,7 @@ export class Telemetry {
         };
 
         const url = getOption('collector-url');
-        const environment = getOption('service-environment');
+        const environment = getOption('service-environment')?.toLowerCase();
         const name = getOption('service-name');
         const namespace = getOption('service-namespace');
         const version = getOption('service-version');
