@@ -81,9 +81,9 @@ jobs:
 
       - name: Build container
         id: build
-        run: dotnet publish ./src/Costellobot --arch x64 --os linux -p:PublishProfile=DefaultContainer
+        run: dotnet publish ./src/Costellobot --arch x64 --os linux -p:PublishProfile=DefaultContainer -p:SetGitHubContainerPublishingOutputs=true
 
-      - name: Tag container image
+      - name: Tag container
         env:
           CONTAINER_IMAGE: ${{ steps.build.outputs.container-image }}
           CONTAINER_TAG: costellobot:latest
