@@ -18,7 +18,7 @@ public class DockerPackageRegistryTests
 
         var options = await new HttpClientInterceptorOptions()
             .ThrowsOnMissingRegistration()
-            .RegisterBundleAsync(Path.Join("Bundles", "microsoft-artifact-registry.json"), cancellationToken: TestContext.Current.CancellationToken);
+            .RegisterBundleFromResourceStreamAsync("microsoft-artifact-registry", cancellationToken: TestContext.Current.CancellationToken);
 
         using var client = options.CreateHttpClient();
         client.BaseAddress = new Uri("https://mcr.microsoft.com");

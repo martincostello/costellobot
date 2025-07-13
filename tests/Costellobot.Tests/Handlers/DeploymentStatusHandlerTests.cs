@@ -14,11 +14,13 @@ namespace MartinCostello.Costellobot.Handlers;
 [Collection<AppCollection>]
 public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 {
+    private const string PullRequestBranch = "dependabot/nuget/NodaTimeVersion-3.0.10";
+
     public DeploymentStatusHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper)
         : base(fixture, outputHelper)
     {
         Fixture.ChangeClock(new(2023, 09, 01, 12, 34, 56, TimeSpan.Zero));
-        Fixture.Interceptor.RegisterBundle(Path.Join("Bundles", "google.json"));
+        Fixture.Interceptor.RegisterGoogleBundle();
     }
 
     [Fact]
@@ -40,6 +42,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
+        RegisterDependabotConfiguration(driver);
         RegisterPullRequestForCommit(driver.HeadCommit);
 
         var deploymentApproved = RegisterApprovePendingDeployment(driver);
@@ -83,6 +86,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
+        RegisterDependabotConfiguration(driver);
 
         var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
@@ -122,6 +126,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
+        RegisterDependabotConfiguration(driver);
 
         var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
@@ -161,6 +166,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
+        RegisterDependabotConfiguration(driver);
 
         var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
@@ -192,6 +198,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
+        RegisterDependabotConfiguration(driver);
         RegisterPullRequestForCommit(driver.HeadCommit);
 
         var deploymentApproved = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -528,6 +535,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     {
         // Arrange
         Fixture.ApproveDeployments();
+        await RegisterNuGetHttpBundleAsync();
 
         var driver = new DeploymentStatusDriver(
             CreateTrustedCommit,
@@ -547,6 +555,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
+        RegisterDependabotConfiguration(driver);
 
         foreach (var commit in driver.Commits)
         {
@@ -590,6 +599,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
+        RegisterDependabotConfiguration(driver);
         RegisterPullRequestForCommit(driver.HeadCommit);
 
         var deploymentApproved = RegisterApprovePendingDeployment(driver);
@@ -720,7 +730,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     {
         var pullRequest = commit.Repository.CreatePullRequest(commit.Author);
 
-        pullRequest.RefHead = "dependabot/nuget/NodaTimeVersion-3.0.10";
+        pullRequest.RefHead = PullRequestBranch;
 
         return pullRequest;
     }
@@ -944,4 +954,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         var pullRequest = CreatePullRequestForCommit(commit);
         RegisterCommitAndDiff(pullRequest, commit);
     }
+
+    private void RegisterDependabotConfiguration(DeploymentStatusDriver driver) =>
+        RegisterDependabotConfiguration(driver.Repository, PullRequestBranch);
 }

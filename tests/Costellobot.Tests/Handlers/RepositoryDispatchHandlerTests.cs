@@ -2,7 +2,6 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Net;
-using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Drivers;
 using MartinCostello.Costellobot.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +15,7 @@ public sealed class RepositoryDispatchHandlerTests : IntegrationTests<AppFixture
         : base(fixture, outputHelper)
     {
         Fixture.ChangeClock(new(2023, 09, 01, 12, 34, 56, TimeSpan.Zero));
-        Fixture.Interceptor.RegisterBundle(Path.Join("Bundles", "grafana.json"));
+        Fixture.Interceptor.RegisterBundleFromResourceStream("grafana");
     }
 
     [Fact]

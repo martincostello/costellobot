@@ -543,9 +543,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
         RegisterRepository(driver.Repository);
         RegisterReviews(driver, reviews ?? []);
 
-        await Fixture.Interceptor.RegisterBundleAsync(
-            Path.Join("Bundles", "nuget-search.json"),
-            cancellationToken: TestContext.Current.CancellationToken);
+        await RegisterNuGetHttpBundleAsync();
 
         return driver;
     }

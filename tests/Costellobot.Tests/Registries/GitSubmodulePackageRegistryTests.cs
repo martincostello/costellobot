@@ -3,6 +3,7 @@
 
 using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Builders;
+using MartinCostello.Costellobot.Infrastructure;
 using NSubstitute;
 using Octokit;
 
@@ -20,7 +21,7 @@ public static class GitSubmodulePackageRegistryTests
 
         var options = await new HttpClientInterceptorOptions()
             .ThrowsOnMissingRegistration()
-            .RegisterBundleAsync(Path.Join("Bundles", "github-submodules.json"), cancellationToken: TestContext.Current.CancellationToken);
+            .RegisterBundleFromResourceStreamAsync("github-submodules", cancellationToken: TestContext.Current.CancellationToken);
 
         using var adapter = new Octokit.Internal.HttpClientAdapter(options.CreateHttpMessageHandler);
         var connection = new Connection(new("costellobot", "1.0.0"), adapter);

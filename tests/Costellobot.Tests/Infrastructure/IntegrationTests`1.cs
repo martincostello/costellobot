@@ -29,7 +29,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         OutputHelper = outputHelper;
         Fixture.SetOutputHelper(OutputHelper);
         _scope = Fixture.Interceptor.BeginScope();
-        Fixture.Interceptor.RegisterBundle(Path.Join("Bundles", "oauth-http-bundle.json"));
+        Fixture.Interceptor.RegisterOAuthBundle();
     }
 
     ~IntegrationTests()
@@ -300,6 +300,9 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
 
         return pullRequestApproved;
     }
+
+    protected async Task RegisterNuGetHttpBundleAsync() =>
+        await Fixture.Interceptor.RegisterNuGetBundleAsync(CancellationToken);
 
     protected async Task<HttpResponseMessage> PostWebhookAsync(
         string @event,

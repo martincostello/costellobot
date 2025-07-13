@@ -168,7 +168,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
             services.AddSingleton<ServiceBusClient, InMemoryServiceBusClient>();
         });
 
-        Interceptor.RegisterBundle(Path.Join("Bundles", "oauth-http-bundle.json"));
+        Interceptor.RegisterOAuthBundle();
     }
 
     private static string? CreateSigningCertificate()

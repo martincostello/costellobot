@@ -25,6 +25,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
 
         RegisterGetAccessToken();
         RegisterCommitAndDiff(driver);
+        RegisterDependabotConfiguration(driver);
 
         var pullRequestApproved = RegisterReview(driver);
 
@@ -42,13 +43,14 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     {
         // Arrange
         Fixture.ApprovePullRequests();
-        await Fixture.Interceptor.RegisterBundleAsync(Path.Join("Bundles", "nuget-search.json"), cancellationToken: CancellationToken);
+        await RegisterNuGetHttpBundleAsync();
 
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(TrustedCommitMessage("Newtonsoft.Json", "13.0.1"));
 
         RegisterGetAccessToken();
         RegisterCommitAndDiff(driver);
+        RegisterDependabotConfiguration(driver);
 
         var pullRequestApproved = RegisterReview(driver);
 
@@ -87,6 +89,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
 
         RegisterGetAccessToken();
         RegisterCommitAndDiff(driver);
+        RegisterDependabotConfiguration(driver);
         RegisterReview(driver);
 
         var automergeEnabled = RegisterEnableAutomerge(driver, (p, tcs) => p.WithInterceptionCallback(async (request) =>
@@ -143,6 +146,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         RegisterGetAccessToken();
         RegisterCollaborator(driver, driver.Sender.Login, isCollaborator: true);
         RegisterCommitAndDiff(driver);
+        RegisterDependabotConfiguration(driver);
         RegisterReview(driver);
 
         var pullRequestApproved = RegisterReview(driver);
@@ -260,12 +264,14 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     {
         // Arrange
         Fixture.ApprovePullRequests();
+        await RegisterNuGetHttpBundleAsync();
 
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(UntrustedCommitMessage());
 
         RegisterGetAccessToken();
         RegisterCommitAndDiff(driver);
+        RegisterDependabotConfiguration(driver);
 
         var pullRequestApproved = RegisterReview(driver);
 
@@ -600,6 +606,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
 
         RegisterGetAccessToken();
         RegisterCommitAndDiff(driver);
+        RegisterDependabotConfiguration(driver);
 
         var pullRequestApproved = RegisterReview(driver);
 
@@ -617,13 +624,14 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     {
         // Arrange
         Fixture.ApprovePullRequests();
-        await Fixture.Interceptor.RegisterBundleAsync(Path.Join("Bundles", "nuget-search.json"), cancellationToken: CancellationToken);
+        await RegisterNuGetHttpBundleAsync();
 
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(TrustedCommitMessageForRenovate("Newtonsoft.Json", "13.0.1"));
 
         RegisterGetAccessToken();
         RegisterCommitAndDiff(driver);
+        RegisterDependabotConfiguration(driver);
 
         var pullRequestApproved = RegisterReview(driver);
 
@@ -641,4 +649,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         var value = driver.CreateWebhook(action);
         return await PostWebhookAsync("pull_request", value);
     }
+
+    private void RegisterDependabotConfiguration(PullRequestDriver driver) =>
+        RegisterDependabotConfiguration(driver.Repository, driver.PullRequest.RefHead);
 }
