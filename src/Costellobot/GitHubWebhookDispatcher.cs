@@ -19,7 +19,7 @@ public sealed partial class GitHubWebhookDispatcher(
         {
             Log.ProcessingWebhook(logger, message.Headers.Delivery, message);
 
-            if (!IsValidInstallation(message))
+            if (!IsValidInstallation(message) && message.Headers.Event is not Octokit.Webhooks.WebhookEventType.Ping)
             {
                 Log.IncorrectInstallationWebhookIgnored(logger, message.Headers.Delivery, message, message.Event.Installation?.Id);
                 return;
