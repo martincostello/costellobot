@@ -17,6 +17,8 @@ noreply
 NuGet
 Octokit
 OpenTelemetry
+Otlp
+Pyroscope
 SemVer
 serializer
 startup
