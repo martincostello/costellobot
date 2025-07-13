@@ -15,7 +15,13 @@ public static class IGitHubClientExtensions
     {
         // See https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#get-a-pull-request
         var parameters = new Dictionary<string, string>(0);
-        var response = await client.Connection.Get<string>(new(pullRequestUrl, UriKind.Absolute), parameters, "application/vnd.github.v3.diff", cancellationToken);
+
+        var response = await client.Connection.Get<string>(
+            new(pullRequestUrl, UriKind.Absolute),
+            parameters,
+            "application/vnd.github.v3.diff",
+            cancellationToken);
+
         return response.Body;
     }
 
