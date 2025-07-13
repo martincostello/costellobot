@@ -171,7 +171,15 @@ public static class GitHubExtensions
         services.AddTransient<PullRequestHandler>();
         services.AddTransient<PullRequestReviewHandler>();
         services.AddTransient<PushHandler>();
-        services.AddTransient<RepositoryDispatchHandler>();
+
+        services.AddHttpClient<RepositoryDispatchHandler>((provider, client) =>
+        {
+            var options = provider.GetRequiredService<IOptionsMonitor<GrafanaOptions>>().CurrentValue;
+
+            client.BaseAddress = new(options.Url, UriKind.Absolute);
+            client.DefaultRequestHeaders.Accept.Add(new("application/json"));
+            client.DefaultRequestHeaders.Authorization = new("Bearer", options.Token);
+        });
 
         services.AddHostedService<GitHubWebhookService>();
 

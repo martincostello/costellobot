@@ -3,11 +3,9 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Caching.Hybrid;
-using Microsoft.Extensions.Options;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 
@@ -16,7 +14,6 @@ namespace MartinCostello.Costellobot.Handlers;
 public sealed partial class RepositoryDispatchHandler(
     HybridCache cache,
     HttpClient client,
-    IOptionsMonitor<GrafanaOptions> options,
     ILogger<RepositoryDispatchHandler> logger) : IHandler
 {
     private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromHours(1) };
@@ -24,105 +21,112 @@ public sealed partial class RepositoryDispatchHandler(
 
     public async Task HandleAsync(WebhookEvent message)
     {
-        if (message is not RepositoryDispatchEvent body || body.ClientPayload is not JsonElement payload)
+        if (message is RepositoryDispatchEvent body && body.ClientPayload is JsonElement payload)
         {
-            return;
+            switch (body.Action)
+            {
+                case "deployment_started":
+                    await CreateAnnotationAsync(payload);
+                    break;
+
+                case "deployment_completed":
+                    await UpdateAnnotationAsync(payload);
+                    break;
+
+                default:
+                    break;
+            }
         }
+    }
 
-        var grafana = options.CurrentValue;
+    private static string AnnotationCacheKey(string repository, string runNumber, string runAttempt)
+        => $"annotation:{repository}:{runNumber}:{runAttempt}";
 
-        client.BaseAddress = new(grafana.Url, UriKind.Absolute);
-        client.DefaultRequestHeaders.Accept.Add(new("application/json"));
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", grafana.Token);
+    private static long GetInt64(JsonElement element, string propertyName)
+        => element.GetProperty(propertyName).GetInt64();
 
+    private static string GetString(JsonElement element, string propertyName)
+        => element.GetProperty(propertyName).GetString()!;
+
+    private async Task CreateAnnotationAsync(JsonElement payload)
+    {
         var context = GrafanaJsonSerializerContext.Default;
 
-        if (body.Action is "deployment_started")
+        string application = GetString(payload, "application");
+        string environment = GetString(payload, "environment");
+        string repository = GetString(payload, "repository");
+        string runAttempt = GetString(payload, "runAttempt");
+        string runId = GetString(payload, "runId");
+        string runNumber = GetString(payload, "runNumber");
+        string serverUrl = GetString(payload, "serverUrl");
+        string sha = GetString(payload, "sha");
+        long timestamp = GetInt64(payload, "timestamp");
+
+        string commitSha = sha[0..7];
+        string commitUrl = $"{serverUrl}/{repository}/commit/{sha}";
+        string workflowUrl = $"{serverUrl}/{repository}/actions/runs/{runId}";
+
+        string text = $@"Deployed <a href=""{workflowUrl}"">#{runNumber}:{runAttempt}</a> with commit <a href=""{commitUrl}"">{commitSha}</a>";
+
+        var request = new CreateAnnotationRequest()
         {
-            string application = GetString(payload, "application");
-            string environment = GetString(payload, "environment");
-            string repository = GetString(payload, "repository");
-            string runAttempt = GetString(payload, "runAttempt");
-            string runId = GetString(payload, "runId");
-            string runNumber = GetString(payload, "runNumber");
-            string serverUrl = GetString(payload, "serverUrl");
-            string sha = GetString(payload, "sha");
-            long timestamp = GetInt64(payload, "timestamp");
+            Tags =
+            [
+                "deployment",
+                $"environment:{environment}",
+                $"service:{application}",
+            ],
+            Text = text,
+            Time = timestamp,
+        };
 
-            string commitSha = sha[0..7];
-            string commitUrl = $"{serverUrl}/{repository}/commit/{sha}";
-            string workflowUrl = $"{serverUrl}/{repository}/actions/runs/{runId}";
+        using var response = await client.PostAsJsonAsync("api/annotations", request, context.CreateAnnotationRequest);
 
-            string text = $@"Deployed <a href=""${workflowUrl}"">#{runNumber}:{runAttempt}</a> with commit <a href=""${commitUrl}"">${commitSha}</a>";
+        if (response.IsSuccessStatusCode)
+        {
+            var annotation = await response.Content.ReadFromJsonAsync(context.CreateAnnotationResponse);
 
-            var request = new CreateAnnotationRequest()
-            {
-                Tags =
-                [
-                    "deployment",
-                    $"environment:{environment}",
-                    $"service:{application}",
-                ],
-                Text = text,
-                Time = timestamp,
-            };
+            Log.CreatedAnnotation(logger, annotation!.Id);
 
-            using var response = await client.PostAsJsonAsync("api/annotations", request, context.CreateAnnotationRequest);
+            await cache.SetAsync(
+                AnnotationCacheKey(repository, runNumber, runAttempt),
+                annotation.Id,
+                CacheEntryOptions,
+                CacheTags);
+        }
+        else
+        {
+            Log.CreateAnnotationFailed(logger, response.StatusCode);
+        }
+    }
+
+    private async Task UpdateAnnotationAsync(JsonElement payload)
+    {
+        string repository = GetString(payload, "repository");
+        string runAttempt = GetString(payload, "runAttempt");
+        string runNumber = GetString(payload, "runNumber");
+        long timestamp = GetInt64(payload, "timestamp");
+
+        var id = await cache.GetOrCreateAsync<long>(
+            AnnotationCacheKey(repository, runNumber, runAttempt),
+            (_) => ValueTask.FromResult(-1L));
+
+        if (id is not -1)
+        {
+            using var response = await client.PatchAsJsonAsync(
+                $"api/annotations/{id}",
+                new() { TimeEnd = timestamp },
+                GrafanaJsonSerializerContext.Default.UpdateAnnotationRequest);
 
             if (response.IsSuccessStatusCode)
             {
-                var annotation = await response.Content.ReadFromJsonAsync(context.CreateAnnotationResponse);
-
-                Log.CreatedAnnotation(logger, annotation!.Id);
-
-                await cache.SetAsync(
-                    CacheKey(repository, runNumber, runAttempt),
-                    annotation.Id,
-                    CacheEntryOptions,
-                    CacheTags);
+                Log.UpdatedAnnotation(logger, id);
             }
             else
             {
-                Log.CreateAnnotationFailed(logger, response.StatusCode);
+                Log.UpdateAnnotationFailed(logger, id, response.StatusCode);
             }
         }
-        else if (body.Action is "deployment_completed")
-        {
-            string repository = GetString(payload, "repository");
-            string runAttempt = GetString(payload, "runAttempt");
-            string runNumber = GetString(payload, "runNumber");
-            long timestamp = GetInt64(payload, "timestamp");
-
-            var id = await cache.GetOrCreateAsync<long>(
-                CacheKey(repository, runNumber, runAttempt),
-                (_) => ValueTask.FromResult(-1L));
-
-            if (id is not -1)
-            {
-                using var response = await client.PatchAsJsonAsync(
-                    $"api/annotations/{id}",
-                    new() { TimeEnd = timestamp },
-                    GrafanaJsonSerializerContext.Default.UpdateAnnotationRequest);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    Log.UpdatedAnnotation(logger, id);
-                }
-                else
-                {
-                    Log.UpdateAnnotationFailed(logger, id, response.StatusCode);
-                }
-            }
-        }
-
-        static string CacheKey(string repository, string runNumber, string runAttempt)
-            => $"annotation:{repository}:{runNumber}:{runAttempt}";
-
-        static long GetInt64(JsonElement element, string propertyName)
-            => element.GetProperty(propertyName).GetInt64();
-
-        static string GetString(JsonElement element, string propertyName)
-            => element.GetProperty(propertyName).GetString()!;
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
