@@ -21,6 +21,7 @@ export class Telemetry {
         const url = getOption('collector-url');
         const environment = getOption('service-environment');
         const name = getOption('service-name');
+        const namespace = getOption('service-namespace');
         const version = getOption('service-version');
 
         if (!url || !name || !version || !environment) {
@@ -41,6 +42,7 @@ export class Telemetry {
             app: {
                 environment,
                 name,
+                namespace,
                 version,
             },
             sessionTracking: tracking,
