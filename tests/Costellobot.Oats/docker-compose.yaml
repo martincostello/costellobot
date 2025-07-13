@@ -1,8 +1,6 @@
 services:
   costellobot:
-    build:
-      context: ../..
-      dockerfile: Dockerfile
+    image: ${DOCKER_REGISTRY-}costellobot:latest
     ports:
       - '8080:8080'
     environment:
