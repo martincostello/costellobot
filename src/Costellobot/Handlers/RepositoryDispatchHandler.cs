@@ -25,11 +25,11 @@ public sealed partial class RepositoryDispatchHandler(
         {
             switch (body.Action)
             {
-                case "deployment_started":
+                case WellKnownGitHubEvents.RepositoryDispatchActionValue.DeploymentStarted:
                     await CreateAnnotationAsync(payload);
                     break;
 
-                case "deployment_completed":
+                case WellKnownGitHubEvents.RepositoryDispatchActionValue.DeploymentCompleted:
                     await UpdateAnnotationAsync(payload);
                     break;
 
