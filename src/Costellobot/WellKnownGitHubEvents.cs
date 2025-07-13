@@ -27,10 +27,16 @@ public static class WellKnownGitHubEvents
         (WebhookEventType.PullRequest, PullRequestActionValue.Labeled),
         (WebhookEventType.PullRequest, PullRequestActionValue.Opened),
         (WebhookEventType.PullRequestReview, PullRequestReviewActionValue.Submitted),
-        (WebhookEventType.RepositoryDispatch, "deployment_started"),
-        (WebhookEventType.RepositoryDispatch, "deployment_completed"),
+        (WebhookEventType.RepositoryDispatch, RepositoryDispatchActionValue.DeploymentCompleted),
+        (WebhookEventType.RepositoryDispatch, RepositoryDispatchActionValue.DeploymentStarted),
     ];
 
     public static bool IsKnown(GitHubEvent message)
         => KnownEvents.Contains((message.Headers.Event, message.Event.Action));
+
+    public static class RepositoryDispatchActionValue
+    {
+        public const string DeploymentCompleted = "deployment_completed";
+        public const string DeploymentStarted = "deployment_started";
+    }
 }
