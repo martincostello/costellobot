@@ -85,11 +85,11 @@ jobs:
 
       - name: Tag container
         env:
-          CONTAINER_IMAGE: ${{ steps.build.outputs.container-image }}
-          CONTAINER_TAG: costellobot:latest
+          CONTAINER_TAG: ${{ steps.build.outputs.container-tag }}
+          OATS_TAG: costellobot:latest
         run: |
-          docker tag "${CONTAINER_IMAGE}" "${CONTAINER_TAG}"
-          docker image inspect "${CONTAINER_TAG}"
+          docker tag "${CONTAINER_TAG}" "${OATS_TAG}"
+          docker image inspect "${OATS_TAG}"
 
       - name: Install OATS
         env:
