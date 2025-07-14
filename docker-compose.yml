@@ -6,13 +6,14 @@ services:
     ports:
       - '8080:8080'
     environment:
-      - ConnectionStrings__AzureServiceBus=Endpoint=sb://servicebus-emulator:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      - ConnectionStrings__AzureServiceBus=Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
       - ConnectionStrings__AzureTableStorage=UseDevelopmentStorage=true
       - DOTNET_ENVIRONMENT=Production
       - GitHub__ClientId=github-client-id
       - GitHub__ClientSecret=github-client-secret
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://lgtm:4318
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - Webhook__QueueName=queue.1
       - WEBSITE_SITE_NAME=Costellobot
   servicebus-emulator:
     image: mcr.microsoft.com/azure-messaging/servicebus-emulator:1.1.2@sha256:353913ece3d9124cebd40f4b91d00dd197846b8cf86eae9a4790698709c64a1d
