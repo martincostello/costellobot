@@ -94,6 +94,8 @@ public sealed partial class GitHubWebhookService(
     public async Task ProcessAsync(ProcessMessageEventArgs args)
     {
         using var activity = ApplicationTelemetry.ActivitySource.StartActivity("Process Webhook");
+        activity?.SetTag("messaging.message.conversation_id", args.Message.CorrelationId);
+        activity?.SetTag("messaging.message.id", args.Message.MessageId);
 
         Log.ReceivedMessage(logger, args.Message.MessageId);
 
