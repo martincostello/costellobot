@@ -50,6 +50,20 @@ expected:
     - promql: http_server_request_duration_seconds_count{}
       value: '>= 0'
   traces:
+    - traceql: '{ span.http.route =~ "/github-webhook" }'
+      spans:
+        - name: 'ServiceBusProcessor.ProcessMessage'
+          attributes:
+            az.namespace: Microsoft.ServiceBus
+            messaging.destination.name: queue.1
+            messaging.operation: process
+            messaging.system: servicebus
+        - name: 'ServiceBusSender.Send'
+          attributes:
+            az.namespace: Microsoft.ServiceBus
+            messaging.destination.name: queue.1
+            messaging.operation: publish
+            messaging.system: servicebus
     - traceql: '{ span.http.route =~ "/version" }'
       spans:
         - name: 'GET /version'
