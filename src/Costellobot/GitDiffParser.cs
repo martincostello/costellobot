@@ -17,6 +17,9 @@ public static partial class GitDiffParser
     private const string HunkPrefix = "@@ ";
     private const string TargetPrefix = "+++ b/";
 
+    private const string LatestTag = "latest";
+    private static readonly Version LatestVersion = new(int.MaxValue, int.MaxValue, 0, 0);
+
     private static readonly XName Include = nameof(Include);
     private static readonly XName GlobalPackageReference = nameof(GlobalPackageReference);
     private static readonly XName PackageReference = nameof(PackageReference);
@@ -107,7 +110,15 @@ public static partial class GitDiffParser
             if (minimum < maximum ||
                 (minimum.Version == maximum.Version && minimum.Release != maximum.Release))
             {
-                packages[package] = (minimum.ToString(), maximum.ToString());
+                // Special-case "latest" tags
+                if (minimum.Version == LatestVersion && maximum.Version == LatestVersion)
+                {
+                    packages[package] = ($"{LatestTag}-{minimum.Release}", $"{LatestTag}-{maximum.Release}");
+                }
+                else
+                {
+                    packages[package] = (minimum.ToString(), maximum.ToString());
+                }
             }
         }
 
@@ -240,6 +251,13 @@ public static partial class GitDiffParser
 
             if (!string.IsNullOrEmpty(image) && !string.IsNullOrEmpty(tag))
             {
+                // Special-case "latest" tags
+                if (tag is LatestTag)
+                {
+                    package = (image, new(LatestVersion, digest));
+                    return true;
+                }
+
                 var versionString = tag;
 
                 if (!string.IsNullOrEmpty(digest))

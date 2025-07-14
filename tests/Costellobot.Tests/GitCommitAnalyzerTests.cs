@@ -2471,6 +2471,86 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     }
 
     [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Digest_Update_For_Dockerfile_With_Latest_Tag()
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/dockerfile/mcr.microsoft.com-vscode-devcontainers-dotnet-latest";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.Docker);
+
+        registry.GetPackageOwnersAsync(repository, "mcr.microsoft.com/vscode/devcontainers/dotnet", "latest-b878b60a68aadab1a1d7e7ace12504073ce5a6ce568c785f54a9ef4b834e373f", CancellationToken)
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["mcr.microsoft.com"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.Docker] = ["mcr.microsoft.com"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var sha = "fb4d640a37d4f18510b27a400ee728406401abb2";
+
+        var diff = """
+                   diff --git a/.devcontainer/Dockerfile b/.devcontainer/Dockerfile
+                   index 28b495c9a..c051c6aaf 100644
+                   --- a/.devcontainer/Dockerfile
+                   +++ b/.devcontainer/Dockerfile
+                   @@ -1,4 +1,4 @@
+                   -FROM mcr.microsoft.com/vscode/devcontainers/dotnet:latest@sha256:d99e4e4a3de2bf9249b985e7cb05024d9227361bd346611c0b7f352360c4dc3b
+                   +FROM mcr.microsoft.com/vscode/devcontainers/dotnet:latest@sha256:b878b60a68aadab1a1d7e7ace12504073ce5a6ce568c785f54a9ef4b834e373f
+
+                    ARG INSTALL_NODE="true"
+                    ARG NODE_VERSION="lts/*"
+                   """;
+
+        var commitMessage = """
+                            Bump mcr.microsoft.com/vscode/devcontainers/dotnet:latest Docker dige…
+                            …st to b878b60
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.Docker);
+
+        trust.ShouldContainKeyAndValue("mcr.microsoft.com/vscode/devcontainers/dotnet", (true, "latest-b878b60a68aadab1a1d7e7ace12504073ce5a6ce568c785f54a9ef4b834e373f"));
+        trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Digest_Update_For_Docker_Compose()
     {
         // Arrange
