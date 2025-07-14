@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Drivers;
@@ -92,14 +93,15 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         RegisterDependabotConfiguration(driver);
         RegisterReview(driver);
 
+        var cancellationToken = CancellationToken;
+
         var automergeEnabled = RegisterEnableAutomerge(driver, (p, tcs) => p.WithInterceptionCallback(async (request) =>
         {
             request.Content.ShouldNotBeNull();
 
-            byte[] body = await request.Content.ReadAsByteArrayAsync(CancellationToken);
-            using var document = JsonDocument.Parse(body);
+            using var document = await request.Content.ReadFromJsonAsync<JsonDocument>(cancellationToken);
 
-            var query = document.RootElement.GetProperty("query").GetString();
+            var query = document!.RootElement.GetProperty("query").GetString();
 
             query.ShouldNotBeNull();
 
@@ -121,7 +123,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await automergeEnabled.Task.WaitAsync(ResultTimeout, CancellationToken);
+        await automergeEnabled.Task.WaitAsync(ResultTimeout, cancellationToken);
     }
 
     [Theory]
