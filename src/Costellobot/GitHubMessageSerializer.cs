@@ -84,9 +84,13 @@ public sealed partial class GitHubMessageSerializer
         {
             ContentType = GitHubMessage.ContentType,
             CorrelationId = Activity.Current?.Id,
-            MessageId = deliveryId,
             Subject = GitHubMessage.Subject,
         };
+
+        if (deliveryId is { Length: > 0 })
+        {
+            message.MessageId = deliveryId;
+        }
 
         if (encoding is not null)
         {
