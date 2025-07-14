@@ -9,7 +9,7 @@ input:
       Accept: '*/*'
       Content-Type: application/json; charset=utf-8
       User-Agent: GitHub-Hookshot/f05835d
-      X-GitHub-Deliver: 09e27db8-e74c-4a28-a951-50552382af03
+      X-GitHub-Delivery: 09e27db8-e74c-4a28-a951-50552382af03
       X-GitHub-Event: ping
       X-GitHub-Hook-ID: 109948940
       X-GitHub-Hook-Installation-Target-ID: 183256
