@@ -42,6 +42,7 @@ public sealed partial class GitHubEventHandler(
                 }
                 else
                 {
+                    Activity.Current?.SetTag("messaging.message.conversation_id", message.CorrelationId);
                     Activity.Current?.SetTag("messaging.message.id", message.MessageId);
 
                     var sender = client.CreateSender(config.QueueName);
