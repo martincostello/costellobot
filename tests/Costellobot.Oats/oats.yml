@@ -60,6 +60,15 @@ expected:
             messaging.system: servicebus
     - traceql: '{ span.http.route =~ "/github-webhook" }'
       spans:
+        - name: 'POST /github-webhook'
+          attributes:
+            github.webhook.delivery: 09e27db8-e74c-4a28-a951-50552382af03
+            github.webhook.event: ping
+            github.webhook.hook.id: 109948940
+            github.webhook.hook.installation.target.id: 183256
+            http.request.method: POST
+            http.response.status_code: 200
+            messaging.message.id: regex:.+
         - name: 'ServiceBusProcessor.ProcessMessage'
           attributes:
             az.namespace: Microsoft.ServiceBus
