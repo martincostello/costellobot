@@ -58,6 +58,12 @@ expected:
             messaging.destination.name: queue.1
             messaging.operation: process
             messaging.system: servicebus
+        - name: 'ServiceBusReceiver.Complete'
+          attributes:
+            az.namespace: Microsoft.ServiceBus
+            messaging.destination.name: queue.1
+            messaging.operation: settle
+            messaging.system: servicebus
         - name: 'ServiceBusSender.Send'
           attributes:
             az.namespace: Microsoft.ServiceBus
