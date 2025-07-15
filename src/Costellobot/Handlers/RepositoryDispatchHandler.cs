@@ -87,7 +87,7 @@ public sealed partial class RepositoryDispatchHandler(
 
         if (!string.IsNullOrWhiteSpace(environment))
         {
-            tags.Add($"deployment.environment={environment}");
+            tags.Add($"deployment.environment.name={environment}");
         }
 
         if (!string.IsNullOrWhiteSpace(@namespace))
