@@ -48,6 +48,13 @@ public sealed partial class RepositoryDispatchHandler(
     private static string GetString(JsonElement element, string propertyName)
         => element.GetProperty(propertyName).GetString()!;
 
+    private static string? GetOptionalString(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var property) && property.ValueKind != JsonValueKind.Null
+            ? property.GetString()!
+            : null;
+    }
+
     private async Task CreateAnnotationAsync(
         JsonElement payload,
         CancellationToken cancellationToken)
@@ -55,7 +62,6 @@ public sealed partial class RepositoryDispatchHandler(
         var context = GrafanaJsonSerializerContext.Default;
 
         string application = GetString(payload, "application");
-        string environment = GetString(payload, "environment");
         string repository = GetString(payload, "repository");
         string runAttempt = GetString(payload, "runAttempt");
         string runId = GetString(payload, "runId");
@@ -64,20 +70,34 @@ public sealed partial class RepositoryDispatchHandler(
         string sha = GetString(payload, "sha");
         long timestamp = GetInt64(payload, "timestamp");
 
+        string? environment = GetOptionalString(payload, "environment");
+        string? @namespace = GetOptionalString(payload, "namespace");
+
         string commitSha = sha[0..7];
         string commitUrl = $"{serverUrl}/{repository}/commit/{sha}";
         string workflowUrl = $"{serverUrl}/{repository}/actions/runs/{runId}";
 
         string text = $@"Deployed <a href=""{workflowUrl}"">#{runNumber}:{runAttempt}</a> with commit <a href=""{commitUrl}"">{commitSha}</a>";
 
+        var tags = new List<string>
+        {
+            "deployment",
+            $"service.name={application}",
+        };
+
+        if (!string.IsNullOrWhiteSpace(environment))
+        {
+            tags.Add($"deployment.environment={environment}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(@namespace))
+        {
+            tags.Add($"service.namespace={@namespace}");
+        }
+
         var request = new CreateAnnotationRequest()
         {
-            Tags =
-            [
-                "deployment",
-                $"environment:{environment}",
-                $"service:{application}",
-            ],
+            Tags = tags,
             Text = text,
             Time = timestamp,
         };
