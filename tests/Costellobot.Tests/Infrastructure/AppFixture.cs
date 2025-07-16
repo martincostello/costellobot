@@ -114,6 +114,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
 
             var config = new[]
             {
+                KeyValuePair.Create<string, string?>("WEBSITE_AUTH_ENCRYPTION_KEY", "website-auth-encryption-key"),
                 KeyValuePair.Create<string, string?>("ConnectionStrings:AzureBlobStorage", string.Empty),
                 KeyValuePair.Create<string, string?>("ConnectionStrings:AzureKeyVault", string.Empty),
                 KeyValuePair.Create<string, string?>("GitHub:AccessToken", "gho_github-access-token"),
