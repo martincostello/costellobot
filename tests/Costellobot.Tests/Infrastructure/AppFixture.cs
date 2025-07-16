@@ -103,6 +103,11 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
             "ConnectionStrings:AzureTableStorage",
             "UseDevelopmentStorage=true");
 
+        builder.UseSetting("Aspire:Azure:Data:Tables:DisableHealthChecks", "true");
+        builder.UseSetting("Aspire:Azure:Messaging:ServiceBus:DisableTracing", "true");
+        builder.UseSetting("Aspire:Azure:Messaging:ServiceBus:HealthCheckQueueName", string.Empty);
+        builder.UseSetting("Aspire:Azure:Storage:Blobs:DisableHealthChecks", "true");
+
         builder.ConfigureAppConfiguration((configBuilder) =>
         {
             string testKey = File.ReadAllText("costellobot-tests.pem");

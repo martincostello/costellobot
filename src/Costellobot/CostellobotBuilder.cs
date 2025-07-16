@@ -32,11 +32,7 @@ public static class CostellobotBuilder
 
         if (builder.Configuration["ConnectionStrings:AzureTableStorage"] is { Length: > 0 })
         {
-            builder.AddAzureTableClient("AzureTableStorage", (p) =>
-            {
-                p.Credential = credential;
-                p.DisableHealthChecks = true;
-            });
+            builder.AddAzureTableClient("AzureTableStorage", (p) => p.Credential = credential);
         }
 
         builder.Services.AddAntiforgery();
