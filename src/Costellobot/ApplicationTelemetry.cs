@@ -32,20 +32,18 @@ public static class ApplicationTelemetry
     [StackTraceHidden]
     internal static async Task ProfileAsync<T>(T state, Func<T, Task> operation)
     {
-        // Based on https://github.com/grafana/pyroscope-go/blob/8fff2bccb5ed5611fdb09fdbd9a727367ab35f39/x/k6/baggage.go
-        if (ExtractK6Baggage() is not { Count: > 0 } baggage)
-        {
-            await operation(state);
-            return;
-        }
-
         try
         {
             Profiler.Instance.ClearDynamicTags();
+            Profiler.Instance.SetDynamicTag("service.namespace", ServiceNamespace);
 
-            foreach ((string key, string value) in baggage)
+            // Based on https://github.com/grafana/pyroscope-go/blob/8fff2bccb5ed5611fdb09fdbd9a727367ab35f39/x/k6/baggage.go
+            if (ExtractK6Baggage() is { Count: > 0 } baggage)
             {
-                Profiler.Instance.SetDynamicTag(key, value);
+                foreach ((string key, string value) in baggage)
+                {
+                    Profiler.Instance.SetDynamicTag(key, value);
+                }
             }
 
             await operation(state);
