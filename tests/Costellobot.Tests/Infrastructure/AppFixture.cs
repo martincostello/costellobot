@@ -104,7 +104,6 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
             "UseDevelopmentStorage=true");
 
         builder.UseSetting("Aspire:Azure:Data:Tables:DisableHealthChecks", "true");
-        builder.UseSetting("Aspire:Azure:Messaging:ServiceBus:DisableTracing", "true");
         builder.UseSetting("Aspire:Azure:Messaging:ServiceBus:HealthCheckQueueName", string.Empty);
         builder.UseSetting("Aspire:Azure:Storage:Blobs:DisableHealthChecks", "true");
 

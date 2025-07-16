@@ -110,7 +110,7 @@ public static class HealthCheckEndpoints
                            {
                                authorized = hasClaim && hasRole;
                            }
-                           else if (needsClaim && hasClaim)
+                           else if (needsClaim || hasClaim)
                            {
                                authorized = (needsClaim && hasClaim) || (needsRole && hasRole);
                            }
