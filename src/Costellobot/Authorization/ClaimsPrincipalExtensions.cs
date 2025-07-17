@@ -12,13 +12,20 @@ public static class ClaimsPrincipalExtensions
 
     public static bool IsAdministrator(this ClaimsPrincipal user, ICollection<string> roles, ICollection<string> users)
     {
+        var userName = user.FindFirstValue(ClaimTypes.Name);
+
+        if (string.IsNullOrEmpty(userName))
+        {
+            return false;
+        }
+
         bool hasClaim = false;
         bool needsClaim = false;
 
         if (users is { Count: > 0 })
         {
             needsClaim = true;
-            hasClaim = users.Any((p) => user.HasClaim(ClaimTypes.Name, p));
+            hasClaim = users.Contains(userName, StringComparer.Ordinal);
         }
 
         bool hasRole = false;
@@ -30,21 +37,21 @@ public static class ClaimsPrincipalExtensions
             hasRole = roles.Any(user.IsInRole);
         }
 
-        bool authorized = false;
+        bool isAdministrator = false;
 
         if (needsClaim && needsRole)
         {
-            authorized = hasClaim && hasRole;
+            isAdministrator = hasClaim && hasRole;
         }
         else if (needsClaim || needsRole)
         {
-            authorized = (needsClaim && hasClaim) || (needsRole && hasRole);
+            isAdministrator = (needsClaim && hasClaim) || (needsRole && hasRole);
         }
         else if (!needsClaim && !needsRole)
         {
-            authorized = true;
+            isAdministrator = true;
         }
 
-        return authorized;
+        return isAdministrator;
     }
 }
