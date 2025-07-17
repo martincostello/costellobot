@@ -37,21 +37,6 @@ public static class ClaimsPrincipalExtensions
             hasRole = roles.Any(user.IsInRole);
         }
 
-        bool isAdministrator = false;
-
-        if (needsClaim && needsRole)
-        {
-            isAdministrator = hasClaim && hasRole;
-        }
-        else if (needsClaim || needsRole)
-        {
-            isAdministrator = (needsClaim && hasClaim) || (needsRole && hasRole);
-        }
-        else if (!needsClaim && !needsRole)
-        {
-            isAdministrator = true;
-        }
-
-        return isAdministrator;
+        return (!needsClaim || hasClaim) && (!needsRole || hasRole);
     }
 }
