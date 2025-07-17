@@ -6,12 +6,15 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace MartinCostello.Costellobot.Authorization;
 
-//// See https://learn.microsoft.com/azure/app-service/monitor-instances-health-check?tabs=dotnet#authentication-and-security
-
+/// <summary>
+/// A class representing an authorization handler for automated health probes.
+/// </summary>
+/// <param name="configuration">The <see cref="IConfiguration"/> to use.</param>
 public sealed partial class HealthProbeHandler(IConfiguration configuration) : AuthorizationHandler<HealthProbeRequirement>
 {
     private readonly string? _encryptionKeyHash = GetEncryptionKeyHash(configuration);
 
+    /// <inheritdoc/>
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, HealthProbeRequirement requirement)
     {
         if (_encryptionKeyHash is { Length: > 0 } && context.Resource is HttpContext httpContext)

@@ -5,4 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace MartinCostello.Costellobot.Authorization;
 
-public class AdministratorRequirement : IAuthorizationRequirement;
+/// <summary>
+/// A class representing the authorization requirement for administrators.
+/// </summary>
+public sealed class AdministratorRequirement : IAuthorizationRequirement;

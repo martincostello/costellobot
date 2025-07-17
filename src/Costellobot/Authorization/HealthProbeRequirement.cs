@@ -5,4 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace MartinCostello.Costellobot.Authorization;
 
+/// <summary>
+/// A class representing the authorization requirement for health probes.
+/// </summary>
 public sealed class HealthProbeRequirement : IAuthorizationRequirement;

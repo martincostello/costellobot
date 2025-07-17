@@ -6,8 +6,13 @@ using Microsoft.Extensions.Options;
 
 namespace MartinCostello.Costellobot.Authorization;
 
+/// <summary>
+/// A class representing an authorization handler for automated health probe operators.
+/// </summary>
+/// <param name="options">The <see cref="SiteOptions"/> to use.</param>
 public sealed partial class HealthOperatorHandler(IOptionsMonitor<SiteOptions> options) : AuthorizationHandler<HealthProbeRequirement>
 {
+    /// <inheritdoc/>
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, HealthProbeRequirement requirement)
     {
         if (context.User.IsAdministrator(options.CurrentValue))
