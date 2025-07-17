@@ -34,6 +34,9 @@ var dashboardUrl = DashboardUrl(builder.Configuration["DASHBOARD_URL"]);
 
 builder.AddProject<Projects.Costellobot>(Project)
        .WithEnvironment("Site:LogsUrl", dashboardUrl)
+       .WithHttpHealthCheck("/health/liveness")
+       .WithHttpHealthCheck("/health/readiness")
+       .WithHttpHealthCheck("/health/startup")
        .WithReference(secrets)
        .WithReference(blobStorage)
        .WithReference(tableStorage)
