@@ -31,7 +31,7 @@ public sealed partial class HealthProbeHandler(IConfiguration configuration) : A
     {
         var key = configuration["WEBSITE_AUTH_ENCRYPTION_KEY"];
 
-        if (string.IsNullOrWhiteSpace(key))
+        if (string.IsNullOrWhiteSpace(key) || key.Length < 32)
         {
             return null;
         }

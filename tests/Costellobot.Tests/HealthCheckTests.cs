@@ -57,7 +57,7 @@ public sealed class HealthCheckTests(AppFixture fixture, ITestOutputHelper outpu
     {
         // Arrange
         using var client = Fixture.CreateClient();
-        client.DefaultRequestHeaders.Add("x-ms-auth-internal-token", "B0ehX0xmTb5/XXd7OcRSX2MxNhsojHPHGAGkxVNMWzE=");
+        client.DefaultRequestHeaders.Add("x-ms-auth-internal-token", "I3eGXFWsxHOxEhULepTolmX9jSd/rcSs9CAjao2DgGk=");
 
         // Act
         using var response = await client.GetAsync(requestUri, CancellationToken);
