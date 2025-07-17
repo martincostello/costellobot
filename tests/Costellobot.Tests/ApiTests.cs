@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using NuGet.Versioning;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot;
@@ -112,7 +113,16 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
 
         // Assert
         actual.TryGetProperty("application", out var application).ShouldBeTrue();
-        application.TryGetProperty("version", out _).ShouldBeTrue();
+
+        application.TryGetProperty("version", out var version).ShouldBeTrue();
+        version.ValueKind.ShouldBe(JsonValueKind.String);
+        NuGetVersion.TryParse(version.GetString(), out var nugetVersion).ShouldBeTrue();
+
+        actual.TryGetProperty("process", out var process).ShouldBeTrue();
+        process.TryGetProperty("uptime", out var uptime).ShouldBeTrue();
+        uptime.ValueKind.ShouldBe(JsonValueKind.String);
+        TimeSpan.TryParseExact(uptime.GetString(), @"d\.hh\:mm\:ss", CultureInfo.InvariantCulture, out var uptimeSpan).ShouldBeTrue();
+        uptimeSpan.ShouldBeGreaterThanOrEqualTo(TimeSpan.Zero);
     }
 
     [Theory]

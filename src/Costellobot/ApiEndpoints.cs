@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -12,6 +13,8 @@ namespace MartinCostello.Costellobot;
 
 public static class ApiEndpoints
 {
+    private static readonly long StartedAt = Stopwatch.GetTimestamp();
+
     public static IEndpointRouteBuilder MapApiRoutes(this IEndpointRouteBuilder builder)
     {
         builder.MapGitHubWebhooks("/github-webhook");
@@ -25,6 +28,8 @@ public static class ApiEndpoints
 
             return Results.NotFound();
         }).AllowAnonymous();
+
+        var started = Stopwatch.GetTimestamp();
 
         builder.MapGet("/version", () => new JsonObject()
         {
@@ -49,6 +54,7 @@ public static class ApiEndpoints
                 ["is64BitProcess"] = Environment.Is64BitProcess,
                 ["isNativeAoT"] = !RuntimeFeature.IsDynamicCodeSupported,
                 ["isPrivilegedProcess"] = Environment.IsPrivilegedProcess,
+                ["uptime"] = Stopwatch.GetElapsedTime(StartedAt).ToString(@"%d\.hh\:mm\:ss", CultureInfo.InvariantCulture),
             },
             ["dotnetVersions"] = new JsonObject()
             {
