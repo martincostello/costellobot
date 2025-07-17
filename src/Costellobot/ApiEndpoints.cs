@@ -29,8 +29,6 @@ public static class ApiEndpoints
             return Results.NotFound();
         }).AllowAnonymous();
 
-        var started = Stopwatch.GetTimestamp();
-
         builder.MapGet("/version", () => new JsonObject()
         {
             ["application"] = new JsonObject()
