@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Security.Claims;
 using AspNet.Security.OAuth.GitHub;
 using Azure.Storage.Blobs;
+using MartinCostello.Costellobot.Authorization;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -86,24 +87,19 @@ public static class AuthenticationEndpoints
             })
             .ValidateOnStart();
 
+        services.AddSingleton<IAuthorizationHandler, AdministratorHandler>();
+        services.AddSingleton<IAuthorizationHandler, HealthOperatorHandler>();
+        services.AddSingleton<IAuthorizationHandler, HealthProbeHandler>();
+
         services
             .AddAuthorization()
             .AddOptions<AuthorizationOptions>()
-            .Configure<IOptions<SiteOptions>>((options, config) =>
+            .Configure((options) =>
             {
                 options.AddPolicy(AdminPolicyName, (policy) =>
                 {
                     policy.RequireAuthenticatedUser();
-
-                    if (config.Value.AdminRoles.Count > 0)
-                    {
-                        policy.RequireRole(config.Value.AdminRoles);
-                    }
-
-                    if (config.Value.AdminUsers.Count > 0)
-                    {
-                        policy.RequireClaim(ClaimTypes.Name, config.Value.AdminUsers);
-                    }
+                    policy.AddRequirements(new AdministratorRequirement());
                 });
             });
 

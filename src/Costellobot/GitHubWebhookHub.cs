@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace MartinCostello.Costellobot;
 
-[CostellobotAdmin]
+[Authorization.CostellobotAdmin]
 public class GitHubWebhookHub(ClientLogQueue logs, GitHubWebhookQueue webhooks) : Hub<IWebhookClient>
 {
     public override async Task OnConnectedAsync()
