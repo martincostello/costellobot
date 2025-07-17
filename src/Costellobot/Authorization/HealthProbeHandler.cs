@@ -19,7 +19,10 @@ public sealed partial class HealthProbeHandler(IConfiguration configuration) : A
     {
         if (_encryptionKeyHash is { Length: > 0 } && context.Resource is HttpContext httpContext)
         {
-            var token = httpContext.Request.Headers["x-ms-auth-internal-token"].FirstOrDefault();
+            // See https://learn.microsoft.com/azure/app-service/monitor-instances-health-check?tabs=dotnet#authentication-and-security
+            var token =
+                httpContext.Request.Headers["x-health-probe-token"].FirstOrDefault() ??
+                httpContext.Request.Headers["x-ms-auth-internal-token"].FirstOrDefault();
 
             if (string.Equals(token, _encryptionKeyHash, StringComparison.Ordinal))
             {
