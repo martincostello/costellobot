@@ -18,15 +18,7 @@ public static class ClaimsPrincipalExtensions
         if (users is { Count: > 0 })
         {
             needsClaim = true;
-
-            foreach (var name in users)
-            {
-                if (user.HasClaim(ClaimTypes.Name, name))
-                {
-                    hasClaim = true;
-                    break;
-                }
-            }
+            hasClaim = users.Any((p) => user.HasClaim(ClaimTypes.Name, p));
         }
 
         bool hasRole = false;
@@ -35,15 +27,7 @@ public static class ClaimsPrincipalExtensions
         if (roles is { Count: > 0 })
         {
             needsRole = true;
-
-            foreach (var role in roles)
-            {
-                if (user.IsInRole(role))
-                {
-                    hasRole = true;
-                    break;
-                }
-            }
+            hasRole = roles.Any(user.IsInRole);
         }
 
         bool authorized = false;
