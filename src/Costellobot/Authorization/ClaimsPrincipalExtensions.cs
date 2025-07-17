@@ -36,7 +36,7 @@ public static class ClaimsPrincipalExtensions
         {
             authorized = hasClaim && hasRole;
         }
-        else if (needsClaim || hasClaim)
+        else if (needsClaim || needsRole)
         {
             authorized = (needsClaim && hasClaim) || (needsRole && hasRole);
         }
