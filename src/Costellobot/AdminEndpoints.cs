@@ -99,7 +99,7 @@ public static class AdminEndpoints
           .DisableAntiforgery()
           .WithMetadata(new ResponseCacheAttribute() { Duration = 0, Location = ResponseCacheLocation.None, NoStore = true });
 
-        var admin = new CostellobotAdminAttribute();
+        var admin = new Authorization.CostellobotAdminAttribute();
 
         builder
             .MapGet(

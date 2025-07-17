@@ -35,7 +35,8 @@ public static class HealthCheckEndpoints
         configure?.Invoke(options);
 
         builder.MapHealthChecks(pattern, options)
-               .RequireHost(["localhost", "127.0.0.1"]);
+               .RequireHost(["localhost", "127.0.0.1"])
+               .RequireAuthorization((policy) => policy.AddRequirements(new Authorization.HealthProbeRequirement()));
     }
 
     private static Task WriteResponse(HttpContext context, HealthReport healthReport)

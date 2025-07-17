@@ -103,12 +103,17 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
             "ConnectionStrings:AzureTableStorage",
             "UseDevelopmentStorage=true");
 
+        builder.UseSetting("Aspire:Azure:Data:Tables:DisableHealthChecks", "true");
+        builder.UseSetting("Aspire:Azure:Messaging:ServiceBus:HealthCheckQueueName", string.Empty);
+        builder.UseSetting("Aspire:Azure:Storage:Blobs:DisableHealthChecks", "true");
+
         builder.ConfigureAppConfiguration((configBuilder) =>
         {
             string testKey = File.ReadAllText("costellobot-tests.pem");
 
             var config = new[]
             {
+                KeyValuePair.Create<string, string?>("WEBSITE_AUTH_ENCRYPTION_KEY", "website-auth-encryption-key-for-health-probes"),
                 KeyValuePair.Create<string, string?>("ConnectionStrings:AzureBlobStorage", string.Empty),
                 KeyValuePair.Create<string, string?>("ConnectionStrings:AzureKeyVault", string.Empty),
                 KeyValuePair.Create<string, string?>("GitHub:AccessToken", "gho_github-access-token"),
