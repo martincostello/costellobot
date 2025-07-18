@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Octokit.Webhooks;
 
@@ -11,6 +12,7 @@ namespace MartinCostello.Costellobot;
 public sealed partial class GitHubEventProcessor(
     GitHubEventHandler handler,
     IHubContext<GitHubWebhookHub, IWebhookClient> hub,
+    IOptionsMonitor<WebhookOptions> options,
     ILogger<GitHubEventProcessor> logger) : WebhookEventProcessor
 {
     private static readonly string[] HeadersToLog =
@@ -34,6 +36,11 @@ public sealed partial class GitHubEventProcessor(
     {
         ArgumentNullException.ThrowIfNull(headers);
         ArgumentNullException.ThrowIfNull(body);
+
+        if (options.CurrentValue.Disable)
+        {
+            return;
+        }
 
         (var rawHeaders, var rawPayload) = await BroadcastLogAsync(headers, body, cancellationToken);
 

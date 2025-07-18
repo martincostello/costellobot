@@ -32,6 +32,7 @@ public class GitHubWebhookServiceTests(ITestOutputHelper outputHelper)
 
         var processor = new GitHubMessageProcessor(
             serviceProvider,
+            options,
             outputHelper.ToLogger<GitHubMessageProcessor>());
 
         var target = new GitHubWebhookService(
