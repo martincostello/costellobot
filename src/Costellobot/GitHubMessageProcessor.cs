@@ -11,7 +11,7 @@ public sealed partial class GitHubMessageProcessor(
     IServiceProvider serviceProvider,
     ILogger<GitHubMessageProcessor> logger) : WebhookEventProcessor
 {
-    public override async Task ProcessWebhookAsync(
+    public override async ValueTask ProcessWebhookAsync(
         IDictionary<string, StringValues> headers,
         string body,
         CancellationToken cancellationToken = default)
