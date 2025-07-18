@@ -14,6 +14,8 @@ public sealed partial class GitHubEventHandler(
     ILogger<GitHubEventHandler> logger) : IAsyncDisposable
 {
     private readonly Lock _lock = new();
+    private readonly string _queueName = options.CurrentValue.QueueName;
+
     private ServiceBusSender? _sender;
 
     public async ValueTask DisposeAsync()
@@ -80,19 +82,17 @@ public sealed partial class GitHubEventHandler(
 
     private ServiceBusSender EnsureSender()
     {
-        if (_sender != null)
+        if (_sender == null)
         {
-            return _sender;
-        }
-
-        lock (_lock)
-        {
+            lock (_lock)
+            {
 #pragma warning disable CA1508
-            _sender ??= client.CreateSender(options.CurrentValue.QueueName);
+                _sender ??= client.CreateSender(_queueName);
 #pragma warning restore CA1508
-
-            return _sender;
+            }
         }
+
+        return _sender;
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
