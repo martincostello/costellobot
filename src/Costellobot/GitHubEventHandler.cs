@@ -11,8 +11,22 @@ public sealed partial class GitHubEventHandler(
     ServiceBusClient client,
     GitHubWebhookQueue queue,
     IOptionsMonitor<WebhookOptions> options,
-    ILogger<GitHubEventHandler> logger)
+    ILogger<GitHubEventHandler> logger) : IAsyncDisposable
 {
+    private readonly Lock _lock = new();
+    private readonly string _queueName = options.CurrentValue.QueueName;
+
+    private ServiceBusSender? _sender;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_sender is not null)
+        {
+            await _sender.DisposeAsync();
+            _sender = null;
+        }
+    }
+
     public async Task HandleAsync(GitHubEvent payload, CancellationToken cancellationToken)
     {
         if (Activity.Current is { } activity)
@@ -45,8 +59,7 @@ public sealed partial class GitHubEventHandler(
                     Activity.Current?.SetTag("messaging.message.conversation_id", message.CorrelationId);
                     Activity.Current?.SetTag("messaging.message.id", message.MessageId);
 
-                    await using var sender = client.CreateSender(config.QueueName);
-                    await sender.SendMessageAsync(message, combined.Token);
+                    await EnsureSender().SendMessageAsync(message, combined.Token);
                 }
             }
             else
@@ -65,6 +78,21 @@ public sealed partial class GitHubEventHandler(
         }
 
         queue.Enqueue(payload);
+    }
+
+    private ServiceBusSender EnsureSender()
+    {
+        var sender = _sender;
+
+        if (sender == null)
+        {
+            using (_lock.EnterScope())
+            {
+                sender = _sender = client.CreateSender(_queueName);
+            }
+        }
+
+        return sender;
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
