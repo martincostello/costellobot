@@ -1,0 +1,113 @@
+docker-compose:
+  files:
+    - ./../../docker-compose.yml
+input:
+  - path: /version
+  - path: /github-webhook
+    method: POST
+    headers:
+      Accept: '*/*'
+      Content-Type: application/json; charset=utf-8
+      User-Agent: GitHub-Hookshot/f05835d
+      X-GitHub-Delivery: 09e27db8-e74c-4a28-a951-50552382af03
+      X-GitHub-Event: ping
+      X-GitHub-Hook-ID: 109948940
+      X-GitHub-Hook-Installation-Target-ID: 183256
+      X-GitHub-Hook-Installation-Target-Type: integration
+    body: |-
+      {
+        "zen": "Responsive is better than fast.",
+        "hook_id": 109948940,
+        "hook": {
+          "type": "App",
+          "id": 109948940,
+          "name": "web",
+          "active": true,
+          "events": ["*"]
+        },
+        "config": {
+          "content_type": "json",
+          "insecure_ssl": "0",
+          "secret": "my-secret",
+          "url": "https://costellobot.martincostello.local/github-webhook"
+        },
+        "updated_at": "2022-03-23T23:13:43Z",
+        "created_at": "2022-03-23T23:13:43Z",
+        "app_id": 349596565,
+        "deliveries_url": "https://api.github.com/app/hook/deliveries"
+      }
+interval: 500ms
+expected:
+  logs:
+    - logql: '{ service_name="Costellobot" } |~ `Application started.`'
+      contains:
+        - 'Application started'
+  metrics:
+    - promql: dotnet_process_memory_working_set_bytes{}
+      value: '>= 0'
+    - promql: http_client_request_duration_seconds_count{}
+      value: '>= 0'
+    - promql: http_server_request_duration_seconds_count{}
+      value: '>= 0'
+  traces:
+    - traceql: '{ span.messaging.operation = "receive" }'
+      spans:
+        - name: 'ServiceBusReceiver.Receive'
+          attributes:
+            az.namespace: Microsoft.ServiceBus
+            messaging.destination.name: queue.1
+            messaging.operation: receive
+            messaging.system: servicebus
+    - traceql: '{ span.http.route =~ "/github-webhook" }'
+      spans:
+        - name: 'POST /github-webhook'
+          attributes:
+            github.webhook.delivery: 09e27db8-e74c-4a28-a951-50552382af03
+            github.webhook.event: ping
+            github.webhook.hook.id: 109948940
+            github.webhook.hook.installation.target.id: 183256
+            http.request.method: POST
+            http.response.status_code: 200
+            messaging.message.id: regex:.+
+        - name: 'ServiceBusProcessor.ProcessMessage'
+          attributes:
+            az.namespace: Microsoft.ServiceBus
+            messaging.destination.name: queue.1
+            messaging.operation: process
+            messaging.system: servicebus
+        - name: 'ServiceBusReceiver.Complete'
+          attributes:
+            az.namespace: Microsoft.ServiceBus
+            messaging.destination.name: queue.1
+            messaging.operation: settle
+            messaging.system: servicebus
+        - name: 'ServiceBusSender.Send'
+          attributes:
+            az.namespace: Microsoft.ServiceBus
+            messaging.destination.name: queue.1
+            messaging.operation: publish
+            messaging.system: servicebus
+    - traceql: '{ span.http.route =~ "/version" }'
+      spans:
+        - name: 'GET /version'
+          attributes:
+            cloud.provider: azure
+            container.id: regex:.+
+            host.name: regex:.+
+            http.request.method: GET
+            http.response.status_code: 200
+            os.build_id: regex:.+
+            os.description: regex:.+
+            os.name: Ubuntu
+            os.type: linux
+            os.version: regex:.+
+            process.runtime.description: regex:.NET.+
+            process.runtime.name: .NET
+            process.runtime.version: regex:.+
+            service.instance.id: regex:.+
+            service.name: Costellobot
+            service.namespace: Costellobot
+            service.version: regex:1.0.\d+
+            telemetry.sdk.language: dotnet
+            telemetry.sdk.name: opentelemetry
+            telemetry.sdk.version: regex:.+
