@@ -84,7 +84,7 @@ public sealed partial class GitHubEventHandler(
     {
         if (_sender == null)
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
 #pragma warning disable CA1508
                 _sender ??= client.CreateSender(_queueName);
