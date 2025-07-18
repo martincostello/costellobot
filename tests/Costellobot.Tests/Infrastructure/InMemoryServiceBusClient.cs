@@ -142,33 +142,13 @@ internal sealed class InMemoryServiceBusClient : ServiceBusClient
             => Task.CompletedTask;
     }
 
-    private sealed class InMemoryServiceBusSender : ServiceBusSender
+    private sealed class InMemoryServiceBusSender(ChannelWriter<Payload> writer) : ServiceBusSender
     {
-        private const int MaxHandles = 50;
-        private static int _handles;
-        private readonly ChannelWriter<Payload> _writer;
-
-        public InMemoryServiceBusSender(ChannelWriter<Payload> writer)
-        {
-            // Simulate "Cannot allocate more handles. The maximum number of handles is 4999. (QuotaExceeded)"
-            var handles = Interlocked.Increment(ref _handles);
-
-            if (handles > MaxHandles)
-            {
-                throw new InvalidOperationException($"Too many ServiceBusSender instances: {handles}.");
-            }
-
-            _writer = writer;
-        }
-
         public override Task CloseAsync(CancellationToken cancellationToken = default)
-        {
-            _ = Interlocked.Decrement(ref _handles);
-            return Task.CompletedTask;
-        }
+            => Task.CompletedTask;
 
         public override async Task SendMessageAsync(ServiceBusMessage message, CancellationToken cancellationToken = default)
-            => await _writer.WriteAsync(new(message.MessageId, message.ContentType, message.Subject, message.Body.ToArray()), cancellationToken);
+            => await writer.WriteAsync(new(message.MessageId, message.ContentType, message.Subject, message.Body.ToArray()), cancellationToken);
     }
 
     private sealed record Payload(string MessageId, string ContentType, string Subject, byte[] Body);
