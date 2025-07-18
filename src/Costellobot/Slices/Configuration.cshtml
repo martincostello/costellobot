@@ -216,7 +216,7 @@
                                 <td>Approve pull requests?</td>
                                 <td>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" id="approve" type="checkbox" checked="@(Model.Webhook.Approve)" disabled>
+                                        <input class="form-check-input" id="approve" type="checkbox" checked="@(Model.Webhook.Approve ? "checked" : null)" disabled>
                                     </div>
                                 </td>
                             </tr>
@@ -224,7 +224,7 @@
                                 <td>Auto-merge pull requests?</td>
                                 <td>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" id="automerge" type="checkbox" checked="@(Model.Webhook.Automerge)" disabled>
+                                        <input class="form-check-input" id="automerge" type="checkbox" checked="@(Model.Webhook.Automerge ? "checked" : null)" disabled>
                                     </div>
                                 </td>
                             </tr>
@@ -232,7 +232,7 @@
                                 <td>Approve deployments?</td>
                                 <td>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" id="deploy" type="checkbox" checked="@(Model.Webhook.Deploy)" disabled>
+                                        <input class="form-check-input" id="deploy" type="checkbox" checked="@(Model.Webhook.Deploy ? "checked" : null)" disabled>
                                     </div>
                                 </td>
                             </tr>
@@ -240,7 +240,7 @@
                                 <td>Implicitly trust owner approvals?</td>
                                 <td>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" id="implicit-trust" type="checkbox" checked="@(Model.Webhook.ImplicitTrust)" disabled>
+                                        <input class="form-check-input" id="implicit-trust" type="checkbox" checked="@(Model.Webhook.ImplicitTrust ? "checked" : null)" disabled>
                                     </div>
                                 </td>
                             </tr>
