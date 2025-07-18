@@ -82,17 +82,17 @@ public sealed partial class GitHubEventHandler(
 
     private ServiceBusSender EnsureSender()
     {
-        if (_sender == null)
+        var sender = _sender;
+
+        if (sender == null)
         {
             using (_lock.EnterScope())
             {
-#pragma warning disable CA1508
-                _sender ??= client.CreateSender(_queueName);
-#pragma warning restore CA1508
+                sender = _sender = client.CreateSender(_queueName);
             }
         }
 
-        return _sender;
+        return sender;
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
