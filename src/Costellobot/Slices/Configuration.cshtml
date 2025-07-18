@@ -213,6 +213,14 @@
                         </thead>
                         <tbody>
                             <tr>
+                                <td>Disabled?</td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" id="approve" type="checkbox" checked="@(Model.Webhook.Disable ? "checked" : null)" disabled>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
                                 <td>Approve pull requests?</td>
                                 <td>
                                     <div class="form-check form-switch">

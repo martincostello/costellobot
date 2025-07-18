@@ -21,6 +21,8 @@ public sealed class WebhookOptions
 
     public IList<string> DeployEnvironments { get; set; } = [];
 
+    public bool Disable { get; set; }
+
     public IList<string> IgnoreRepositories { get; set; } = [];
 
     public bool ImplicitTrust { get; set; }

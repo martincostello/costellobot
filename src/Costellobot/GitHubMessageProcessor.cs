@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Text.Json;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Octokit.Webhooks;
 
@@ -9,6 +10,7 @@ namespace MartinCostello.Costellobot;
 
 public sealed partial class GitHubMessageProcessor(
     IServiceProvider serviceProvider,
+    IOptionsMonitor<WebhookOptions> options,
     ILogger<GitHubMessageProcessor> logger) : WebhookEventProcessor
 {
     public override async ValueTask ProcessWebhookAsync(
@@ -18,6 +20,11 @@ public sealed partial class GitHubMessageProcessor(
     {
         ArgumentNullException.ThrowIfNull(headers);
         ArgumentNullException.ThrowIfNull(body);
+
+        if (options.CurrentValue.Disable)
+        {
+            return;
+        }
 
         (var rawHeaders, var rawPayload) = ParseRaw(headers, body);
 
