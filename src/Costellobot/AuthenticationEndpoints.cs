@@ -59,6 +59,7 @@ public static class AuthenticationEndpoints
                 options.ClientSecret = configuration.Value.ClientSecret;
                 options.CorrelationCookie.Name = CookiePrefix + "correlation";
                 options.EnterpriseDomain = configuration.Value.EnterpriseDomain;
+                options.UsePkce = true;
 
                 foreach (string scope in configuration.Value.Scopes)
                 {
