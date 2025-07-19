@@ -14,6 +14,10 @@ public sealed class LoopbackOAuthEvents : OAuthEvents
         var query = new UriBuilder(context.RedirectUri).Uri.Query;
         var queryString = HttpUtility.ParseQueryString(query);
 
+        // Ensure PKCE is in use
+        queryString["code_challenge"].ShouldNotBeNullOrWhiteSpace();
+        queryString["code_challenge_method"].ShouldBe("S256");
+
         var location = queryString["redirect_uri"];
         var state = queryString["state"];
 
