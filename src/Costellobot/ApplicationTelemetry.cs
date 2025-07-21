@@ -35,7 +35,7 @@ public static class ApplicationTelemetry
         try
         {
             Profiler.Instance.ClearDynamicTags();
-            Profiler.Instance.SetDynamicTag("service.namespace", ServiceNamespace);
+            Profiler.Instance.SetDynamicTag("namespace", ServiceNamespace);
 
             // Based on https://github.com/grafana/pyroscope-go/blob/8fff2bccb5ed5611fdb09fdbd9a727367ab35f39/x/k6/baggage.go
             if (ExtractK6Baggage() is { Count: > 0 } baggage)
