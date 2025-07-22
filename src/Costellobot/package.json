@@ -20,8 +20,8 @@
   "author": "martincostello",
   "license": "Apache-2.0",
   "dependencies": {
-    "@grafana/faro-web-sdk": "1.18.2",
-    "@grafana/faro-web-tracing": "1.18.2",
+    "@grafana/faro-web-sdk": "1.19.0",
+    "@grafana/faro-web-tracing": "1.19.0",
     "@microsoft/signalr": "8.0.7",
     "moment": "2.30.1"
   },
