@@ -48,6 +48,9 @@ public static class CostellobotBuilder
             options.Providers.Add<GzipCompressionProvider>();
         });
 
+        builder.Services.AddMetrics();
+        builder.Services.AddSingleton<CostellobotMetrics>();
+
         builder.Services.AddSignalR();
         builder.Services.AddSingleton<ClientLogQueue>();
         builder.Services.AddHostedService<ClientLogBroadcastService>();
