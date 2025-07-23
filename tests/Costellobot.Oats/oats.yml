@@ -44,13 +44,13 @@ expected:
         - 'Application started'
   metrics:
     - promql: costellobot_github_webhook_delivery_total{ github_webhook_event="ping" }
-      value: '>= 0'
+      value: '>= 1'
     - promql: dotnet_process_memory_working_set_bytes{}
-      value: '>= 0'
+      value: '>= 1'
     - promql: http_client_request_duration_seconds_count{}
-      value: '>= 0'
+      value: '>= 1'
     - promql: http_server_request_duration_seconds_count{}
-      value: '>= 0'
+      value: '>= 1'
   traces:
     - traceql: '{ span.messaging.operation = "receive" }'
       spans:
