@@ -12,6 +12,7 @@ namespace MartinCostello.Costellobot;
 public sealed partial class GitHubEventProcessor(
     GitHubEventHandler handler,
     IHubContext<GitHubWebhookHub, IWebhookClient> hub,
+    CostellobotMetrics metrics,
     IOptionsMonitor<WebhookOptions> options,
     ILogger<GitHubEventProcessor> logger) : WebhookEventProcessor
 {
@@ -48,6 +49,8 @@ public sealed partial class GitHubEventProcessor(
 
         using (logger.BeginWebhookScope(webhookHeaders))
         {
+            metrics.WebhookDelivery(webhookHeaders.Event, webhookHeaders.HookInstallationTargetId);
+
             var webhookEvent = DeserializeWebhookEvent(webhookHeaders, body);
 
             using (logger.BeginWebhookScope(webhookEvent))

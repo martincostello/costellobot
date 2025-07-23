@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using OpenTelemetry;
 using OpenTelemetry.Resources;
 using Pyroscope;
@@ -14,6 +15,7 @@ public static class ApplicationTelemetry
     public static readonly string ServiceNamespace = "Costellobot";
     public static readonly string ServiceVersion = GitMetadata.Version.Split('+')[0];
     public static readonly ActivitySource ActivitySource = new(ServiceName, ServiceVersion);
+    public static readonly Meter Meter = new(ServiceName, ServiceVersion);
 
     public static ResourceBuilder ResourceBuilder { get; } = ResourceBuilder.CreateDefault()
         .AddService(ServiceName, ServiceNamespace, ServiceVersion)
