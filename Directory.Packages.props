@@ -60,7 +60,7 @@
     <PackageVersion Include="OpenTelemetry.Resources.ProcessRuntime" Version="1.12.0-beta.1" />
     <PackageVersion Include="Polly.Extensions" Version="8.6.2" />
     <PackageVersion Include="Polly.RateLimiting" Version="8.6.2" />
-    <PackageVersion Include="Pyroscope" Version="0.10.0" />
+    <PackageVersion Include="Pyroscope" Version="0.11.0" />
     <PackageVersion Include="Pyroscope.OpenTelemetry" Version="0.3.0" />
     <PackageVersion Include="RazorSlices" Version="0.9.2" />
     <PackageVersion Include="ReportGenerator" Version="5.4.10" />
