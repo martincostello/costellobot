@@ -27,12 +27,12 @@ public static class CostellobotBuilder
 
         if (builder.Configuration["ConnectionStrings:AzureBlobStorage"] is { Length: > 0 })
         {
-            builder.AddAzureBlobClient("AzureBlobStorage", (p) => p.Credential = credential);
+            builder.AddAzureBlobServiceClient("AzureBlobStorage", (p) => p.Credential = credential);
         }
 
         if (builder.Configuration["ConnectionStrings:AzureTableStorage"] is { Length: > 0 })
         {
-            builder.AddAzureTableClient("AzureTableStorage", (p) => p.Credential = credential);
+            builder.AddAzureTableServiceClient("AzureTableStorage", (p) => p.Credential = credential);
         }
 
         builder.Services.AddAntiforgery();
