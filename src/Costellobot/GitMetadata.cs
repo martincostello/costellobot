@@ -29,9 +29,8 @@ public static class GitMetadata
     {
         get
         {
-            var url = GetRepositoryUrl();
-            var uri = new Uri(url);
-            return uri.Segments.DefaultIfEmpty("costellobot").ElementAtOrDefault(2)!.TrimEnd('/');
+            var uri = new Uri(RepositoryUrl);
+            return uri.Segments.Length > 2 ? uri.Segments[2].TrimEnd('/') : "costellobot";
         }
     }
 
@@ -39,9 +38,8 @@ public static class GitMetadata
     {
         get
         {
-            var url = GetRepositoryUrl();
-            var uri = new Uri(url);
-            return uri.Segments.DefaultIfEmpty("martincostello").ElementAtOrDefault(1)!.TrimEnd('/');
+            var uri = new Uri(RepositoryUrl);
+            return uri.Segments.Length > 1 ? uri.Segments[1].TrimEnd('/') : "martincostello";
         }
     }
 
