@@ -16,8 +16,7 @@
         siteUrl = $"https://{domain}/";
     }
 
-    string environment = HttpContext.RequestServices.GetRequiredService<IHostEnvironment>().EnvironmentName;
-    string commit = GitMetadata.CommitUrl;
+    var environment = HttpContext.RequestServices.GetRequiredService<IHostEnvironment>().EnvironmentName;
 
     var logs = string.Empty;
     var telemetry = string.Empty;
