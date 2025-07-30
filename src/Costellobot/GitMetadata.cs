@@ -13,9 +13,37 @@ public static class GitMetadata
 
     public static string Commit { get; } = GetMetadataValue("CommitHash", "HEAD");
 
+    public static string RepositoryUrl { get; } = GetRepositoryUrl();
+
     public static DateTimeOffset Timestamp { get; } = DateTimeOffset.Parse(GetMetadataValue("BuildTimestamp", DateTimeOffset.UtcNow.ToString("u", CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
 
     public static string Version { get; } = typeof(GitMetadata).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+
+    public static string BranchUrl => $"{RepositoryUrl}/tree/{Branch}";
+
+    public static string BuildUrl => $"{RepositoryUrl}/actions/runs/{BuildId}";
+
+    public static string CommitUrl => $"{RepositoryUrl}/commit/{Commit}";
+
+    public static string RepositoryName
+    {
+        get
+        {
+            var url = GetRepositoryUrl();
+            var uri = new Uri(url);
+            return uri.Segments.DefaultIfEmpty("costellobot").ElementAtOrDefault(2)!.TrimEnd('/');
+        }
+    }
+
+    public static string RepositoryOwner
+    {
+        get
+        {
+            var url = GetRepositoryUrl();
+            var uri = new Uri(url);
+            return uri.Segments.DefaultIfEmpty("martincostello").ElementAtOrDefault(1)!.TrimEnd('/');
+        }
+    }
 
     private static string GetMetadataValue(string name, string defaultValue)
     {
@@ -24,5 +52,18 @@ public static class GitMetadata
             .Where((p) => string.Equals(p.Key, name, StringComparison.Ordinal))
             .Select((p) => p.Value)
             .FirstOrDefault() ?? defaultValue;
+    }
+
+    private static string GetRepositoryUrl()
+    {
+        string repository = GetMetadataValue("RepositoryUrl", "https://github.com/martincostello/costellobot");
+
+        const string Suffix = ".git";
+        if (repository.EndsWith(Suffix, StringComparison.Ordinal))
+        {
+            repository = repository[..^Suffix.Length];
+        }
+
+        return repository;
     }
 }

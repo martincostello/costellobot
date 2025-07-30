@@ -21,7 +21,17 @@ public static class ApplicationTelemetry
         .AddContainerDetector()
         .AddHostDetector()
         .AddOperatingSystemDetector()
-        .AddProcessRuntimeDetector();
+        .AddProcessRuntimeDetector()
+        .AddAttributes(
+            [
+                new("vcs.owner.name", GitMetadata.RepositoryOwner),
+                new("vcs.provider.name", "github"),
+                new("vcs.ref.head.name", GitMetadata.Branch),
+                new("vcs.ref.head.revision", GitMetadata.Commit),
+                new("vcs.ref.head.type", "branch"),
+                new("vcs.repository.name", GitMetadata.RepositoryName),
+                new("vcs.repository.url.full", GitMetadata.RepositoryUrl),
+            ]);
 
     internal static bool IsOtlpCollectorConfigured()
         => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT"));

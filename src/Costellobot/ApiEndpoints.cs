@@ -62,10 +62,10 @@ public static class ApiEndpoints
             ["_links"] = new JsonObject()
             {
                 ["self"] = new JsonObject() { ["href"] = "https://costellobot.martincostello.com" },
-                ["repo"] = new JsonObject() { ["href"] = "https://github.com/martincostello/costellobot" },
-                ["branch"] = new JsonObject() { ["href"] = $"https://github.com/martincostello/costellobot/tree/{GitMetadata.Branch}" },
-                ["commit"] = new JsonObject() { ["href"] = $"https://github.com/martincostello/costellobot/commit/{GitMetadata.Commit}" },
-                ["deploy"] = new JsonObject() { ["href"] = $"https://github.com/martincostello/costellobot/actions/runs/{GitMetadata.BuildId}" },
+                ["repo"] = new JsonObject() { ["href"] = GitMetadata.RepositoryUrl },
+                ["branch"] = new JsonObject() { ["href"] = GitMetadata.BranchUrl },
+                ["commit"] = new JsonObject() { ["href"] = GitMetadata.CommitUrl },
+                ["deploy"] = new JsonObject() { ["href"] = GitMetadata.BuildUrl },
             },
         }).AllowAnonymous();
 
