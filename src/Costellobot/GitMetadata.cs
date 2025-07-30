@@ -13,9 +13,35 @@ public static class GitMetadata
 
     public static string Commit { get; } = GetMetadataValue("CommitHash", "HEAD");
 
+    public static string RepositoryUrl { get; } = GetRepositoryUrl();
+
     public static DateTimeOffset Timestamp { get; } = DateTimeOffset.Parse(GetMetadataValue("BuildTimestamp", DateTimeOffset.UtcNow.ToString("u", CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
 
     public static string Version { get; } = typeof(GitMetadata).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+
+    public static string BranchUrl => $"{RepositoryUrl}/tree/{Branch}";
+
+    public static string BuildUrl => $"{RepositoryUrl}/actions/runs/{BuildId}";
+
+    public static string CommitUrl => $"{RepositoryUrl}/commit/{Commit}";
+
+    public static string RepositoryName
+    {
+        get
+        {
+            var uri = new Uri(RepositoryUrl);
+            return uri.Segments.Length > 2 ? uri.Segments[2].TrimEnd('/') : "costellobot";
+        }
+    }
+
+    public static string RepositoryOwner
+    {
+        get
+        {
+            var uri = new Uri(RepositoryUrl);
+            return uri.Segments.Length > 1 ? uri.Segments[1].TrimEnd('/') : "martincostello";
+        }
+    }
 
     private static string GetMetadataValue(string name, string defaultValue)
     {
@@ -24,5 +50,18 @@ public static class GitMetadata
             .Where((p) => string.Equals(p.Key, name, StringComparison.Ordinal))
             .Select((p) => p.Value)
             .FirstOrDefault() ?? defaultValue;
+    }
+
+    private static string GetRepositoryUrl()
+    {
+        string repository = GetMetadataValue("RepositoryUrl", "https://github.com/martincostello/costellobot");
+
+        const string Suffix = ".git";
+        if (repository.EndsWith(Suffix, StringComparison.Ordinal))
+        {
+            repository = repository[..^Suffix.Length];
+        }
+
+        return repository;
     }
 }

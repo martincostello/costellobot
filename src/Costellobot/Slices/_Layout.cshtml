@@ -16,11 +16,7 @@
         siteUrl = $"https://{domain}/";
     }
 
-    string environment = HttpContext.RequestServices.GetRequiredService<IHostEnvironment>().EnvironmentName;
-    string repository = "https://github.com/martincostello/costellobot";
-    string branch = repository + "/tree/" + GitMetadata.Branch;
-    string build = repository + "/actions/runs/" + GitMetadata.BuildId;
-    string commit = repository + "/commit/" + GitMetadata.Commit;
+    var environment = HttpContext.RequestServices.GetRequiredService<IHostEnvironment>().EnvironmentName;
 
     var logs = string.Empty;
     var telemetry = string.Empty;
@@ -106,7 +102,7 @@
             <div class="collapse navbar-collapse" id="site-navbar">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="@(repository)" title="GitHub" target="_blank" rel="noopener">
+                        <a class="nav-link" href="@(GitMetadata.RepositoryUrl)" title="GitHub" target="_blank" rel="noopener">
                             GitHub
                             <span class="fa-brands fa-github fa-fw" aria-hidden="true"></span>
                         </a>
@@ -192,18 +188,18 @@
             <p>
                 &copy; @(DateTimeOffset.UtcNow.Year) - Martin Costello |
                 Built from
-                <a href="@(commit)" title="View commit @(GitMetadata.Commit) on GitHub" target="_blank" rel="noopener">
+                <a href="@(GitMetadata.CommitUrl)" title="View commit @(GitMetadata.Commit) on GitHub" target="_blank" rel="noopener">
                     <code>@(string.Join(string.Empty, GitMetadata.Commit.Take(7)))</code>
                 </a>
                 on
-                <a href="@(branch)" title="View branch @(GitMetadata.Branch) on GitHub" target="_blank" rel="noopener">
+                <a href="@(GitMetadata.BranchUrl)" title="View branch @(GitMetadata.Branch) on GitHub" target="_blank" rel="noopener">
                     <code>@(GitMetadata.Branch)</code>
                 </a>
                 @if (!string.IsNullOrWhiteSpace(GitMetadata.BuildId))
                 {
                     <text>
                         by
-                        <a href="@(build)" title="View deployment on GitHub" target="_blank" rel="noopener">
+                        <a href="@(GitMetadata.BuildUrl)" title="View deployment on GitHub" target="_blank" rel="noopener">
                             GitHub
                         </a>
                     </text>
@@ -217,7 +213,7 @@
     <script src="@(this.Content("~/static/js/main.js"))" defer></script>
 </body>
 <!--
-    Deployment:    @(build)
+    Deployment:    @(GitMetadata.BuildUrl)
     Environment:   @(environment)
     Commit SHA:    @(GitMetadata.Commit)
     Commit branch: @(GitMetadata.Branch)
