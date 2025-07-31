@@ -18,6 +18,18 @@ public static class CostellobotBuilder
             ExcludeVisualStudioCredential = true,
         });
 
+        if (builder.Configuration["AzureAppConfigurationEndpoint"] is { Length: > 0 } endpoint)
+        {
+            builder.Configuration.AddAzureAppConfiguration((options) =>
+            {
+                options.Connect(new Uri(endpoint), credential)
+                       .Select("*", "costellobot")
+                       .TrimKeyPrefix("Costellobot:")
+                       .ConfigureRefresh((refresh) => refresh.RegisterAll());
+            });
+            builder.Services.AddAzureAppConfiguration();
+        }
+
         if (builder.Configuration["ConnectionStrings:AzureKeyVault"] is { Length: > 0 })
         {
             builder.Configuration.AddAzureKeyVaultSecrets("AzureKeyVault", (p) => p.Credential = credential);
@@ -123,6 +135,11 @@ public static class CostellobotBuilder
         if (!app.Environment.IsDevelopment())
         {
             app.UseExceptionHandler("/error");
+        }
+
+        if (!string.IsNullOrWhiteSpace(app.Configuration["AzureAppConfigurationEndpoint"]))
+        {
+            app.UseAzureAppConfiguration();
         }
 
         app.UseMiddleware<CustomHttpHeadersMiddleware>();
