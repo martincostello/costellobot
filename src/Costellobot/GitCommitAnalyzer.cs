@@ -458,49 +458,46 @@ public sealed partial class GitCommitAnalyzer(
             }
         }
 
-        if (dependencyTrust.Values.All((p) => p.Trusted))
+        foreach ((string dependency, var trust) in dependencyTrust.Where((p) => p.Value.Trusted))
         {
-            foreach ((string dependency, var trust) in dependencyTrust)
+            var registry = _registries.FirstOrDefault((p) => p.Ecosystem == ecosystem);
+
+            if (registry is null)
             {
-                var registry = _registries.FirstOrDefault((p) => p.Ecosystem == ecosystem);
+                continue;
+            }
 
-                if (registry is null)
-                {
-                    continue;
-                }
+            var update = dependencies.FirstOrDefault((p) => string.Equals(p.Name, dependency, StringComparison.OrdinalIgnoreCase));
 
-                var update = dependencies.FirstOrDefault((p) => string.Equals(p.Name, dependency, StringComparison.OrdinalIgnoreCase));
+            if (update == default || update.Version is null || update.Previous is null)
+            {
+                continue;
+            }
 
-                if (update == default || update.Version is null || update.Previous is null)
-                {
-                    continue;
-                }
+            var wasAttested = await registry.GetPackageAttestationAsync(
+                repository,
+                dependency,
+                update.Previous,
+                cancellationToken);
 
-                var wasAttested = await registry.GetPackageAttestationAsync(
+            if (wasAttested is true)
+            {
+                var isAttested = await registry.GetPackageAttestationAsync(
                     repository,
                     dependency,
-                    update.Previous,
+                    update.Version,
                     cancellationToken);
 
-                if (wasAttested is true)
+                if (isAttested is not true)
                 {
-                    var isAttested = await registry.GetPackageAttestationAsync(
-                        repository,
-                        dependency,
-                        update.Version,
-                        cancellationToken);
+                    // Revoke trust if any dependencies lost their attestation
+                    Log.PackageIsNoLongerAttested(logger, dependency, update.Previous, update.Version, ecosystem);
+                    dependencyTrust[dependency] = (false, update.Version);
 
-                    if (isAttested is not true)
+                    if (stopAfterFirstUntrustedDependency)
                     {
-                        // Revoke trust if any dependencies lost their attestation
-                        Log.PackageIsNoLongerAttested(logger, dependency, update.Previous, update.Version, ecosystem);
-                        dependencyTrust[dependency] = (false, update.Version);
-
-                        if (stopAfterFirstUntrustedDependency)
-                        {
-                            // We only care if all dependencies are trusted, so stop looking on the first failure
-                            break;
-                        }
+                        // We only care if all dependencies are trusted, so stop looking on the first failure
+                        break;
                     }
                 }
             }
