@@ -51,7 +51,9 @@ public static class GitSubmodulePackageRegistryTests
             InstallationId = GitHubFixtures.InstallationId,
         };
 
-        var target = new GitSubmodulePackageRegistry(context);
+        using var cache = new ApplicationCache();
+
+        var target = new GitSubmodulePackageRegistry(context, cache);
 
         // Act
         var actual = await target.GetPackageOwnersAsync(

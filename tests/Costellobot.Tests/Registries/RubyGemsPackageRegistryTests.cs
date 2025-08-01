@@ -23,7 +23,9 @@ public class RubyGemsPackageRegistryTests
         using var client = options.CreateHttpClient();
         client.BaseAddress = new Uri("https://rubygems.org");
 
-        var target = new RubyGemsPackageRegistry(client);
+        using var cache = new ApplicationCache();
+
+        var target = new RubyGemsPackageRegistry(client, cache);
 
         // Act
         var actual = await target.GetPackageOwnersAsync(

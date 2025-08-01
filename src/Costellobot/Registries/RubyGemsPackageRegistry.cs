@@ -4,11 +4,17 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed partial class RubyGemsPackageRegistry(HttpClient client) : PackageRegistry(client)
+public sealed partial class RubyGemsPackageRegistry(
+    HttpClient client,
+    HybridCache cache) : PackageRegistry(client)
 {
+    private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromHours(1) };
+    private static readonly string[] CacheTags = ["all", "ruby-gems"];
+
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.Ruby;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
@@ -22,16 +28,23 @@ public sealed partial class RubyGemsPackageRegistry(HttpClient client) : Package
         // https://guides.rubygems.org/rubygems-org-api/#owner-methods
         var uri = new Uri($"api/v1/gems/{escapedId}/owners.json", UriKind.Relative);
 
-        Owner[]? owners;
-
-        try
-        {
-            owners = await Client.GetFromJsonAsync(uri, RubyGemsJsonSerializerContext.Default.OwnerArray, cancellationToken);
-        }
-        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound)
-        {
-            owners = null;
-        }
+        Owner[]? owners = await cache.GetOrCreateAsync(
+            $"ruby-gems:{id}",
+            (Client, uri),
+            static async (context, token) =>
+            {
+                try
+                {
+                    return await context.Client.GetFromJsonAsync(context.uri, RubyGemsJsonSerializerContext.Default.OwnerArray, token);
+                }
+                catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+            },
+            CacheEntryOptions,
+            CacheTags,
+            cancellationToken);
 
         if (owners?.Length > 0)
         {
