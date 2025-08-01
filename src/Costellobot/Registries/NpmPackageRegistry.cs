@@ -23,7 +23,7 @@ public sealed partial class NpmPackageRegistry(
         string version,
         CancellationToken cancellationToken)
     {
-        repository.ToString();
+        ArgumentNullException.ThrowIfNull(repository);
 
         Package? package = await GetPackageAsync(id, version, cancellationToken);
 
