@@ -17,8 +17,46 @@ public sealed partial class NpmPackageRegistry(
 
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.Npm;
 
+    public async Task<bool?> GetPackageAttestationAsync(
+        RepositoryId repository,
+        string id,
+        string version,
+        CancellationToken cancellationToken)
+    {
+        repository.ToString();
+
+        Package? package = await GetPackageAsync(id, version, cancellationToken);
+
+        if (package is null ||
+            !string.Equals(package.Name, id, StringComparison.Ordinal) ||
+            !string.Equals(package.Version, version, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        return package.Distribution?.Attestations?.Provenance?.PredicateType == "https://slsa.dev/provenance/v1";
+    }
+
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         RepositoryId repository,
+        string id,
+        string version,
+        CancellationToken cancellationToken)
+    {
+        Package? package = await GetPackageAsync(id, version, cancellationToken);
+
+        if (package?.User?.Name is { } name &&
+            !string.IsNullOrWhiteSpace(name) &&
+            string.Equals(package.Name, id, StringComparison.Ordinal) &&
+            string.Equals(package.Version, version, StringComparison.Ordinal))
+        {
+            return [name];
+        }
+
+        return [];
+    }
+
+    private async Task<Package?> GetPackageAsync(
         string id,
         string version,
         CancellationToken cancellationToken)
@@ -29,7 +67,7 @@ public sealed partial class NpmPackageRegistry(
         // https://github.com/npm/registry/blob/main/docs/responses/package-metadata.md#package-metadata
         var uri = new Uri($"{escapedId}/{escapedVersion}", UriKind.Relative);
 
-        Package? package = await cache.GetOrCreateAsync(
+        return await cache.GetOrCreateAsync(
             $"{id}@{version}",
             async (token) =>
             {
@@ -46,16 +84,6 @@ public sealed partial class NpmPackageRegistry(
             CacheTags,
             cancellationToken);
 
-        if (package?.User?.Name is { } name &&
-            !string.IsNullOrWhiteSpace(name) &&
-            string.Equals(package.Name, id, StringComparison.Ordinal) &&
-            string.Equals(package.Version, version, StringComparison.Ordinal))
-        {
-            return [name];
-        }
-
-        return [];
-
         static bool IsNotFound(HttpRequestException exception) =>
             exception.StatusCode switch
             {
@@ -67,6 +95,9 @@ public sealed partial class NpmPackageRegistry(
 
     private sealed class Package
     {
+        [JsonPropertyName("dist")]
+        public Distribution? Distribution { get; set; }
+
         [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
 
@@ -75,6 +106,27 @@ public sealed partial class NpmPackageRegistry(
 
         [JsonPropertyName("_npmUser")]
         public User? User { get; set; }
+    }
+
+    private sealed class Attestations
+    {
+        [JsonPropertyName("url")]
+        public string Url { get; set; } = string.Empty;
+
+        [JsonPropertyName("provenance")]
+        public Provenance? Provenance { get; set; }
+    }
+
+    private sealed class Distribution
+    {
+        [JsonPropertyName("attestations")]
+        public Attestations? Attestations { get; set; }
+    }
+
+    private sealed class Provenance
+    {
+        [JsonPropertyName("predicateType")]
+        public string PredicateType { get; set; } = string.Empty;
     }
 
     private sealed class User

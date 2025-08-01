@@ -457,6 +457,255 @@
       }
     },
     {
+      "comment": "The package for eslint-config-prettier v10.1.3",
+      "uri": "https://registry.npmjs.org/eslint-config-prettier/10.1.3",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "name": "eslint-config-prettier",
+        "version": "10.1.3",
+        "keywords": [ "eslint", "eslintconfig", "eslint-config", "eslint-prettier", "prettier" ],
+        "author": { "name": "Simon Lydell" },
+        "license": "MIT",
+        "_id": "eslint-config-prettier@10.1.3",
+        "maintainers": [
+          {
+            "name": "lydell",
+            "email": "simon.lydell@gmail.com"
+          },
+          {
+            "name": "thorn0",
+            "email": "georgii.dolzhykov@gmail.com"
+          },
+          {
+            "name": "jounqin",
+            "email": "admin@1stg.me"
+          }
+        ],
+        "homepage": "https://github.com/prettier/eslint-config-prettier#readme",
+        "bugs": { "url": "https://github.com/prettier/eslint-config-prettier/issues" },
+        "bin": { "eslint-config-prettier": "bin/cli.js" },
+        "dist": {
+          "shasum": "b53b626e5fae39aa2a442a929488c35acec53c96",
+          "tarball": "https://registry.npmjs.org/eslint-config-prettier/-/eslint-config-prettier-10.1.3.tgz",
+          "fileCount": 11,
+          "integrity": "sha512-vDo4d9yQE+cS2tdIT4J02H/16veRvkHgiLDRpej+WL67oCfbOb97itZXn8wMPJ/GsiEBVjrjs//AVNw2Cp1EcA==",
+          "signatures": [
+            {
+              "sig": "MEYCIQD3HSVz65F0EWEDpIC5+EwCd0vh62Ct9woD6qfiL4OpYwIhAKdBdN4mT1LX4OKkv/s4POp1m0OF36Gt85esqFNgd5LL",
+              "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+            }
+          ],
+          "unpackedSize": 58737
+        },
+        "main": "index.js",
+        "type": "commonjs",
+        "types": "index.d.ts",
+        "exports": {
+          ".": {
+            "types": "./index.d.ts",
+            "default": "./index.js"
+          },
+          "./flat": {
+            "types": "./flat.d.ts",
+            "default": "./flat.js"
+          },
+          "./prettier": {
+            "types": "./prettier.d.ts",
+            "default": "./prettier.js"
+          },
+          "./package.json": "./package.json"
+        },
+        "gitHead": "cdc4a5c7e39e7f2d5760c60ea39cecb028fb34dc",
+        "_npmUser": {
+          "name": "jounqin",
+          "email": "admin@1stg.me"
+        },
+        "repository": {
+          "url": "git+https://github.com/prettier/eslint-config-prettier.git",
+          "type": "git"
+        },
+        "_npmVersion": "10.9.2",
+        "description": "Turns off all rules that are unnecessary or might conflict with Prettier.",
+        "directories": {},
+        "_nodeVersion": "22.15.0",
+        "_hasShrinkwrap": false,
+        "peerDependencies": { "eslint": ">=7.0.0" },
+        "_npmOperationalInternal": {
+          "tmp": "tmp/eslint-config-prettier_10.1.3_1746599819498_0.22733859916941368",
+          "host": "s3://npm-registry-packages-npm-production"
+        }
+      }
+    },
+    {
+      "comment": "The package for eslint-config-prettier v10.1.8",
+      "uri": "https://registry.npmjs.org/eslint-config-prettier/10.1.8",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "name": "eslint-config-prettier",
+        "version": "10.1.8",
+        "keywords": [ "eslint", "eslintconfig", "eslint-config", "eslint-prettier", "prettier" ],
+        "author": { "name": "Simon Lydell" },
+        "license": "MIT",
+        "_id": "eslint-config-prettier@10.1.8",
+        "maintainers": [
+          {
+            "name": "jounqin",
+            "email": "admin@1stg.me"
+          },
+          {
+            "name": "lydell",
+            "email": "simon.lydell@gmail.com"
+          },
+          {
+            "name": "thorn0",
+            "email": "georgii.dolzhykov@gmail.com"
+          }
+        ],
+        "homepage": "https://github.com/prettier/eslint-config-prettier#readme",
+        "bugs": { "url": "https://github.com/prettier/eslint-config-prettier/issues" },
+        "bin": { "eslint-config-prettier": "bin/cli.js" },
+        "dist": {
+          "shasum": "15734ce4af8c2778cc32f0b01b37b0b5cd1ecb97",
+          "tarball": "https://registry.npmjs.org/eslint-config-prettier/-/eslint-config-prettier-10.1.8.tgz",
+          "fileCount": 11,
+          "integrity": "sha512-82GZUjRS0p/jganf6q1rEO25VSoHH0hKPCTrgillPjdI/3bgBhAE1QzHrHTizjpRvy6pGAvKjDJtk2pF9NDq8w==",
+          "signatures": [
+            {
+              "sig": "MEYCIQD9EuOP+1zjg0YQuwDmmgFte/IM76XVawVfX0pBqnxvawIhALW1gE/Lcp65mO3qAMHnbS2JjZ0PoeTBxPw1NlcJ36Wh",
+              "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+            }
+          ],
+          "attestations": {
+            "url": "https://registry.npmjs.org/-/npm/v1/attestations/eslint-config-prettier@10.1.8",
+            "provenance": { "predicateType": "https://slsa.dev/provenance/v1" }
+          },
+          "unpackedSize": 59021
+        },
+        "main": "index.js",
+        "type": "commonjs",
+        "types": "index.d.ts",
+        "exports": {
+          ".": {
+            "types": "./index.d.ts",
+            "default": "./index.js"
+          },
+          "./flat": {
+            "types": "./flat.d.ts",
+            "default": "./flat.js"
+          },
+          "./prettier": {
+            "types": "./prettier.d.ts",
+            "default": "./prettier.js"
+          },
+          "./package.json": "./package.json"
+        },
+        "funding": "https://opencollective.com/eslint-config-prettier",
+        "gitHead": "9b0b0a47ec28a7a83cf65e8436a8776910379385",
+        "_npmUser": {
+          "name": "jounqin",
+          "email": "admin@1stg.me"
+        },
+        "repository": {
+          "url": "git+https://github.com/prettier/eslint-config-prettier.git",
+          "type": "git"
+        },
+        "_npmVersion": "10.9.2",
+        "description": "Turns off all rules that are unnecessary or might conflict with Prettier.",
+        "directories": {},
+        "_nodeVersion": "22.17.0",
+        "_hasShrinkwrap": false,
+        "peerDependencies": { "eslint": ">=7.0.0" },
+        "_npmOperationalInternal": {
+          "tmp": "tmp/eslint-config-prettier_10.1.8_1752864008046_0.9485717851502893",
+          "host": "s3://npm-registry-packages-npm-production"
+        }
+      }
+    },
+    {
+      "comment": "The package for eslint-config-prettier v10.1.9",
+      "uri": "https://registry.npmjs.org/eslint-config-prettier/10.1.9",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "name": "eslint-config-prettier",
+        "version": "10.1.9",
+        "keywords": [ "eslint", "eslintconfig", "eslint-config", "eslint-prettier", "prettier" ],
+        "author": { "name": "Simon Lydell" },
+        "license": "MIT",
+        "_id": "eslint-config-prettier@10.1.9",
+        "maintainers": [
+          {
+            "name": "jounqin",
+            "email": "admin@1stg.me"
+          },
+          {
+            "name": "lydell",
+            "email": "simon.lydell@gmail.com"
+          },
+          {
+            "name": "thorn0",
+            "email": "georgii.dolzhykov@gmail.com"
+          }
+        ],
+        "homepage": "https://github.com/prettier/eslint-config-prettier#readme",
+        "bugs": { "url": "https://github.com/prettier/eslint-config-prettier/issues" },
+        "bin": { "eslint-config-prettier": "bin/cli.js" },
+        "dist": {
+          "shasum": "15734ce4af8c2778cc32f0b01b37b0b5cd1ecb97",
+          "tarball": "https://registry.npmjs.org/eslint-config-prettier/-/eslint-config-prettier-10.1.9.tgz",
+          "fileCount": 11,
+          "integrity": "sha512-82GZUjRS0p/jganf6q1rEO25VSoHH0hKPCTrgillPjdI/3bgBhAE1QzHrHTizjpRvy6pGAvKjDJtk2pF9NDq8w==",
+          "signatures": [
+            {
+              "sig": "MEYCIQD9EuOP+1zjg0YQuwDmmgFte/IM76XVawVfX0pBqnxvawIhALW1gE/Lcp65mO3qAMHnbS2JjZ0PoeTBxPw1NlcJ36Wh",
+              "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+            }
+          ],
+          "unpackedSize": 59021
+        },
+        "main": "index.js",
+        "type": "commonjs",
+        "types": "index.d.ts",
+        "exports": {
+          ".": {
+            "types": "./index.d.ts",
+            "default": "./index.js"
+          },
+          "./flat": {
+            "types": "./flat.d.ts",
+            "default": "./flat.js"
+          },
+          "./prettier": {
+            "types": "./prettier.d.ts",
+            "default": "./prettier.js"
+          },
+          "./package.json": "./package.json"
+        },
+        "funding": "https://opencollective.com/eslint-config-prettier",
+        "gitHead": "9b0b0a47ec28a7a83cf65e8436a8776910379385",
+        "_npmUser": {
+          "name": "jounqin",
+          "email": "admin@1stg.me"
+        },
+        "repository": {
+          "url": "git+https://github.com/prettier/eslint-config-prettier.git",
+          "type": "git"
+        },
+        "_npmVersion": "10.9.2",
+        "description": "Turns off all rules that are unnecessary or might conflict with Prettier.",
+        "directories": {},
+        "_nodeVersion": "22.17.0",
+        "_hasShrinkwrap": false,
+        "peerDependencies": { "eslint": ">=7.0.0" },
+        "_npmOperationalInternal": {
+          "tmp": "tmp/eslint-config-prettier_10.1.8_1752864008046_0.9485717851502893",
+          "host": "s3://npm-registry-packages-npm-production"
+        }
+      }
+    },
+    {
       "comment": "A package that does not exist",
       "uri": "https://registry.npmjs.org/foo/0.0.0",
       "method": "GET",
