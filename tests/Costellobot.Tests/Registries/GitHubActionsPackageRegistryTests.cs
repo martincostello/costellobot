@@ -55,7 +55,9 @@ public static class GitHubActionsPackageRegistryTests
             InstallationId = GitHubFixtures.InstallationId,
         };
 
-        var target = new GitHubActionsPackageRegistry(context);
+        using var cache = new ApplicationCache();
+
+        var target = new GitHubActionsPackageRegistry(context, cache);
 
         // Act
         var actual = await target.GetPackageOwnersAsync(

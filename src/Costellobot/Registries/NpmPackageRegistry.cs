@@ -4,11 +4,17 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed partial class NpmPackageRegistry(HttpClient client) : PackageRegistry(client)
+public sealed partial class NpmPackageRegistry(
+    HttpClient client,
+    HybridCache cache) : PackageRegistry(client)
 {
+    private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromHours(1) };
+    private static readonly string[] CacheTags = ["all", "npm"];
+
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.Npm;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
@@ -23,16 +29,22 @@ public sealed partial class NpmPackageRegistry(HttpClient client) : PackageRegis
         // https://github.com/npm/registry/blob/main/docs/responses/package-metadata.md#package-metadata
         var uri = new Uri($"{escapedId}/{escapedVersion}", UriKind.Relative);
 
-        Package? package;
-
-        try
-        {
-            package = await Client.GetFromJsonAsync(uri, NpmJsonSerializerContext.Default.Package, cancellationToken);
-        }
-        catch (HttpRequestException ex) when (IsNotFound(ex))
-        {
-            package = null;
-        }
+        Package? package = await cache.GetOrCreateAsync(
+            $"{id}@{version}",
+            async (token) =>
+            {
+                try
+                {
+                    return await Client.GetFromJsonAsync(uri, NpmJsonSerializerContext.Default.Package, token);
+                }
+                catch (HttpRequestException ex) when (IsNotFound(ex))
+                {
+                    return null;
+                }
+            },
+            CacheEntryOptions,
+            CacheTags,
+            cancellationToken);
 
         if (package?.User?.Name is { } name &&
             !string.IsNullOrWhiteSpace(name) &&

@@ -1,13 +1,18 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using Microsoft.Extensions.Caching.Hybrid;
 using Octokit;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed class GitHubActionsPackageRegistry(GitHubWebhookContext context)
-    : GitHubPackageRegistry(context)
+public sealed class GitHubActionsPackageRegistry(
+    GitHubWebhookContext context,
+    HybridCache cache) : GitHubPackageRegistry(context)
 {
+    private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromHours(1) };
+    private static readonly string[] CacheTags = ["all", "github-actions"];
+
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.GitHubActions;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
@@ -20,8 +25,8 @@ public sealed class GitHubActionsPackageRegistry(GitHubWebhookContext context)
 
         if (parts.Length == 2)
         {
-            string actionOwner = parts[0];
-            string actionName = parts[1];
+            string owner = parts[0];
+            string name = parts[1];
 
             // GitHub Actions tags that are versions are usually prefixed with
             // a 'v' but the version extracted from the commit message will just
@@ -35,16 +40,16 @@ public sealed class GitHubActionsPackageRegistry(GitHubWebhookContext context)
 
             foreach (var reference in refs)
             {
-                if (await ExistsAsync(() => RestClient.Git.Reference.Get(actionOwner, actionName, $"tags/{reference}")))
+                if (await CachedExistsAsync($"{owner}/{name}@ref:{reference}", () => RestClient.Git.Reference.Get(owner, name, $"tags/{reference}")))
                 {
-                    return [actionOwner];
+                    return [owner];
                 }
             }
 
             // If we didn't find the tag(s), maybe it's a sha to a specific commit
-            if (await ExistsAsync(() => RestClient.Git.Commit.Get(actionOwner, actionName, version)))
+            if (await CachedExistsAsync($"{owner}/{name}@commit:{version}", () => RestClient.Git.Commit.Get(owner, name, version)))
             {
-                return [actionOwner];
+                return [owner];
             }
         }
 
@@ -61,6 +66,16 @@ public sealed class GitHubActionsPackageRegistry(GitHubWebhookContext context)
             {
                 return false;
             }
+        }
+
+        async Task<bool> CachedExistsAsync<T>(string key, Func<Task<T>> resource)
+        {
+            return await cache.GetOrCreateAsync<bool>(
+                key,
+                async (_) => await ExistsAsync<T>(resource),
+                CacheEntryOptions,
+                CacheTags,
+                cancellationToken);
         }
     }
 }

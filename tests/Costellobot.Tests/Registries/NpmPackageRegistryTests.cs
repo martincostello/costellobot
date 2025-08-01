@@ -25,7 +25,9 @@ public static class NpmPackageRegistryTests
         using var client = options.CreateHttpClient();
         client.BaseAddress = new Uri("https://registry.npmjs.org");
 
-        var target = new NpmPackageRegistry(client);
+        using var cache = new ApplicationCache();
+
+        var target = new NpmPackageRegistry(client, cache);
 
         // Act
         var actual = await target.GetPackageOwnersAsync(
