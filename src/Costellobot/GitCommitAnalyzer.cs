@@ -12,7 +12,7 @@ using NuGet.Versioning;
 using Octokit;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using DependencyUpdate = (string Name, string? Version, string? UpdateType);
+using DependencyUpdate = (string Name, string? Version, string? UpdateType, string? Previous);
 
 namespace MartinCostello.Costellobot;
 
@@ -231,7 +231,7 @@ public sealed partial class GitCommitAnalyzer(
                 {
                     if (dependency?.DependencyName is { Length: > 0 } name)
                     {
-                        updates.Add((name, dependency.DependencyVersion, dependency.UpdateType));
+                        updates.Add((name, dependency.DependencyVersion, dependency.UpdateType, null));
                     }
                 }
             }
@@ -266,7 +266,7 @@ public sealed partial class GitCommitAnalyzer(
 
                         string? updateType = GetUpdateType(from, to);
 
-                        updates.Add((name, to, updateType));
+                        updates.Add((name, to, updateType, from));
                     }
                 }
             }
@@ -358,7 +358,7 @@ public sealed partial class GitCommitAnalyzer(
             ecosystem is DependencyEcosystem.Docker &&
             GitDiffParser.TryParseUpdatedPackages(diff, out var updates))
         {
-            dependencies = [.. updates.Select((p) => new DependencyUpdate(p.Key, p.Value.To, GetUpdateType(p.Value.From, p.Value.To)))];
+            dependencies = [.. updates.Select((p) => new DependencyUpdate(p.Key, p.Value.To, GetUpdateType(p.Value.From, p.Value.To), p.Value.From))];
         }
 
         if (dependencies.Count < 1)
@@ -390,7 +390,7 @@ public sealed partial class GitCommitAnalyzer(
         var dependenciesToIgnore = await GetIgnoredDependenciesAsync(repository, reference, ecosystem);
         var ignoredDependencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach ((string dependency, string? version, string? updateType) in dependencies)
+        foreach ((string dependency, string? version, string? updateType, _) in dependencies)
         {
             bool ignored = dependenciesToIgnore
                 .Any((p) =>
@@ -454,6 +454,49 @@ public sealed partial class GitCommitAnalyzer(
                 {
                     // We only care if all dependencies are trusted, so stop looking on the first failure
                     break;
+                }
+            }
+        }
+
+        if (dependencyTrust.Values.All((p) => p.Trusted))
+        {
+            foreach ((string dependency, var trust) in dependencyTrust)
+            {
+                var registry = _registries.FirstOrDefault((p) => p.Ecosystem == ecosystem);
+
+                if (registry is null)
+                {
+                    continue;
+                }
+
+                var update = dependencies.FirstOrDefault((p) => string.Equals(p.Name, dependency, StringComparison.OrdinalIgnoreCase));
+
+                if (update == default || update.Version is null || update.Previous is null)
+                {
+                    continue;
+                }
+
+                var wasAttested = await registry.GetPackageAttestationAsync(
+                    repository,
+                    dependency,
+                    update.Previous,
+                    cancellationToken);
+
+                if (wasAttested is true)
+                {
+                    var isAttested = await registry.GetPackageAttestationAsync(
+                        repository,
+                        dependency,
+                        update.Version,
+                        cancellationToken);
+
+                    if (isAttested is not true)
+                    {
+                        // Revoke trust if any dependencies lost their attestation
+                        Log.PackageIsNoLongerAttested(logger, dependency, update.Previous, update.Version, ecosystem);
+                        dependencyTrust[dependency] = (false, update.Version);
+                        break;
+                    }
                 }
             }
         }
@@ -782,6 +825,17 @@ public sealed partial class GitCommitAnalyzer(
             string packageVersion,
             DependencyEcosystem ecosystem,
             Exception exception);
+
+        [LoggerMessage(
+            EventId = 14,
+            Level = LogLevel.Warning,
+            Message = "Package {PackageId} version {PreviousVersion} from the {Ecosystem} ecosystem was attested, but version {UpdatedVersion} is not.")]
+        public static partial void PackageIsNoLongerAttested(
+            ILogger logger,
+            string packageId,
+            string previousVersion,
+            string updatedVersion,
+            DependencyEcosystem ecosystem);
     }
 
     private sealed class DependabotConfig
