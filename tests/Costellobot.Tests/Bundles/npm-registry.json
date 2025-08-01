@@ -700,7 +700,7 @@
         "_hasShrinkwrap": false,
         "peerDependencies": { "eslint": ">=7.0.0" },
         "_npmOperationalInternal": {
-          "tmp": "tmp/eslint-config-prettier_10.1.8_1752864008046_0.9485717851502893",
+          "tmp": "tmp/eslint-config-prettier_10.1.9_1752864008046_0.9485717851502893",
           "host": "s3://npm-registry-packages-npm-production"
         }
       }
