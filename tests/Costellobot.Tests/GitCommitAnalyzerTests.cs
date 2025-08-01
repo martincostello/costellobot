@@ -2631,6 +2631,94 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         trust.Count.ShouldBe(1);
     }
 
+    [Theory]
+    [InlineData(null, null, true)]
+    [InlineData(null, false, true)]
+    [InlineData(null, true, true)]
+    [InlineData(false, null, true)]
+    [InlineData(false, false, true)]
+    [InlineData(false, true, true)]
+    [InlineData(true, null, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, true)]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Npm_Package_Considering_Attestation(
+        bool? wasAttested,
+        bool? isAttested,
+        bool expected)
+    {
+        // Arrange
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/npm/eslint-config-prettier-10.x";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(DependencyEcosystem.Npm);
+
+        registry.GetPackageAttestationAsync(repository, "eslint-config-prettier", "10.1.8", CancellationToken)
+                .Returns(Task.FromResult(wasAttested));
+
+        registry.GetPackageAttestationAsync(repository, "eslint-config-prettier", "10.1.9", CancellationToken)
+                .Returns(Task.FromResult(isAttested));
+
+        registry.GetPackageOwnersAsync(repository, "eslint-config-prettier", "10.1.9", CancellationToken)
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["jounqin"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies =
+                [
+                    "^eslint-config-prettier$"
+                ],
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "ede67e4da2189277a6e280d76274ffa3079a2f66";
+        var commitMessage = """
+                            Bump dependency eslint-config-prettier to v10.1.9
+                            | datasource | package                | from   | to     |
+                            | ---------- | ---------------------- | ------ | ------ |
+                            | npm        | eslint-config-prettier | 10.1.8 | 10.1.9 |
+
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBe(expected);
+
+        // Act
+        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        ecosystem.ShouldBe(DependencyEcosystem.Npm);
+
+        trust.ShouldContainKeyAndValue("eslint-config-prettier", (expected, "10.1.9"));
+        trust.Count.ShouldBe(1);
+    }
+
     private static GitCommitAnalyzer CreateTarget(
         IServiceProvider serviceProvider,
         WebhookOptions? options = null,
