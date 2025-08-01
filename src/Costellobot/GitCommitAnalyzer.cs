@@ -495,7 +495,12 @@ public sealed partial class GitCommitAnalyzer(
                         // Revoke trust if any dependencies lost their attestation
                         Log.PackageIsNoLongerAttested(logger, dependency, update.Previous, update.Version, ecosystem);
                         dependencyTrust[dependency] = (false, update.Version);
-                        break;
+
+                        if (stopAfterFirstUntrustedDependency)
+                        {
+                            // We only care if all dependencies are trusted, so stop looking on the first failure
+                            break;
+                        }
                     }
                 }
             }
