@@ -226,7 +226,7 @@ public static class GitHubExtensions
         }
     }
 
-    private static Connection CreateConnection<T>(this IServiceProvider provider, object key)
+    private static Connection CreateConnection<T>(this IServiceProvider provider, object? key)
         where T : ICredentialStore
     {
         var baseAddress = GetGitHubUri(provider);
@@ -242,7 +242,7 @@ public static class GitHubExtensions
         return new Connection(UserAgent, baseAddress, credentialStore, httpClient, serializer);
     }
 
-    private static GitHubClientAdapter CreateClient<T>(this IServiceProvider provider, object key)
+    private static GitHubClientAdapter CreateClient<T>(this IServiceProvider provider, object? key)
         where T : ICredentialStore
     {
         var connection = provider.CreateConnection<T>(key);
