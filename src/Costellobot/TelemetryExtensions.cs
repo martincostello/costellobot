@@ -30,6 +30,7 @@ public static class TelemetryExtensions
                           .AddHttpClientInstrumentation()
                           .AddProcessInstrumentation()
                           .AddMeter(ApplicationTelemetry.ServiceName)
+                          .AddMeter("Polly")
                           .AddMeter("System.Runtime");
                })
                .WithTracing((builder) =>
