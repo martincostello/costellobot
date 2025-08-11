@@ -58,7 +58,7 @@ jobs:
 
         git checkout -b $BranchName
         git add $BankHolidaysJsonFileName
-        git commit -m "Update UK Bank Holidays`n`nUpdate UK bank holidays from ${BankHolidaysJsonUri}."
+        git commit -m "Update UK Bank Holidays`n`nUpdate UK bank holidays from ${BankHolidaysJsonUri}." -s
         git push -u origin $BranchName
 
         "updated-uk-bank-holidays=true" >> $env:GITHUB_OUTPUT
