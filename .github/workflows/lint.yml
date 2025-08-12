@@ -23,6 +23,8 @@ env:
   # renovate: datasource=github-releases depName=PSScriptAnalyzer packageName=PowerShell/PSScriptAnalyzer
   PSSCRIPTANALYZER_VERSION: '1.24.0'
   TERM: xterm
+  # renovate: datasource=github-releases depName=zizmor packageName=zizmorcore/zizmor
+  ZIZMOR_VERSION: '1.11.0'
 
 jobs:
   lint:
@@ -54,8 +56,7 @@ jobs:
       uses: zizmorcore/zizmor-action@972c1ee4fa5eec7b62704332a985ae8f4649431e # v0.1.2
       with:
         persona: pedantic
-        # renovate: datasource=github-releases depName=zizmor packageName=zizmorcore/zizmor
-        version: 'v1.11.0'
+        version: ${{ env.ZIZMOR_VERSION }}
 
     - name: Lint markdown
       uses: DavidAnson/markdownlint-cli2-action@992badcdf24e3b8eb7e87ff9287fe931bcb00c6e # v20.0.0
