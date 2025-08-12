@@ -53,7 +53,7 @@ jobs:
         args: -color
 
     - name: Lint workflows with zizmor
-      uses: zizmorcore/zizmor-action@972c1ee4fa5eec7b62704332a985ae8f4649431e # v0.1.2
+      uses: zizmorcore/zizmor-action@f52a838cfabf134edcbaa7c8b3677dde20045018 # v0.1.1
       with:
         persona: pedantic
         version: ${{ env.ZIZMOR_VERSION }}
