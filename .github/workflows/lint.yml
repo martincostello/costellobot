@@ -29,7 +29,9 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      actions: read
       contents: read
+      security-events: write
 
     steps:
 
@@ -43,10 +45,17 @@ jobs:
     - name: Add actionlint problem matcher
       run: echo "::add-matcher::.github/actionlint-matcher.json"
 
-    - name: Lint workflows
+    - name: Lint workflows with actionlint
       uses: docker://rhysd/actionlint:1.7.7@sha256:887a259a5a534f3c4f36cb02dca341673c6089431057242cdc931e9f133147e9
       with:
         args: -color
+
+    - name: Lint workflows with zizmor
+      uses: zizmorcore/zizmor-action@f52a838cfabf134edcbaa7c8b3677dde20045018 # v0.1.1
+      with:
+        persona: pedantic
+        # renovate: datasource=github-releases depName=zizmor packageName=zizmorcore/zizmor
+        version: 'v1.11.0'
 
     - name: Lint markdown
       uses: DavidAnson/markdownlint-cli2-action@992badcdf24e3b8eb7e87ff9287fe931bcb00c6e # v20.0.0
