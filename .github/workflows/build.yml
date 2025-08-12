@@ -220,7 +220,7 @@ jobs:
         !cancelled() &&
         steps.build.outcome == 'failure' &&
         github.event.repository.fork == false &&
-        !contains('["dependabot[bot]", "github-actions[bot]", "renovate[bot]"]', github.event.pull_request.user.login)
+        !contains(fromJSON('["dependabot[bot]", "github-actions[bot]", "renovate[bot]"]'), github.event.pull_request.user.login)
       env:
         AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.CRASH_DUMPS_STORAGE_CONNECTION_STRING }}
         # renovate: datasource=github-releases depName=PSCompression packageName=santisq/PSCompression
