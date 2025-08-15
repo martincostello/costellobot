@@ -2,15 +2,13 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.Caching.Hybrid;
-using Octokit;
 
 namespace MartinCostello.Costellobot.Registries;
 
 public sealed class GitHubActionsPackageRegistry(
     GitHubWebhookContext context,
-    HybridCache cache) : GitHubPackageRegistry(context)
+    HybridCache cache) : GitHubPackageRegistry(context, cache)
 {
-    private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromHours(1) };
     private static readonly string[] CacheTags = ["all", "github-actions"];
 
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.GitHubActions;
@@ -21,12 +19,12 @@ public sealed class GitHubActionsPackageRegistry(
         string version,
         CancellationToken cancellationToken)
     {
-        string[] parts = id.Split('/');
+        var slug = ParseRepository(id);
 
-        if (parts.Length == 2)
+        if (slug != default)
         {
-            string owner = parts[0];
-            string name = parts[1];
+            string owner = slug.Owner;
+            string name = slug.Name;
 
             // GitHub Actions tags that are versions are usually prefixed with
             // a 'v' but the version extracted from the commit message will just
@@ -55,25 +53,11 @@ public sealed class GitHubActionsPackageRegistry(
 
         return [];
 
-        static async Task<bool> ExistsAsync<T>(Func<Task<T>> resource)
-        {
-            try
-            {
-                _ = await resource();
-                return true;
-            }
-            catch (NotFoundException)
-            {
-                return false;
-            }
-        }
-
         async Task<bool> CachedExistsAsync<T>(string key, Func<Task<T>> resource)
         {
-            return await cache.GetOrCreateAsync<bool>(
+            return await base.CachedExistsAsync<T>(
                 key,
-                async (_) => await ExistsAsync<T>(resource),
-                CacheEntryOptions,
+                resource,
                 CacheTags,
                 cancellationToken);
         }
