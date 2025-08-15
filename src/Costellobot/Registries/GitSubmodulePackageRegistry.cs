@@ -8,10 +8,9 @@ namespace MartinCostello.Costellobot.Registries;
 
 public sealed class GitSubmodulePackageRegistry(
     GitHubWebhookContext context,
-    HybridCache cache) : GitHubPackageRegistry(context)
+    HybridCache cache) : GitHubPackageRegistry(context, cache)
 {
-    private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromHours(1) };
-    private static readonly string[] CacheTags = ["all", "github"];
+    private static readonly string[] CacheTags = ["all", "github-submodule"];
 
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.GitSubmodule;
 
@@ -21,7 +20,7 @@ public sealed class GitSubmodulePackageRegistry(
         string version,
         CancellationToken cancellationToken)
     {
-        IReadOnlyList<RepositoryContent> items = await cache.GetOrCreateAsync(
+        IReadOnlyList<RepositoryContent> items = await Cache.GetOrCreateAsync(
             $"git-submodule:{repository.Owner}/{repository.Name}:{id}",
             (RestClient, repository, id),
             static async (context, _) =>
