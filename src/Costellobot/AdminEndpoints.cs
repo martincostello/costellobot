@@ -344,6 +344,7 @@ public static class AdminEndpoints
                 [
                     DependencyEcosystem.Docker,
                     DependencyEcosystem.GitHubActions,
+                    DependencyEcosystem.GitHubRelease,
                     DependencyEcosystem.Npm,
                     DependencyEcosystem.NuGet,
                     DependencyEcosystem.Ruby,

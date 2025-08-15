@@ -221,9 +221,9 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                 {
                     [DependencyEcosystem.Docker] = ["devcontainers/dotnet"],
                     [DependencyEcosystem.GitHubActions] = ["actions"],
+                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
-                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Ruby] = ["tenderlove", "raggi", "chneukirchen", "ioquatix", "rafaelfranca", "eileencodes"],
                 },
             },
@@ -296,9 +296,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                 {
                     [DependencyEcosystem.Docker] = ["devcontainers/dotnet"],
                     [DependencyEcosystem.GitHubActions] = ["actions"],
+                    [DependencyEcosystem.GitHubRelease] = ["zizmorcore"],
+                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
-                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Ruby] = ["tenderlove", "raggi", "chneukirchen", "ioquatix", "rafaelfranca", "eileencodes"],
                 },
             },
@@ -348,9 +349,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                 {
                     [DependencyEcosystem.Docker] = ["mcr.microsoft.com"],
                     [DependencyEcosystem.GitHubActions] = ["actions"],
+                    [DependencyEcosystem.GitHubRelease] = ["github"],
+                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
-                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Ruby] = [],
                 },
             },
@@ -454,13 +456,14 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_If_No_Trusted_Publishers_For_Ecosystem()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var options = new WebhookOptions()
         {
             TrustedEntities = new()
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = [],
+                    [ecosystem] = [],
                 },
             },
         };
@@ -487,7 +490,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeFalse();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -496,7 +499,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("NodaTime", (false, null));
         trust.ShouldContainKeyAndValue("NodaTime.Testing", (false, null));
@@ -507,6 +510,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_If_Package_Registry_Lookup_Fails()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.GitHubActions;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -515,7 +519,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var registry = Substitute.For<IPackageRegistry>();
 
         registry.Ecosystem
-                .Returns(DependencyEcosystem.GitHubActions);
+                .Returns(ecosystem);
 
         registry.When((p) => p.GetPackageOwnersAsync(repository, "actions/checkout", "3", CancellationToken))
                 .Throw(new InvalidOperationException("Expected exception."));
@@ -527,9 +531,9 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
                     [DependencyEcosystem.GitHubActions] = ["actions"],
+                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
-                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                 },
             },
         };
@@ -554,7 +558,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeFalse();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -563,7 +567,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.GitHubActions);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("actions/checkout", (false, "3"));
         trust.Count.ShouldBe(1);
@@ -573,6 +577,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Multiple_Package_Updates()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -580,7 +585,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "OpenTelemetry.Instrumentation.AspNetCore", "1.0.0-rc9.12", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["OpenTelemetry"]));
@@ -595,9 +600,9 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
                     [DependencyEcosystem.GitHubActions] = ["actions"],
+                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft", "OpenTelemetry"],
-                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                 },
             },
         };
@@ -645,7 +650,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -654,7 +659,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("OpenTelemetry.Instrumentation.AspNetCore", (true, "1.0.0-rc9.12"));
         trust.ShouldContainKeyAndValue("OpenTelemetry.Instrumentation.Http", (true, "1.0.0-rc9.12"));
@@ -665,6 +670,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Grouped_Package_Update_For_One_Package()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -672,7 +678,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "xunit", "2.6.3", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
@@ -683,7 +689,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = ["dotnetfoundation", "xunit"],
+                    [ecosystem] = ["dotnetfoundation", "xunit"],
                 },
             },
         };
@@ -723,7 +729,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -732,7 +738,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("xunit", (true, "2.6.3"));
         trust.Count.ShouldBe(1);
@@ -742,6 +748,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Grouped_Package_Update_For_Two_Packages()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -749,7 +756,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "xunit", "2.6.3", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
@@ -763,7 +770,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = ["dotnetfoundation", "xunit"],
+                    [ecosystem] = ["dotnetfoundation", "xunit"],
                 },
             },
         };
@@ -814,7 +821,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -823,7 +830,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("xunit", (true, "2.6.3"));
         trust.ShouldContainKeyAndValue("xunit.runner.visualstudio", (true, "2.5.5"));
@@ -834,6 +841,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Grouped_Package_Update_For_Two_Packages_With_No_Release_Notes()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -841,7 +849,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "xunit", "2.9.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["dotnetfoundation", "xunit"]));
@@ -855,7 +863,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = ["dotnetfoundation", "xunit"],
+                    [ecosystem] = ["dotnetfoundation", "xunit"],
                 },
             },
         };
@@ -902,7 +910,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -911,7 +919,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("xunit", (true, "2.9.0"));
         trust.ShouldContainKeyAndValue("xunit.runner.visualstudio", (true, "2.8.2"));
@@ -922,6 +930,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Single_Package_Update()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -930,7 +939,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var registry = Substitute.For<IPackageRegistry>();
 
         registry.Ecosystem
-            .Returns(DependencyEcosystem.NuGet);
+            .Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "Microsoft.TypeScript.MSBuild", "4.9.5", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "TypeScriptTeam"]));
@@ -942,9 +951,9 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
                     [DependencyEcosystem.GitHubActions] = ["actions"],
+                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
-                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                 },
             },
         };
@@ -979,7 +988,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -988,7 +997,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("Microsoft.TypeScript.MSBuild", (true, "4.9.5"));
         trust.Count.ShouldBe(1);
@@ -998,6 +1007,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Multiple_Package_Update_Using_Update_DotNet_Sdk()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -1005,7 +1015,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "Microsoft.Extensions.Configuration.Binder", "7.0.4", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "aspnet"]));
@@ -1025,7 +1035,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = ["aspnet", "dotnetframework", "Microsoft"],
+                    [ecosystem] = ["aspnet", "dotnetframework", "Microsoft"],
                 },
             },
         };
@@ -1072,7 +1082,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -1081,7 +1091,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("Microsoft.Extensions.Configuration.Binder", (true, "7.0.4"));
         trust.ShouldContainKeyAndValue("Microsoft.Extensions.Http.Polly", (true, "7.0.5"));
@@ -1094,6 +1104,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Grouped_Package_Update_With_Only_Yaml_Frontmatter()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -1101,7 +1112,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "AWSSDK.SecurityToken", "3.7.300.118", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["awsdotnet"]));
@@ -1115,7 +1126,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = ["awsdotnet"],
+                    [ecosystem] = ["awsdotnet"],
                 },
             },
         };
@@ -1173,7 +1184,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -1182,7 +1193,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("AWSSDK.SecurityToken", (true, "3.7.300.118"));
         trust.ShouldContainKeyAndValue("AWSSDK.SimpleSystemsManagement", (true, "3.7.305.8"));
@@ -1193,6 +1204,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Grouped_Package_Update_With_Only_Yaml_Frontmatter_With_Versions()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -1200,7 +1212,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "AWSSDK.SecurityToken", "3.7.300.118", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["awsdotnet"]));
@@ -1214,7 +1226,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = ["awsdotnet"],
+                    [ecosystem] = ["awsdotnet"],
                 },
             },
         };
@@ -1257,7 +1269,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -1266,7 +1278,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("AWSSDK.SecurityToken", (true, "3.7.300.118"));
         trust.ShouldContainKeyAndValue("AWSSDK.SimpleSystemsManagement", (true, "3.7.305.8"));
@@ -1277,6 +1289,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Mix_Of_Trust_By_Name_And_Publisher()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -1284,7 +1297,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", "8.0.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["AzureAD", "Microsoft"]));
@@ -1296,7 +1309,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                 Dependencies = ["^AspNet.Security.OAuth\\..*$"],
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = ["Microsoft"],
+                    [ecosystem] = ["Microsoft"],
                 },
             },
         };
@@ -1384,7 +1397,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -1393,7 +1406,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.Amazon", (true, null));
         trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.Apple", (true, null));
@@ -1406,6 +1419,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Ignored_Packages_In_Dependabot_Configuration()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -1413,7 +1427,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", "8.0.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["AzureAD", "Microsoft"]));
@@ -1425,7 +1439,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                 Dependencies = ["^AspNet.Security.OAuth\\..*$"],
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = ["Microsoft"],
+                    [ecosystem] = ["Microsoft"],
                 },
             },
         };
@@ -1559,7 +1573,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeFalse();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -1568,7 +1582,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.Amazon", (true, null));
         trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.Apple", (true, null));
@@ -1590,6 +1604,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         bool expected)
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -1597,7 +1612,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", dependencyVersion, CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["AzureAD", "Microsoft"]));
@@ -1609,7 +1624,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                 Dependencies = ["^AspNet.Security.OAuth\\..*$"],
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = ["Microsoft"],
+                    [ecosystem] = ["Microsoft"],
                 },
             },
         };
@@ -1744,7 +1759,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBe(expected);
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -1753,7 +1768,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.Amazon", (true, null));
         trust.ShouldContainKeyAndValue("AspNet.Security.OAuth.Apple", (true, null));
@@ -1766,6 +1781,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Duplicated_Dependency_Names()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -1773,7 +1789,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "Microsoft.IdentityModel.JsonWebTokens", "8.0.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["AzureAD", "Microsoft"]));
@@ -1785,7 +1801,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                 Dependencies = ["^AspNet.Security.OAuth\\..*$", "^Microsoft.Extensions\\..*$"],
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = ["Microsoft"],
+                    [ecosystem] = ["Microsoft"],
                 },
             },
         };
@@ -1941,7 +1957,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeFalse();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -1950,7 +1966,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("Microsoft.Extensions.Configuration.Binder", (true, null));
         trust.ShouldContainKeyAndValue("Microsoft.Extensions.DependencyInjection", (true, null));
@@ -1964,6 +1980,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_DotNet_Monorepo()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -1971,7 +1988,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "Microsoft.AspNetCore.AzureAppServices.HostingStartup", "9.0.6", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["aspnet", "dotnetframework", "Microsoft"]));
@@ -1986,7 +2003,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                 Dependencies = ["^dotnet-sdk$"],
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = ["aspnet", "dotnetframework", "Microsoft"],
+                    [ecosystem] = ["aspnet", "dotnetframework", "Microsoft"],
                 },
             },
         };
@@ -2021,7 +2038,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -2030,7 +2047,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("dotnet-sdk", (true, "9.0.301"));
         trust.ShouldContainKeyAndValue("Microsoft.AspNetCore.AzureAppServices.HostingStartup", (true, "9.0.6"));
@@ -2042,6 +2059,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Git_Submodule_Dependency()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.GitSubmodule;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -2049,7 +2067,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.GitSubmodule);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "src/submodules/dependabot-helper", "aca93c2", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["https://github.com/martincostello"]));
@@ -2060,7 +2078,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
+                    [ecosystem] = ["https://github.com/martincostello"],
                 },
             },
         };
@@ -2093,7 +2111,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -2102,7 +2120,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.GitSubmodule);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("src/submodules/dependabot-helper", (true, "aca93c2"));
         trust.Count.ShouldBe(1);
@@ -2112,6 +2130,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_GitHub_Dependency()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.GitHubActions;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -2119,7 +2138,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.GitHubActions);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "github/codeql-action", "3.29.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["github"]));
@@ -2130,7 +2149,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.GitHubActions] = ["github"],
+                    [ecosystem] = ["github"],
                 },
             },
         };
@@ -2163,7 +2182,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -2172,7 +2191,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.GitHubActions);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("github/codeql-action", (true, "3.29.0"));
         trust.Count.ShouldBe(1);
@@ -2182,6 +2201,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Npm_Dependency()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.Npm;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -2189,7 +2209,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.Npm);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "@typescript-eslint/eslint-plugin", "8.34.0", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["bradzacher", "jameshenry"]));
@@ -2238,7 +2258,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -2247,7 +2267,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.Npm);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("@typescript-eslint/eslint-plugin", (true, "8.34.0"));
         trust.ShouldContainKeyAndValue("@typescript-eslint/parser", (true, "8.34.0"));
@@ -2258,6 +2278,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Untrusted_Npm_Dependency_For_Renovate()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.Npm;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -2265,7 +2286,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.Npm);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "@stylistic/eslint-plugin", "4.4.1", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["eslint-stylistic-bot"]));
@@ -2307,7 +2328,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeFalse();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -2316,7 +2337,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.Npm);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("@stylistic/eslint-plugin", (false, "4.4.1"));
         trust.Count.ShouldBe(1);
@@ -2326,6 +2347,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_NuGet_Dependency()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -2333,7 +2355,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.NuGet);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "Microsoft.NET.Test.Sdk", "17.14.1", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["Microsoft", "vstest"]));
@@ -2344,7 +2366,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
+                    [ecosystem] = ["aspnet", "Microsoft"],
                 },
             },
         };
@@ -2377,7 +2399,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -2386,7 +2408,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.NuGet);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("Microsoft.NET.Test.Sdk", (true, "17.14.1"));
         trust.Count.ShouldBe(1);
@@ -2396,6 +2418,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Digest_Update_For_Dockerfile()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.Docker;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -2403,7 +2426,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.Docker);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "mcr.microsoft.com/dotnet/sdk", "9.0.301-b768b444028d3c531de90a356836047e48658cd1e26ba07a539a6f1a052a35d9", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["mcr.microsoft.com"]));
@@ -2414,7 +2437,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.Docker] = ["mcr.microsoft.com"],
+                    [ecosystem] = ["mcr.microsoft.com"],
                 },
             },
         };
@@ -2455,7 +2478,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -2464,7 +2487,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.Docker);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("mcr.microsoft.com/dotnet/sdk", (true, "9.0.301-b768b444028d3c531de90a356836047e48658cd1e26ba07a539a6f1a052a35d9"));
         trust.Count.ShouldBe(1);
@@ -2474,6 +2497,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Digest_Update_For_Dockerfile_With_Latest_Tag()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.Docker;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -2481,7 +2505,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.Docker);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "mcr.microsoft.com/vscode/devcontainers/dotnet", "latest-b878b60a68aadab1a1d7e7ace12504073ce5a6ce568c785f54a9ef4b834e373f", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["mcr.microsoft.com"]));
@@ -2492,7 +2516,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.Docker] = ["mcr.microsoft.com"],
+                    [ecosystem] = ["mcr.microsoft.com"],
                 },
             },
         };
@@ -2535,7 +2559,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -2544,7 +2568,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.Docker);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("mcr.microsoft.com/vscode/devcontainers/dotnet", (true, "latest-b878b60a68aadab1a1d7e7ace12504073ce5a6ce568c785f54a9ef4b834e373f"));
         trust.Count.ShouldBe(1);
@@ -2554,6 +2578,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Digest_Update_For_Docker_Compose()
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.Docker;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -2561,7 +2586,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.Docker);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageOwnersAsync(repository, "mcr.microsoft.com/azure-sql-edge", "2.0.0-52605ea3251cbc4a7e03eccd458e775ae8a626a3afb4019bec66520a81e78170", CancellationToken)
                 .Returns(Task.FromResult<IReadOnlyList<string>>(["mcr.microsoft.com"]));
@@ -2572,7 +2597,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             {
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
-                    [DependencyEcosystem.Docker] = ["mcr.microsoft.com"],
+                    [ecosystem] = ["mcr.microsoft.com"],
                 },
             },
         };
@@ -2616,7 +2641,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBeTrue();
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -2625,7 +2650,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.Docker);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("mcr.microsoft.com/azure-sql-edge", (true, "2.0.0-52605ea3251cbc4a7e03eccd458e775ae8a626a3afb4019bec66520a81e78170"));
         trust.Count.ShouldBe(1);
@@ -2647,6 +2672,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         bool expected)
     {
         // Arrange
+        var ecosystem = DependencyEcosystem.Npm;
         var owner = CreateUser();
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
@@ -2654,7 +2680,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         var registry = Substitute.For<IPackageRegistry>();
 
-        registry.Ecosystem.Returns(DependencyEcosystem.Npm);
+        registry.Ecosystem.Returns(ecosystem);
 
         registry.GetPackageAttestationAsync(repository, "eslint-config-prettier", "10.1.8", CancellationToken)
                 .Returns(Task.FromResult(wasAttested));
@@ -2704,7 +2730,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actual.ShouldBe(expected);
 
         // Act
-        (var ecosystem, var trust) = await target.GetDependencyTrustAsync(
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
             repository,
             reference,
             sha,
@@ -2713,9 +2739,80 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             CancellationToken);
 
         // Assert
-        ecosystem.ShouldBe(DependencyEcosystem.Npm);
+        actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("eslint-config-prettier", (expected, "10.1.9"));
+        trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Git_Release_Dependency()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.GitHubRelease;
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/regex/zizmor-1.x";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(ecosystem);
+
+        registry.GetPackageOwnersAsync(repository, "zizmorcore/zizmor", "1.12.1", CancellationToken)
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["zizmorcore"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [ecosystem] = ["zizmorcore"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "b5f884fc009fd98bb690bd984cac3d6175092e87";
+        var commitMessage = @"""
+                            Bump dependency zizmor to v1.12.1
+                            | datasource      | package           | from    | to      |
+                            | --------------- | ----------------- | ------- | ------- |
+                            | github-releases | zizmorcore/zizmor | v1.12.0 | v1.12.1 |
+                            
+                            
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actualEcosystem.ShouldBe(ecosystem);
+
+        trust.ShouldContainKeyAndValue("zizmorcore/zizmor", (true, "1.12.1"));
         trust.Count.ShouldBe(1);
     }
 

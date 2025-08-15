@@ -13,4 +13,5 @@ public enum DependencyEcosystem
     NuGet,
     GitSubmodule,
     Ruby,
+    GitHubRelease,
 }
