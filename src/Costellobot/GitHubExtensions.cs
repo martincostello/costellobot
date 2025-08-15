@@ -149,6 +149,7 @@ public static class GitHubExtensions
 
         services.AddPackageRegistry<DockerPackageRegistry>("MicrosoftArtifactRegistry");
         services.AddPackageRegistry<GitHubActionsPackageRegistry>();
+        services.AddPackageRegistry<GitHubReleasePackageRegistry>();
         services.AddPackageRegistry<GitSubmodulePackageRegistry>();
         services.AddPackageRegistry<NpmPackageRegistry>("Npm");
         services.AddPackageRegistry<NuGetPackageRegistry>("NuGet");

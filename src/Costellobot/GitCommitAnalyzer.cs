@@ -306,16 +306,25 @@ public sealed partial class GitCommitAnalyzer(
             return DependencyEcosystem.Unknown;
         }
 
-        return parts[1] switch
+        var parsed = parts[1] switch
         {
             "bundler" => DependencyEcosystem.Ruby,
             "docker" or "dockerfile" or "docker-compose" => DependencyEcosystem.Docker,
             "github-actions" or "github_actions" => DependencyEcosystem.GitHubActions,
+            "github-releases" => DependencyEcosystem.GitHubRelease,
             "npm" or "npm_and_yarn" => DependencyEcosystem.Npm,
             "nuget" => DependencyEcosystem.NuGet,
             "git-submodules" or "submodules" => DependencyEcosystem.GitSubmodule,
             _ => DependencyEcosystem.Unsupported,
         };
+
+        if (parsed is DependencyEcosystem.Unsupported && parts[0] is "renovate" && parts[1] is "regex")
+        {
+            // Assume that renovate updates from regexes are for GitHub releases
+            parsed = DependencyEcosystem.GitHubRelease;
+        }
+
+        return parsed;
     }
 
     private static string? TryGetDependencyVersion(
