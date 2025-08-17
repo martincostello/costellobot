@@ -8,8 +8,8 @@ using MartinCostello.Costellobot.Infrastructure;
 
 namespace MartinCostello.Costellobot;
 
-[Collection<AppCollection>]
-public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
+[Collection<HttpServerCollection>]
+public sealed class ResourceTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<HttpServerFixture>(fixture, outputHelper)
 {
     [Theory]
     [InlineData("/bad-request.html", MediaTypeNames.Text.Html)]
