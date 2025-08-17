@@ -31,7 +31,7 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
     public async Task Can_Get_Resource_Unauthenticated(string requestUri, string contentType)
     {
         // Arrange
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
 
         // Act
         using var response = await client.GetAsync(requestUri, CancellationToken);
@@ -83,7 +83,7 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
     public async Task Cannot_Get_Resource_Unauthenticated(string requestUri)
     {
         // Arrange
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
 
         // Act
         using var response = await client.GetAsync(requestUri, CancellationToken);
@@ -174,7 +174,7 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
     public async Task Manifest_Is_Valid_Json()
     {
         // Arrange
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
         using var response = await client.GetAsync("/manifest.webmanifest", CancellationToken);
 
         // Assert
@@ -202,7 +202,7 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
     public async Task Error_Page_Returns_Correct_Status_Code(string requestUri, HttpStatusCode expected)
     {
         // Arrange
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
 
         // Act
         using var response = await client.GetAsync(requestUri, CancellationToken);
@@ -235,7 +235,7 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
             "X-XSS-Protection",
         ];
 
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
 
         // Act
         using var response = await client.GetAsync("/", CancellationToken);
@@ -257,7 +257,7 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
             "X-Powered-By",
         ];
 
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
 
         // Act
         using var response = await client.GetAsync("/", CancellationToken);
@@ -307,7 +307,7 @@ public sealed class ResourceTests(AppFixture fixture, ITestOutputHelper outputHe
         // Arrange
         HttpMethod[] methods = [HttpMethod.Get, HttpMethod.Head, HttpMethod.Post];
 
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
 
         foreach (var method in methods)
         {

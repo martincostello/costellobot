@@ -24,7 +24,7 @@ public sealed class HealthCheckTests(AppFixture fixture, ITestOutputHelper outpu
     public async Task Cannot_Get_Health_Resource_Unauthenticated(string requestUri)
     {
         // Arrange
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
 
         // Act
         using var response = await client.GetAsync(requestUri, CancellationToken);
@@ -39,7 +39,7 @@ public sealed class HealthCheckTests(AppFixture fixture, ITestOutputHelper outpu
     public async Task Cannot_Get_Health_Resource_Unauthenticated_With_Invalid_Token(string requestUri)
     {
         // Arrange
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
 
         client.DefaultRequestHeaders.Add("x-ms-auth-internal-token", "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=");
 
@@ -56,7 +56,7 @@ public sealed class HealthCheckTests(AppFixture fixture, ITestOutputHelper outpu
     public async Task Can_Get_Health_Resource_Unauthenticated_With_Token(string requestUri)
     {
         // Arrange
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
         client.DefaultRequestHeaders.Add("x-ms-auth-internal-token", "I3eGXFWsxHOxEhULepTolmX9jSd/rcSs9CAjao2DgGk=");
 
         // Act

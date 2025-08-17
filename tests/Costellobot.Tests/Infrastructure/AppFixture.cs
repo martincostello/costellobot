@@ -75,7 +75,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
         Func<HttpClient>? httpClientFactory = null,
         CancellationToken cancellationToken = default)
     {
-        using var httpClient = httpClientFactory?.Invoke() ?? CreateClient();
+        using var httpClient = httpClientFactory?.Invoke() ?? CreateHttpClientForApp();
 
         var tokens = await httpClient.GetFromJsonAsync<AntiforgeryTokens>(
             AntiforgeryTokenController.GetTokensUri,
