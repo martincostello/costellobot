@@ -119,7 +119,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
 
         using var anonymousCookieHandler = new CookieContainerHandler();
         anonymousCookieHandler.Container.Add(
-            Fixture.Server.BaseAddress,
+            Fixture.ServerUri,
             new Cookie(anonymousTokens.CookieName, anonymousTokens.CookieValue));
 
         using var anonymousClient = Fixture.CreateDefaultClient(redirectHandler, anonymousCookieHandler);
@@ -128,10 +128,10 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         var parameters = Array.Empty<KeyValuePair<string?, string?>>();
         using var content = new FormUrlEncodedContent(parameters);
 
-        using var response = await anonymousClient.PostAsync("/sign-in", content);
-        response.IsSuccessStatusCode.ShouldBeTrue();
+        using var response = await anonymousClient.PostAsync("/sign-in", content, CancellationToken);
+        response.IsSuccessStatusCode.ShouldBeTrue($"Sign in failed with HTTP {response.StatusCode}.");
 
-        var authenticatedTokens = await Fixture.GetAntiforgeryTokensAsync(() => anonymousClient);
+        var authenticatedTokens = await Fixture.GetAntiforgeryTokensAsync(() => anonymousClient, CancellationToken);
 
         var authenticatedCookieHandler = new CookieContainerHandler(anonymousCookieHandler.Container);
 
