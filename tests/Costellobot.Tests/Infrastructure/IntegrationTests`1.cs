@@ -125,8 +125,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         using var anonymousClient = Fixture.CreateDefaultClient(redirectHandler, anonymousCookieHandler);
         anonymousClient.DefaultRequestHeaders.Add(anonymousTokens.HeaderName, anonymousTokens.RequestToken);
 
-        var parameters = Array.Empty<KeyValuePair<string?, string?>>();
-        using var content = new FormUrlEncodedContent(parameters);
+        using var content = new FormUrlEncodedContent([]);
 
         using var response = await anonymousClient.PostAsync("/sign-in", content, CancellationToken);
         response.IsSuccessStatusCode.ShouldBeTrue($"Sign in failed with HTTP {response.StatusCode}.");
