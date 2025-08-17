@@ -9,8 +9,8 @@ using MartinCostello.Costellobot.Infrastructure;
 
 namespace MartinCostello.Costellobot;
 
-[Collection<AppCollection>]
-public sealed class HealthCheckTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
+[Collection<HttpServerCollection>]
+public sealed class HealthCheckTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<HttpServerFixture>(fixture, outputHelper)
 {
     public static TheoryData<string> HealthCheckUrls() =>
     [
