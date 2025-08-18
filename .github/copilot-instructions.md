@@ -241,7 +241,9 @@ services.AddSingleton<SomeService>();
 ```
 
 ### Configuration Pattern
+
 Configuration uses strongly-typed options classes with `IOptionsMonitor<T>`:
+
 ```csharp
 public sealed class SomeOptions
 {
