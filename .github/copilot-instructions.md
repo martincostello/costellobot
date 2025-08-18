@@ -188,7 +188,7 @@ The application follows a clean architecture pattern:
 
 If changing GitHub Actions workflows **ALWAYS** pin versions.
 
-If adding a new tool that isn't a GitHub Actions, always provide a specific version via the relevant GitHub release and include a `*_VERSION` environment variable to specify the version with a renovate commend above it for automated updates.
+If adding a new tool that isn't a GitHub Actions, always provide a specific version via the relevant GitHub release and include a `*_VERSION` environment variable to specify the version with a renovate comment above it for automated updates.
 
 ### Pre-commit Validation Steps
 
@@ -280,7 +280,8 @@ public sealed class SomeOptions
 
 - **ALWAYS trust these instructions** - they are validated and comprehensive
 - **Use `./build.ps1`** for all builds - it handles environment setup correctly
-- **Frontend changes require npm build** - TypeScript is compiled at build time - changes to `.cshtml` files may also require the TypeScript code to be updated
+- **Frontend changes require npm build** - TypeScript is compiled at build time.
+  - **When do `.cshtml` changes require TypeScript updates?** If you modify HTML elements (IDs, classes, structure) that are referenced or manipulated by TypeScript, add/remove interactive components, or change markup that TypeScript relies on for event handling or DOM queries, you must update the corresponding TypeScript code to match. Always review TypeScript files for dependencies on the Razor view before finalizing `.cshtml` changes.
 - **Tests may fail in non-CI environments** due to .NET runtime version requirements - ensure the version specified in `global.json` is installed first and available to `PATH`
 - **Build artifacts go to `artifacts/` directory** - excluded by .gitignore
 - **Configuration is extensive** - check `appsettings.json` for feature flags and trusted entities
