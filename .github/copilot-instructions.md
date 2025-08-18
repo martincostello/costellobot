@@ -5,6 +5,7 @@
 **Costellobot** is a .NET 9.0 ASP.NET Core web application that provides GitHub automation services. The application handles GitHub webhooks to automatically approve dependency updates, manage deployments, and perform repository maintenance tasks across multiple GitHub repositories.
 
 **High-level Details:**
+
 - **Size**: several hundred C# files, a handful of TypeScript files
 - **Type**: ASP.NET Core web application with microservices architecture using .NET Aspire
 - **Languages**: C# (.NET 9.0), TypeScript, PowerShell
@@ -16,6 +17,7 @@
 ## Build and Validation Process
 
 ### Prerequisites
+
 - **PowerShell Core 7+** (required for build script)
 - **Node.js 22** (for frontend asset compilation)
 - **Latest .NET 9 SDK** (automatically installed by build script if missing)
@@ -38,6 +40,7 @@
 **ALWAYS use PowerShell Core (pwsh)** to run PowerShell scripts - it works on macOS, Linux and Windows.
 
 **Build Time**: Full build takes 4-5 minutes including:
+
 - .NET SDK installation (if needed): ~30 seconds
 - NuGet package restore: ~10 seconds  
 - TypeScript/npm compilation: ~10 seconds
@@ -55,6 +58,7 @@ npm run build  # Compiles TypeScript, runs ESLint, Prettier, Jest tests
 ```
 
 Frontend build includes:
+
 - TypeScript compilation with webpack
 - CSS processing and minification
 - ESLint linting
@@ -81,7 +85,7 @@ npm run compile   # TypeScript compilation only
 
 ### Common Build Issues and Workarounds
 
-1. **Test failures due to .NET runtime mismatch**: 
+1. **Test failures due to .NET runtime mismatch**:
    - **Issue**: Tests expect .NET 9.0.0 runtime but may find 9.0.8
    - **Workaround**: Use GitHub Actions environment or ensure proper DOTNET_ROOT/PATH setup
    - **Solution**: Always use `./build.ps1` which handles environment correctly
@@ -213,7 +217,9 @@ Invoke-ScriptAnalyzer -Path . -Recurse -Settings @{IncludeDefaultRules=$true}
 ## Key Implementation Patterns
 
 ### Webhook Handler Pattern
+
 All GitHub webhook handlers implement `IHandler` interface:
+
 ```csharp
 public sealed class SomeHandler : IHandler
 {
@@ -226,7 +232,9 @@ public sealed class SomeHandler : IHandler
 ```
 
 ### Service Registration Pattern
+
 Services are registered in `GitHubExtensions.cs` using dependency injection:
+
 ```csharp
 services.AddTransient<SomeHandler>();
 services.AddSingleton<SomeService>();
@@ -244,21 +252,29 @@ public sealed class SomeOptions
 ## Common Development Tasks
 
 ### Adding a New GitHub Webhook Handler
+
 1. Create handler class in `src/Costellobot/Handlers/` implementing `IHandler`
 2. Register in `GitHubExtensions.cs`: `services.AddTransient<NewHandler>()`
 3. Add to handler factory in `HandlerFactory.cs`
 4. Create unit tests in `tests/Costellobot.Tests/Handlers/`
 
-### Adding a New Deployment Rule  
+### Adding a New Deployment Rule
+
 1. Create class in `src/Costellobot/DeploymentRules/` implementing `IDeploymentRule`
 2. Register in `GitHubExtensions.cs` with appropriate priority order
 3. Add unit tests in `tests/Costellobot.Tests/DeploymentRules/`
 
 ### Adding Frontend Features
+
 1. Create TypeScript files in `src/Costellobot/scripts/ts/`
 2. Add CSS in `src/Costellobot/styles/`
 3. Import in `src/Costellobot/scripts/main.ts`
 4. Build with `npm run build`
+
+### Updating documentation
+
+1. Ensure that there are no lint warnings using markdownlint
+1. Prefer that links use `[text][link]` syntax instead of `[text](url)` syntax
 
 ## Important Notes for Coding Agents
 
