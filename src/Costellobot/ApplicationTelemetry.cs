@@ -46,6 +46,8 @@ public static class ApplicationTelemetry
         {
             Profiler.Instance.ClearDynamicTags();
             Profiler.Instance.SetDynamicTag("namespace", ServiceNamespace);
+            Profiler.Instance.SetDynamicTag("service_git_ref", GitMetadata.Commit);
+            Profiler.Instance.SetDynamicTag("service_repository", GitMetadata.RepositoryUrl);
 
             // Based on https://github.com/grafana/pyroscope-go/blob/8fff2bccb5ed5611fdb09fdbd9a727367ab35f39/x/k6/baggage.go
             if (ExtractK6Baggage() is { Count: > 0 } baggage)
