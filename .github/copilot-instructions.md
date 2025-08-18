@@ -5,11 +5,11 @@
 **Costellobot** is a .NET 9.0 ASP.NET Core web application that provides GitHub automation services. The application handles GitHub webhooks to automatically approve dependency updates, manage deployments, and perform repository maintenance tasks across multiple GitHub repositories.
 
 **High-level Details:**
-- **Size**: ~249 C# files, ~12K TypeScript files (mostly node_modules)
+- **Size**: several hundred C# files, a handful of TypeScript files
 - **Type**: ASP.NET Core web application with microservices architecture using .NET Aspire
 - **Languages**: C# (.NET 9.0), TypeScript, PowerShell
 - **Frameworks**: ASP.NET Core, .NET Aspire, xUnit, Playwright, webpack, Jest
-- **Target Runtime**: .NET 9.0 (specifically version 9.0.304 SDK)
+- **Target Runtime**: .NET 9.0
 - **Cloud Platform**: Azure (Service Bus, Blob Storage, Table Storage, Key Vault)
 - **Container**: Publishes as container image to Azure Container Registry
 
@@ -18,7 +18,7 @@
 ### Prerequisites
 - **PowerShell Core 7+** (required for build script)
 - **Node.js 22** (for frontend asset compilation)
-- **.NET 9.0.304 SDK** (automatically installed by build script if missing)
+- **Latest .NET 9 SDK** (automatically installed by build script if missing)
 
 ### Core Build Commands
 
@@ -31,9 +31,11 @@
 # Build without tests (faster for development)
 ./build.ps1 -SkipTests
 
-# Run specific test filter
+# Run with filter for specific tests
 ./build.ps1 -TestFilter "ClassName*"
 ```
+
+**ALWAYS use PowerShell Core (pwsh)** to run PowerShell scripts - it works on macOS, Linux and Windows.
 
 **Build Time**: Full build takes 4-5 minutes including:
 - .NET SDK installation (if needed): ~30 seconds
@@ -117,21 +119,21 @@ costellobot/
 │   │   └── package.json      # npm dependencies
 │   └── Costellobot.AppHost/  # .NET Aspire orchestration host
 ├── tests/
-│   ├── Costellobot.Tests/           # Unit tests (xUnit)
+│   ├── Costellobot.Tests/           # Unit tests (xUnit and Playwright)
 │   ├── Costellobot.EndToEndTests/   # E2E tests (Playwright)
-│   └── Costellobot.Oats/           # OATS API testing
+│   └── Costellobot.Oats/           # OATs OpenTelemetry testing
 ├── perf/Costellobot.Benchmarks/    # BenchmarkDotNet performance tests
 ├── build.ps1                       # Main build script
 ├── global.json                     # .NET SDK version specification
 ├── Costellobot.slnx                # Solution file
 ├── Directory.Build.props            # MSBuild configuration
 ├── Directory.Packages.props         # Central package management
-└── docker-compose.yml             # Local development services
+└── docker-compose.yml             # Local development services for OATs
 ```
 
 ### Key Configuration Files
 
-- **`global.json`**: Specifies .NET SDK version (9.0.304)
+- **`global.json`**: Specifies .NET SDK version
 - **`Directory.Build.props`**: MSBuild settings, versioning, code analysis
 - **`Directory.Packages.props`**: Central package version management
 - **`Costellobot.ruleset`**: Code analysis rules
@@ -142,7 +144,7 @@ costellobot/
 
 The application follows a clean architecture pattern:
 
-1. **Program.cs**: Application entry point using minimal APIs
+1. **Program.cs**: Application entry point using Minimal APIs
 2. **CostellobotBuilder.cs**: Dependency injection and service configuration
 3. **GitHubExtensions.cs**: GitHub service registration and client setup
 4. **Handlers/**: Event-driven webhook processors for different GitHub events
@@ -180,6 +182,10 @@ The application follows a clean architecture pattern:
    - `lighthouse.yml`: Web performance testing
    - `container-scan.yml`: Container vulnerability scanning
 
+If changing GitHub Actions workflows **ALWAYS** pin versions.
+
+If adding a new tool that isn't a GitHub Actions, always provide a specific version via the relevant GitHub release and include a `*_VERSION` environment variable to specify the version with a renovate commend above it for automated updates.
+
 ### Pre-commit Validation Steps
 
 To replicate CI locally:
@@ -201,6 +207,7 @@ Invoke-ScriptAnalyzer -Path . -Recurse -Settings @{IncludeDefaultRules=$true}
 - **NuGet**: Central package management via `Directory.Packages.props`
 - **npm**: Frontend dependencies in `src/Costellobot/package.json`
 - **Dependabot**: Yearly updates configured in `.github/dependabot.yml`
+- **Renovate**: Configured in `.github/renovate.json`
 - **Trusted Dependencies**: Extensive allow-list in `appsettings.json` under `TrustedEntities`
 
 ## Key Implementation Patterns
@@ -257,8 +264,8 @@ public sealed class SomeOptions
 
 - **ALWAYS trust these instructions** - they are validated and comprehensive
 - **Use `./build.ps1`** for all builds - it handles environment setup correctly
-- **Frontend changes require npm build** - TypeScript is compiled at build time
-- **Tests may fail in non-CI environments** due to .NET runtime version requirements
+- **Frontend changes require npm build** - TypeScript is compiled at build time - changes to `.cshtml` files may also require the TypeScript code to be updated
+- **Tests may fail in non-CI environments** due to .NET runtime version requirements - ensure the version specified in `global.json` is installed first and available to `PATH`
 - **Build artifacts go to `artifacts/` directory** - excluded by .gitignore
 - **Configuration is extensive** - check `appsettings.json` for feature flags and trusted entities
 - **Security-focused** - extensive SAST, dependency scanning, and security controls
