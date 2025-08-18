@@ -314,6 +314,7 @@ public sealed partial class GitCommitAnalyzer(
             "github-releases" => DependencyEcosystem.GitHubRelease,
             "npm" or "npm_and_yarn" => DependencyEcosystem.Npm,
             "nuget" => DependencyEcosystem.NuGet,
+            "pip" or "pypi" => DependencyEcosystem.Pip,
             "git-submodules" or "submodules" => DependencyEcosystem.GitSubmodule,
             _ => DependencyEcosystem.Unsupported,
         };

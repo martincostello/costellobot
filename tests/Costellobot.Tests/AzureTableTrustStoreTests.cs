@@ -42,6 +42,7 @@ public class AzureTableTrustStoreTests
     [InlineData(DependencyEcosystem.GitHubActions, "martincostello/rebaser", "2.0.1", "GITHUBACTIONS", "MARTINCOSTELLO~REBASER@2.0.1")]
     [InlineData(DependencyEcosystem.Npm, "@octokit/request", "9.2.2", "NPM", "@OCTOKIT~REQUEST@9.2.2")]
     [InlineData(DependencyEcosystem.NuGet, "Polly.Core", "8.5.2", "NUGET", "POLLY.CORE@8.5.2")]
+    [InlineData(DependencyEcosystem.Pip, "boto3", "1.40.11", "PIP", "BOTO3@1.40.11")]
     [InlineData(DependencyEcosystem.Ruby, "rack", "3.1.16", "RUBY", "RACK@3.1.16")]
     public async Task DistrustAsync_Distrusts_Entity(
         DependencyEcosystem ecosystem,
@@ -51,6 +52,7 @@ public class AzureTableTrustStoreTests
         string expectedRowKey)
     {
         // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
         var table = Substitute.For<TableClient>();
         var client = Substitute.For<TableServiceClient>();
 
@@ -64,13 +66,13 @@ public class AzureTableTrustStoreTests
             ecosystem,
             id,
             version,
-            TestContext.Current.CancellationToken);
+            cancellationToken);
 
         // Assert
         await table.Received().DeleteEntityAsync(
             expectedPartitionKey,
             expectedRowKey,
-            cancellationToken: TestContext.Current.CancellationToken);
+            cancellationToken: cancellationToken);
     }
 
     [Fact]
@@ -129,6 +131,7 @@ public class AzureTableTrustStoreTests
     public async Task IsTrustedAsync_Returns_Correct_Value(bool hasValue, bool expected)
     {
         // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
         var ecosystem = DependencyEcosystem.NuGet;
         var id = "Polly.Core";
         var version = "8.5.2";
@@ -145,12 +148,12 @@ public class AzureTableTrustStoreTests
         table.GetEntityIfExistsAsync<TrustEntity>(
             "NUGET",
             "POLLY.CORE@8.5.2",
-            cancellationToken: TestContext.Current.CancellationToken).Returns(response);
+            cancellationToken: cancellationToken).Returns(response);
 
         var target = new AzureTableTrustStore(client);
 
         // Act
-        var actual = await target.IsTrustedAsync(ecosystem, id, version, TestContext.Current.CancellationToken);
+        var actual = await target.IsTrustedAsync(ecosystem, id, version, cancellationToken);
 
         // Assert
         actual.ShouldBe(expected);
