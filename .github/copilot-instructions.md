@@ -272,6 +272,8 @@ public sealed class SomeOptions
 2. Add CSS in `src/Costellobot/styles/`
 3. Import in `src/Costellobot/scripts/main.ts`
 4. Build with `npm run build`
+5. Use Bootstrap for CSS and DOM layout
+6. Use FontAwesome for icons
 
 ### Updating documentation
 
