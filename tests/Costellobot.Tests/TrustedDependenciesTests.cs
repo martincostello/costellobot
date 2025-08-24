@@ -23,6 +23,7 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
         await trustStore.TrustAsync(DependencyEcosystem.NuGet, "Verify.Playwright", "3.0.0", CancellationToken);
         await trustStore.TrustAsync(DependencyEcosystem.NuGet, "Verify.XunitV3", "28.10.1", CancellationToken);
         await trustStore.TrustAsync(DependencyEcosystem.NuGet, "Verify.XunitV3", "28.11.0", CancellationToken);
+        await trustStore.TrustAsync(DependencyEcosystem.Pip, "boto3", "1.40.11", CancellationToken);
         await trustStore.TrustAsync(DependencyEcosystem.Ruby, "rack", "3.1.16", CancellationToken);
 
         var browser = new BrowserFixture(OutputHelper);
@@ -43,6 +44,7 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
                 ("NuGet", "Verify.Playwright", "3.0.0"),
                 ("NuGet", "Verify.XunitV3", "28.11.0"),
                 ("NuGet", "Verify.XunitV3", "28.10.1"),
+                ("PyPI", "boto3", "1.40.11"),
                 ("Ruby", "rack", "3.1.16"),
             };
 
@@ -71,6 +73,7 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
                 ("NuGet", "Verify.Playwright", "3.0.0"),
                 ("NuGet", "Verify.XunitV3", "28.11.0"),
                 ("NuGet", "Verify.XunitV3", "28.10.1"),
+                ("PyPI", "boto3", "1.40.11"),
                 ("Ruby", "rack", "3.1.16"),
             ];
 

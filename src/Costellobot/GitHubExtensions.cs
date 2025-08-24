@@ -153,6 +153,7 @@ public static class GitHubExtensions
         services.AddPackageRegistry<GitSubmodulePackageRegistry>();
         services.AddPackageRegistry<NpmPackageRegistry>("Npm");
         services.AddPackageRegistry<NuGetPackageRegistry>("NuGet");
+        services.AddPackageRegistry<PyPiPackageRegistry>("PyPI");
         services.AddPackageRegistry<RubyGemsPackageRegistry>("RubyGems");
 
         services.AddSingleton<BadgeService>();

@@ -14,4 +14,5 @@ public enum DependencyEcosystem
     GitSubmodule,
     Ruby,
     GitHubRelease,
+    Pip,
 }
