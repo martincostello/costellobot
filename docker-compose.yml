@@ -30,7 +30,7 @@ services:
       - MSSQL_SA_PASSWORD=C0st3ll0b0t$
       - SQL_SERVER=sql-server:1433
   sql-server:
-    image: mcr.microsoft.com/mssql/server:2025-RC0-ubuntu-24.04@sha256:bec2a24800b121a9a434428d94363cdc0482df90145ae10a91e280809b1e9e39
+    image: mcr.microsoft.com/mssql/server:2022-CU20-GDR1-ubuntu-22.04@sha256:6249e946034c0b72e98cbbdd790deede2bb94fe5c73335ecdbb77176af4d267c
     ports:
       - '1433:1433'
     environment:
