@@ -11,10 +11,7 @@ services:
       - DOTNET_ENVIRONMENT=Production
       - GitHub__ClientId=github-client-id
       - GitHub__ClientSecret=github-client-secret
-      - OTEL_BLRP_SCHEDULE_DELAY=2000
-      - OTEL_BSP_SCHEDULE_DELAY=2000
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://lgtm:4317
-      - OTEL_METRIC_EXPORT_INTERVAL=2000
       - Webhook__QueueName=queue.1
       - WEBSITE_SITE_NAME=Costellobot
   servicebus-emulator:
