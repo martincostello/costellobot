@@ -59,7 +59,8 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
     public async Task ClearCacheAsync() =>
         await Services.GetRequiredService<HybridCache>().RemoveByTagAsync("all");
 
-    public virtual HttpClient CreateHttpClientForApp() => CreateDefaultClient();
+    public virtual HttpClient CreateHttpClientForApp(params DelegatingHandler[] handlers)
+        => CreateDefaultClient(handlers);
 
     public void OverrideConfiguration(string key, string value, bool reload = true)
     {

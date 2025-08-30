@@ -122,7 +122,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             Fixture.ServerUri,
             new Cookie(anonymousTokens.CookieName, anonymousTokens.CookieValue));
 
-        using var anonymousClient = Fixture.CreateDefaultClient(redirectHandler, anonymousCookieHandler);
+        using var anonymousClient = Fixture.CreateHttpClientForApp(redirectHandler, anonymousCookieHandler);
         anonymousClient.DefaultRequestHeaders.Add(anonymousTokens.HeaderName, anonymousTokens.RequestToken);
 
         using var content = new FormUrlEncodedContent([]);
@@ -136,7 +136,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
 
         try
         {
-            var authenticatedClient = Fixture.CreateDefaultClient(authenticatedCookieHandler);
+            var authenticatedClient = Fixture.CreateHttpClientForApp(authenticatedCookieHandler);
 
             try
             {
