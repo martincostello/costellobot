@@ -43,13 +43,25 @@ public sealed class HttpServerFixture : AppFixture
         }
     }
 
-    public override HttpClient CreateHttpClientForApp()
+    public override HttpClient CreateHttpClientForApp(params DelegatingHandler[] handlers)
     {
-        var handler = new HttpClientHandler()
+        HttpMessageHandler handler = new HttpClientHandler()
         {
+            AllowAutoRedirect = ClientOptions.AllowAutoRedirect,
             CheckCertificateRevocationList = true,
             ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
         };
+
+        if (handlers.Length > 0)
+        {
+            for (var i = handlers.Length - 1; i > 0; i--)
+            {
+                handlers[i - 1].InnerHandler = handlers[i];
+            }
+
+            handlers[^1].InnerHandler = handler;
+            handler = handlers[0];
+        }
 
         return new HttpClient(handler, disposeHandler: true)
         {

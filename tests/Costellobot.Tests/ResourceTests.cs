@@ -83,7 +83,7 @@ public sealed class ResourceTests(HttpServerFixture fixture, ITestOutputHelper o
     public async Task Cannot_Get_Resource_Unauthenticated(string requestUri)
     {
         // Arrange
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
 
         // Act
         using var response = await client.GetAsync(requestUri, CancellationToken);
@@ -307,7 +307,7 @@ public sealed class ResourceTests(HttpServerFixture fixture, ITestOutputHelper o
         // Arrange
         HttpMethod[] methods = [HttpMethod.Get, HttpMethod.Head, HttpMethod.Post];
 
-        using var client = Fixture.CreateClient();
+        using var client = Fixture.CreateHttpClientForApp();
 
         foreach (var method in methods)
         {
