@@ -636,7 +636,8 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     public async Task Deployment_Is_Not_Approved_On_Public_Holiday()
     {
         // Arrange
-        Fixture.ChangeClock(new(2023, 12, 25, 12, 00, 00, TimeSpan.Zero));
+        Fixture.ChangeClock(new(2026, 12, 25, 12, 00, 00, TimeSpan.Zero));
+        Fixture.OverrideConfiguration("Google:CalendarIds:0", string.Empty);
         Fixture.ApproveDeployments();
 
         var driver = new DeploymentStatusDriver(

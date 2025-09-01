@@ -30,7 +30,7 @@ public sealed partial class CalendarDeploymentRule(
         {
             var today = timeProvider.GetUtcNow().Date;
 
-            foreach (var calendarId in calendarIds)
+            foreach (var calendarId in calendarIds.Where((p) => !string.IsNullOrEmpty(p)))
             {
                 var events = await cache.GetOrCreateAsync(
                     CacheKey(today, calendarId),
