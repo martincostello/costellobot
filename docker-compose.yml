@@ -11,7 +11,8 @@ services:
       - DOTNET_ENVIRONMENT=Production
       - GitHub__ClientId=github-client-id
       - GitHub__ClientSecret=github-client-secret
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://lgtm:4317
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://lgtm:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
       - Webhook__QueueName=queue.1
       - WEBSITE_SITE_NAME=Costellobot
   servicebus-emulator:
