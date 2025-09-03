@@ -78,7 +78,7 @@ public sealed partial class PullRequestHandler(
     {
         if (message is not PullRequestLabeledEvent labelled ||
             message.Sender is not { } sender ||
-            message.PullRequest.State?.Value != Octokit.Webhooks.Models.PullRequestEvent.PullRequestState.Open ||
+            message.PullRequest.State.Value != Octokit.Webhooks.Models.PullRequestEvent.PullRequestState.Open ||
             message.PullRequest.Draft)
         {
             return false;
