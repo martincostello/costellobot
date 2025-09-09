@@ -13,7 +13,7 @@
     <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="9.5.1" />
     <PackageVersion Include="Aspire.Hosting.Azure.ServiceBus" Version="9.5.1" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="9.5.1" />
-    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="10.0.0-preview.7.25412.67" />
+    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="10.0.0-rc.1.25459.55" />
     <PackageVersion Include="Azure.Data.Tables" Version="12.11.0" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" Version="1.5.1" />
@@ -31,11 +31,11 @@
     <PackageVersion Include="JustEat.HttpClientInterception" Version="5.1.2" />
     <PackageVersion Include="Markdig" Version="0.42.0" />
     <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.6.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="10.0.0-preview.7.25380.108" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0-preview.7.25380.108" />
+    <PackageVersion Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="10.0.0-rc.1.25451.107" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0-rc.1.25451.107" />
     <PackageVersion Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="8.3.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="9.9.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0-preview.7.25380.108" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0-rc.1.25451.107" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="9.9.0" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.9.0" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.9.0" />
