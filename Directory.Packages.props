@@ -67,7 +67,6 @@
     <PackageVersion Include="ReportGenerator" Version="5.4.13" />
     <PackageVersion Include="Sentry.AspNetCore" Version="5.15.0" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
-    <PackageVersion Include="System.Memory.Data" Version="9.0.9" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
     <PackageVersion Include="xunit.v3" Version="3.0.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
