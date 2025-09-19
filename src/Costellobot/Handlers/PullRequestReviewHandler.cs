@@ -22,7 +22,7 @@ public sealed partial class PullRequestReviewHandler(
 
     private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromDays(1) };
     private static readonly string[] CacheTags = ["all", "github"];
-    private static readonly string[] PullRequestCreators = ["app/dependabot", "app/renovate"];
+    private static readonly string[] PullRequestCreators = ["app/dependabot", "app/mend", "app/renovate"];
 
     public async Task HandleAsync(WebhookEvent message, CancellationToken cancellationToken)
     {
