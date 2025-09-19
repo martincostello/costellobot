@@ -42,51 +42,23 @@ public static class ApplicationTelemetry
     [StackTraceHidden]
     internal static async Task ProfileAsync<T>(T state, Func<T, Task> operation)
     {
-        try
-        {
-            Profiler.Instance.ClearDynamicTags();
-            Profiler.Instance.SetDynamicTag("namespace", ServiceNamespace);
-            Profiler.Instance.SetDynamicTag("service_git_ref", GitMetadata.Commit);
-            Profiler.Instance.SetDynamicTag("service_repository", GitMetadata.RepositoryUrl);
+        var builder = LabelSet.Empty.BuildUpon()
+            .Add("namespace", ServiceNamespace)
+            .Add("service_git_ref", GitMetadata.Commit)
+            .Add("service_repository", GitMetadata.RepositoryUrl);
 
-            // Based on https://github.com/grafana/pyroscope-go/blob/8fff2bccb5ed5611fdb09fdbd9a727367ab35f39/x/k6/baggage.go
-            if (ExtractK6Baggage() is { Count: > 0 } baggage)
+        // Based on https://github.com/grafana/pyroscope-go/blob/8fff2bccb5ed5611fdb09fdbd9a727367ab35f39/x/k6/baggage.go
+        if (Baggage.GetBaggage() is { Count: > 0 } baggage)
+        {
+            foreach ((string key, string? value) in baggage.Where((p) => p.Key.StartsWith("k6.", StringComparison.Ordinal)))
             {
-                foreach ((string key, string value) in baggage)
+                if (value is { Length: > 0 })
                 {
-                    Profiler.Instance.SetDynamicTag(key, value);
+                    builder.Add(key.Replace('.', '_'), value);
                 }
             }
-
-            await operation(state);
-        }
-        finally
-        {
-            Profiler.Instance.ClearDynamicTags();
-        }
-    }
-
-    private static Dictionary<string, string>? ExtractK6Baggage()
-    {
-        if (Baggage.GetBaggage() is not { Count: > 0 } baggage)
-        {
-            return null;
         }
 
-        Dictionary<string, string>? labels = null;
-
-        foreach ((string key, string? value) in baggage.Where((p) => p.Key.StartsWith("k6.", StringComparison.Ordinal)))
-        {
-            if (value is { Length: > 0 })
-            {
-                string label = key.Replace('.', '_');
-
-                // See https://grafana.com/docs/k6/latest/javascript-api/jslib/http-instrumentation-pyroscope/#about-baggage-header
-                labels ??= new(3);
-                labels[label] = value;
-            }
-        }
-
-        return labels;
+        await LabelsWrapper.DoAsync<T>(builder.Build(), state, operation);
     }
 }
