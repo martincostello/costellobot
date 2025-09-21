@@ -73,6 +73,8 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
         response.Headers.Location.ShouldBe(new("https://img.shields.io/badge/security-0-brightgreen?logo=github"));
+        response.Headers.CacheControl.ShouldNotBeNull();
+        response.Headers.CacheControl.NoCache.ShouldBeTrue();
     }
 
     [Fact]
@@ -97,6 +99,8 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
         response.Headers.Location.ShouldBe(new("https://img.shields.io/badge/security-0-brightgreen?logo=github"));
+        response.Headers.CacheControl.ShouldNotBeNull();
+        response.Headers.CacheControl.NoCache.ShouldBeTrue();
     }
 
     [Fact]
@@ -121,6 +125,8 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
         response.Headers.Location.ShouldBe(new("https://img.shields.io/badge/security-9-red?logo=github"));
+        response.Headers.CacheControl.ShouldNotBeNull();
+        response.Headers.CacheControl.NoCache.ShouldBeTrue();
 
         static object[] Alerts(int count)
             => [.. Enumerable.Range(0, count).Select((i) => new { })];
@@ -175,6 +181,8 @@ public sealed class BadgeTests(AppFixture fixture, ITestOutputHelper outputHelpe
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
         response.Headers.Location.ShouldBe(new($"https://img.shields.io/badge/release-{expected}-blue?logo=github"));
+        response.Headers.CacheControl.ShouldNotBeNull();
+        response.Headers.CacheControl.NoCache.ShouldBeTrue();
     }
 
     private static string CreateSignature(string type, string owner, string repo)

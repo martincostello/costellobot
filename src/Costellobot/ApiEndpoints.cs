@@ -19,10 +19,17 @@ public static class ApiEndpoints
     {
         builder.MapGitHubWebhooks("/github-webhook");
 
-        builder.MapGet("/badge/{type}/{owner}/{repo}", async (string type, string owner, string repo, [FromQuery(Name = "s")] string? signature, BadgeService service) =>
+        builder.MapGet("/badge/{type}/{owner}/{repo}", async (
+            string type,
+            string owner,
+            string repo,
+            [FromQuery(Name = "s")] string? signature,
+            BadgeService service,
+            HttpResponse response) =>
         {
-            if (await service.GetBadgeAsync(type, owner, repo, signature) is { } url)
+            if (await service.GetBadgeAsync(type, owner, repo, signature) is { Length: > 0 } url)
             {
+                response.GetTypedHeaders().CacheControl = new() { NoCache = true };
                 return Results.Redirect(url);
             }
 
