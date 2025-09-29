@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
+using MartinCostello.Costellobot.Models;
 using Microsoft.Extensions.Options;
 using Octokit;
 
@@ -13,11 +14,13 @@ public sealed partial class BadgeService(
     IOptionsMonitor<GitHubOptions> options,
     ILogger<BadgeService> logger)
 {
+    private const int BadgeSchemaVersion = 1;
+
     private static readonly string[] AlertTypes = ["code-scanning", "dependabot", "secret-scanning"];
 
     private readonly byte[] _key = Encoding.UTF8.GetBytes(options.CurrentValue.BadgesKey);
 
-    public async Task<string?> GetBadgeAsync(string type, string owner, string repo, string? signature)
+    public async Task<Badge?> GetBadgeAsync(string type, string owner, string repo, string? signature)
     {
         if (!VerifySignature(type, owner, repo, signature, out var repository))
         {
@@ -28,8 +31,31 @@ public sealed partial class BadgeService(
         {
             return type.ToUpperInvariant() switch
             {
-                "RELEASE" => await LatestReleaseBadgeAsync(repository),
-                "SECURITY" => await SecurityAlertsAsync(repository),
+                "RELEASE" => await LatestReleaseBadgeJsonAsync(repository),
+                "SECURITY" => await SecurityAlertsBadgeJsonAsync(repository),
+                _ => null,
+            };
+        }
+        catch (Exception ex)
+        {
+            Log.FailedToGenerateBadge(logger, ex, type, repository);
+            return null;
+        }
+    }
+
+    public async Task<string?> GetBadgeUrlAsync(string type, string owner, string repo, string? signature)
+    {
+        if (!VerifySignature(type, owner, repo, signature, out var repository))
+        {
+            return null;
+        }
+
+        try
+        {
+            return type.ToUpperInvariant() switch
+            {
+                "RELEASE" => await LatestReleaseBadgeUrlAsync(repository),
+                "SECURITY" => await SecurityAlertsBadgeUrlAsync(repository),
                 _ => null,
             };
         }
@@ -64,7 +90,7 @@ public sealed partial class BadgeService(
         return CryptographicOperations.FixedTimeEquals(expected, actual);
     }
 
-    private async Task<string?> LatestReleaseBadgeAsync(RepositoryId repository)
+    private async Task<string?> LatestReleaseAsync(RepositoryId repository)
     {
         var installationId = GetInstallationId(repository.Owner);
         var client = factory.CreateForInstallation(installationId);
@@ -99,13 +125,43 @@ public sealed partial class BadgeService(
             releaseName = releaseName.Split(' ').Last();
         }
 
-        releaseName = releaseName.TrimStart('v');
+        return releaseName.TrimStart('v');
+    }
+
+    private async Task<string?> LatestReleaseBadgeUrlAsync(RepositoryId repository)
+    {
+        var releaseName = await LatestReleaseAsync(repository);
+
+        if (releaseName is null)
+        {
+            return null;
+        }
+
         releaseName = Uri.EscapeDataString(releaseName).Replace("-", "--", StringComparison.Ordinal);
 
         return $"https://img.shields.io/badge/release-{releaseName}-blue?logo=github";
     }
 
-    private async Task<string?> SecurityAlertsAsync(RepositoryId repository)
+    private async Task<Badge?> LatestReleaseBadgeJsonAsync(RepositoryId repository)
+    {
+        var releaseName = await LatestReleaseAsync(repository);
+
+        if (releaseName is null)
+        {
+            return null;
+        }
+
+        return new Badge()
+        {
+            Color = "blue",
+            Label = "release",
+            Message = releaseName,
+            NamedLogo = "github",
+            SchemaVersion = BadgeSchemaVersion,
+        };
+    }
+
+    private async Task<(int Count, string Color)> SecurityAlertsAsync(RepositoryId repository)
     {
         var installationId = GetInstallationId(repository.Owner);
         var client = factory.CreateForInstallation(installationId);
@@ -119,7 +175,7 @@ public sealed partial class BadgeService(
 
         string color = count is 0 ? "brightgreen" : "red";
 
-        return $"https://img.shields.io/badge/security-{count}-{color}?logo=github";
+        return (count, color);
 
         static async Task<int> GetAlertsAsync(IGitHubClient client, RepositoryId repository, string type)
         {
@@ -142,6 +198,27 @@ public sealed partial class BadgeService(
 
             return 0;
         }
+    }
+
+    private async Task<string?> SecurityAlertsBadgeUrlAsync(RepositoryId repository)
+    {
+        (int count, string color) = await SecurityAlertsAsync(repository);
+        return $"https://img.shields.io/badge/security-{count}-{color}?logo=github";
+    }
+
+    private async Task<Badge> SecurityAlertsBadgeJsonAsync(RepositoryId repository)
+    {
+        (int count, string color) = await SecurityAlertsAsync(repository);
+
+        return new Badge()
+        {
+            Color = color,
+            IsError = count > 0,
+            Label = "security",
+            Message = count.ToString(CultureInfo.InvariantCulture),
+            NamedLogo = "github",
+            SchemaVersion = BadgeSchemaVersion,
+        };
     }
 
     private string GetInstallationId(string owner)
