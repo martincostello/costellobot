@@ -27,7 +27,7 @@
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
     <PackageVersion Include="Google.Apis.Calendar.v3" Version="1.69.0.3746" />
     <PackageVersion Include="Humanizer" Version="2.14.1" />
-    <PackageVersion Include="JunitXml.TestLogger" Version="7.0.1" />
+    <PackageVersion Include="JunitXml.TestLogger" Version="7.0.2" />
     <PackageVersion Include="JustEat.HttpClientInterception" Version="5.1.2" />
     <PackageVersion Include="Markdig" Version="0.42.0" />
     <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.6.0" />
