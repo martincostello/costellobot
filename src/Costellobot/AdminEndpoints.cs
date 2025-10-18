@@ -249,15 +249,20 @@ public static class AdminEndpoints
                     return Results.NotFound();
                 }
 
-                using var document = apiResponse switch
+                var delivery = apiResponse switch
                 {
-                    { Body: Stream stream } => await JsonDocument.ParseAsync(stream),
-                    { HttpResponse: Stream stream } => await JsonDocument.ParseAsync(stream),
-                    _ => JsonDocument.Parse(apiResponse.HttpResponse.Body.ToString()!),
+                    { Body: Stream stream } => await ParseJsonAsync(stream),
+                    { HttpResponse: Stream stream } => await ParseJsonAsync(stream),
+                    _ => JsonElement.Parse(apiResponse.HttpResponse.Body.ToString()!),
                 };
 
-                var delivery = document.RootElement;
-                var model = new DeliveryModel(delivery.Clone());
+                static async Task<JsonElement> ParseJsonAsync(Stream stream)
+                {
+                    using var document = await JsonDocument.ParseAsync(stream);
+                    return document.RootElement.Clone();
+                }
+
+                var model = new DeliveryModel(delivery);
 
                 var request = delivery.GetProperty("request");
 
