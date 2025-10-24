@@ -99,5 +99,5 @@ jobs:
       - name: Run OATS
         env:
           # renovate: datasource=github-releases depName=LGTM packageName=grafana/docker-otel-lgtm
-          LGTM_VERSION: '0.11.13'
+          LGTM_VERSION: '0.11.14'
         run: oats --lgtm-version="${LGTM_VERSION}" --timeout=5m ./tests/Costellobot.Oats
