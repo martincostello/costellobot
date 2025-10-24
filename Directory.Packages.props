@@ -5,14 +5,14 @@
     <GlobalPackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <PackageVersion Include="Aspire.Azure.Data.Tables" Version="9.5.1" />
-    <PackageVersion Include="Aspire.Azure.Messaging.ServiceBus" Version="9.5.1" />
-    <PackageVersion Include="Aspire.Azure.Security.KeyVault" Version="9.5.1" />
-    <PackageVersion Include="Aspire.Azure.Storage.Blobs" Version="9.5.1" />
-    <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.5.1" />
-    <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="9.5.1" />
-    <PackageVersion Include="Aspire.Hosting.Azure.ServiceBus" Version="9.5.1" />
-    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="9.5.1" />
+    <PackageVersion Include="Aspire.Azure.Data.Tables" Version="9.5.2" />
+    <PackageVersion Include="Aspire.Azure.Messaging.ServiceBus" Version="9.5.2" />
+    <PackageVersion Include="Aspire.Azure.Security.KeyVault" Version="9.5.2" />
+    <PackageVersion Include="Aspire.Azure.Storage.Blobs" Version="9.5.2" />
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.5.2" />
+    <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="9.5.2" />
+    <PackageVersion Include="Aspire.Hosting.Azure.ServiceBus" Version="9.5.2" />
+    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="9.5.2" />
     <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="9.4.1" />
     <PackageVersion Include="Azure.Data.Tables" Version="12.11.0" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
