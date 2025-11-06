@@ -2,15 +2,15 @@
 
 ## Repository Overview
 
-**Costellobot** is a .NET 9.0 ASP.NET Core web application that provides GitHub automation services. The application handles GitHub webhooks to automatically approve dependency updates, manage deployments, and perform repository maintenance tasks across multiple GitHub repositories.
+**Costellobot** is a .NET 10.0 ASP.NET Core web application that provides GitHub automation services. The application handles GitHub webhooks to automatically approve dependency updates, manage deployments, and perform repository maintenance tasks across multiple GitHub repositories.
 
 **High-level Details:**
 
 - **Size**: several hundred C# files, a handful of TypeScript files
 - **Type**: ASP.NET Core web application with microservices architecture using .NET Aspire
-- **Languages**: C# (.NET 9.0), TypeScript, PowerShell
+- **Languages**: C# (.NET 10.0), TypeScript, PowerShell
 - **Frameworks**: ASP.NET Core, .NET Aspire, xUnit, Playwright, webpack, Jest
-- **Target Runtime**: .NET 9.0
+- **Target Runtime**: .NET 10.0
 - **Cloud Platform**: Azure (Service Bus, Blob Storage, Table Storage, Key Vault)
 - **Container**: Publishes as container image to Azure Container Registry
 
@@ -19,8 +19,8 @@
 ### Prerequisites
 
 - **PowerShell Core 7+** (required for build script)
-- **Node.js 22** (for frontend asset compilation)
-- **Latest .NET 9 SDK** (automatically installed by build script if missing)
+- **Node.js 24** (for frontend asset compilation)
+- **Latest .NET 10 SDK** (automatically installed by build script if missing)
 
 ### Core Build Commands
 
@@ -86,8 +86,8 @@ npm run compile   # TypeScript compilation only
 ### Common Build Issues and Workarounds
 
 1. **Test failures due to .NET runtime mismatch**:
-   - **Issue**: Tests expect .NET 9.0.0 runtime but may find 9.0.8
-   - **Workaround**: Use GitHub Actions environment or ensure proper DOTNET_ROOT/PATH setup
+   - **Issue**: Tests expect .NET 10.0.0 runtime but may find 9.0.x
+   - **Workaround**: Use GitHub Actions environment or ensure proper `DOTNET_ROOT`/`PATH` setup
    - **Solution**: Always use `./build.ps1` which handles environment correctly
 
 2. **Missing TypeScript assets**:
@@ -104,16 +104,16 @@ npm run compile   # TypeScript compilation only
 
 ```
 costellobot/
-├── .github/                    # GitHub workflows, templates, configurations
-│   ├── workflows/              # CI/CD pipelines (build.yml, lint.yml, etc.)
-│   ├── dependabot.yml         # Dependency update configuration
-│   └── CONTRIBUTING.md        # Contribution guidelines
+├── .github/                  # GitHub workflows, templates, configurations
+│   ├── workflows/            # CI/CD pipelines (build.yml, lint.yml, etc.)
+│   ├── dependabot.yml        # Dependency update configuration
+│   └── CONTRIBUTING.md       # Contribution guidelines
 ├── src/
-│   ├── Costellobot/           # Main web application
-│   │   ├── Handlers/          # GitHub webhook event handlers
-│   │   ├── DeploymentRules/   # Deployment approval logic
-│   │   ├── Registries/        # Package registry integrations
-│   │   ├── Authorization/     # Authentication/authorization
+│   ├── Costellobot/          # Main web application
+│   │   ├── Handlers/         # GitHub webhook event handlers
+│   │   ├── DeploymentRules/  # Deployment approval logic
+│   │   ├── Registries/       # Package registry integrations
+│   │   ├── Authorization/    # Authentication/authorization
 │   │   ├── Models/           # Data models and DTOs
 │   │   ├── scripts/ts/       # TypeScript source files
 │   │   ├── styles/           # CSS source files
@@ -123,15 +123,15 @@ costellobot/
 │   │   └── package.json      # npm dependencies
 │   └── Costellobot.AppHost/  # .NET Aspire orchestration host
 ├── tests/
-│   ├── Costellobot.Tests/           # Unit tests (xUnit and Playwright)
-│   ├── Costellobot.EndToEndTests/   # E2E tests (Playwright)
-│   └── Costellobot.Oats/           # OATs OpenTelemetry testing
-├── perf/Costellobot.Benchmarks/    # BenchmarkDotNet performance tests
-├── build.ps1                       # Main build script
-├── global.json                     # .NET SDK version specification
-├── Costellobot.slnx                # Solution file
-├── Directory.Build.props            # MSBuild configuration
-├── Directory.Packages.props         # Central package management
+│   ├── Costellobot.Tests/         # Unit tests (xUnit and Playwright)
+│   ├── Costellobot.EndToEndTests/ # E2E tests (Playwright)
+│   └── Costellobot.Oats/          # OATs OpenTelemetry testing
+├── perf/Costellobot.Benchmarks/   # BenchmarkDotNet performance tests
+├── build.ps1                      # Main build script
+├── global.json                    # .NET SDK version specification
+├── Costellobot.slnx               # Solution file
+├── Directory.Build.props          # MSBuild configuration
+├── Directory.Packages.props       # Central package management
 └── docker-compose.yml             # Local development services for OATs
 ```
 
