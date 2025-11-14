@@ -28,4 +28,4 @@ jobs:
       - name: Review dependencies
         uses: actions/dependency-review-action@3c4e3dcb1aa7874d2c16be7d79418e9b7efd6261 # v4.8.2
         with:
-          allow-licenses: 'BSD-3-Clause AND LicenseRef-scancode-protobuf,(MIT AND BSD-3-Clause),(MIT AND Zlib),(MIT OR Apache-2.0),(MIT OR CC0-1.0),0BSD,Apache-2.0,BlueOak-1.0.0,BSD-2-Clause,BSD-3-Clause,CC-BY-4.0,CC0-1.0,ISC,MIT,MIT-0,Python-2.0,Unlicense'
+          allow-licenses: '(BSD-3-Clause AND LicenseRef-scancode-protobuf),(MIT AND BSD-3-Clause),(MIT AND Zlib),(MIT OR Apache-2.0),(MIT OR CC0-1.0),0BSD,Apache-2.0,BlueOak-1.0.0,BSD-2-Clause,BSD-3-Clause,CC-BY-4.0,CC0-1.0,ISC,MIT,MIT-0,Python-2.0,Unlicense'
