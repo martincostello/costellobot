@@ -111,7 +111,7 @@ public sealed partial class PullRequestReviewHandler(
 
         static bool IsApprovedByOwner(Review review) =>
             review is { AuthorAssociation.Value: Octokit.Webhooks.Models.AuthorAssociation.Owner } &&
-            review?.State is { Value: Octokit.Webhooks.Models.PullRequestReviewEvent.ReviewState.Approved };
+            review.State is { Value: Octokit.Webhooks.Models.PullRequestReviewEvent.ReviewState.Approved };
     }
 
     private async Task<string> GetAppLoginAsync(CancellationToken cancellationToken) =>
