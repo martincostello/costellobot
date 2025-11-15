@@ -22,7 +22,7 @@
   "dependencies": {
     "@grafana/faro-web-sdk": "2.0.2",
     "@grafana/faro-web-tracing": "2.0.2",
-    "@microsoft/signalr": "9.0.6",
+    "@microsoft/signalr": "10.0.0",
     "moment": "2.30.1"
   },
   "devDependencies": {
