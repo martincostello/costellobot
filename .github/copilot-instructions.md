@@ -9,7 +9,7 @@
 - **Size**: several hundred C# files, a handful of TypeScript files
 - **Type**: ASP.NET Core web application with microservices architecture using .NET Aspire
 - **Languages**: C# (.NET 10.0), TypeScript, PowerShell
-- **Frameworks**: ASP.NET Core, .NET Aspire, xUnit, Playwright, webpack, Jest
+- **Frameworks**: ASP.NET Core, .NET Aspire, xUnit, Playwright, webpack, Vitest
 - **Target Runtime**: .NET 10.0
 - **Cloud Platform**: Azure (Service Bus, Blob Storage, Table Storage, Key Vault)
 - **Container**: Publishes as container image to Azure Container Registry
@@ -54,7 +54,7 @@
 ```bash
 cd src/Costellobot
 npm install
-npm run build  # Compiles TypeScript, runs ESLint, Prettier, Jest tests
+npm run build  # Compiles TypeScript, runs ESLint, Prettier, Vitest tests
 ```
 
 Frontend build includes:
@@ -63,7 +63,7 @@ Frontend build includes:
 - CSS processing and minification
 - ESLint linting
 - Prettier code formatting
-- Jest unit tests
+- Vitest unit tests
 - Output to `src/Costellobot/wwwroot/static/`
 
 ### Manual Commands (for troubleshooting)
@@ -79,7 +79,7 @@ PATH=./.dotnet:$PATH DOTNET_ROOT=./.dotnet ./.dotnet/dotnet test --configuration
 cd src/Costellobot
 npm run lint      # ESLint only
 npm run format    # Prettier + StyleLint
-npm test          # Jest tests only
+npm test          # Vitest tests only
 npm run compile   # TypeScript compilation only
 ```
 
