@@ -24,7 +24,7 @@
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.26.0" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.7" />
     <PackageVersion Include="coverlet.msbuild" Version="6.0.4" />
-    <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
+    <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.0" />
     <PackageVersion Include="Google.Apis.Calendar.v3" Version="1.72.0.3953" />
     <PackageVersion Include="Humanizer" Version="3.0.1" />
     <PackageVersion Include="JunitXml.TestLogger" Version="7.0.2" />
@@ -68,7 +68,7 @@
     <PackageVersion Include="Sentry.AspNetCore" Version="5.16.2" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <PackageVersion Include="xunit.v3" Version="3.2.0" />
+    <PackageVersion Include="xunit.v3.mtp-off" Version="3.2.0" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
 </Project>
