@@ -58,13 +58,6 @@ jobs:
         with:
           node-version: '24.x'
 
-      - name: Setup NuGet cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ env.NUGET_PACKAGES }}
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props') }}
-          restore-keys: ${{ runner.os }}-nuget-
-
       - name: Build container
         id: build
         run: dotnet publish ./src/Costellobot --arch x64 --os linux -p:PublishProfile=DefaultContainer -p:SetGitHubContainerPublishingOutputs=true
