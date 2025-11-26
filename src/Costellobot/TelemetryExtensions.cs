@@ -31,7 +31,8 @@ public static class TelemetryExtensions
                           .AddProcessInstrumentation()
                           .AddMeter(ApplicationTelemetry.ServiceName)
                           .AddMeter("Polly")
-                          .AddMeter("System.Runtime");
+                          .AddMeter("System.Runtime")
+                          .SetExemplarFilter(ExemplarFilterType.TraceBased);
                })
                .WithTracing((builder) =>
                {
