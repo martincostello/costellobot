@@ -40,8 +40,7 @@ interval: 500ms
 expected:
   logs:
     - logql: '{ service_name="Costellobot" } |~ `Application started.`'
-      contains:
-        - 'Application started'
+      regexp: 'Application started'
   metrics:
     - promql: costellobot_github_webhook_delivery_total{ github_webhook_event="ping" }
       value: '>= 1'
@@ -53,63 +52,63 @@ expected:
       value: '>= 1'
   traces:
     - traceql: '{ span.messaging.operation = "receive" }'
-      spans:
-        - name: 'ServiceBusReceiver.Receive'
-          attributes:
-            az.namespace: Microsoft.ServiceBus
-            messaging.destination.name: queue.1
-            messaging.operation: receive
-            messaging.system: servicebus
+      equals: 'ServiceBusReceiver.Receive'
+      attributes:
+        az.namespace: Microsoft.ServiceBus
+        messaging.destination.name: queue.1
+        messaging.operation: receive
+        messaging.system: servicebus
     - traceql: '{ span.http.route =~ "/github-webhook" }'
-      spans:
-        - name: 'POST /github-webhook'
-          attributes:
-            github.webhook.delivery: 09e27db8-e74c-4a28-a951-50552382af03
-            github.webhook.event: ping
-            github.webhook.hook.id: 109948940
-            github.webhook.hook.installation.target.id: 183256
-            http.request.method: POST
-            http.response.status_code: 200
-            messaging.message.id: regex:.+
-        - name: 'ServiceBusProcessor.ProcessMessage'
-          attributes:
-            az.namespace: Microsoft.ServiceBus
-            messaging.destination.name: queue.1
-            messaging.operation: process
-            messaging.system: servicebus
-        - name: 'ServiceBusReceiver.Complete'
-          attributes:
-            az.namespace: Microsoft.ServiceBus
-            messaging.destination.name: queue.1
-            messaging.operation: settle
-            messaging.system: servicebus
-        - name: 'ServiceBusSender.Send'
-          attributes:
-            az.namespace: Microsoft.ServiceBus
-            messaging.destination.name: queue.1
-            messaging.operation: publish
-            messaging.system: servicebus
+      equals: 'POST /github-webhook'
+      attributes:
+        github.webhook.delivery: 09e27db8-e74c-4a28-a951-50552382af03
+        github.webhook.event: ping
+        github.webhook.hook.id: 109948940
+        github.webhook.hook.installation.target.id: 183256
+        http.request.method: POST
+        http.response.status_code: 200
+        messaging.message.id: regex:.+
+    - traceql: '{ span.http.route =~ "/github-webhook" }'
+      equals: 'ServiceBusProcessor.ProcessMessage'
+      attributes:
+        az.namespace: Microsoft.ServiceBus
+        messaging.destination.name: queue.1
+        messaging.operation: process
+        messaging.system: servicebus
+    - traceql: '{ span.http.route =~ "/github-webhook" }'
+      equals: 'ServiceBusReceiver.Complete'
+      attributes:
+        az.namespace: Microsoft.ServiceBus
+        messaging.destination.name: queue.1
+        messaging.operation: settle
+        messaging.system: servicebus
+    - traceql: '{ span.http.route =~ "/github-webhook" }'
+      equals: 'ServiceBusSender.Send'
+      attributes:
+        az.namespace: Microsoft.ServiceBus
+        messaging.destination.name: queue.1
+        messaging.operation: publish
+        messaging.system: servicebus
     - traceql: '{ span.http.route =~ "/version" }'
-      spans:
-        - name: 'GET /version'
-          attributes:
-            cloud.provider: azure
-            container.id: regex:.+
-            host.name: regex:.+
-            http.request.method: GET
-            http.response.status_code: 200
-            os.build_id: regex:.+
-            os.description: regex:.+
-            os.name: Ubuntu
-            os.type: linux
-            os.version: regex:.+
-            process.runtime.description: regex:.NET.+
-            process.runtime.name: .NET
-            process.runtime.version: regex:.+
-            service.instance.id: regex:.+
-            service.name: Costellobot
-            service.namespace: Costellobot
-            service.version: regex:1.0.\d+
-            telemetry.sdk.language: dotnet
-            telemetry.sdk.name: opentelemetry
-            telemetry.sdk.version: regex:.+
+      equals: 'GET /version'
+      attributes:
+        cloud.provider: azure
+        container.id: regex:.+
+        host.name: regex:.+
+        http.request.method: GET
+        http.response.status_code: 200
+        os.build_id: regex:.+
+        os.description: regex:.+
+        os.name: Ubuntu
+        os.type: linux
+        os.version: regex:.+
+        process.runtime.description: regex:.NET.+
+        process.runtime.name: .NET
+        process.runtime.version: regex:.+
+        service.instance.id: regex:.+
+        service.name: Costellobot
+        service.namespace: Costellobot
+        service.version: regex:1.0.\d+
+        telemetry.sdk.language: dotnet
+        telemetry.sdk.name: opentelemetry
+        telemetry.sdk.version: regex:.+
