@@ -67,7 +67,8 @@ expected:
         github.webhook.hook.installation.target.id: 183256
         http.request.method: POST
         http.response.status_code: 200
-        messaging.message.id: regex:.+
+      attribute-regexp:
+        messaging.message.id: .+
     - traceql: '{ span.http.route =~ "/github-webhook" }'
       equals: 'ServiceBusProcessor.ProcessMessage'
       attributes:
@@ -93,22 +94,23 @@ expected:
       equals: 'GET /version'
       attributes:
         cloud.provider: azure
-        container.id: regex:.+
-        host.name: regex:.+
         http.request.method: GET
         http.response.status_code: 200
-        os.build_id: regex:.+
-        os.description: regex:.+
         os.name: Ubuntu
         os.type: linux
-        os.version: regex:.+
-        process.runtime.description: regex:.NET.+
         process.runtime.name: .NET
-        process.runtime.version: regex:.+
-        service.instance.id: regex:.+
         service.name: Costellobot
         service.namespace: Costellobot
-        service.version: regex:1.0.\d+
         telemetry.sdk.language: dotnet
         telemetry.sdk.name: opentelemetry
-        telemetry.sdk.version: regex:.+
+      attributes-regexp:
+        container.id: .+
+        host.name: .+
+        os.build_id: .+
+        os.description: .+
+        os.version: .+
+        process.runtime.description: .NET.+
+        process.runtime.version: .+
+        service.instance.id: .+
+        service.version: 1.0.\d+
+        telemetry.sdk.version: .+
