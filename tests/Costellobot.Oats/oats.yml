@@ -103,7 +103,7 @@ expected:
         service.namespace: Costellobot
         telemetry.sdk.language: dotnet
         telemetry.sdk.name: opentelemetry
-      attributes-regexp:
+      attribute-regexp:
         container.id: .+
         host.name: .+
         os.build_id: .+
