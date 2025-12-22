@@ -1,5 +1,0 @@
-paths:
-  .github/workflows/build.yml:
-    ignore:
-      # Depends on https://github.com/rhysd/actionlint/pull/602
-      - 'unknown permission scope "artifact-metadata"'
