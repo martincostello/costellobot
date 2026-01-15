@@ -44,7 +44,6 @@
     <File Path=".github/workflows/codeql.yml" />
     <File Path=".github/workflows/container-scan.yml" />
     <File Path=".github/workflows/dependency-review.yml" />
-    <File Path=".github/workflows/lighthouse.yml" />
     <File Path=".github/workflows/lint.yml" />
     <File Path=".github/workflows/ossf-scorecard.yml" />
     <File Path=".github/workflows/update-bank-holidays.yml" />

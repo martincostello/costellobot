@@ -183,7 +183,6 @@ The application follows a clean architecture pattern:
 3. **Additional workflows**:
    - `codeql.yml`: Security analysis
    - `dependency-review.yml`: Dependency security scanning
-   - `lighthouse.yml`: Web performance testing
    - `container-scan.yml`: Container vulnerability scanning
 
 If changing GitHub Actions workflows **ALWAYS** pin versions.
