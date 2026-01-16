@@ -16,7 +16,7 @@ services:
       - Webhook__QueueName=queue.1
       - WEBSITE_SITE_NAME=Costellobot
   servicebus-emulator:
-    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:1.1.2@sha256:353913ece3d9124cebd40f4b91d00dd197846b8cf86eae9a4790698709c64a1d
+    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:2.0.0@sha256:a00c9626c8960f6b9be6178aa91a7ac8f1a102c0d9deda7603a1ba0ac9d9ab51
     depends_on:
       - sql-server
     ports:
