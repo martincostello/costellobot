@@ -122,14 +122,14 @@ jobs:
         PYROSCOPE_ARCH: 'x86_64'
         PYROSCOPE_VARIANT: 'glibc'
         # renovate: datasource=nuget depName=Pyroscope packageName=Pyroscope
-        PYROSCOPE_VERSION: '0.10.0'
+        PYROSCOPE_VERSION: '0.14.1'
         SentryAuthToken: ${{ secrets.SENTRY_TOKEN }}
         UsePyroscope: 'true'
       run: |
         if (${env:UsePyroscope} -eq "true") {
           Write-Output "Downloading Pyroscope..."
 
-          $pyroscope = (gh api "/repos/grafana/pyroscope-dotnet/releases/tags/v${env:PYROSCOPE_VERSION}" | ConvertFrom-Json)
+          $pyroscope = (gh api "/repos/grafana/pyroscope-dotnet/releases/tags/v${env:PYROSCOPE_VERSION}-pyroscope" | ConvertFrom-Json)
           $pyroscopeAsset = $pyroscope.assets | Where-Object { $_.name -eq "pyroscope.${env:PYROSCOPE_VERSION}-${env:PYROSCOPE_VARIANT}-${env:PYROSCOPE_ARCH}.tar.gz" }
           $pyroscopeUrl = $pyroscopeAsset.browser_download_url
 
