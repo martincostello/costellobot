@@ -56,7 +56,33 @@ jobs:
 
       - name: Build container
         id: build
-        run: dotnet publish ./src/Costellobot --arch x64 --os linux -p:PublishProfile=DefaultContainer -p:SetGitHubContainerPublishingOutputs=true
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYROSCOPE_ARCH: 'x86_64'
+          PYROSCOPE_VARIANT: 'glibc'
+          # renovate: datasource=nuget depName=Pyroscope packageName=Pyroscope
+          PYROSCOPE_VERSION: '0.14.1'
+        run: |
+          Write-Output "Downloading Pyroscope..."
+
+          $pyroscope = (gh api "/repos/grafana/pyroscope-dotnet/releases/tags/v${env:PYROSCOPE_VERSION}-pyroscope" | ConvertFrom-Json)
+          $pyroscopeAsset = $pyroscope.assets | Where-Object { $_.name -eq "pyroscope.${env:PYROSCOPE_VERSION}-${env:PYROSCOPE_VARIANT}-${env:PYROSCOPE_ARCH}.tar.gz" }
+          $pyroscopeUrl = $pyroscopeAsset.browser_download_url
+
+          $archive = Join-Path ${env:RUNNER_TEMP} "pyroscope.tar.gz"
+          Invoke-WebRequest -Uri $pyroscopeUrl -OutFile $archive
+
+          Write-Output "Extracting Pyroscope..."
+
+          $targetPath = Join-Path ${env:GITHUB_WORKSPACE} ".pyroscope"
+          New-Item -Path $targetPath -Type Directory -Force | Out-Null
+          tar -xzf $archive -C $targetPath
+
+          chmod +x (Join-Path $targetPath "Pyroscope.Linux.ApiWrapper.x64.so")
+          chmod +x (Join-Path $targetPath "Pyroscope.Profiler.Native.so")
+
+          dotnet publish ./src/Costellobot --arch x64 --os linux -p:PublishProfile=DefaultContainer -p:SetGitHubContainerPublishingOutputs=true
 
       - name: Tag container
         env:
