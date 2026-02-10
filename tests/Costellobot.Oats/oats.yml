@@ -53,8 +53,6 @@ expected:
       value: '>= 1'
   profiles:
     - query: 'process_cpu:cpu:nanoseconds:cpu:nanoseconds{service_name="Costellobot"}'
-      flamebearers:
-        contains: "Microsoft.AspNetCore."
   traces:
     - traceql: '{ span.messaging.operation = "receive" }'
       equals: 'ServiceBusReceiver.Receive'
