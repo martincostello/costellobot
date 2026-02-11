@@ -44,7 +44,7 @@ jobs:
         uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           cache: false
-          go-version: '1.25'
+          go-version: '1.26'
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
