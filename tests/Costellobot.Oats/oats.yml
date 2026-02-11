@@ -51,6 +51,13 @@ expected:
       value: '>= 1'
     - promql: http_server_request_duration_seconds_count{}
       value: '>= 1'
+  profiles:
+    - query: process_cpu:cpu:nanoseconds:cpu:nanoseconds{ service_name="Costellobot" }
+      flamebearers:
+        regexp: MartinCostello.Costellobot!
+    - query: process_cpu:alloc_size:bytes:cpu:nanoseconds{ service_name="Costellobot" }
+      flamebearers:
+        regexp: MartinCostello.Costellobot!
   traces:
     - traceql: '{ span.messaging.operation = "receive" }'
       equals: 'ServiceBusReceiver.Receive'
