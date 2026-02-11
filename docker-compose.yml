@@ -14,7 +14,7 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://lgtm:4318
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
       - PYROSCOPE_PROFILING_ENABLED=1
-      - PYROSCOPE_SERVER_ADDRESS=http://lgtm:4318
+      - PYROSCOPE_SERVER_ADDRESS=http://lgtm:4040
       - Webhook__QueueName=queue.1
       - WEBSITE_SITE_NAME=Costellobot
   servicebus-emulator:

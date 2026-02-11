@@ -52,7 +52,7 @@ expected:
     - promql: http_server_request_duration_seconds_count{}
       value: '>= 1'
   profiles:
-    - query: 'process_cpu:cpu:nanoseconds:cpu:nanoseconds{service_name="Costellobot"}'
+    - query: process_cpu:cpu:nanoseconds:cpu:nanoseconds{ service_name="costellobot-martincostello" }
       flamebearers:
         regexp: "Microsoft.AspNetCore."
   traces:
