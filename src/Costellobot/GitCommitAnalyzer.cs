@@ -393,7 +393,7 @@ public sealed partial class GitCommitAnalyzer(
             trustedDependencies = [];
         }
 
-        Dictionary<string, (bool Trusted, string? Version)> dependencyTrust = new(dependencies.Count);
+        Dictionary<string, (bool Trusted, string? Version)> dependencyTrust = [with(dependencies.Count)];
 
         foreach (var dependency in dependencies)
         {
