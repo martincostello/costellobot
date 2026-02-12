@@ -151,9 +151,9 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
         public string RowKey { get; set; } = default!;
 
         /// <inheritdoc/>
-        public DateTimeOffset? Timestamp { get; set; } = default;
+        public DateTimeOffset? Timestamp { get; set; }
 
         /// <inheritdoc/>
-        public ETag ETag { get; set; } = default;
+        public ETag ETag { get; set; }
     }
 }
