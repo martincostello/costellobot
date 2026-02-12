@@ -23,7 +23,7 @@ namespace MartinCostello.Costellobot.Infrastructure;
 
 public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAccessor
 {
-    private readonly Dictionary<string, string?> _configOverrides = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string?> _configOverrides = [with(StringComparer.OrdinalIgnoreCase)];
 
     private DateTimeOffset? _utcNow;
 
