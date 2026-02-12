@@ -389,7 +389,7 @@ public sealed partial class GitCommitAnalyzer(
         // First do a simple lookup by name
         var trustedDependencies = context.WebhookOptions.TrustedEntities.Dependencies;
 
-        Dictionary<string, (bool Trusted, string? Version)> dependencyTrust = new(dependencies.Count);
+        Dictionary<string, (bool Trusted, string? Version)> dependencyTrust = [with(dependencies.Count)];
 
         foreach (var dependency in dependencies)
         {
