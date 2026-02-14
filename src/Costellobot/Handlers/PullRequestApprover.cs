@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using Octokit.GraphQL;
+using Octokit.GraphQL.Core.Deserializers;
 using Octokit.GraphQL.Model;
 using PullRequestMergeMethod = Octokit.GraphQL.Model.PullRequestMergeMethod;
 
@@ -113,7 +114,7 @@ public sealed partial class PullRequestApprover(
 
             Log.AutoMergeEnabled(logger, pull);
         }
-        catch (Octokit.GraphQL.Core.Deserializers.ResponseDeserializerException ex) when (ex.Message.Contains("Pull request Pull request is in clean status", StringComparison.OrdinalIgnoreCase))
+        catch (ResponseDeserializerException ex) when (CanAttemptMerge(ex))
         {
             try
             {
@@ -138,6 +139,10 @@ public sealed partial class PullRequestApprover(
         {
             Log.EnableAutoMergeFailed(logger, ex, pull, nodeId);
         }
+
+        static bool CanAttemptMerge(ResponseDeserializerException ex) =>
+            ex.Message.Contains("Pull request Pull request is in clean status", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("Pull request Pull request is in unstable status", StringComparison.OrdinalIgnoreCase);
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
