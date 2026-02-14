@@ -165,10 +165,13 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     }
 
     [Theory]
-    [InlineData("dependencies")]
-    [InlineData("merge-approved")]
+    [InlineData("dependencies", "Pull request Pull request is in clean status")]
+    [InlineData("dependencies", "Pull request Pull request is in unstable status")]
+    [InlineData("merge-approved", "Pull request Pull request is in clean status")]
+    [InlineData("merge-approved", "Pull request Pull request is in unstable status")]
     public async Task Pull_Request_Is_Approved_And_Merged_For_Trusted_User_With_Untrusted_Dependency_When_Labelled_By_Collaborator(
-        string label)
+        string label,
+        string message)
     {
         // Arrange
         Fixture.ApprovePullRequests();
@@ -214,7 +217,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
                                  column = 21,
                              },
                          },
-                         message = "[\"Pull request Pull request is in clean status\"]",
+                         message = $"[\"{message}\"]",
                      },
                  },
              })
