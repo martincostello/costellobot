@@ -26,7 +26,7 @@ public class AppFixture
         get
         {
             Assert.SkipWhen(_serverAddress is null, $"The {ApplicationUrl} environment variable is not set or is not a valid absolute URI.");
-            return _serverAddress!;
+            return _serverAddress;
         }
     }
 
