@@ -5,6 +5,8 @@ namespace MartinCostello.Costellobot;
 
 public sealed class GrafanaOptions
 {
+    public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(30);
+
     public string Token { get; set; } = string.Empty;
 
     public string Url { get; set; } = string.Empty;

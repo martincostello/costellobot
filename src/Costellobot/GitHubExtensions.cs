@@ -180,6 +180,7 @@ public static class GitHubExtensions
             client.BaseAddress = new(options.Url, UriKind.Absolute);
             client.DefaultRequestHeaders.Accept.Add(new("application/json"));
             client.DefaultRequestHeaders.Authorization = new("Bearer", options.Token);
+            client.Timeout = options.Timeout;
         });
 
         services.AddHostedService<GitHubWebhookService>();
