@@ -312,9 +312,10 @@ public sealed partial class GitCommitAnalyzer(
             "docker" or "dockerfile" or "docker-compose" => DependencyEcosystem.Docker,
             "github-actions" or "github_actions" => DependencyEcosystem.GitHubActions,
             "github-releases" => DependencyEcosystem.GitHubRelease,
+            "git-submodules" or "submodules" => DependencyEcosystem.GitSubmodule,
             "npm" or "npm_and_yarn" => DependencyEcosystem.Npm,
             "nuget" => DependencyEcosystem.NuGet,
-            "git-submodules" or "submodules" => DependencyEcosystem.GitSubmodule,
+            "pip" or "pypi" => DependencyEcosystem.PyPI,
             _ => DependencyEcosystem.Unsupported,
         };
 

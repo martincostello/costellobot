@@ -1,0 +1,134 @@
+{
+  "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
+  "id": "pypi-warehouse",
+  "version": 1,
+  "comment": "HTTP bundle for PyPi projects.",
+  "items": [
+    {
+      "comment": "The package for boto3 v1.26.0",
+      "uri": "https://pypi.org/pypi/boto3/1.26.0/json",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "info": {
+          "author": "Amazon Web Services",
+          "author_email": "",
+          "bugtrack_url": null,
+          "classifiers": [ "Development Status :: 5 - Production/Stable", "Intended Audience :: Developers", "License :: OSI Approved :: Apache Software License", "Natural Language :: English", "Programming Language :: Python", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.7", "Programming Language :: Python :: 3.8", "Programming Language :: Python :: 3.9" ],
+          "description": "===============================\nBoto3 - The AWS SDK for Python\n===============================\n\n|Version| |Python| |License|\n\nBoto3 is the Amazon Web Services (AWS) Software Development Kit (SDK) for\nPython, which allows Python developers to write software that makes use\nof services like Amazon S3 and Amazon EC2. You can find the latest, most\nup to date, documentation at our `doc site`_, including a list of\nservices that are supported.\n\nBoto3 is maintained and published by `Amazon Web Services`_.\n\nBoto (pronounced boh-toh) was named after the fresh water dolphin native to the Amazon river. The name was chosen by the author of the original Boto library, Mitch Garnaat, as a reference to the company.\n\nNotices\n-------\n\nOn 2021-01-15, deprecation for Python 2.7 was announced and support was dropped\non 2021-07-15. To avoid disruption, customers using Boto3 on Python 2.7 may\nneed to upgrade their version of Python or pin the version of Boto3. For\nmore information, see this `blog post <https://aws.amazon.com/blogs/developer/announcing-end-of-support-for-python-2-7-in-aws-sdk-for-python-and-aws-cli-v1/>`__.\n\nOn 2022-05-30, support for Python 3.6 was ended. This follows the\nPython Software Foundation `end of support <https://www.python.org/dev/peps/pep-0494/#lifespan>`__\nfor the runtime which occurred on 2021-12-23.\nFor more information, see this `blog post <https://aws.amazon.com/blogs/developer/python-support-policy-updates-for-aws-sdks-and-tools/>`__.\n\n.. _boto: https://docs.pythonboto.org/\n.. _`doc site`: https://boto3.amazonaws.com/v1/documentation/api/latest/index.html\n.. _`Amazon Web Services`: https://aws.amazon.com/what-is-aws/\n.. |Python| image:: https://img.shields.io/pypi/pyversions/boto3.svg?style=flat\n    :target: https://pypi.python.org/pypi/boto3/\n    :alt: Python Versions\n.. |Version| image:: http://img.shields.io/pypi/v/boto3.svg?style=flat\n    :target: https://pypi.python.org/pypi/boto3/\n    :alt: Package Version\n.. |License| image:: http://img.shields.io/pypi/l/boto3.svg?style=flat\n    :target: https://github.com/boto/boto3/blob/develop/LICENSE\n    :alt: License\n\nGetting Started\n---------------\nAssuming that you have a supported version of Python installed, you can first\nset up your environment with:\n\n.. code-block:: sh\n\n    $ python -m venv .venv\n    ...\n    $ . .venv/bin/activate\n\nThen, you can install boto3 from PyPI with:\n\n.. code-block:: sh\n\n    $ python -m pip install boto3\n\nor install from source with:\n\n.. code-block:: sh\n\n    $ git clone https://github.com/boto/boto3.git\n    $ cd boto3\n    $ python -m pip install -r requirements.txt\n    $ python -m pip install -e .\n\n\nUsing Boto3\n~~~~~~~~~~~~~~\nAfter installing boto3\n\nNext, set up credentials (in e.g. ``~/.aws/credentials``):\n\n.. code-block:: ini\n\n    [default]\n    aws_access_key_id = YOUR_KEY\n    aws_secret_access_key = YOUR_SECRET\n\nThen, set up a default region (in e.g. ``~/.aws/config``):\n\n.. code-block:: ini\n\n   [default]\n   region=us-east-1\n\nOther credentials configuration method can be found `here <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html>`__\n\nThen, from a Python interpreter:\n\n.. code-block:: python\n\n    >>> import boto3\n    >>> s3 = boto3.resource('s3')\n    >>> for bucket in s3.buckets.all():\n            print(bucket.name)\n\nRunning Tests\n~~~~~~~~~~~~~\nYou can run tests in all supported Python versions using ``tox``. By default,\nit will run all of the unit and functional tests, but you can also specify your own\n``pytest`` options. Note that this requires that you have all supported\nversions of Python installed, otherwise you must pass ``-e`` or run the\n``pytest`` command directly:\n\n.. code-block:: sh\n\n    $ tox\n    $ tox -- unit/test_session.py\n    $ tox -e py26,py33 -- integration/\n\nYou can also run individual tests with your default Python version:\n\n.. code-block:: sh\n\n    $ pytest tests/unit\n\n\nGetting Help\n------------\n\nWe use GitHub issues for tracking bugs and feature requests and have limited\nbandwidth to address them. Please use these community resources for getting\nhelp:\n\n* Ask a question on `Stack Overflow <https://stackoverflow.com/>`__ and tag it with `boto3 <https://stackoverflow.com/questions/tagged/boto3>`__\n* Open a support ticket with `AWS Support <https://console.aws.amazon.com/support/home#/>`__\n* If it turns out that you may have found a bug, please `open an issue <https://github.com/boto/boto3/issues/new>`__\n\n\nContributing\n------------\n\nWe value feedback and contributions from our community. Whether it's a bug report, new feature, correction, or additional documentation, we welcome your issues and pull requests. Please read through this `CONTRIBUTING <https://github.com/boto/boto3/blob/develop/CONTRIBUTING.rst>`__ document before submitting any issues or pull requests to ensure we have all the necessary information to effectively respond to your contribution.\n\n\nMaintenance and Support for SDK Major Versions\n----------------------------------------------\n\nBoto3 was made generally available on 06/22/2015 and is currently in the full support phase of the availability life cycle.\n\nFor information about maintenance and support for SDK major versions and their underlying dependencies, see the following in the AWS SDKs and Tools Shared Configuration and Credentials Reference Guide:\n\n* `AWS SDKs and Tools Maintenance Policy <https://docs.aws.amazon.com/sdkref/latest/guide/maint-policy.html>`__\n* `AWS SDKs and Tools Version Support Matrix <https://docs.aws.amazon.com/sdkref/latest/guide/version-support-matrix.html>`__\n\n\nMore Resources\n--------------\n\n* `NOTICE <https://github.com/boto/boto3/blob/develop/NOTICE>`__\n* `Changelog <https://github.com/boto/boto3/blob/develop/CHANGELOG.rst>`__\n* `License <https://github.com/boto/boto3/blob/develop/LICENSE>`__\n\n\n",
+          "description_content_type": "",
+          "docs_url": null,
+          "download_url": "",
+          "downloads": {
+            "last_day": -1,
+            "last_month": -1,
+            "last_week": -1
+          },
+          "dynamic": null,
+          "home_page": "https://github.com/boto/boto3",
+          "keywords": "",
+          "license": "Apache License 2.0",
+          "license_expression": null,
+          "license_files": null,
+          "maintainer": "",
+          "maintainer_email": "",
+          "name": "boto3",
+          "package_url": "https://pypi.org/project/boto3/",
+          "platform": null,
+          "project_url": "https://pypi.org/project/boto3/",
+          "project_urls": {
+            "Documentation": "https://boto3.amazonaws.com/v1/documentation/api/latest/index.html",
+            "Homepage": "https://github.com/boto/boto3",
+            "Source": "https://github.com/boto/boto3"
+          },
+          "provides_extra": null,
+          "release_url": "https://pypi.org/project/boto3/1.26.0/",
+          "requires_dist": [ "botocore (<1.30.0,>=1.29.0)", "jmespath (<2.0.0,>=0.7.1)", "s3transfer (<0.7.0,>=0.6.0)", "botocore[crt] (<2.0a0,>=1.21.0) ; extra == 'crt'" ],
+          "requires_python": ">= 3.7",
+          "summary": "The AWS SDK for Python",
+          "version": "1.26.0",
+          "yanked": false,
+          "yanked_reason": null
+        },
+        "last_serial": 34396177,
+        "ownership": {
+          "organization": null,
+          "roles": [
+            {
+              "role": "Owner",
+              "user": "aws"
+            }
+          ]
+        },
+        "urls": [
+          {
+            "comment_text": "",
+            "digests": {
+              "blake2b_256": "646a944b995c2483f9c3f7f7710be24a681cdd2007ffce8c69bfeb3a927ce2bf",
+              "md5": "090226f1dde408daae5345310899c20d",
+              "sha256": "0a19d07a39d69b8e84e24d75474bbf4e737b1749d0c665503dfc2446f321e1f0"
+            },
+            "downloads": -1,
+            "filename": "boto3-1.26.0-py3-none-any.whl",
+            "has_sig": false,
+            "md5_digest": "090226f1dde408daae5345310899c20d",
+            "packagetype": "bdist_wheel",
+            "python_version": "py3",
+            "requires_python": ">= 3.7",
+            "size": 132482,
+            "upload_time": "2022-11-01T20:40:44",
+            "upload_time_iso_8601": "2022-11-01T20:40:44.666740Z",
+            "url": "https://files.pythonhosted.org/packages/64/6a/944b995c2483f9c3f7f7710be24a681cdd2007ffce8c69bfeb3a927ce2bf/boto3-1.26.0-py3-none-any.whl",
+            "yanked": false,
+            "yanked_reason": null
+          },
+          {
+            "comment_text": "",
+            "digests": {
+              "blake2b_256": "771891af4ff58b26d03af8bf8e0759c4087b77032bdc54199d750905080c669a",
+              "md5": "17f5f946d79da139fa9fd9b014fe0d99",
+              "sha256": "8f0e4eb5c26f927c09bc03302d38156af578b816f1e4f8ca4f0f734d134b9d4f"
+            },
+            "downloads": -1,
+            "filename": "boto3-1.26.0.tar.gz",
+            "has_sig": false,
+            "md5_digest": "17f5f946d79da139fa9fd9b014fe0d99",
+            "packagetype": "sdist",
+            "python_version": "source",
+            "requires_python": ">= 3.7",
+            "size": 104017,
+            "upload_time": "2022-11-01T20:40:46",
+            "upload_time_iso_8601": "2022-11-01T20:40:46.947796Z",
+            "url": "https://files.pythonhosted.org/packages/77/18/91af4ff58b26d03af8bf8e0759c4087b77032bdc54199d750905080c669a/boto3-1.26.0.tar.gz",
+            "yanked": false,
+            "yanked_reason": null
+          }
+        ],
+        "vulnerabilities": []
+      }
+    },
+    {
+      "comment": "A package that does not exist",
+      "uri": "https://pypi.org/pypi/foo/0.0.0/json",
+      "method": "GET",
+      "status": "404",
+      "contentFormat": "string",
+      "contentString": "version not found: 10.0.0"
+    },
+    {
+      "comment": "A package with an organization",
+      "uri": "https://pypi.org/pypi/some-package/1.2.3/json",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "info": {
+          "name": "some-package",
+          "version": "1.2.3"
+        },
+        "ownership": {
+          "organization": "weyland-yutani"
+        }
+      }
+    }
+  ]
+}

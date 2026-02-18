@@ -352,6 +352,7 @@ public static class AdminEndpoints
                     DependencyEcosystem.GitHubRelease,
                     DependencyEcosystem.Npm,
                     DependencyEcosystem.NuGet,
+                    DependencyEcosystem.PyPI,
                     DependencyEcosystem.Ruby,
                 ];
 

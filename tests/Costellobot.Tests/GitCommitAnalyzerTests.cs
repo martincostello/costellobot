@@ -185,11 +185,12 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     [Theory]
     [InlineData("@actions/github", "dependabot/npm_and_yarn/actions/github-5.0.3", "5.0.3", DependencyEcosystem.Npm, new[] { "thboop" }, false)]
     [InlineData("actions/checkout", "dependabot/github_actions/actions/checkout-3", "3", DependencyEcosystem.GitHubActions, new[] { "actions" }, true)]
+    [InlineData("boto3", "dependabot/pip/boto3-1.26.0", "1.26.0", DependencyEcosystem.PyPI, new[] { "aws" }, true)]
     [InlineData("JustEat.HttpClientInterception", "dependabot/nuget/JustEat.HttpClientInterception-3.1.1", "3.1.1", DependencyEcosystem.NuGet, new[] { "JUSTEAT_OSS" }, false)]
     [InlineData("Microsoft.EntityFrameworkCore.SqlServer", "dependabot/nuget/Microsoft.EntityFrameworkCore.SqlServer-7.0.0-preview.6.22329.4", "7.0.0-preview.6.22329.4", DependencyEcosystem.NuGet, new[] { "aspnet", "EntityFramework", "Microsoft" }, true)]
     [InlineData("Microsoft.NET.Sdk", "update-dotnet-sdk-6.0.302", "6.0.302", DependencyEcosystem.Unknown, new string[0], false)]
     [InlineData("NodaTime", "dependabot/nuget/NodaTimeVersion-3.1.0", "3.1.0", DependencyEcosystem.NuGet, new[] { "NodaTime" }, false)]
-    [InlineData("python-dotenv", "dependabot/pip/python-dotenv-0.17.1", "0.17.1", DependencyEcosystem.Unsupported, new string[0], false)]
+    [InlineData("python-dotenv", "dependabot/pip/python-dotenv-0.17.1", "0.17.1", DependencyEcosystem.PyPI, new string[0], false)]
     [InlineData("src/submodules/dependabot-helper", "dependabot/submodules/src/submodules/dependabot-helper-697aaa7", "697aaa7", DependencyEcosystem.GitSubmodule, new[] { "https://github.com/martincostello" }, true)]
     [InlineData("typescript", "dependabot/npm_and_yarn/typescript-5.0.1", "5.0.1", DependencyEcosystem.Npm, new[] { "typescript-bot" }, true)]
     [InlineData("rack", "dependabot/bundler/rack-3.1.16", "3.1.16", DependencyEcosystem.Ruby, new[] { "tenderlove", "raggi", "chneukirchen", "ioquatix", "rafaelfranca", "eileencodes" }, true)]
@@ -224,6 +225,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
+                    [DependencyEcosystem.PyPI] = ["aws"],
                     [DependencyEcosystem.Ruby] = ["tenderlove", "raggi", "chneukirchen", "ioquatix", "rafaelfranca", "eileencodes"],
                 },
             },
@@ -300,6 +302,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
+                    [DependencyEcosystem.PyPI] = ["aws"],
                     [DependencyEcosystem.Ruby] = ["tenderlove", "raggi", "chneukirchen", "ioquatix", "rafaelfranca", "eileencodes"],
                 },
             },
@@ -353,6 +356,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
+                    [DependencyEcosystem.PyPI] = ["aws"],
                     [DependencyEcosystem.Ruby] = [],
                 },
             },
@@ -534,6 +538,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
+                    [DependencyEcosystem.PyPI] = ["aws"],
                 },
             },
         };
@@ -603,6 +608,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft", "OpenTelemetry"],
+                    [DependencyEcosystem.PyPI] = ["aws"],
                 },
             },
         };
@@ -954,6 +960,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
+                    [DependencyEcosystem.PyPI] = ["aws"],
                 },
             },
         };
