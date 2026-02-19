@@ -30,7 +30,7 @@ public sealed partial class PyPiPackageRegistry(
         var uri = new Uri($"/pypi/{escapedId}/{escapedVersion}/json", UriKind.Relative);
 
         Project? project = await cache.GetOrCreateAsync(
-            $"ruby-gems:{id}",
+            $"pypi:{id}",
             (Client, uri),
             static async (context, token) =>
             {
