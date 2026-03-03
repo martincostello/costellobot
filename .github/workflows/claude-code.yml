@@ -23,12 +23,6 @@ jobs:
        (github.event_name == 'pull_request_review' && contains(github.event.review.body || '', '@claude')) ||
        (github.event_name == 'issues' && (contains(github.event.issue.body || '', '@claude') || contains(github.event.issue.title, '@claude'))))
 
-    permissions:
-      actions: read
-      contents: write
-      issues: write
-      pull-requests: write
-
     steps:
 
       - name: Harden runner
@@ -40,11 +34,11 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 1
-          persist-credentials: true # zizmor: ignore[artipacked] Needed to push commits
+          persist-credentials: false
           show-progress: false
 
       - name: Run Claude Code
-        id: claude
         uses: anthropics/claude-code-action@64c7a0ef71df67b14cb4471f4d9c8565c61042bf # v1.0.66
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          use_commit_signing: true
