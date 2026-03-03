@@ -45,3 +45,10 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           use_commit_signing: true
+          settings: |
+            {
+              "attribution": {
+                "commit": "Co-Authored-By: claude[bot] <209825114+claude[bot]@users.noreply.github.com>",
+                "pr": "🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+              }
+            }
