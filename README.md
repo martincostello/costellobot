@@ -20,7 +20,7 @@ to be installed.
 To build and test the application locally from a terminal/command-line, run the
 following set of commands:
 
-```powershell
+```console
 git clone https://github.com/martincostello/costellobot.git
 cd costellobot
 ./build.ps1
