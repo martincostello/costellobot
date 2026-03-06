@@ -883,7 +883,7 @@ public sealed partial class GitCommitAnalyzer(
 
         [LoggerMessage(
             EventId = 15,
-            Level = LogLevel.Warning,
+            Level = LogLevel.Information,
             Message = "Dependency {Dependency} version {Version} from the {Ecosystem} ecosystem is in the deny list.")]
         public static partial void DependencyVersionIsDenied(
             ILogger logger,
