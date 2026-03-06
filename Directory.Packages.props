@@ -26,7 +26,7 @@
     <PackageVersion Include="coverlet.msbuild" Version="8.0.0" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.1" />
     <PackageVersion Include="Google.Apis.Calendar.v3" Version="1.73.0.4063" />
-    <PackageVersion Include="Humanizer" Version="3.0.8" />
+    <PackageVersion Include="Humanizer" Version="3.0.1" />
     <PackageVersion Include="JunitXml.TestLogger" Version="8.0.0" />
     <PackageVersion Include="JustEat.HttpClientInterception" Version="5.1.2" />
     <PackageVersion Include="Markdig" Version="1.1.1" />
