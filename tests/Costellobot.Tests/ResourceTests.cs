@@ -99,6 +99,7 @@ public sealed class ResourceTests(HttpServerFixture fixture, ITestOutputHelper o
     [Theory]
     [InlineData("/deliveries/costellobot")]
     [InlineData("/delivery/costellobot/2")]
+    [InlineData("/dependencies/deny")]
     [InlineData("/dependencies/distrust")]
     [InlineData("/dependencies/distrust-all")]
     [InlineData("/github-webhook")]

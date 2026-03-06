@@ -539,7 +539,9 @@ public sealed partial class GitCommitAnalyzer(
             }
             catch (Exception ex)
             {
+                // Fail closed if the query fails so that we do not allow potentially denied dependencies to be treated as trusted
                 Log.FailedToQueryDenyStore(logger, dependency, version, ecosystem, ex);
+                dependencyTrust[dependency] = (false, version);
             }
         }
 
