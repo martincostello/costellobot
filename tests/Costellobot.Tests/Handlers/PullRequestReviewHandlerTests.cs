@@ -495,7 +495,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
     {
         if (Fixture.Services.GetRequiredService<ITrustStore>() is InMemoryTrustStore trustStore)
         {
-            await trustStore.DistrustAllAsync();
+            trustStore.Reset();
         }
 
         await base.DisposeAsync(disposing);
@@ -554,7 +554,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
 
         if (Fixture.Services.GetRequiredService<ITrustStore>() is InMemoryTrustStore trustStore)
         {
-            trustStore.Count.ShouldBe(0);
+            trustStore.TrustedCount.ShouldBe(0);
         }
 
         await Fixture.Services.GetRequiredService<HybridCache>().RemoveByTagAsync("all");

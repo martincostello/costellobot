@@ -7,6 +7,12 @@ namespace MartinCostello.Costellobot;
 
 public interface ITrustStore
 {
+    Task DenyAsync(
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        CancellationToken cancellationToken = default);
+
     Task DistrustAsync(
         DependencyEcosystem ecosystem,
         string id,
@@ -15,9 +21,19 @@ public interface ITrustStore
 
     Task DistrustAllAsync(CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<DeniedDependency>> GetDeniedAsync(
+        DependencyEcosystem ecosystem,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<TrustedDependency>> GetTrustAsync(
        DependencyEcosystem ecosystem,
        CancellationToken cancellationToken = default);
+
+    Task<bool> IsDeniedAsync(
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        CancellationToken cancellationToken = default);
 
     Task<bool> IsTrustedAsync(
         DependencyEcosystem ecosystem,
