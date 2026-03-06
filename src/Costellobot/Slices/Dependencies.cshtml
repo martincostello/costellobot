@@ -165,32 +165,44 @@
     }
     <div class="row justify-content-center mt-3">
         <div class="col-auto">
-            <form action="dependencies/deny" method="post">
-                <input type="hidden" name="@(tokens.FormFieldName)" value="@(tokens.RequestToken)">
-                <div class="mb-3">
-                    <label for="deny-ecosystem" class="form-label">Ecosystem</label>
-                    <select id="deny-ecosystem" name="ecosystem" class="form-select">
-                        <option value="@(DependencyEcosystem.Docker)">Docker</option>
-                        <option value="@(DependencyEcosystem.GitHubActions)">GitHub Actions</option>
-                        <option value="@(DependencyEcosystem.GitHubRelease)">GitHub Releases</option>
-                        <option value="@(DependencyEcosystem.Npm)">npm</option>
-                        <option value="@(DependencyEcosystem.NuGet)" selected>NuGet</option>
-                        <option value="@(DependencyEcosystem.PyPI)">PyPI</option>
-                        <option value="@(DependencyEcosystem.Ruby)">Ruby</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="deny-id" class="form-label">Package ID</label>
-                    <input id="deny-id" type="text" name="id" class="form-control" placeholder="e.g. Humanizer.Core" required />
-                </div>
-                <div class="mb-3">
-                    <label for="deny-version" class="form-label">Version</label>
-                    <input id="deny-version" type="text" name="version" class="form-control" placeholder="e.g. 2.14.2" required />
-                </div>
-                <button type="submit" id="deny-dependency" class="btn btn-warning">
-                    <span class="fa-solid fa-ban" aria-hidden="true"></span>
-                    Deny
-                </button>
+            <form action="dependencies/deny" method="post" class="row row-cols-lg-auto g-3 align-items-center" autocomplete="off">
+              <div class="col-12">
+                  <input type="hidden" name="@(tokens.FormFieldName)" value="@(tokens.RequestToken)">
+                  <label class="visually-hidden" for="deny-ecosystem">Ecosystem</label>
+                  <select id="deny-ecosystem" name="ecosystem" class="form-select">
+                      <option value="@(DependencyEcosystem.Docker)">Docker</option>
+                      <option value="@(DependencyEcosystem.GitHubActions)">GitHub Actions</option>
+                      <option value="@(DependencyEcosystem.GitHubRelease)">GitHub</option>
+                      <option value="@(DependencyEcosystem.Npm)">npm</option>
+                      <option value="@(DependencyEcosystem.NuGet)" selected>NuGet</option>
+                      <option value="@(DependencyEcosystem.PyPI)">PyPI</option>
+                      <option value="@(DependencyEcosystem.Ruby)">Ruby</option>
+                  </select>
+              </div>
+              <div class="col-12">
+                  <label class="visually-hidden" for="deny-id">Package ID</label>
+                  <div class="input-group">
+                      <div class="input-group-text">
+                          <span class="fa-solid fa-cube" aria-hidden="true"></span>
+                      </div>
+                      <input id="deny-id" type="text" name="id" class="form-control" placeholder="Foo.Bar" required spellcheck="false" data-1p-ignore />
+                  </div>
+              </div>
+              <div class="col-12">
+                  <label class="visually-hidden" for="deny-version">Package Version</label>
+                  <div class="input-group">
+                      <div class="input-group-text">
+                          <span class="fa-solid fa-hashtag" aria-hidden="true"></span>
+                      </div>
+                      <input id="deny-version" type="text" name="version" class="form-control" placeholder="1.2.3" spellcheck="false" required data-1p-ignore />
+                  </div>
+              </div>
+              <div class="col-12">
+                  <button id="deny-dependency" type="submit" class="btn btn-secondary">
+                      <span class="fa-solid fa-ban" aria-hidden="true"></span>
+                      Deny
+                  </button>
+              </div>
             </form>
         </div>
     </div>
