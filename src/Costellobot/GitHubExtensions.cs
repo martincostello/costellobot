@@ -134,6 +134,7 @@ public static class GitHubExtensions
         }
 
         services.TryAddSingleton<ITrustStore, AzureTableTrustStore>();
+        services.TryAddSingleton<IDenyStore, AzureTableDenyStore>();
 
         services.AddSingleton<WebhookEventProcessor, GitHubEventProcessor>();
         services.AddSingleton<GitHubEventHandler>();

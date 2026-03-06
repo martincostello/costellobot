@@ -130,6 +130,7 @@ public static class CostellobotBuilder
             app.Services.GetService<TableServiceClient>() is { } tableClient)
         {
             tableClient.CreateTableIfNotExists("TrustStore");
+            tableClient.CreateTableIfNotExists("DenyStore");
         }
 
         if (!app.Environment.IsDevelopment())

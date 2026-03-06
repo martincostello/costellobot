@@ -2823,11 +2823,54 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         trust.Count.ShouldBe(1);
     }
 
+    [Fact]
+    public async Task Commit_Is_Not_Trusted_If_Dependency_Version_Is_Denied()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
+        var dependency = "Humanizer.Core";
+        var version = "2.14.1";
+        var reference = $"dependabot/nuget/{dependency}-{version}";
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies = [@"^Humanizer\..+$"],
+            },
+        };
+
+        var denyStore = Substitute.For<IDenyStore>();
+        denyStore.IsDeniedAsync(ecosystem, dependency, version, CancellationToken)
+                 .Returns(true);
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, denyStore: denyStore);
+
+        var repository = new RepositoryId("someone", "something");
+        var diff = string.Empty;
+        var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
+        var commitMessage = TrustedCommitMessage(dependency, version);
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeFalse();
+    }
+
     private static GitCommitAnalyzer CreateTarget(
         IServiceProvider serviceProvider,
         WebhookOptions? options = null,
         IEnumerable<IPackageRegistry>? registries = null,
-        Action<IRepositoryContentsClient>? configureActionsClient = null)
+        Action<IRepositoryContentsClient>? configureActionsClient = null,
+        IDenyStore? denyStore = null)
     {
         registries ??= serviceProvider.GetServices<IPackageRegistry>();
 
@@ -2839,6 +2882,8 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var repositories = Substitute.For<IRepositoriesClient>();
         var client = Substitute.For<IGitHubClientForInstallation>();
         var trustStore = Substitute.For<ITrustStore>();
+
+        denyStore ??= Substitute.For<IDenyStore>();
 
         repositories.Content.Returns(contents);
         client.Repository.Returns(repositories);
@@ -2856,6 +2901,6 @@ Signed-off-by: dependabot[bot] <support@github.com>";
             InstallationId = GitHubFixtures.InstallationId,
         };
 
-        return new(context, registries, trustStore, logger);
+        return new(context, registries, trustStore, denyStore, logger);
     }
 }

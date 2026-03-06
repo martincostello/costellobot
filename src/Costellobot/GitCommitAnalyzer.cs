@@ -20,6 +20,7 @@ public sealed partial class GitCommitAnalyzer(
     GitHubWebhookContext context,
     IEnumerable<IPackageRegistry> registries,
     ITrustStore trustStore,
+    IDenyStore denyStore,
     ILogger<GitCommitAnalyzer> logger)
 {
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
@@ -513,6 +514,33 @@ public sealed partial class GitCommitAnalyzer(
             }
         }
 
+        // Check the denylist to revoke trust for any explicitly denied versions
+        foreach ((string dependency, var trust) in dependencyTrust.Where((p) => p.Value.Trusted).ToList())
+        {
+            string? version = trust.Version;
+
+            if (version is not null)
+            {
+                try
+                {
+                    if (await denyStore.IsDeniedAsync(ecosystem, dependency, version, cancellationToken))
+                    {
+                        Log.DeniedDependencyVersionUpdated(logger, dependency, version, ecosystem);
+                        dependencyTrust[dependency] = (false, version);
+
+                        if (stopAfterFirstUntrustedDependency)
+                        {
+                            break;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.FailedToQueryDenyStore(logger, dependency, version, ecosystem, ex);
+                }
+            }
+        }
+
         return dependencyTrust;
 
         // If only one dependency was found, we can attempt to extract the version
@@ -848,6 +876,27 @@ public sealed partial class GitCommitAnalyzer(
             string previousVersion,
             string updatedVersion,
             DependencyEcosystem ecosystem);
+
+        [LoggerMessage(
+            EventId = 15,
+            Level = LogLevel.Warning,
+            Message = "Package {PackageId} version {PackageVersion} from the {Ecosystem} ecosystem is in the denylist and will not be trusted.")]
+        public static partial void DeniedDependencyVersionUpdated(
+            ILogger logger,
+            string packageId,
+            string packageVersion,
+            DependencyEcosystem ecosystem);
+
+        [LoggerMessage(
+            EventId = 16,
+            Level = LogLevel.Error,
+            Message = "Failed to query deny store for package {PackageId} version {PackageVersion} from the {Ecosystem} ecosystem.")]
+        public static partial void FailedToQueryDenyStore(
+            ILogger logger,
+            string packageId,
+            string packageVersion,
+            DependencyEcosystem ecosystem,
+            Exception exception);
     }
 
     private sealed class DependabotConfig

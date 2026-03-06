@@ -171,6 +171,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
             services.AddScoped<LoopbackOAuthEvents>();
 
             services.AddSingleton<ITrustStore, InMemoryTrustStore>();
+            services.AddSingleton<IDenyStore, InMemoryDenyStore>();
             services.AddSingleton<ServiceBusClient, InMemoryServiceBusClient>();
         });
 

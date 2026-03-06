@@ -14,6 +14,22 @@ internal static class DependencyHelpers
     private const string PyPIStyles = "fa-brands fa-python text-primary";
     private const string RubyGemStyles = "fa-solid fa-gem text-danger";
 
+    public static string GetEcosystemDisplayName(DependencyEcosystem ecosystem)
+    {
+        return ecosystem switch
+        {
+            DependencyEcosystem.Docker => "Docker",
+            DependencyEcosystem.GitHubActions => "GitHub Actions",
+            DependencyEcosystem.GitHubRelease => "GitHub",
+            DependencyEcosystem.GitSubmodule => "Git Submodule",
+            DependencyEcosystem.Npm => "npm",
+            DependencyEcosystem.NuGet => "NuGet",
+            DependencyEcosystem.PyPI => "PyPI",
+            DependencyEcosystem.Ruby => "Ruby",
+            _ => ecosystem.ToString(),
+        };
+    }
+
     public static (string Name, string Url, string CssClasses) GetPackageMetadata(DependencyEcosystem ecosystem, string id, string version)
     {
         return ecosystem switch
