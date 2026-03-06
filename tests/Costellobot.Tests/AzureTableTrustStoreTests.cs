@@ -1,4 +1,4 @@
-﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
+// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Linq.Expressions;
@@ -6,12 +6,51 @@ using Azure;
 using Azure.Data.Tables;
 using MartinCostello.Costellobot.Models;
 using NSubstitute;
+using DenyEntity = MartinCostello.Costellobot.AzureTableTrustStore.DenyEntity;
 using TrustEntity = MartinCostello.Costellobot.AzureTableTrustStore.TrustEntity;
 
 namespace MartinCostello.Costellobot;
 
 public class AzureTableTrustStoreTests
 {
+    [Theory]
+    [InlineData(DependencyEcosystem.Docker, "devcontainers/dotnet", "latest", "DOCKER", "DEVCONTAINERS~DOTNET@LATEST")]
+    [InlineData(DependencyEcosystem.GitHubActions, "martincostello/rebaser", "2.0.1", "GITHUBACTIONS", "MARTINCOSTELLO~REBASER@2.0.1")]
+    [InlineData(DependencyEcosystem.NuGet, "Humanizer.Core", "2.14.2", "NUGET", "HUMANIZER.CORE@2.14.2")]
+    public async Task DenyAsync_Denies_Entity(
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        string expectedPartitionKey,
+        string expectedRowKey)
+    {
+        // Arrange
+        var table = Substitute.For<TableClient>();
+        var client = Substitute.For<TableServiceClient>();
+
+        client.GetTableClient("DenyStore")
+              .Returns(table);
+
+        var target = new AzureTableTrustStore(client);
+
+        // Act
+        await target.DenyAsync(
+            ecosystem,
+            id,
+            version,
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        await table.Received().UpsertEntityAsync(
+            Arg.Is<DenyEntity>((p) =>
+                p.PartitionKey == expectedPartitionKey &&
+                p.RowKey == expectedRowKey &&
+                p.DependencyEcosystem == ecosystem.ToString() &&
+                p.DependencyId == id &&
+                p.DependencyVersion == version),
+            cancellationToken: TestContext.Current.CancellationToken);
+    }
+
     [Fact]
     public async Task DistrustAllAsync_Distrusts_All_Entities()
     {
@@ -26,7 +65,7 @@ public class AzureTableTrustStoreTests
         page.Values.Returns([new(), new()]);
 
         var pages = Substitute.For<AsyncPageable<TrustEntity>>();
-        pages.AsPages().Returns(Pages([page]));
+        pages.AsPages().Returns(Pages<TrustEntity>([page]));
 
         table.QueryAsync<TrustEntity>(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string[]>(), Arg.Any<CancellationToken>())
              .ReturnsForAnyArgs(pages);
@@ -75,6 +114,48 @@ public class AzureTableTrustStoreTests
     }
 
     [Fact]
+    public async Task GetDeniedAsync_Returns_Correct_Values()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
+        var table = Substitute.For<TableClient>();
+        var client = Substitute.For<TableServiceClient>();
+
+        client.GetTableClient("DenyStore")
+              .Returns(table);
+
+        DenyEntity[] entities =
+        [
+            new()
+            {
+                DependencyEcosystem = "NuGet",
+                DependencyId = "Humanizer.Core",
+                DependencyVersion = "2.14.2",
+                Timestamp = new(2025, 02, 23, 12, 34, 55, TimeSpan.Zero),
+            },
+        ];
+
+        var page = Substitute.For<Page<DenyEntity>>();
+        page.Values.Returns(entities);
+
+        var pages = Substitute.For<AsyncPageable<DenyEntity>>();
+        pages.AsPages().Returns(Pages<DenyEntity>([page]));
+
+        table.QueryAsync<DenyEntity>(Arg.Any<Expression<Func<DenyEntity, bool>>>(), Arg.Any<int>(), Arg.Any<IEnumerable<string>>(), Arg.Any<CancellationToken>())
+             .ReturnsForAnyArgs(pages);
+
+        var target = new AzureTableTrustStore(client);
+
+        // Act
+        var actual = await target.GetDeniedAsync(ecosystem, TestContext.Current.CancellationToken);
+
+        // Assert
+        actual.ShouldNotBeNull();
+        actual.ShouldNotBeEmpty();
+        actual.ShouldContain(new DeniedDependency("Humanizer.Core", "2.14.2") { DeniedAt = new(2025, 02, 23, 12, 34, 55, TimeSpan.Zero) });
+    }
+
+    [Fact]
     public async Task GetTrustAsync_Returns_Correct_Values()
     {
         // Arrange
@@ -107,7 +188,7 @@ public class AzureTableTrustStoreTests
         page.Values.Returns(entities);
 
         var pages = Substitute.For<AsyncPageable<TrustEntity>>();
-        pages.AsPages().Returns(Pages([page]));
+        pages.AsPages().Returns(Pages<TrustEntity>([page]));
 
         table.QueryAsync<TrustEntity>(Arg.Any<Expression<Func<TrustEntity, bool>>>(), Arg.Any<int>(), Arg.Any<IEnumerable<string>>(), Arg.Any<CancellationToken>())
              .ReturnsForAnyArgs(pages);
@@ -122,6 +203,39 @@ public class AzureTableTrustStoreTests
         actual.ShouldNotBeEmpty();
         actual.ShouldContain(new TrustedDependency("Polly", "8.5.2") { TrustedAt = new(2025, 02, 23, 12, 34, 55, TimeSpan.Zero) });
         actual.ShouldContain(new TrustedDependency("Polly.Core", "8.5.2") { TrustedAt = new(2025, 02, 23, 12, 34, 56, TimeSpan.Zero) });
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public async Task IsDeniedAsync_Returns_Correct_Value(bool hasValue, bool expected)
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
+        var id = "Humanizer.Core";
+        var version = "2.14.2";
+
+        var table = Substitute.For<TableClient>();
+        var client = Substitute.For<TableServiceClient>();
+
+        client.GetTableClient("DenyStore")
+              .Returns(table);
+
+        var response = Substitute.For<NullableResponse<DenyEntity>>();
+        response.HasValue.Returns(hasValue);
+
+        table.GetEntityIfExistsAsync<DenyEntity>(
+            "NUGET",
+            "HUMANIZER.CORE@2.14.2",
+            cancellationToken: TestContext.Current.CancellationToken).Returns(response);
+
+        var target = new AzureTableTrustStore(client);
+
+        // Act
+        var actual = await target.IsDeniedAsync(ecosystem, id, version, TestContext.Current.CancellationToken);
+
+        // Assert
+        actual.ShouldBe(expected);
     }
 
     [Theory]
@@ -177,7 +291,8 @@ public class AzureTableTrustStoreTests
         await Should.NotThrowAsync(() => target.TrustAsync(ecosystem, id, version, TestContext.Current.CancellationToken));
     }
 
-    private static async IAsyncEnumerable<Page<TrustEntity>> Pages(IEnumerable<Page<TrustEntity>> pages)
+    private static async IAsyncEnumerable<Page<T>> Pages<T>(IEnumerable<Page<T>> pages)
+        where T : notnull
     {
         foreach (var page in pages)
         {

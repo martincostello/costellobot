@@ -356,8 +356,6 @@ public static class AdminEndpoints
                     DependencyEcosystem.Ruby,
                 ];
 
-                var model = new Dictionary<DependencyEcosystem, IReadOnlyList<TrustedDependency>>();
-
                 var comparer = Comparer<string>.Create(static (x, y) =>
                 {
                     if (NuGetVersion.TryParse(x, out var versionX) &&
@@ -369,16 +367,26 @@ public static class AdminEndpoints
                     return string.Compare(x, y, StringComparison.Ordinal);
                 });
 
+                var trusted = new Dictionary<DependencyEcosystem, IReadOnlyList<TrustedDependency>>();
+                var denied = new Dictionary<DependencyEcosystem, IReadOnlyList<DeniedDependency>>();
+
                 foreach (var ecosystem in ecosystems)
                 {
                     var dependencies = await store.GetTrustAsync(ecosystem, cancellationToken);
 
-                    model[ecosystem] = [.. dependencies
+                    trusted[ecosystem] = [.. dependencies
+                        .OrderBy((p) => p.Id)
+                        .ThenByDescending((p) => p.Version, comparer)];
+
+                    var deniedDependencies = await store.GetDeniedAsync(ecosystem, cancellationToken);
+
+                    denied[ecosystem] = [.. deniedDependencies
                         .OrderBy((p) => p.Id)
                         .ThenByDescending((p) => p.Version, comparer)];
                 }
 
-                return Results.Extensions.RazorSlice<Dependencies, IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<TrustedDependency>>>(model);
+                var model = new DependenciesModel(trusted, denied);
+                return Results.Extensions.RazorSlice<Dependencies, DependenciesModel>(model);
             })
             .AddEndpointFilter<SetAntiforgeryCookieFilter>()
             .WithName(DependenciesRoute)
@@ -425,6 +433,29 @@ public static class AdminEndpoints
                 return Results.RedirectToRoute(DependenciesRoute);
             })
             .WithName("DistrustAllDependencies")
+            .WithMetadata(admin);
+
+        builder.MapPost(
+            "/dependencies/deny",
+            async (
+                [FromForm] DependencyEcosystem ecosystem,
+                [FromForm] string id,
+                [FromForm] string version,
+                ITrustStore store,
+                HttpContext context,
+                IAntiforgery antiforgery,
+                CancellationToken cancellationToken) =>
+            {
+                if (!await antiforgery.IsRequestValidAsync(context))
+                {
+                    antiforgery.SetCookieTokenAndHeader(context);
+                    return Results.RedirectToRoute(DependenciesRoute);
+                }
+
+                await store.DenyAsync(ecosystem, id, version, cancellationToken);
+                return Results.RedirectToRoute(DependenciesRoute);
+            })
+            .WithName("DenyDependency")
             .WithMetadata(admin);
 
         builder.MapGet("/github-webhook", (IOptions<GitHubOptions> options) => Results.Extensions.RazorSlice<Debug, GitHubOptions>(options.Value))

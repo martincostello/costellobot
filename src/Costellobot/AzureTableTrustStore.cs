@@ -1,4 +1,4 @@
-﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
+// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Security.Cryptography;
@@ -10,7 +10,34 @@ namespace MartinCostello.Costellobot;
 
 public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStore
 {
-    private const string TableName = "TrustStore";
+    private const string DenyTableName = "DenyStore";
+    private const string TrustTableName = "TrustStore";
+
+    /// <inheritdoc/>
+    public async Task DenyAsync(
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        CancellationToken cancellationToken = default)
+    {
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes($"{id}@{version}"));
+        var etag = Convert.ToBase64String(hash);
+
+        (string partition, string row) = GetKeys(ecosystem, id, version);
+
+        var entity = new DenyEntity()
+        {
+            DependencyEcosystem = ecosystem.ToString(),
+            DependencyId = id,
+            DependencyVersion = version,
+            ETag = new(etag),
+            PartitionKey = partition,
+            RowKey = row,
+        };
+
+        var table = GetDenyClient();
+        await table.UpsertEntityAsync(entity, cancellationToken: cancellationToken);
+    }
 
     /// <inheritdoc/>
     public async Task DistrustAllAsync(CancellationToken cancellationToken = default)
@@ -18,7 +45,7 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
         const int BatchSize = 100;
         const int PageSize = 1_000;
 
-        var table = GetClient();
+        var table = GetTrustClient();
 
         // Adapted from https://medium.com/medialesson/deleting-all-rows-from-azure-table-storage-as-fast-as-possible-79e03937c331
         var query = table.QueryAsync<TrustEntity>(
@@ -48,8 +75,36 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
     {
         (string partition, string row) = GetKeys(ecosystem, id, version);
 
-        var table = GetClient();
+        var table = GetTrustClient();
         await table.DeleteEntityAsync(partition, row, cancellationToken: cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<DeniedDependency>> GetDeniedAsync(
+        DependencyEcosystem ecosystem,
+        CancellationToken cancellationToken = default)
+    {
+        var ecosystemName = ecosystem.ToString();
+
+        var table = GetDenyClient();
+        var query = table.QueryAsync<DenyEntity>((p) => p.DependencyEcosystem == ecosystemName, cancellationToken: cancellationToken);
+
+        var results = new List<DeniedDependency>();
+
+        await foreach (var page in query.AsPages().WithCancellation(cancellationToken))
+        {
+            foreach (var item in page.Values)
+            {
+                var dependency = new DeniedDependency(item.DependencyId, item.DependencyVersion)
+                {
+                    DeniedAt = item.Timestamp,
+                };
+
+                results.Add(dependency);
+            }
+        }
+
+        return results;
     }
 
     /// <inheritdoc/>
@@ -59,7 +114,7 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
     {
         var ecosystemName = ecosystem.ToString();
 
-        var table = GetClient();
+        var table = GetTrustClient();
         var query = table.QueryAsync<TrustEntity>((p) => p.DependencyEcosystem == ecosystemName, cancellationToken: cancellationToken);
 
         var results = new List<TrustedDependency>();
@@ -81,6 +136,21 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
     }
 
     /// <inheritdoc/>
+    public async Task<bool> IsDeniedAsync(
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        CancellationToken cancellationToken = default)
+    {
+        (string partition, string row) = GetKeys(ecosystem, id, version);
+
+        var table = GetDenyClient();
+        var deny = await table.GetEntityIfExistsAsync<DenyEntity>(partition, row, cancellationToken: cancellationToken);
+
+        return deny.HasValue;
+    }
+
+    /// <inheritdoc/>
     public async Task<bool> IsTrustedAsync(
         DependencyEcosystem ecosystem,
         string id,
@@ -89,7 +159,7 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
     {
         (string partition, string row) = GetKeys(ecosystem, id, version);
 
-        var table = GetClient();
+        var table = GetTrustClient();
         var trust = await table.GetEntityIfExistsAsync<TrustEntity>(partition, row, cancellationToken: cancellationToken);
 
         return trust.HasValue;
@@ -117,7 +187,7 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
             RowKey = row,
         };
 
-        var table = GetClient();
+        var table = GetTrustClient();
         await table.UpsertEntityAsync(entity, cancellationToken: cancellationToken);
     }
 
@@ -131,7 +201,33 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
         return (partitionKey, $"{normalizedId}@{normalizedVersion}");
     }
 
-    private TableClient GetClient() => client.GetTableClient(TableName);
+    private TableClient GetDenyClient() => client.GetTableClient(DenyTableName);
+
+    private TableClient GetTrustClient() => client.GetTableClient(TrustTableName);
+
+    /// <summary>
+    /// A class representing an entity in the deny store. This class cannot be inherited.
+    /// </summary>
+    public sealed class DenyEntity : ITableEntity
+    {
+        public string DependencyEcosystem { get; set; } = default!;
+
+        public string DependencyId { get; set; } = default!;
+
+        public string DependencyVersion { get; set; } = default!;
+
+        /// <inheritdoc/>
+        public string PartitionKey { get; set; } = default!;
+
+        /// <inheritdoc/>
+        public string RowKey { get; set; } = default!;
+
+        /// <inheritdoc/>
+        public DateTimeOffset? Timestamp { get; set; } = default!;
+
+        /// <inheritdoc/>
+        public ETag ETag { get; set; } = default!;
+    }
 
     /// <summary>
     /// A class representing an entity in the trust store. This class cannot be inherited.
