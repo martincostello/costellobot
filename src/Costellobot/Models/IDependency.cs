@@ -3,9 +3,9 @@
 
 namespace MartinCostello.Costellobot.Models;
 
-public sealed record TrustedDependency(
-    string Id,
-    string Version) : IDependency
+public interface IDependency
 {
-    public DateTimeOffset? TrustedAt { get; set; }
+    string Id { get; }
+
+    string Version { get; }
 }

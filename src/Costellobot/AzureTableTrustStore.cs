@@ -10,7 +10,16 @@ namespace MartinCostello.Costellobot;
 
 public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStore
 {
-    private const string TableName = "TrustStore";
+    private const string DenyTableName = "DenyStore";
+    private const string TrustTableName = "TrustStore";
+
+    /// <inheritdoc/>
+    public async Task DenyAsync(
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        CancellationToken cancellationToken = default) =>
+        await UpsertAsync(DenyTableName, ecosystem, id, version, cancellationToken);
 
     /// <inheritdoc/>
     public async Task DistrustAllAsync(CancellationToken cancellationToken = default)
@@ -18,7 +27,7 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
         const int BatchSize = 100;
         const int PageSize = 1_000;
 
-        var table = GetClient();
+        var table = GetClient(TrustTableName);
 
         // Adapted from https://medium.com/medialesson/deleting-all-rows-from-azure-table-storage-as-fast-as-possible-79e03937c331
         var query = table.QueryAsync<TrustEntity>(
@@ -44,63 +53,135 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
         DependencyEcosystem ecosystem,
         string id,
         string version,
-        CancellationToken cancellationToken = default)
-    {
-        (string partition, string row) = GetKeys(ecosystem, id, version);
+        CancellationToken cancellationToken = default) =>
+        await DeleteAsync(TrustTableName, ecosystem, id, version, cancellationToken);
 
-        var table = GetClient();
-        await table.DeleteEntityAsync(partition, row, cancellationToken: cancellationToken);
-    }
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<DeniedDependency>> GetDeniedAsync(
+        DependencyEcosystem ecosystem,
+        CancellationToken cancellationToken = default) =>
+        await GetAsync(
+            DenyTableName,
+            ecosystem,
+            (item) =>
+            {
+                return new DeniedDependency(item.DependencyId, item.DependencyVersion)
+                {
+                    DeniedAt = item.Timestamp,
+                };
+            },
+            cancellationToken);
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<TrustedDependency>> GetTrustAsync(
         DependencyEcosystem ecosystem,
-        CancellationToken cancellationToken = default)
-    {
-        var ecosystemName = ecosystem.ToString();
-
-        var table = GetClient();
-        var query = table.QueryAsync<TrustEntity>((p) => p.DependencyEcosystem == ecosystemName, cancellationToken: cancellationToken);
-
-        var results = new List<TrustedDependency>();
-
-        await foreach (var page in query.AsPages().WithCancellation(cancellationToken))
-        {
-            foreach (var item in page.Values)
+        CancellationToken cancellationToken = default) =>
+        await GetAsync(
+            TrustTableName,
+            ecosystem,
+            (item) =>
             {
-                var dependency = new TrustedDependency(item.DependencyId, item.DependencyVersion)
+                return new TrustedDependency(item.DependencyId, item.DependencyVersion)
                 {
                     TrustedAt = item.Timestamp,
                 };
+            },
+            cancellationToken);
 
-                results.Add(dependency);
-            }
-        }
-
-        return results;
-    }
+    /// <inheritdoc/>
+    public async Task<bool> IsDeniedAsync(
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        CancellationToken cancellationToken = default) =>
+        await ExistsAsync(DenyTableName, ecosystem, id, version, cancellationToken);
 
     /// <inheritdoc/>
     public async Task<bool> IsTrustedAsync(
         DependencyEcosystem ecosystem,
         string id,
         string version,
-        CancellationToken cancellationToken = default)
-    {
-        (string partition, string row) = GetKeys(ecosystem, id, version);
-
-        var table = GetClient();
-        var trust = await table.GetEntityIfExistsAsync<TrustEntity>(partition, row, cancellationToken: cancellationToken);
-
-        return trust.HasValue;
-    }
+        CancellationToken cancellationToken = default) =>
+        await ExistsAsync(TrustTableName, ecosystem, id, version, cancellationToken);
 
     /// <inheritdoc/>
     public async Task TrustAsync(
         DependencyEcosystem ecosystem,
         string id,
         string version,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await UpsertAsync(TrustTableName, ecosystem, id, version, cancellationToken);
+
+    private static (string PartitionKey, string RowKey) GetKeys(DependencyEcosystem ecosystem, string id, string version)
+    {
+        var partitionKey = ecosystem.ToString().ToUpperInvariant();
+
+        var normalizedId = id.ToUpperInvariant().Replace('/', '~').Trim();
+        var normalizedVersion = version.ToUpperInvariant().Trim();
+
+        return (partitionKey, $"{normalizedId}@{normalizedVersion}");
+    }
+
+    private TableClient GetClient(string tableName) => client.GetTableClient(tableName);
+
+    private async Task DeleteAsync(
+        string tableName,
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        CancellationToken cancellationToken)
+    {
+        (string partition, string row) = GetKeys(ecosystem, id, version);
+
+        var table = GetClient(tableName);
+        await table.DeleteEntityAsync(partition, row, cancellationToken: cancellationToken);
+    }
+
+    private async Task<bool> ExistsAsync(
+        string tableName,
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        CancellationToken cancellationToken)
+    {
+        (string partition, string row) = GetKeys(ecosystem, id, version);
+
+        var table = GetClient(tableName);
+        var deny = await table.GetEntityIfExistsAsync<TrustEntity>(partition, row, cancellationToken: cancellationToken);
+
+        return deny.HasValue;
+    }
+
+    private async Task<IReadOnlyList<T>> GetAsync<T>(
+        string tableName,
+        DependencyEcosystem ecosystem,
+        Func<TrustEntity, T> selector,
+        CancellationToken cancellationToken)
+    {
+        var ecosystemName = ecosystem.ToString();
+
+        var table = GetClient(tableName);
+        var query = table.QueryAsync<TrustEntity>((p) => p.DependencyEcosystem == ecosystemName, cancellationToken: cancellationToken);
+
+        var results = new List<T>();
+
+        await foreach (var page in query.AsPages().WithCancellation(cancellationToken))
+        {
+            foreach (var item in page.Values)
+            {
+                results.Add(selector(item));
+            }
+        }
+
+        return results;
+    }
+
+    private async Task UpsertAsync(
+        string tableName,
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        CancellationToken cancellationToken)
     {
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes($"{id}@{version}"));
         var etag = Convert.ToBase64String(hash);
@@ -117,21 +198,9 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
             RowKey = row,
         };
 
-        var table = GetClient();
+        var table = GetClient(tableName);
         await table.UpsertEntityAsync(entity, cancellationToken: cancellationToken);
     }
-
-    private static (string PartitionKey, string RowKey) GetKeys(DependencyEcosystem ecosystem, string id, string version)
-    {
-        var partitionKey = ecosystem.ToString().ToUpperInvariant();
-
-        var normalizedId = id.ToUpperInvariant().Replace('/', '~');
-        var normalizedVersion = version.ToUpperInvariant();
-
-        return (partitionKey, $"{normalizedId}@{normalizedVersion}");
-    }
-
-    private TableClient GetClient() => client.GetTableClient(TableName);
 
     /// <summary>
     /// A class representing an entity in the trust store. This class cannot be inherited.
@@ -151,9 +220,9 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
         public string RowKey { get; set; } = default!;
 
         /// <inheritdoc/>
-        public DateTimeOffset? Timestamp { get; set; } = default!;
+        public DateTimeOffset? Timestamp { get; set; }
 
         /// <inheritdoc/>
-        public ETag ETag { get; set; } = default!;
+        public ETag ETag { get; set; }
     }
 }

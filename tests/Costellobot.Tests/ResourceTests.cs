@@ -77,8 +77,10 @@ public sealed class ResourceTests(HttpServerFixture fixture, ITestOutputHelper o
 
     [Theory]
     [InlineData("/")]
+    [InlineData("/configuration")]
     [InlineData("/deliveries/costellobot")]
     [InlineData("/delivery/costellobot/2")]
+    [InlineData("/dependencies")]
     [InlineData("/github-webhook")]
     public async Task Cannot_Get_Resource_Unauthenticated(string requestUri)
     {
@@ -92,6 +94,25 @@ public sealed class ResourceTests(HttpServerFixture fixture, ITestOutputHelper o
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
         response.Headers.Location.ShouldNotBeNull();
         response.Headers.Location.PathAndQuery.ShouldBe($"/sign-in?ReturnUrl={Uri.EscapeDataString(requestUri)}");
+    }
+
+    [Theory]
+    [InlineData("/deliveries/costellobot")]
+    [InlineData("/delivery/costellobot/2")]
+    [InlineData("/dependencies/distrust")]
+    [InlineData("/dependencies/distrust-all")]
+    [InlineData("/github-webhook")]
+    public async Task Cannot_Post_Resource_Unauthenticated(string requestUri)
+    {
+        // Arrange
+        using var client = Fixture.CreateHttpClientForApp();
+        using var content = new StringContent(string.Empty);
+
+        // Act
+        using var response = await client.PostAsync(requestUri, content, CancellationToken);
+
+        // Assert
+        response.IsSuccessStatusCode.ShouldBeFalse();
     }
 
     [Theory]

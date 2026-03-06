@@ -48,9 +48,10 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
 
             // Assert
             await dependencies.WaitForContentAsync();
-            await dependencies.WaitForDependenciesCountAsync(expected.Length);
+            await dependencies.WaitForTrustedDependenciesCountAsync(expected.Length);
+            await dependencies.WaitForDeniedDependenciesCountAsync(0);
 
-            var items = await dependencies.GetDependenciesAsync();
+            var items = await dependencies.GetTrustedDependenciesAsync();
 
             foreach ((var index, var item) in expected.Index())
             {
@@ -79,9 +80,10 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
 
             // Assert
             await dependencies.WaitForContentAsync();
-            await dependencies.WaitForDependenciesCountAsync(expected.Length);
+            await dependencies.WaitForTrustedDependenciesCountAsync(expected.Length);
+            await dependencies.WaitForDeniedDependenciesCountAsync(0);
 
-            items = await dependencies.GetDependenciesAsync();
+            items = await dependencies.GetTrustedDependenciesAsync();
 
             foreach ((var index, var item) in expected.Index())
             {
@@ -97,7 +99,85 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
 
             // Assert
             await dependencies.WaitForContentAsync();
-            await dependencies.WaitForDependenciesCountAsync(0);
+            await dependencies.WaitForTrustedDependenciesCountAsync(0);
+            await dependencies.WaitForDeniedDependenciesCountAsync(0);
         });
+    }
+
+    [Fact]
+    public async Task Can_View_Denied_Dependencies()
+    {
+        // Arrange
+        var trustStore = Fixture.Services.GetRequiredService<ITrustStore>();
+
+        await trustStore.DenyAsync(DependencyEcosystem.NuGet, "Humanizer.Core", "2.14.1", CancellationToken);
+        await trustStore.DenyAsync(DependencyEcosystem.NuGet, "Humanizer.Core", "2.14.2", CancellationToken);
+
+        var browser = new BrowserFixture(OutputHelper);
+        await browser.WithPageAsync(async (page) =>
+        {
+            var app = await SignInAsync(page);
+
+            // Act
+            var dependencies = await app.DependenciesAsync();
+
+            var expected = new[]
+            {
+                ("NuGet", "Humanizer.Core", "2.14.2"),
+                ("NuGet", "Humanizer.Core", "2.14.1"),
+            };
+
+            // Assert
+            await dependencies.WaitForContentAsync();
+            await dependencies.WaitForTrustedDependenciesCountAsync(0);
+            await dependencies.WaitForDeniedDependenciesCountAsync(expected.Length);
+
+            var items = await dependencies.GetDeniedDependenciesAsync();
+
+            items.Count.ShouldBe(expected.Length);
+        });
+    }
+
+    [Fact]
+    public async Task Can_Deny_A_Dependency()
+    {
+        // Arrange
+        var browser = new BrowserFixture(OutputHelper);
+        await browser.WithPageAsync(async (page) =>
+        {
+            var app = await SignInAsync(page);
+
+            // Act
+            var dependencies = await app.DependenciesAsync();
+            await dependencies.WaitForContentAsync();
+            await dependencies.WaitForDeniedDependenciesCountAsync(0);
+            await dependencies.WaitForTrustedDependenciesCountAsync(0);
+
+            // Act - deny a dependency via the form
+            dependencies = await dependencies.DenyDependencyAsync(DependencyEcosystem.NuGet, "Humanizer.Core", "2.14.2");
+
+            // Assert
+            await dependencies.WaitForDeniedDependenciesCountAsync(1);
+            await dependencies.WaitForTrustedDependenciesCountAsync(0);
+
+            var items = await dependencies.GetDeniedDependenciesAsync();
+            items.Count.ShouldBe(1);
+
+            var item = items[0];
+
+            await item.EcosystemAsync().ShouldBe("NuGet");
+            await item.IdAsync().ShouldBe("Humanizer.Core");
+            await item.VersionAsync().ShouldBe("2.14.2");
+        });
+    }
+
+    protected override async ValueTask DisposeAsync(bool disposing)
+    {
+        if (Fixture.Services.GetRequiredService<ITrustStore>() is InMemoryTrustStore trustStore)
+        {
+            trustStore.Reset();
+        }
+
+        await base.DisposeAsync(disposing);
     }
 }

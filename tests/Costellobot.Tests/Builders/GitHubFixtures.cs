@@ -204,9 +204,9 @@ updated-dependencies:
 
 Signed-off-by: dependabot[bot] <support@github.com>";
 
-    public static string TrustedCommitMessage(string dependency, string version = "5.0.1") => $@"
-Bump {dependency} from 5.0.0 to {version}
-Bumps [{dependency}](https://github.com/actions/toolkit/tree/HEAD/packages/github) from 5.0.0 to {version}.
+    public static string TrustedCommitMessage(string dependency, string updatedVersion = "5.0.1", string originalVersion = "5.0.0") => $@"
+Bump {dependency} from {originalVersion} to {updatedVersion}
+Bumps [{dependency}](https://github.com/actions/toolkit/tree/HEAD/packages/github) from {originalVersion} to {updatedVersion}.
 - [Release notes](https://github.com/actions/toolkit/releases)
 - [Changelog](https://github.com/actions/toolkit/blob/main/packages/github/RELEASES.md)
 - [Commits](https://github.com/actions/toolkit/commits/HEAD/packages/github)

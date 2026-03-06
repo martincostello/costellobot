@@ -1,4 +1,4 @@
-@inherits RazorSliceHttpResult<IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<TrustedDependency>>>
+@inherits RazorSliceHttpResult<DependenciesModel>
 @implements IUsesLayout<_Layout, LayoutModel>
 
 @{
@@ -11,7 +11,7 @@
         @(LayoutModel.Title)
     </h1>
     <hr />
-    @if (!Model.SelectMany((p) => p.Value).Any())
+    @if (!Model.Trusted.SelectMany((p) => p.Value).Any())
     {
         <div class="card">
             <div class="card-body dependencies-none">
@@ -32,7 +32,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ((var ecosystem, var dependencies) in Model)
+                    @foreach ((var ecosystem, var dependencies) in Model.Trusted)
                     {
                         foreach (var group in dependencies.GroupBy((p) => p.Id))
                         {
@@ -93,7 +93,7 @@
                                         <span class="fa-solid fa-ban fa-stack-2x text-white"></span>
                                     </span>
                                 </button>
-                            </form>                            
+                            </form>
                         </td>
                     </tr>
                 </tbody>
@@ -103,6 +103,97 @@
             </table>
         </div>
     }
+    <hr />
+    <h2>
+        <span class="fa-solid fa-ban" aria-hidden="true"></span>
+        Denied dependency versions
+    </h2>
+    @if (Model.Denied.SelectMany((p) => p.Value).Any())
+    {
+        <div class="row justify-content-center">
+            <table class="table w-auto">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" colspan="2">ID</th>
+                        <th scope="col">Version</th>
+                        <th scope="col">Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ((var ecosystem, var denied) in Model.Denied)
+                    {
+                        foreach (var group in denied.GroupBy((p) => p.Id))
+                        {
+                            foreach ((var index, var dependency) in group.Index())
+                            {
+                                (var name, var url, var icon) = DependencyHelpers.GetPackageMetadata(ecosystem, dependency.Id, dependency.Version);
+
+                                <tr class="denied-dependency @(index is not 0 ? "table-light" : null)">
+                                    <td>
+                                        <span class="dependency-ecosystem @(icon)" title="@(name)" aria-hidden="true"></span>
+                                    </td>
+                                    <td>
+                                        <code class="dependency-id">
+                                            @if (url is { Length: > 0 })
+                                            {
+                                                <a href="@(url)" target="_blank" rel="noopener">@(dependency.Id)</a>
+                                            }
+                                            else
+                                            {
+                                                @(dependency.Id)
+                                            }
+                                        </code>
+                                    </td>
+                                    <td>
+                                        <code class="dependency-version">@(dependency.Version)</code>
+                                    </td>
+                                    <td>
+                                        <div class="dependency-timestamp" title="@(dependency.DeniedAt?.ToString("u", CultureInfo.InvariantCulture))">
+                                            @(dependency.DeniedAt?.Humanize())
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    }
+                </tbody>
+                <caption>
+                    Denied dependency versions.
+                </caption>
+            </table>
+        </div>
+    }
+    <div class="row justify-content-center mt-3">
+        <div class="col-auto">
+            <form action="dependencies/deny" method="post">
+                <input type="hidden" name="@(tokens.FormFieldName)" value="@(tokens.RequestToken)">
+                <div class="mb-3">
+                    <label for="deny-ecosystem" class="form-label">Ecosystem</label>
+                    <select id="deny-ecosystem" name="ecosystem" class="form-select">
+                        <option value="@(DependencyEcosystem.Docker)">Docker</option>
+                        <option value="@(DependencyEcosystem.GitHubActions)">GitHub Actions</option>
+                        <option value="@(DependencyEcosystem.GitHubRelease)">GitHub Releases</option>
+                        <option value="@(DependencyEcosystem.Npm)">npm</option>
+                        <option value="@(DependencyEcosystem.NuGet)" selected>NuGet</option>
+                        <option value="@(DependencyEcosystem.PyPI)">PyPI</option>
+                        <option value="@(DependencyEcosystem.Ruby)">Ruby</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="deny-id" class="form-label">Package ID</label>
+                    <input id="deny-id" type="text" name="id" class="form-control" placeholder="e.g. Humanizer.Core" required />
+                </div>
+                <div class="mb-3">
+                    <label for="deny-version" class="form-label">Version</label>
+                    <input id="deny-version" type="text" name="version" class="form-control" placeholder="e.g. 2.14.2" required />
+                </div>
+                <button type="submit" id="deny-dependency" class="btn btn-warning">
+                    <span class="fa-solid fa-ban" aria-hidden="true"></span>
+                    Deny
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
 
 @functions {

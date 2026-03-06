@@ -2823,13 +2823,60 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         trust.Count.ShouldBe(1);
     }
 
+    [Fact]
+    public async Task Commit_Is_Not_Trusted_If_Dependency_Version_Is_Denied()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
+        var dependency = "Humanizer.Core";
+        var version = "3.0.8";
+        var reference = $"dependabot/nuget/Humanizer.Core-{version}";
+
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies = [@"^Humanizer\.Core$"],
+            },
+        };
+
+        var trustStore = Substitute.For<ITrustStore>();
+
+        trustStore.IsDeniedAsync(ecosystem, dependency, version, Arg.Any<CancellationToken>())
+                  .Returns(true);
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, trustStore: trustStore);
+
+        var sha = "0304f7fb4e17d674ea52392d70e775761ccf5aed";
+        var commitMessage = TrustedCommitMessageForRenovate(dependency, version);
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            string.Empty,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeFalse();
+    }
+
     private static GitCommitAnalyzer CreateTarget(
         IServiceProvider serviceProvider,
         WebhookOptions? options = null,
         IEnumerable<IPackageRegistry>? registries = null,
-        Action<IRepositoryContentsClient>? configureActionsClient = null)
+        Action<IRepositoryContentsClient>? configureActionsClient = null,
+        ITrustStore? trustStore = null)
     {
         registries ??= serviceProvider.GetServices<IPackageRegistry>();
+        trustStore ??= Substitute.For<ITrustStore>();
 
         var githubOptions = serviceProvider.GetRequiredService<IOptionsMonitor<GitHubOptions>>();
         var webhookOptions = options?.ToMonitor() ?? serviceProvider.GetRequiredService<IOptionsMonitor<WebhookOptions>>();
@@ -2838,7 +2885,6 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var contents = Substitute.For<IRepositoryContentsClient>();
         var repositories = Substitute.For<IRepositoriesClient>();
         var client = Substitute.For<IGitHubClientForInstallation>();
-        var trustStore = Substitute.For<ITrustStore>();
 
         repositories.Content.Returns(contents);
         client.Repository.Returns(repositories);

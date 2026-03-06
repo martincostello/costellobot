@@ -513,6 +513,36 @@ public sealed partial class GitCommitAnalyzer(
             }
         }
 
+        // Check the denylist for any trusted dependencies and revoke trust for denied versions
+        foreach ((string dependency, var trust) in dependencyTrust.Where((p) => p.Value.Trusted).ToList())
+        {
+            string? version = trust.Version;
+
+            if (version is null)
+            {
+                continue;
+            }
+
+            try
+            {
+                if (await trustStore.IsDeniedAsync(ecosystem, dependency, version, cancellationToken))
+                {
+                    Log.DependencyVersionIsDenied(logger, dependency, version, ecosystem);
+                    dependencyTrust[dependency] = (false, version);
+
+                    if (stopAfterFirstUntrustedDependency)
+                    {
+                        // We only care if all dependencies are trusted, so stop looking on the first denial
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.FailedToQueryDenyStore(logger, dependency, version, ecosystem, ex);
+            }
+        }
+
         return dependencyTrust;
 
         // If only one dependency was found, we can attempt to extract the version
@@ -848,6 +878,27 @@ public sealed partial class GitCommitAnalyzer(
             string previousVersion,
             string updatedVersion,
             DependencyEcosystem ecosystem);
+
+        [LoggerMessage(
+            EventId = 15,
+            Level = LogLevel.Warning,
+            Message = "Dependency {Dependency} version {Version} from the {Ecosystem} ecosystem is in the deny list.")]
+        public static partial void DependencyVersionIsDenied(
+            ILogger logger,
+            string dependency,
+            string version,
+            DependencyEcosystem ecosystem);
+
+        [LoggerMessage(
+            EventId = 16,
+            Level = LogLevel.Error,
+            Message = "Failed to query deny store for package {PackageId} version {PackageVersion} from the {Ecosystem} ecosystem.")]
+        public static partial void FailedToQueryDenyStore(
+            ILogger logger,
+            string packageId,
+            string packageVersion,
+            DependencyEcosystem ecosystem,
+            Exception exception);
     }
 
     private sealed class DependabotConfig

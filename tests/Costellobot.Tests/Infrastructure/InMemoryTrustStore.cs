@@ -8,9 +8,24 @@ namespace MartinCostello.Costellobot.Infrastructure;
 
 internal sealed class InMemoryTrustStore : ITrustStore
 {
+    private readonly ConcurrentDictionary<(DependencyEcosystem Ecosystem, string Id, string Version), bool> _denyStore = new();
     private readonly ConcurrentDictionary<(DependencyEcosystem Ecosystem, string Id, string Version), bool> _trustStore = new();
 
-    public int Count => _trustStore.Count;
+    public int DeniedCount => _denyStore.Count;
+
+    public int TrustedCount => _trustStore.Count;
+
+    public void Reset()
+    {
+        _denyStore.Clear();
+        _trustStore.Clear();
+    }
+
+    public Task DenyAsync(DependencyEcosystem ecosystem, string id, string version, CancellationToken cancellationToken = default)
+    {
+        _denyStore[(ecosystem, id, version)] = true;
+        return Task.CompletedTask;
+    }
 
     public Task DistrustAllAsync(CancellationToken cancellationToken = default)
     {
@@ -24,6 +39,16 @@ internal sealed class InMemoryTrustStore : ITrustStore
         return Task.CompletedTask;
     }
 
+    public Task<IReadOnlyList<DeniedDependency>> GetDeniedAsync(DependencyEcosystem ecosystem, CancellationToken cancellationToken = default)
+    {
+        var denied = _denyStore.Keys
+            .Where((p) => p.Ecosystem == ecosystem)
+            .Select((p) => new DeniedDependency(p.Id, p.Version))
+            .ToList();
+
+        return Task.FromResult<IReadOnlyList<DeniedDependency>>(denied);
+    }
+
     public Task<IReadOnlyList<TrustedDependency>> GetTrustAsync(DependencyEcosystem ecosystem, CancellationToken cancellationToken = default)
     {
         var trusted = _trustStore.Keys
@@ -32,6 +57,12 @@ internal sealed class InMemoryTrustStore : ITrustStore
             .ToList();
 
         return Task.FromResult<IReadOnlyList<TrustedDependency>>(trusted);
+    }
+
+    public Task<bool> IsDeniedAsync(DependencyEcosystem ecosystem, string id, string version, CancellationToken cancellationToken = default)
+    {
+        bool isDenied = _denyStore.ContainsKey((ecosystem, id, version));
+        return Task.FromResult(isDenied);
     }
 
     public Task<bool> IsTrustedAsync(DependencyEcosystem ecosystem, string id, string version, CancellationToken cancellationToken = default)
