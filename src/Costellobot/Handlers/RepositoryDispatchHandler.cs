@@ -51,7 +51,7 @@ public sealed partial class RepositoryDispatchHandler(
     private static string? GetOptionalString(JsonElement element, string propertyName)
     {
         return element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
-            ? property.GetString()!
+            ? property.GetString()
             : null;
     }
 
