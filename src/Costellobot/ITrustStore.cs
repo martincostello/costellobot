@@ -13,6 +13,12 @@ public interface ITrustStore
         string version,
         CancellationToken cancellationToken = default);
 
+    Task UndenyAsync(
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        CancellationToken cancellationToken = default);
+
     Task DistrustAsync(
         DependencyEcosystem ecosystem,
         string id,

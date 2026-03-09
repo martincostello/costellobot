@@ -22,6 +22,12 @@ internal sealed class InMemoryTrustStore : ITrustStore
         return Task.CompletedTask;
     }
 
+    public Task UndenyAsync(DependencyEcosystem ecosystem, string id, string version, CancellationToken cancellationToken = default)
+    {
+        _trustStore.Remove((ecosystem, id, version), out _);
+        return Task.CompletedTask;
+    }
+
     public Task DistrustAllAsync(CancellationToken cancellationToken = default)
     {
         _trustStore.Clear();

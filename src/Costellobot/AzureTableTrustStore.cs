@@ -22,6 +22,14 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
         await UpsertAsync(DenyTableName, ecosystem, id, version, cancellationToken);
 
     /// <inheritdoc/>
+    public async Task UndenyAsync(
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        CancellationToken cancellationToken = default) =>
+        await DeleteAsync(DenyTableName, ecosystem, id, version, cancellationToken);
+
+    /// <inheritdoc/>
     public async Task DistrustAllAsync(CancellationToken cancellationToken = default)
     {
         const int BatchSize = 100;

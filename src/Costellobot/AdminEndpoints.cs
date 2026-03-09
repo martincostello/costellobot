@@ -456,6 +456,29 @@ public static class AdminEndpoints
             .WithName("DenyDependency")
             .WithMetadata(admin);
 
+        builder.MapPost(
+            "/dependencies/undeny",
+            async (
+                [FromForm] DependencyEcosystem ecosystem,
+                [FromForm] string id,
+                [FromForm] string version,
+                ITrustStore store,
+                HttpContext context,
+                IAntiforgery antiforgery,
+                CancellationToken cancellationToken) =>
+            {
+                if (!await antiforgery.IsRequestValidAsync(context))
+                {
+                    antiforgery.SetCookieTokenAndHeader(context);
+                    return Results.RedirectToRoute(DependenciesRoute);
+                }
+
+                await store.UndenyAsync(ecosystem, id, version, cancellationToken);
+                return Results.RedirectToRoute(DependenciesRoute);
+            })
+            .WithName("UndenyDependency")
+            .WithMetadata(admin);
+
         builder.MapGet("/github-webhook", (IOptions<GitHubOptions> options) => Results.Extensions.RazorSlice<Debug, GitHubOptions>(options.Value))
                .WithMetadata(admin);
 
