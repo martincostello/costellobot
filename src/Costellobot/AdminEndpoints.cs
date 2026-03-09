@@ -457,7 +457,7 @@ public static class AdminEndpoints
             .WithMetadata(admin);
 
         builder.MapPost(
-            "/dependencies/undeny",
+            "/dependencies/allow",
             async (
                 [FromForm] DependencyEcosystem ecosystem,
                 [FromForm] string id,
@@ -473,10 +473,10 @@ public static class AdminEndpoints
                     return Results.RedirectToRoute(DependenciesRoute);
                 }
 
-                await store.UndenyAsync(ecosystem, id, version, cancellationToken);
+                await store.AllowAsync(ecosystem, id, version, cancellationToken);
                 return Results.RedirectToRoute(DependenciesRoute);
             })
-            .WithName("UndenyDependency")
+            .WithName("AllowDependency")
             .WithMetadata(admin);
 
         builder.MapGet("/github-webhook", (IOptions<GitHubOptions> options) => Results.Extensions.RazorSlice<Debug, GitHubOptions>(options.Value))

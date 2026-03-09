@@ -154,13 +154,13 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <form action="dependencies/undeny" method="post">
+                                        <form action="dependencies/allow" method="post">
                                             <input type="hidden" name="@(tokens.FormFieldName)" value="@(tokens.RequestToken)">
                                             <input type="hidden" name="ecosystem" value="@(ecosystem)">
                                             <input type="hidden" name="id" value="@(dependency.Id)">
                                             <input type="hidden" name="version" value="@(dependency.Version)">
                                             <div class="d-grid">
-                                                <button class="btn btn-danger btn-sm undeny-dependency" title="Allow @(dependency.Id) @(dependency.Version)" type="submit">
+                                                <button class="btn btn-danger btn-sm allow-dependency" title="Allow @(dependency.Id) @(dependency.Version)" type="submit">
                                                     <span class="fa-solid fa-trash-can" aria-hidden="true"></span>
                                                 </button>
                                             </div>

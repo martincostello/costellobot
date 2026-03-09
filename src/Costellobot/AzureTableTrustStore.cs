@@ -22,7 +22,7 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
         await UpsertAsync(DenyTableName, ecosystem, id, version, cancellationToken);
 
     /// <inheritdoc/>
-    public async Task UndenyAsync(
+    public async Task AllowAsync(
         DependencyEcosystem ecosystem,
         string id,
         string version,

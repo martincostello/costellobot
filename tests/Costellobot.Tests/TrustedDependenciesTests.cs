@@ -139,7 +139,7 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
     }
 
     [Fact]
-    public async Task Can_Undeny_A_Dependency()
+    public async Task Can_Allow_A_Dependency()
     {
         // Arrange
         var trustStore = Fixture.Services.GetRequiredService<ITrustStore>();
@@ -162,7 +162,7 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
             items.Count.ShouldBe(2);
 
             // Act - allow the first denied dependency
-            await items[0].UndenyAsync();
+            await items[0].AllowAsync();
 
             // Assert
             await dependencies.WaitForDeniedDependenciesCountAsync(1);

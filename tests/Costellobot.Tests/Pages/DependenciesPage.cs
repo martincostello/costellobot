@@ -107,9 +107,9 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         public async Task<string> VersionAsync()
             => await StringAsync(Selectors.DependencyVersion);
 
-        public async Task<DependenciesPage> UndenyAsync()
+        public async Task<DependenciesPage> AllowAsync()
         {
-            var element = await SelectAsync(Selectors.UndenyDependency);
+            var element = await SelectAsync(Selectors.AllowDependency);
             await element.ClickAsync();
 
             var page = new DependenciesPage(Page);
@@ -133,6 +133,6 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         internal const string DependencyVersion = "[class*='dependency-version']";
         internal const string DistrustAll = "id=distrust-all";
         internal const string DistrustDependency = "[class*='distrust-dependency']";
-        internal const string UndenyDependency = "[class*='undeny-dependency']";
+        internal const string AllowDependency = "[class*='allow-dependency']";
     }
 }

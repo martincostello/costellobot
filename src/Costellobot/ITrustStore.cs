@@ -13,7 +13,7 @@ public interface ITrustStore
         string version,
         CancellationToken cancellationToken = default);
 
-    Task UndenyAsync(
+    Task AllowAsync(
         DependencyEcosystem ecosystem,
         string id,
         string version,
