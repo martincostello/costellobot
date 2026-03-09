@@ -21,12 +21,10 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
 
     public async Task<DependenciesPage> DistrustAllAsync()
     {
-        await Page.ClickAsync(Selectors.DistrustAll);
+        await Page.RunAndWaitForNavigationAsync(async () =>
+            await Page.ClickAsync(Selectors.DistrustAll));
 
-        var page = new DependenciesPage(Page);
-        await page.WaitForContentAsync();
-
-        return page;
+        return new DependenciesPage(Page);
     }
 
     public async Task<DependenciesPage> DenyDependencyAsync(DependencyEcosystem ecosystem, string id, string version)
@@ -34,12 +32,11 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         await Page.SelectOptionAsync(Selectors.DenyEcosystem, ecosystem.ToString());
         await Page.FillAsync(Selectors.DenyId, id);
         await Page.FillAsync(Selectors.DenyVersion, version);
-        await Page.ClickAsync(Selectors.DenySubmit);
 
-        var page = new DependenciesPage(Page);
-        await page.WaitForContentAsync();
+        await Page.RunAndWaitForNavigationAsync(async () =>
+            await Page.ClickAsync(Selectors.DenySubmit));
 
-        return page;
+        return new DependenciesPage(Page);
     }
 
     public async Task WaitForContentAsync()
@@ -79,12 +76,11 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         public async Task<DependenciesPage> DistrustAsync()
         {
             var element = await SelectAsync(Selectors.DistrustDependency);
-            await element.ClickAsync();
 
-            var page = new DependenciesPage(Page);
-            await page.WaitForContentAsync();
+            await Page.RunAndWaitForNavigationAsync(async () =>
+                await element.ClickAsync());
 
-            return page;
+            return new DependenciesPage(Page);
         }
     }
 
