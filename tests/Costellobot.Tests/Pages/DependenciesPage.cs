@@ -21,9 +21,9 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
 
     public async Task<DependenciesPage> DistrustAllAsync()
     {
-        await Page.RunAndWaitForResponseAsync(
-            async () => await Page.ClickAsync(Selectors.DistrustAll),
-            IsDependenciesPageResponse);
+        var waitForResponse = Page.WaitForResponseAsync(IsDependenciesPageResponse);
+        await Page.ClickAsync(Selectors.DistrustAll);
+        await waitForResponse;
 
         return new DependenciesPage(Page);
     }
@@ -34,9 +34,9 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         await Page.FillAsync(Selectors.DenyId, id);
         await Page.FillAsync(Selectors.DenyVersion, version);
 
-        await Page.RunAndWaitForResponseAsync(
-            async () => await Page.ClickAsync(Selectors.DenySubmit),
-            IsDependenciesPageResponse);
+        var waitForResponse = Page.WaitForResponseAsync(IsDependenciesPageResponse);
+        await Page.ClickAsync(Selectors.DenySubmit);
+        await waitForResponse;
 
         return new DependenciesPage(Page);
     }
@@ -55,6 +55,11 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         await Assertions.Expect(Page.Locator(Selectors.DeniedDependencyItem))
                         .ToHaveCountAsync(count);
     }
+
+    private static bool IsDependenciesPageResponse(IResponse response) =>
+        response.Url.EndsWith("/dependencies", StringComparison.Ordinal) &&
+        response.Request.Method == "GET" &&
+        response.Status == 200;
 
     public sealed class DependencyItem : Item
     {
@@ -79,9 +84,9 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         {
             var element = await SelectAsync(Selectors.DistrustDependency);
 
-            await Page.RunAndWaitForResponseAsync(
-                async () => await element.ClickAsync(),
-                IsDependenciesPageResponse);
+            var waitForResponse = Page.WaitForResponseAsync(IsDependenciesPageResponse);
+            await element.ClickAsync();
+            await waitForResponse;
 
             return new DependenciesPage(Page);
         }
@@ -106,11 +111,6 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         public async Task<string> VersionAsync()
             => await StringAsync(Selectors.DependencyVersion);
     }
-
-    private static bool IsDependenciesPageResponse(IResponse response) =>
-        response.Url.EndsWith("/dependencies", StringComparison.Ordinal) &&
-        response.Request.Method == "GET" &&
-        response.Status == 200;
 
     private sealed class Selectors
     {
