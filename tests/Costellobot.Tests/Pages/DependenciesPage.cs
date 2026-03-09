@@ -21,9 +21,9 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
 
     public async Task<DependenciesPage> DistrustAllAsync()
     {
-        var waitForUrl = Page.WaitForURLAsync("**/dependencies");
-        await Page.ClickAsync(Selectors.DistrustAll);
-        await waitForUrl;
+        await Page.RunAndWaitForResponseAsync(
+            async () => await Page.ClickAsync(Selectors.DistrustAll),
+            IsDependenciesPageResponse);
 
         return new DependenciesPage(Page);
     }
@@ -34,9 +34,9 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         await Page.FillAsync(Selectors.DenyId, id);
         await Page.FillAsync(Selectors.DenyVersion, version);
 
-        var waitForUrl = Page.WaitForURLAsync("**/dependencies");
-        await Page.ClickAsync(Selectors.DenySubmit);
-        await waitForUrl;
+        await Page.RunAndWaitForResponseAsync(
+            async () => await Page.ClickAsync(Selectors.DenySubmit),
+            IsDependenciesPageResponse);
 
         return new DependenciesPage(Page);
     }
@@ -79,9 +79,9 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         {
             var element = await SelectAsync(Selectors.DistrustDependency);
 
-            var waitForUrl = Page.WaitForURLAsync("**/dependencies");
-            await element.ClickAsync();
-            await waitForUrl;
+            await Page.RunAndWaitForResponseAsync(
+                async () => await element.ClickAsync(),
+                IsDependenciesPageResponse);
 
             return new DependenciesPage(Page);
         }
@@ -106,6 +106,11 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         public async Task<string> VersionAsync()
             => await StringAsync(Selectors.DependencyVersion);
     }
+
+    private static bool IsDependenciesPageResponse(IResponse response) =>
+        response.Url.EndsWith("/dependencies", StringComparison.Ordinal) &&
+        response.Request.Method == "GET" &&
+        response.Status == 200;
 
     private sealed class Selectors
     {
