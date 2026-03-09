@@ -21,12 +21,12 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
 
     public async Task<DependenciesPage> DistrustAllAsync()
     {
+        var waitForResponse = Page.WaitForResponseAsync(IsDependenciesPageResponse);
+
         await Page.ClickAsync(Selectors.DistrustAll);
+        await waitForResponse;
 
-        var page = new DependenciesPage(Page);
-        await page.WaitForContentAsync();
-
-        return page;
+        return new DependenciesPage(Page);
     }
 
     public async Task<DependenciesPage> DenyDependencyAsync(DependencyEcosystem ecosystem, string id, string version)
@@ -34,12 +34,13 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         await Page.SelectOptionAsync(Selectors.DenyEcosystem, ecosystem.ToString());
         await Page.FillAsync(Selectors.DenyId, id);
         await Page.FillAsync(Selectors.DenyVersion, version);
+
+        var waitForResponse = Page.WaitForResponseAsync(IsDependenciesPageResponse);
+
         await Page.ClickAsync(Selectors.DenySubmit);
+        await waitForResponse;
 
-        var page = new DependenciesPage(Page);
-        await page.WaitForContentAsync();
-
-        return page;
+        return new DependenciesPage(Page);
     }
 
     public async Task WaitForContentAsync()
@@ -56,6 +57,11 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         await Assertions.Expect(Page.Locator(Selectors.DeniedDependencyItem))
                         .ToHaveCountAsync(count);
     }
+
+    private static bool IsDependenciesPageResponse(IResponse response) =>
+        response.Url.EndsWith("/dependencies", StringComparison.Ordinal) &&
+        response.Request.Method == "GET" &&
+        response.Status == 200;
 
     public sealed class DependencyItem : Item
     {
@@ -79,12 +85,13 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         public async Task<DependenciesPage> DistrustAsync()
         {
             var element = await SelectAsync(Selectors.DistrustDependency);
+
+            var waitForResponse = Page.WaitForResponseAsync(IsDependenciesPageResponse);
+
             await element.ClickAsync();
+            await waitForResponse;
 
-            var page = new DependenciesPage(Page);
-            await page.WaitForContentAsync();
-
-            return page;
+            return new DependenciesPage(Page);
         }
     }
 
