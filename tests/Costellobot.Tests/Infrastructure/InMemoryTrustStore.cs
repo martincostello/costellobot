@@ -18,7 +18,11 @@ internal sealed class InMemoryTrustStore : ITrustStore
 
     public Task AllowAsync(DependencyEcosystem ecosystem, string id, string version, CancellationToken cancellationToken = default)
     {
-        _trustStore.Remove((ecosystem, id, version), out _);
+        if (_trustStore.TryGetValue((ecosystem, id, version), out var value) && !value)
+        {
+            _trustStore.Remove((ecosystem, id, version), out _);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -36,7 +40,11 @@ internal sealed class InMemoryTrustStore : ITrustStore
 
     public Task DistrustAsync(DependencyEcosystem ecosystem, string id, string version, CancellationToken cancellationToken = default)
     {
-        _trustStore.Remove((ecosystem, id, version), out _);
+        if (_trustStore.TryGetValue((ecosystem, id, version), out var value) && value)
+        {
+            _trustStore.Remove((ecosystem, id, version), out _);
+        }
+
         return Task.CompletedTask;
     }
 
