@@ -22,6 +22,7 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
     public async Task<DependenciesPage> DistrustAllAsync()
     {
         var waitForResponse = Page.WaitForResponseAsync(IsDependenciesPageResponse);
+
         await Page.ClickAsync(Selectors.DistrustAll);
         await waitForResponse;
 
@@ -35,6 +36,7 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         await Page.FillAsync(Selectors.DenyVersion, version);
 
         var waitForResponse = Page.WaitForResponseAsync(IsDependenciesPageResponse);
+
         await Page.ClickAsync(Selectors.DenySubmit);
         await waitForResponse;
 
@@ -85,6 +87,7 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
             var element = await SelectAsync(Selectors.DistrustDependency);
 
             var waitForResponse = Page.WaitForResponseAsync(IsDependenciesPageResponse);
+
             await element.ClickAsync();
             await waitForResponse;
 
