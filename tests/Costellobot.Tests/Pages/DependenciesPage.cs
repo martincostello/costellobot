@@ -21,8 +21,9 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
 
     public async Task<DependenciesPage> DistrustAllAsync()
     {
-        await Page.RunAndWaitForNavigationAsync(async () =>
-            await Page.ClickAsync(Selectors.DistrustAll));
+        var waitForUrl = Page.WaitForURLAsync("**/dependencies");
+        await Page.ClickAsync(Selectors.DistrustAll);
+        await waitForUrl;
 
         return new DependenciesPage(Page);
     }
@@ -33,8 +34,9 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         await Page.FillAsync(Selectors.DenyId, id);
         await Page.FillAsync(Selectors.DenyVersion, version);
 
-        await Page.RunAndWaitForNavigationAsync(async () =>
-            await Page.ClickAsync(Selectors.DenySubmit));
+        var waitForUrl = Page.WaitForURLAsync("**/dependencies");
+        await Page.ClickAsync(Selectors.DenySubmit);
+        await waitForUrl;
 
         return new DependenciesPage(Page);
     }
@@ -77,8 +79,9 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         {
             var element = await SelectAsync(Selectors.DistrustDependency);
 
-            await Page.RunAndWaitForNavigationAsync(async () =>
-                await element.ClickAsync());
+            var waitForUrl = Page.WaitForURLAsync("**/dependencies");
+            await element.ClickAsync();
+            await waitForUrl;
 
             return new DependenciesPage(Page);
         }
