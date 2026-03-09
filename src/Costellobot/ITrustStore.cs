@@ -7,13 +7,13 @@ namespace MartinCostello.Costellobot;
 
 public interface ITrustStore
 {
-    Task DenyAsync(
+    Task AllowAsync(
         DependencyEcosystem ecosystem,
         string id,
         string version,
         CancellationToken cancellationToken = default);
 
-    Task AllowAsync(
+    Task DenyAsync(
         DependencyEcosystem ecosystem,
         string id,
         string version,

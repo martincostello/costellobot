@@ -16,15 +16,15 @@ internal sealed class InMemoryTrustStore : ITrustStore
 
     public void Reset() => _trustStore.Clear();
 
-    public Task DenyAsync(DependencyEcosystem ecosystem, string id, string version, CancellationToken cancellationToken = default)
-    {
-        _trustStore[(ecosystem, id, version)] = false;
-        return Task.CompletedTask;
-    }
-
     public Task AllowAsync(DependencyEcosystem ecosystem, string id, string version, CancellationToken cancellationToken = default)
     {
         _trustStore.Remove((ecosystem, id, version), out _);
+        return Task.CompletedTask;
+    }
+
+    public Task DenyAsync(DependencyEcosystem ecosystem, string id, string version, CancellationToken cancellationToken = default)
+    {
+        _trustStore[(ecosystem, id, version)] = false;
         return Task.CompletedTask;
     }
 

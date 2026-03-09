@@ -121,6 +121,7 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
 
     private sealed class Selectors
     {
+        internal const string AllowDependency = "[class*='allow-dependency']";
         internal const string DependenciesContent = "id=dependencies-content";
         internal const string DeniedDependencyItem = "[class*='denied-dependency']";
         internal const string DenyEcosystem = "id=deny-ecosystem";
@@ -133,6 +134,5 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
         internal const string DependencyVersion = "[class*='dependency-version']";
         internal const string DistrustAll = "id=distrust-all";
         internal const string DistrustDependency = "[class*='distrust-dependency']";
-        internal const string AllowDependency = "[class*='allow-dependency']";
     }
 }

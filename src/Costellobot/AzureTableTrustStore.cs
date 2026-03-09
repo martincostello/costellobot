@@ -14,20 +14,20 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
     private const string TrustTableName = "TrustStore";
 
     /// <inheritdoc/>
-    public async Task DenyAsync(
-        DependencyEcosystem ecosystem,
-        string id,
-        string version,
-        CancellationToken cancellationToken = default) =>
-        await UpsertAsync(DenyTableName, ecosystem, id, version, cancellationToken);
-
-    /// <inheritdoc/>
     public async Task AllowAsync(
         DependencyEcosystem ecosystem,
         string id,
         string version,
         CancellationToken cancellationToken = default) =>
         await DeleteAsync(DenyTableName, ecosystem, id, version, cancellationToken);
+
+    /// <inheritdoc/>
+    public async Task DenyAsync(
+        DependencyEcosystem ecosystem,
+        string id,
+        string version,
+        CancellationToken cancellationToken = default) =>
+        await UpsertAsync(DenyTableName, ecosystem, id, version, cancellationToken);
 
     /// <inheritdoc/>
     public async Task DistrustAllAsync(CancellationToken cancellationToken = default)
