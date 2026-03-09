@@ -139,6 +139,45 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
     }
 
     [Fact]
+    public async Task Can_Allow_A_Dependency()
+    {
+        // Arrange
+        var trustStore = Fixture.Services.GetRequiredService<ITrustStore>();
+
+        await trustStore.DenyAsync(DependencyEcosystem.NuGet, "Humanizer.Core", "2.14.1", CancellationToken);
+        await trustStore.DenyAsync(DependencyEcosystem.NuGet, "Humanizer.Core", "2.14.2", CancellationToken);
+
+        var browser = new BrowserFixture(OutputHelper);
+        await browser.WithPageAsync(async (page) =>
+        {
+            var app = await SignInAsync(page);
+
+            // Act
+            var dependencies = await app.DependenciesAsync();
+            await dependencies.WaitForContentAsync();
+            await dependencies.WaitForDeniedDependenciesCountAsync(2);
+            await dependencies.WaitForTrustedDependenciesCountAsync(0);
+
+            var items = await dependencies.GetDeniedDependenciesAsync();
+            items.Count.ShouldBe(2);
+
+            // Act - allow the first denied dependency
+            await items[0].AllowAsync();
+
+            // Assert
+            await dependencies.WaitForDeniedDependenciesCountAsync(1);
+            await dependencies.WaitForTrustedDependenciesCountAsync(0);
+
+            items = await dependencies.GetDeniedDependenciesAsync();
+            items.Count.ShouldBe(1);
+
+            await items[0].EcosystemAsync().ShouldBe("NuGet");
+            await items[0].IdAsync().ShouldBe("Humanizer.Core");
+            await items[0].VersionAsync().ShouldBe("2.14.1");
+        });
+    }
+
+    [Fact]
     public async Task Can_Deny_A_Dependency()
     {
         // Arrange

@@ -117,6 +117,7 @@
                         <th scope="col" colspan="2">ID</th>
                         <th scope="col">Version</th>
                         <th scope="col">Timestamp</th>
+                        <th scope="col">Allow</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -151,6 +152,19 @@
                                         <div class="dependency-timestamp" title="@(dependency.DeniedAt?.ToString("u", CultureInfo.InvariantCulture))">
                                             @(dependency.DeniedAt?.Humanize())
                                         </div>
+                                    </td>
+                                    <td>
+                                        <form action="dependencies/allow" method="post">
+                                            <input type="hidden" name="@(tokens.FormFieldName)" value="@(tokens.RequestToken)">
+                                            <input type="hidden" name="ecosystem" value="@(ecosystem)">
+                                            <input type="hidden" name="id" value="@(dependency.Id)">
+                                            <input type="hidden" name="version" value="@(dependency.Version)">
+                                            <div class="d-grid">
+                                                <button class="btn btn-danger btn-sm allow-dependency" title="Allow @(dependency.Id) @(dependency.Version)" type="submit">
+                                                    <span class="fa-solid fa-trash-can" aria-hidden="true"></span>
+                                                </button>
+                                            </div>
+                                        </form>
                                     </td>
                                 </tr>
                             }

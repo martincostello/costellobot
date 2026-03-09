@@ -106,10 +106,22 @@ public sealed class DependenciesPage(IPage page) : AppPage(page)
 
         public async Task<string> VersionAsync()
             => await StringAsync(Selectors.DependencyVersion);
+
+        public async Task<DependenciesPage> AllowAsync()
+        {
+            var element = await SelectAsync(Selectors.AllowDependency);
+            await element.ClickAsync();
+
+            var page = new DependenciesPage(Page);
+            await page.WaitForContentAsync();
+
+            return page;
+        }
     }
 
     private sealed class Selectors
     {
+        internal const string AllowDependency = "[class*='allow-dependency']";
         internal const string DependenciesContent = "id=dependencies-content";
         internal const string DeniedDependencyItem = "[class*='denied-dependency']";
         internal const string DenyEcosystem = "id=deny-ecosystem";
