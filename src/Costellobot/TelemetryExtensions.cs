@@ -41,6 +41,7 @@ public static class TelemetryExtensions
                           .AddHttpClientInstrumentation()
                           .AddSource(ApplicationTelemetry.ServiceName)
                           .AddSource("Azure.*")
+                          .AddSource("Polly")
                           .AddSource("Microsoft.AspNetCore.SignalR.Server");
 
                    if (environment.IsDevelopment())

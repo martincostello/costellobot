@@ -8,6 +8,7 @@ using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.DeploymentStatus;
 using Octokit.Webhooks.Models.DeploymentStatusEvent;
 using Polly;
+using Polly.Telemetry;
 
 namespace MartinCostello.Costellobot.Handlers;
 
@@ -105,6 +106,7 @@ public sealed partial class DeploymentStatusHandler(
                 ShouldHandle = new PredicateBuilder().Handle<ApiValidationException>(),
                 UseJitter = true,
             })
+            .ConfigureTelemetry(new TelemetryOptions())
             .Build();
     }
 

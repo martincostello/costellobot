@@ -6,6 +6,7 @@ using Octokit;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events.DeploymentProtectionRule;
 using Polly;
+using Polly.Telemetry;
 
 namespace MartinCostello.Costellobot.Handlers;
 
@@ -85,6 +86,7 @@ public sealed partial class DeploymentProtectionRuleHandler(
                 Delay = TimeSpan.FromSeconds(2),
                 UseJitter = true,
             })
+            .ConfigureTelemetry(new TelemetryOptions())
             .Build();
     }
 
