@@ -197,11 +197,11 @@ public static partial class GitDiffParser
         var fragmentTrimmed = fragmentText.Trim();
         var fileName = Path.GetFileName(path);
 
-        if (fragmentTrimmed.StartsWith('<'))
+        if (fragmentTrimmed.StartsWith('<', StringComparison.Ordinal))
         {
             return TryParseXml(fragmentTrimmed, out package);
         }
-        else if (fragmentTrimmed.StartsWith('"') && fileName is "package.json")
+        else if (fragmentTrimmed.StartsWith('"', StringComparison.Ordinal) && fileName is "package.json")
         {
             return TryParseJson(fragmentTrimmed, out package);
         }
