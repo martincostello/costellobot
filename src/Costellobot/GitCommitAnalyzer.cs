@@ -208,7 +208,7 @@ public sealed partial class GitCommitAnalyzer(
         {
             // Look for renovate Markdown metadata in the commit message.
             start = commitMessage.IndexOf('|', StringComparison.Ordinal);
-            end = commitMessage.LastIndexOf('|');
+            end = commitMessage.LastIndexOf('|', StringComparison.Ordinal);
 
             if (start > -1 && ((end - start) > 1))
             {
