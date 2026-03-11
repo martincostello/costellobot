@@ -55,7 +55,7 @@ expected:
     - query: process_cpu:cpu:nanoseconds:cpu:nanoseconds{ service_name="Costellobot" }
       flamebearers:
         regexp: MartinCostello.Costellobot!
-    - query: process_cpu:alloc_size:bytes:cpu:nanoseconds{ service_name="Costellobot" }
+    - query: alloc:alloc_size:bytes:cpu:nanoseconds{ service_name="Costellobot" }
       flamebearers:
         regexp: MartinCostello.Costellobot!
   traces:
