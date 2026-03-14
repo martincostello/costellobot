@@ -40,13 +40,6 @@ public class ConfigurationTests(HttpServerFixture fixture, ITestOutputHelper out
                     reset = inOneHour,
                 },
             },
-            rate = new
-            {
-                limit = 12_500,
-                used = 1,
-                remaining = 12_499,
-                reset = inOneHour,
-            },
         };
 
         CreateDefaultBuilder()
