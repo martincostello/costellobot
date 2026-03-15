@@ -10,6 +10,7 @@ using Azure.Identity;
 using Microsoft.AspNetCore.HostFiltering;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Options;
 
 namespace MartinCostello.Costellobot;
 
@@ -17,8 +18,6 @@ public static class CostellobotBuilder
 {
     public static WebApplicationBuilder AddCostellobot(this WebApplicationBuilder builder)
     {
-        builder.Services.ConfigureAllowedHosts(builder.Configuration);
-
         var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions()
         {
             ExcludeVisualStudioCredential = true,
@@ -115,6 +114,8 @@ public static class CostellobotBuilder
                 (options) => options.ForwardedHeaders |= ForwardedHeaders.XForwardedHost);
         }
 
+        builder.Services.AddSingleton<IPostConfigureOptions<HostFilteringOptions>, ConfigureHostFiltering>();
+
         builder.WebHost.ConfigureKestrel((p) => p.AddServerHeader = false);
 
         if (builder.Configuration["Sentry:Dsn"] is { Length: > 0 } dsn)
@@ -181,26 +182,26 @@ public static class CostellobotBuilder
         return app;
     }
 
-    private static void ConfigureAllowedHosts(this IServiceCollection services, ConfigurationManager configuration)
+    private sealed class ConfigureHostFiltering(IConfiguration configuration) : IPostConfigureOptions<HostFilteringOptions>
     {
-        var allowedHosts = configuration["AllowedHosts"];
-
-        if (string.IsNullOrEmpty(allowedHosts) || allowedHosts is "*")
+        public void PostConfigure(string? name, HostFilteringOptions options)
         {
-            return;
-        }
+            var allowedHosts = configuration["AllowedHosts"];
 
-        var allowedHostNames = allowedHosts
-            .Split([';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList();
+            if (string.IsNullOrEmpty(allowedHosts) || allowedHosts is "*")
+            {
+                return;
+            }
 
-        services.PostConfigure<HostFilteringOptions>((options) =>
-        {
+            var allowedHostNames = allowedHosts
+                .Split([';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
+
             var allowed = new HashSet<string>(options.AllowedHosts ?? [], StringComparer.OrdinalIgnoreCase);
 
-            foreach (var name in allowedHostNames)
+            foreach (var value in allowedHostNames)
             {
-                allowed.Add(name);
+                allowed.Add(value);
             }
 
             allowed.Add("localhost");
@@ -213,36 +214,56 @@ public static class CostellobotBuilder
             }
 
             options.AllowedHosts = [.. allowed];
-        });
-    }
+        }
 
-    private static IEnumerable<IPAddress> GetLocalUnicastIpAddresses()
-    {
-        foreach (var network in NetworkInterface.GetAllNetworkInterfaces())
+        private static IEnumerable<IPAddress> GetLocalUnicastIpAddresses()
         {
-            if (network.OperationalStatus is not OperationalStatus.Up ||
-                network.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel)
+            NetworkInterface[] interfaces;
+
+            try
             {
-                continue;
+                interfaces = NetworkInterface.GetAllNetworkInterfaces();
+            }
+            catch (Exception)
+            {
+                yield break;
             }
 
-            var properties = network.GetIPProperties();
-
-            foreach (var address in properties.UnicastAddresses)
+            foreach (var network in interfaces)
             {
-                if (address.Address is not { } ip)
+                if (network.OperationalStatus is not OperationalStatus.Up ||
+                    network.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel)
                 {
                     continue;
                 }
 
-                if (ip.AddressFamily == AddressFamily.InterNetworkV6 && ip.IsIPv6LinkLocal)
+                IPInterfaceProperties properties;
+
+                try
+                {
+                    properties = network.GetIPProperties();
+                }
+                catch (Exception)
                 {
                     continue;
                 }
 
-                if (ip.AddressFamily is AddressFamily.InterNetwork or AddressFamily.InterNetworkV6)
+                foreach (var address in properties.UnicastAddresses)
                 {
-                    yield return ip;
+                    if (address.Address is not { } ip)
+                    {
+                        continue;
+                    }
+
+                    if (ip.AddressFamily == AddressFamily.InterNetworkV6 && ip.IsIPv6LinkLocal)
+                    {
+                        continue;
+                    }
+
+                    if (ip.AddressFamily is AddressFamily.InterNetwork or AddressFamily.InterNetworkV6)
+                    {
+                        yield return ip;
+                    }
                 }
             }
         }
