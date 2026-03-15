@@ -2,10 +2,15 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.IO.Compression;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using Azure.Data.Tables;
 using Azure.Identity;
+using Microsoft.AspNetCore.HostFiltering;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Options;
 
 namespace MartinCostello.Costellobot;
 
@@ -109,6 +114,8 @@ public static class CostellobotBuilder
                 (options) => options.ForwardedHeaders |= ForwardedHeaders.XForwardedHost);
         }
 
+        builder.Services.AddSingleton<IPostConfigureOptions<HostFilteringOptions>, ConfigureHostFiltering>();
+
         builder.WebHost.ConfigureKestrel((p) => p.AddServerHeader = false);
 
         if (builder.Configuration["Sentry:Dsn"] is { Length: > 0 } dsn)
@@ -173,5 +180,92 @@ public static class CostellobotBuilder
         app.MapAdminRoutes();
 
         return app;
+    }
+
+    private sealed class ConfigureHostFiltering(IConfiguration configuration) : IPostConfigureOptions<HostFilteringOptions>
+    {
+        public void PostConfigure(string? name, HostFilteringOptions options)
+        {
+            var allowedHosts = configuration["AllowedHosts"];
+
+            if (string.IsNullOrEmpty(allowedHosts) || allowedHosts is "*")
+            {
+                return;
+            }
+
+            var allowedHostNames = allowedHosts
+                .Split([';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
+
+            var allowed = new HashSet<string>(options.AllowedHosts ?? [], StringComparer.OrdinalIgnoreCase);
+
+            foreach (var value in allowedHostNames)
+            {
+                allowed.Add(value);
+            }
+
+            allowed.Add("localhost");
+            allowed.Add(IPAddress.Loopback.ToString());
+            allowed.Add($"[{IPAddress.IPv6Loopback}]");
+
+            foreach (var address in GetLocalUnicastIpAddresses())
+            {
+                allowed.Add(address.AddressFamily is AddressFamily.InterNetworkV6 ? $"[{address}]" : address.ToString());
+            }
+
+            options.AllowedHosts = [.. allowed];
+        }
+
+        private static IEnumerable<IPAddress> GetLocalUnicastIpAddresses()
+        {
+            NetworkInterface[] interfaces;
+
+            try
+            {
+                interfaces = NetworkInterface.GetAllNetworkInterfaces();
+            }
+            catch (Exception)
+            {
+                yield break;
+            }
+
+            foreach (var network in interfaces)
+            {
+                if (network.OperationalStatus is not OperationalStatus.Up ||
+                    network.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel)
+                {
+                    continue;
+                }
+
+                IPInterfaceProperties properties;
+
+                try
+                {
+                    properties = network.GetIPProperties();
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                foreach (var address in properties.UnicastAddresses)
+                {
+                    if (address.Address is not { } ip)
+                    {
+                        continue;
+                    }
+
+                    if (ip.AddressFamily == AddressFamily.InterNetworkV6 && ip.IsIPv6LinkLocal)
+                    {
+                        continue;
+                    }
+
+                    if (ip.AddressFamily is AddressFamily.InterNetwork or AddressFamily.InterNetworkV6)
+                    {
+                        yield return ip;
+                    }
+                }
+            }
+        }
     }
 }

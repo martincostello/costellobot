@@ -6,7 +6,6 @@ services:
     ports:
       - '8080:8080'
     environment:
-      - AllowedHosts=*
       - ConnectionStrings__AzureServiceBus=Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
       - ConnectionStrings__AzureTableStorage=UseDevelopmentStorage=true
       - DOTNET_ENVIRONMENT=Production
