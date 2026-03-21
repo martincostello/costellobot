@@ -23,9 +23,9 @@ public sealed partial class HealthProbeHandler(IConfiguration configuration) : A
             const string HealthProbeTokenKey = "x-health-probe-token";
 
             var token =
-                httpContext.Request.Query[HealthProbeTokenKey].FirstOrDefault() ??
+                httpContext.Request.Headers["x-ms-auth-internal-token"].FirstOrDefault() ??
                 httpContext.Request.Headers[HealthProbeTokenKey].FirstOrDefault() ??
-                httpContext.Request.Headers["x-ms-auth-internal-token"].FirstOrDefault();
+                httpContext.Request.Query[HealthProbeTokenKey].FirstOrDefault();
 
             if (string.Equals(token, _encryptionKeyHash, StringComparison.Ordinal))
             {
