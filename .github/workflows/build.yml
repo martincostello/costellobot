@@ -334,7 +334,7 @@ jobs:
         $delay = 10
         $limit = 15
         $success = $false
-        $url = "${env:APPLICATION_URL}/health/liveness";
+        $url = "${env:APPLICATION_URL}/health/readiness";
         $headers = @{
           "User-Agent" = "Costellobot-Deployment+${env:GITHUB_RUN_ID}";
           "x-health-probe-token" = ${env:HEALTH_PROBE_TOKEN};
