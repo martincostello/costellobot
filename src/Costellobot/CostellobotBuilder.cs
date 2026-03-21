@@ -208,6 +208,9 @@ public static class CostellobotBuilder
             allowed.Add(IPAddress.Loopback.ToString());
             allowed.Add($"[{IPAddress.IPv6Loopback}]");
 
+            // See https://learn.microsoft.com/azure/virtual-network/what-is-ip-address-168-63-129-16
+            allowed.Add("168.63.129.16");
+
             foreach (var address in GetLocalUnicastIpAddresses())
             {
                 allowed.Add(address.AddressFamily is AddressFamily.InterNetworkV6 ? $"[{address}]" : address.ToString());

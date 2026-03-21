@@ -6,18 +6,34 @@ using System.Net.Http.Json;
 using System.Net.Mime;
 using System.Text.Json;
 using MartinCostello.Costellobot.Infrastructure;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace MartinCostello.Costellobot;
 
 [Collection<HttpServerCollection>]
 public sealed class HealthCheckTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<HttpServerFixture>(fixture, outputHelper)
 {
+    private const string ValidToken = "I3eGXFWsxHOxEhULepTolmX9jSd/rcSs9CAjao2DgGk=";
+
     public static TheoryData<string> HealthCheckUrls() =>
     [
         "/health/liveness",
         "/health/readiness",
         "/health/startup"
     ];
+
+    public static TheoryData<string, string> HealthCheckUrlsWithHeaders()
+    {
+        var data = new TheoryData<string, string>();
+
+        foreach (var url in HealthCheckUrls())
+        {
+            data.Add(url, "x-health-probe-token");
+            data.Add(url, "x-ms-auth-internal-token");
+        }
+
+        return data;
+    }
 
     [Theory]
     [MemberData(nameof(HealthCheckUrls))]
@@ -53,27 +69,28 @@ public sealed class HealthCheckTests(HttpServerFixture fixture, ITestOutputHelpe
 
     [Theory]
     [MemberData(nameof(HealthCheckUrls))]
-    public async Task Can_Get_Health_Resource_Unauthenticated_With_Token(string requestUri)
+    public async Task Can_Get_Health_Resource_Unauthenticated_With_Query_Token(string requestUri)
     {
         // Arrange
         using var client = Fixture.CreateHttpClientForApp();
-        client.DefaultRequestHeaders.Add("x-ms-auth-internal-token", "I3eGXFWsxHOxEhULepTolmX9jSd/rcSs9CAjao2DgGk=");
 
-        // Act
-        using var response = await client.GetAsync(requestUri, CancellationToken);
+        requestUri = QueryHelpers.AddQueryString(requestUri, "x-health-probe-token", ValidToken);
 
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK, $"Failed to get {requestUri}. {await response.Content!.ReadAsStringAsync(CancellationToken)}");
-        response.Content.Headers.ContentType?.MediaType.ShouldBe(MediaTypeNames.Application.Json);
-        response.Content.Headers.ContentLength.ShouldNotBeNull();
-        response.Content.Headers.ContentLength.ShouldNotBe(0);
+        // Act and Assert
+        await CanGetHealthResource(client, requestUri);
+    }
 
-        using var document = await response.Content.ReadFromJsonAsync<JsonDocument>(CancellationToken);
+    [Theory]
+    [MemberData(nameof(HealthCheckUrlsWithHeaders))]
+    public async Task Can_Get_Health_Resource_Unauthenticated_With_Header_Token(string requestUri, string headerName)
+    {
+        // Arrange
+        using var client = Fixture.CreateHttpClientForApp();
 
-        document.ShouldNotBeNull();
-        document.RootElement.TryGetProperty("status", out var status).ShouldBeTrue();
-        status.ValueKind.ShouldBe(JsonValueKind.String);
-        status.GetString().ShouldBe("Healthy");
+        client.DefaultRequestHeaders.Add(headerName, ValidToken);
+
+        // Act and Assert
+        await CanGetHealthResource(client, requestUri);
     }
 
     [Theory]
@@ -83,11 +100,17 @@ public sealed class HealthCheckTests(HttpServerFixture fixture, ITestOutputHelpe
         // Arrange
         using var client = await CreateAuthenticatedClientAsync();
 
+        // Act and Assert
+        await CanGetHealthResource(client, requestUri);
+    }
+
+    private async Task CanGetHealthResource(HttpClient client, string requestUri)
+    {
         // Act
         using var response = await client.GetAsync(requestUri, CancellationToken);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK, $"Failed to get {requestUri}. {await response.Content!.ReadAsStringAsync(CancellationToken)}");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK, $"Failed to get {requestUri}. {await response.Content.ReadAsStringAsync(CancellationToken)}");
         response.Content.Headers.ContentType?.MediaType.ShouldBe(MediaTypeNames.Application.Json);
         response.Content.Headers.ContentLength.ShouldNotBeNull();
         response.Content.Headers.ContentLength.ShouldNotBe(0);
