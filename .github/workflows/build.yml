@@ -334,11 +334,15 @@ jobs:
         $delay = 10
         $limit = 15
         $success = $false
-        $url = "${env:APPLICATION_URL}/health/liveness?x-health-probe-token=${env:HEALTH_PROBE_TOKEN}";
+        $url = "${env:APPLICATION_URL}/health/liveness";
+        $headers = @{
+          "User-Agent" = "Costellobot-Deployment+${env:GITHUB_RUN_ID}";
+          "x-health-probe-token" = ${env:HEALTH_PROBE_TOKEN};
+        }
         for ($i = 0; $i -lt $limit; $i++) {
           $response = $null
           try {
-            $response = Invoke-WebRequest -Uri $url -Method Get -UseBasicParsing
+            $response = Invoke-WebRequest -Uri $url -Method Get -Headers $headers -UseBasicParsing
           } catch {
             $response = $_.Exception.Response
           }
