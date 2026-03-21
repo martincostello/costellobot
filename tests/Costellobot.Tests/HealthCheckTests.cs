@@ -121,5 +121,9 @@ public sealed class HealthCheckTests(HttpServerFixture fixture, ITestOutputHelpe
         document.RootElement.TryGetProperty("status", out var status).ShouldBeTrue();
         status.ValueKind.ShouldBe(JsonValueKind.String);
         status.GetString().ShouldBe("Healthy");
+
+        document.RootElement.TryGetProperty("version", out var version).ShouldBeTrue();
+        version.ValueKind.ShouldBe(JsonValueKind.String);
+        version.GetString().ShouldNotBeNullOrWhiteSpace();
     }
 }

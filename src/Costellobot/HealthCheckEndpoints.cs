@@ -46,6 +46,7 @@ public static class HealthCheckEndpoints
             writer.WriteStartObject();
             {
                 writer.WriteString("status", healthReport.Status.ToString());
+                writer.WriteString("version", GitMetadata.Version);
                 writer.WriteStartObject("results");
 
                 foreach ((var name, var entry) in healthReport.Entries)
