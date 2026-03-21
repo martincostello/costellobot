@@ -329,21 +329,22 @@ jobs:
       shell: pwsh
       env:
         APPLICATION_URL: ${{ env.APPLICATION_URL_PROD }}
+        HEALTH_PROBE_TOKEN: ${{ secrets.APPLICATION_HEALTH_PROBE_TOKEN }}
       run: |
         $delay = 10
         $limit = 15
         $success = $false
+        $url = "${env:APPLICATION_URL}/health/liveness?x-health-probe-token=${env:HEALTH_PROBE_TOKEN}";
         for ($i = 0; $i -lt $limit; $i++) {
           $response = $null
           try {
-            $response = Invoke-WebRequest -Uri "${env:APPLICATION_URL}/version" -Method Get -UseBasicParsing
+            $response = Invoke-WebRequest -Uri $url -Method Get -UseBasicParsing
           } catch {
             $response = $_.Exception.Response
           }
           if (($null -ne $response) -And ($response.StatusCode -eq 200)) {
             $json = $response.Content | ConvertFrom-Json
-            $app = $json.application
-            $version = $null -eq $app ? "" : $app.version
+            $version = $json.version
             if ((-Not [string]::IsNullOrWhiteSpace($version)) -And $version.Contains(${env:GITHUB_SHA})) {
               $success = $true
               break
