@@ -342,7 +342,7 @@ jobs:
         for ($i = 0; $i -lt $limit; $i++) {
           $response = $null
           try {
-            $response = Invoke-WebRequest -Uri $url -Method Get -Headers $headers -UseBasicParsing
+            $response = Invoke-WebRequest -Uri $url -Method Get -Headers $headers -MaximumRedirection 0 -UseBasicParsing
           } catch {
             $response = $_.Exception.Response
           }
