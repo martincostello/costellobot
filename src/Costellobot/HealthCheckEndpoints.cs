@@ -34,9 +34,7 @@ public static class HealthCheckEndpoints
 
         configure?.Invoke(options);
 
-        // See https://learn.microsoft.com/azure/virtual-network/what-is-ip-address-168-63-129-16
         builder.MapHealthChecks(pattern, options)
-               .RequireHost(["localhost", "127.0.0.1", "168.63.129.16"])
                .RequireAuthorization((policy) => policy.AddRequirements(new Authorization.HealthProbeRequirement()));
     }
 
