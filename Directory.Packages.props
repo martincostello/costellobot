@@ -24,7 +24,7 @@
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.27.0" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="coverlet.msbuild" Version="8.0.1" />
-    <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.1" />
+    <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.2" />
     <PackageVersion Include="Google.Apis.Calendar.v3" Version="1.73.0.4073" />
     <PackageVersion Include="Humanizer" Version="3.0.10" />
     <PackageVersion Include="JunitXml.TestLogger" Version="8.0.0" />
