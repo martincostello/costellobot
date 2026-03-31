@@ -3,6 +3,7 @@
 
 import * as signalR from '@microsoft/signalr';
 import moment from 'moment';
+// @ts-expect-error -- moment locale sub-paths are not exported in package.json exports (TS2882)
 import 'moment/locale/en-gb';
 import { Telemetry } from './Telemetry';
 
@@ -11,18 +12,18 @@ export class App {
     private readonly hidden = 'd-none';
     private readonly loaderSelector = '.spinner-border';
 
-    private logsAutoscroll: HTMLInputElement;
-    private logsContainer: HTMLInputElement;
-    private webhooksCountContainer: HTMLElement;
-    private webhooksIndexContainer: HTMLElement;
-    private webhooksContentContainer: HTMLElement;
+    private logsAutoscroll!: HTMLInputElement;
+    private logsContainer!: HTMLInputElement;
+    private webhooksCountContainer!: HTMLElement;
+    private webhooksIndexContainer!: HTMLElement;
+    private webhooksContentContainer!: HTMLElement;
 
-    private appId: HTMLInputElement;
-    private webhookDelivery: number;
-    private webhookEvent: HTMLInputElement;
-    private webhookPayload: HTMLInputElement;
-    private webhookSignature: HTMLInputElement;
-    private webhookSubmit: HTMLElement;
+    private appId!: HTMLInputElement;
+    private webhookDelivery!: number;
+    private webhookEvent!: HTMLInputElement;
+    private webhookPayload!: HTMLInputElement;
+    private webhookSignature!: HTMLInputElement;
+    private webhookSubmit!: HTMLElement;
 
     constructor() {
         this.connection = new signalR.HubConnectionBuilder().withUrl('/admin/git-hub').withAutomaticReconnect().build();
@@ -46,7 +47,7 @@ export class App {
 
             const clipboard: any = window['ClipboardJS' as any];
             new clipboard(selector);
-            copyButton.addEventListener('click', (event) => {
+            copyButton?.addEventListener('click', (event) => {
                 event.preventDefault();
             });
         }
@@ -54,10 +55,10 @@ export class App {
 
     private async initializeLogs(logsContainer: HTMLInputElement): Promise<void> {
         this.logsContainer = logsContainer;
-        this.webhooksCountContainer = document.getElementById('webhooks-count');
-        this.webhooksIndexContainer = document.getElementById('webhooks-index');
+        this.webhooksCountContainer = document.getElementById('webhooks-count')!;
+        this.webhooksIndexContainer = document.getElementById('webhooks-index')!;
         this.logsAutoscroll = <HTMLInputElement>document.getElementById('logs-auto-scroll');
-        this.webhooksContentContainer = document.getElementById('webhooks-content');
+        this.webhooksContentContainer = document.getElementById('webhooks-content')!;
 
         moment.locale('en-gb');
 
@@ -102,8 +103,8 @@ export class App {
                 signature = this.webhookSignature.value;
             }
 
-            const loader = this.webhookSubmit.querySelector(this.loaderSelector);
-            const badge = document.querySelector('.webhook-status');
+            const loader = this.webhookSubmit.querySelector(this.loaderSelector)!;
+            const badge = document.querySelector('.webhook-status')!;
 
             this.show(loader);
             this.disable(this.webhookSubmit);
@@ -245,8 +246,8 @@ export class App {
             const issue = match[5];
             const trailing = match[6];
 
-            const prefix = message.substring(0, match.index);
-            const suffix = message.substring(match.index + whole.length);
+            const prefix = message.substring(0, match.index!);
+            const suffix = message.substring(match.index! + whole.length);
 
             const link = document.createElement('a');
             link.classList.add('log-link');
@@ -259,7 +260,7 @@ export class App {
             element.append(message);
         }
 
-        if (logEntry.exception !== '') {
+        if (logEntry.exception) {
             const exception = document.createElement('div');
             exception.classList.add('log-exception');
             exception.innerText = logEntry.exception;
