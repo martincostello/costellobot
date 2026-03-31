@@ -3,7 +3,6 @@
 
 import * as signalR from '@microsoft/signalr';
 import moment from 'moment';
-// @ts-expect-error -- moment locale sub-paths are not exported in package.json exports (TS2882)
 import 'moment/locale/en-gb';
 import { Telemetry } from './Telemetry';
 
