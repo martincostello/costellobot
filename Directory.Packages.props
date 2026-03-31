@@ -11,7 +11,7 @@
     <PackageVersion Include="Aspire.Azure.Storage.Blobs" Version="13.2.0" />
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.2.0" />
     <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="13.2.0" />
-    <PackageVersion Include="Aspire.Hosting.Azure.ServiceBus" Version="13.2.0" />
+    <PackageVersion Include="Aspire.Hosting.Azure.ServiceBus" Version="13.2.1" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="13.2.0" />
     <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="10.0.0" />
     <PackageVersion Include="Azure.Data.Tables" Version="12.11.0" />
