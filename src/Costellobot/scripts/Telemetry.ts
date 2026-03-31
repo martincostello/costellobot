@@ -40,7 +40,7 @@ export class Telemetry {
             url,
             app: {
                 environment,
-                namespace,
+                namespace: namespace ?? undefined,
                 version,
             },
             sessionTracking: tracking,
