@@ -169,7 +169,7 @@ public static class AuthenticationEndpoints
 
             var tokens = antiforgery.GetAndStoreTokens(context);
 
-            return Results.Extensions.RazorSlice<Slices.SignIn, AntiforgeryTokenSet>(tokens);
+            return Results.RazorSlice<Slices.SignIn, AntiforgeryTokenSet>(tokens);
         });
 
         builder.MapPost(SignInPath, async (HttpContext context, IAntiforgery antiforgery) =>

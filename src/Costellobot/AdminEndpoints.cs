@@ -94,7 +94,7 @@ public static class AdminEndpoints
                     break;
             }
 
-            return Results.Extensions.RazorSlice<Error, ErrorModel>(model, statusCode);
+            return Results.RazorSlice<Error, ErrorModel>(model, statusCode);
         }).AllowAnonymous()
           .DisableAntiforgery()
           .WithMetadata(new ResponseCacheAttribute() { Duration = 0, Location = ResponseCacheLocation.None, NoStore = true });
@@ -123,7 +123,7 @@ public static class AdminEndpoints
                     var userLimits = await GetRateLimitsAsync(userClient);
 
                     var model = new ConfigurationModel(options, webhook.CurrentValue, installationLimits, userLimits);
-                    return Results.Extensions.RazorSlice<Configuration, ConfigurationModel>(model);
+                    return Results.RazorSlice<Configuration, ConfigurationModel>(model);
 
                     static async Task<MiscellaneousRateLimit?> GetRateLimitsAsync(IGitHubClient client)
                     {
@@ -141,7 +141,7 @@ public static class AdminEndpoints
             .WithName("Configuration")
             .WithMetadata(admin);
 
-        builder.MapMethods("/", [HttpMethod.Get.Method, HttpMethod.Head.Method], () => Results.Extensions.RazorSlice<Home>())
+        builder.MapMethods("/", [HttpMethod.Get.Method, HttpMethod.Head.Method], () => Results.RazorSlice<Home>())
                .WithMetadata(admin);
 
         const string DeliveryRoute = "Delivery";
@@ -166,7 +166,7 @@ public static class AdminEndpoints
 
                 var model = new DeliveriesModel(app, deliveries);
 
-                return Results.Extensions.RazorSlice<Deliveries, DeliveriesModel>(model);
+                return Results.RazorSlice<Deliveries, DeliveriesModel>(model);
             })
             .AddEndpointFilter<SetAntiforgeryCookieFilter>()
             .WithName(DeliveriesRoute)
@@ -283,7 +283,7 @@ public static class AdminEndpoints
                     model.RepositoryId = value.ToString(CultureInfo.InvariantCulture);
                 }
 
-                return Results.Extensions.RazorSlice<Delivery, DeliveryModel>(model);
+                return Results.RazorSlice<Delivery, DeliveryModel>(model);
 
                 static void TryPopulateHeaders(JsonElement element, IDictionary<string, string> headers)
                 {
@@ -380,7 +380,7 @@ public static class AdminEndpoints
                 }
 
                 var model = new DependenciesModel(trusted, denied);
-                return Results.Extensions.RazorSlice<Dependencies, DependenciesModel>(model);
+                return Results.RazorSlice<Dependencies, DependenciesModel>(model);
 
                 static IReadOnlyList<T> Sort<T>(IEnumerable<T> collection, Comparer<string> comparer)
                     where T : IDependency =>
@@ -479,7 +479,7 @@ public static class AdminEndpoints
             .WithName("AllowDependency")
             .WithMetadata(admin);
 
-        builder.MapGet("/github-webhook", (IOptions<GitHubOptions> options) => Results.Extensions.RazorSlice<Debug, GitHubOptions>(options.Value))
+        builder.MapGet("/github-webhook", (IOptions<GitHubOptions> options) => Results.RazorSlice<Debug, GitHubOptions>(options.Value))
                .WithMetadata(admin);
 
         return builder;
