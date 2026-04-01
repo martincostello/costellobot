@@ -7,7 +7,9 @@ using BenchmarkDotNet.Diagnosers;
 
 namespace MartinCostello.Costellobot.Benchmarks;
 
+#if false
 [EventPipeProfiler(EventPipeProfile.CpuSampling)]
+#endif
 [MemoryDiagnoser]
 public class AppBenchmarks : IAsyncDisposable
 {
