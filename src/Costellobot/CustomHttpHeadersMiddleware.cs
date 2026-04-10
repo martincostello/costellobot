@@ -9,7 +9,7 @@ namespace MartinCostello.Costellobot;
 
 public sealed class CustomHttpHeadersMiddleware(RequestDelegate next)
 {
-    private static readonly CompositeFormat ContentSecurityPolicyTemplate = CompositeFormat.Parse(string.Join(
+    private static readonly string BaseContentSecurityPolicy = string.Join(
         ';',
         "default-src 'self'",
         "script-src 'self' cdnjs.cloudflare.com",
@@ -18,16 +18,17 @@ public sealed class CustomHttpHeadersMiddleware(RequestDelegate next)
         "style-src-elem 'self' cdnjs.cloudflare.com use.fontawesome.com",
         "img-src 'self' data: avatars.githubusercontent.com cdn.martincostello.com",
         "font-src 'self' cdnjs.cloudflare.com use.fontawesome.com",
-        "connect-src 'self' cdnjs.cloudflare.com {1}",
         "media-src 'none'",
         "object-src 'none'",
         "child-src 'none'",
         "frame-ancestors 'none'",
-        "form-action 'self' {0}",
         "block-all-mixed-content",
         "base-uri 'self'",
         "manifest-src 'self'",
-        "upgrade-insecure-requests"));
+        "upgrade-insecure-requests",
+        "connect-src 'self' cdnjs.cloudflare.com");
+
+    private volatile string? _contentSecurityPolicy;
 
     public Task Invoke(
         HttpContext context,
@@ -42,7 +43,7 @@ public sealed class CustomHttpHeadersMiddleware(RequestDelegate next)
 
             if (environment.IsProduction())
             {
-                context.Response.Headers.ContentSecurityPolicy = ContentSecurityPolicy(
+                context.Response.Headers.ContentSecurityPolicy = GetContentSecurityPolicy(
                     gitHubOptions.Value.AuthorizationEndpoint,
                     siteOptions.Value.TelemetryCollectorUrl);
             }
@@ -75,17 +76,6 @@ public sealed class CustomHttpHeadersMiddleware(RequestDelegate next)
         return next(context);
     }
 
-    private static string ContentSecurityPolicy(
-        string gitHubAuthorizationEndpoint,
-        string telemetryCollectorEndpoint)
-    {
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            ContentSecurityPolicyTemplate,
-            ParseGitHubHost(gitHubAuthorizationEndpoint),
-            ParseTelemetryCollector(telemetryCollectorEndpoint));
-    }
-
     private static string ParseGitHubHost(string gitHubAuthorizationEndpoint)
     {
         if (Uri.TryCreate(gitHubAuthorizationEndpoint, UriKind.Absolute, out Uri? gitHubHost))
@@ -96,13 +86,36 @@ public sealed class CustomHttpHeadersMiddleware(RequestDelegate next)
         return "github.com";
     }
 
-    private static string ParseTelemetryCollector(string telemetryCollectorEndpoint)
+    private static string? ParseTelemetryCollector(string telemetryCollectorEndpoint)
     {
         if (Uri.TryCreate(telemetryCollectorEndpoint, UriKind.Absolute, out Uri? collector))
         {
             return collector.Host;
         }
 
-        return string.Empty;
+        return null;
+    }
+
+    private string GetContentSecurityPolicy(
+        string gitHubAuthorizationEndpoint,
+        string telemetryCollectorEndpoint)
+    {
+        if (_contentSecurityPolicy is null)
+        {
+            var builder = new StringBuilder(BaseContentSecurityPolicy);
+
+            if (ParseTelemetryCollector(telemetryCollectorEndpoint) is { Length: > 0 } collector)
+            {
+                builder.Append(' ')
+                       .Append(collector);
+            }
+
+            builder.Append(";form-action 'self' ")
+                   .Append(ParseGitHubHost(gitHubAuthorizationEndpoint));
+
+            _contentSecurityPolicy = builder.ToString();
+        }
+
+        return _contentSecurityPolicy;
     }
 }
