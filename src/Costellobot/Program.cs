@@ -3,8 +3,6 @@
 
 using MartinCostello.Costellobot;
 
-AppContext.SetSwitch("Microsoft.AspNetCore.Hosting.SuppressActivityOpenTelemetryData", false);
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddCostellobot();
