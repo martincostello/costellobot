@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using OpenTelemetry;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Instrumentation.AspNetCore;
 using OpenTelemetry.Instrumentation.Http;
 using OpenTelemetry.Metrics;
@@ -21,6 +22,7 @@ public static class TelemetryExtensions
         if (ApplicationTelemetry.IsOtlpCollectorConfigured())
         {
             builder.UseOtlpExporter();
+            services.Configure<OtlpExporterOptions>((options) => options.Compression = OtlpExportCompression.Gzip);
         }
 
         builder.WithMetrics((builder) =>
