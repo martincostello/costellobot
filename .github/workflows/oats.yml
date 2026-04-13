@@ -67,7 +67,7 @@ jobs:
           PYROSCOPE_ARCH: 'x86_64'
           PYROSCOPE_VARIANT: 'glibc'
           # renovate: datasource=nuget depName=Pyroscope packageName=Pyroscope
-          PYROSCOPE_VERSION: '0.14.4'
+          PYROSCOPE_VERSION: '0.14.5'
           UsePyroscope: 'true'
         run: |
           Write-Output "Downloading Pyroscope..."
