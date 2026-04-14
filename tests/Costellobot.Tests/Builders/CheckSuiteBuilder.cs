@@ -39,7 +39,7 @@ public sealed class CheckSuiteBuilder : ResponseBuilder
             check_runs_url = $"{Repository.Url}/check-suites/{Id}/check-runs",
             conclusion = Conclusion,
             head_commit = HeadCommit.Build(),
-            head_sha = HeadCommit.TreeId,
+            head_sha = HeadCommit.HeadSha,
             node_id = NodeId,
             pull_requests = PullRequests.Build(),
             rerequestable = Rerequestable,

@@ -35,7 +35,7 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
 
     public string ReviewCommentUrl => $"{Url}/comments{{/number}}";
 
-    public string ReviewComentsUrl => $"{Url}/comments";
+    public string ReviewCommentsUrl => $"{Url}/comments";
 
     public string ShaBase { get; set; } = RandomGitSha();
 
@@ -93,7 +93,7 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
             draft = IsDraft,
             head = new
             {
-                label = $"{prUser.Login}:{RefBase}",
+                label = $"{prUser.Login}:{RefHead}",
                 @ref = RefHead,
                 sha = ShaHead,
                 repo,
@@ -116,7 +116,7 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
             patch_url = $"{Url}.patch",
             requested_reviewers = Array.Empty<object>(),
             requested_teams = Array.Empty<object>(),
-            review_comments_url = ReviewComentsUrl,
+            review_comments_url = ReviewCommentsUrl,
             review_comment_url = ReviewCommentUrl,
             comments_url = CommentsUrl,
             statuses_url = StatusesUrl,
@@ -144,7 +144,7 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
                 },
                 review_comments = new
                 {
-                    href = ReviewComentsUrl,
+                    href = ReviewCommentsUrl,
                 },
                 review_comment = new
                 {

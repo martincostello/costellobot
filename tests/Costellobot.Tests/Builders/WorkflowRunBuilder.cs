@@ -28,7 +28,7 @@ public sealed class WorkflowRunBuilder(RepositoryBuilder repository) : ResponseB
             @event = Event,
             head_branch = HeadBranch,
             head_sha = HeadSha,
-            html_url = $"{Repository.Url}/actions/runs/{Id}",
+            html_url = $"{Repository.HtmlUrl}/actions/runs/{Id}",
             id = Id,
             name = Name,
             node_id = NodeId,

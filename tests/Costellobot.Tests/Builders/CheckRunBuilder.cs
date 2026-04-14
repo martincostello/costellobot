@@ -22,7 +22,7 @@ public sealed class CheckRunBuilder : ResponseBuilder
 
     public string HeadSha { get; set; } = RandomGitSha();
 
-    public string HtmlUrl => $"{Repository.Url}/actions/runs/{Id}/job/{Id}";
+    public string HtmlUrl => $"{Repository.HtmlUrl}/actions/runs/{Id}/job/{Id}";
 
     public string Name { get; set; } = RandomString();
 

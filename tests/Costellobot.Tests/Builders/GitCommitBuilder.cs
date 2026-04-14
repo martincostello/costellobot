@@ -11,6 +11,8 @@ public sealed class GitCommitBuilder(RepositoryBuilder repository, UserBuilder a
 
     public UserBuilder? Committer { get; set; }
 
+    public string HeadSha { get; set; } = RandomGitSha();
+
     public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
 
     public string TreeId { get; set; } = RandomGitSha();
