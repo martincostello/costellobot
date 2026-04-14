@@ -12,6 +12,9 @@ public static class NullHandlerTests
         var target = NullHandler.Instance;
 
         // Act
-        await Should.NotThrowAsync(() => target.HandleAsync(new Octokit.Webhooks.Events.PingEvent(), TestContext.Current.CancellationToken));
+        await Should.NotThrowAsync(
+            () => target.HandleAsync(
+                Builders.GitHubFixtures.CreatePingEvent(),
+                TestContext.Current.CancellationToken));
     }
 }

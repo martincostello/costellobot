@@ -485,7 +485,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
     {
         // Arrange
         var target = Fixture.Services.GetRequiredService<PullRequestReviewHandler>();
-        var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
+        var message = CreatePingEvent();
 
         // Act
         await Should.NotThrowAsync(() => target.HandleAsync(message, TestContext.Current.CancellationToken));

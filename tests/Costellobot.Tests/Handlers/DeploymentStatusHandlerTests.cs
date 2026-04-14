@@ -234,7 +234,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         driver.WithPendingDeployment(
             CreateDeployment,
-            () => CreateDeploymentStatus(state));
+            () => CreateDeploymentStatus(driver.Repository, driver.Owner, state));
 
         var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
@@ -280,7 +280,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         var driver = new DeploymentStatusDriver();
 
         driver.WithPendingDeployment(
-            (_) => CreateDeployment(environment));
+            (_) => CreateDeployment(driver.Repository, driver.Owner, environment));
 
         var deploymentApproved = RegisterApprovePendingDeployment(driver);
 
@@ -382,7 +382,11 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
         RegisterGetAccessToken();
         RegisterAllDeployments(driver);
         RegisterCommitComparison(driver);
-        RegisterGetDeploymentStatuses(driver.Repository, driver.ActiveDeployment, CreateDeploymentStatus("failure"));
+
+        RegisterGetDeploymentStatuses(
+            driver.Repository,
+            driver.ActiveDeployment,
+            CreateDeploymentStatus(driver.Repository, driver.Owner, "failure"));
 
         // Act
         using var response = await PostWebhookAsync(driver);
@@ -409,7 +413,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
         RegisterGetAccessToken();
         RegisterAllDeployments(driver);
-        RegisterGetDeploymentStatuses(driver.Repository, driver.InactiveDeployments[0], CreateDeploymentStatus("error"));
+        RegisterGetDeploymentStatuses(driver.Repository, driver.InactiveDeployments[0], CreateDeploymentStatus(driver.Repository, driver.Owner, "error"));
         RegisterGetDeploymentStatuses(driver.Repository, driver.InactiveDeployments[1]);
 
         // Act
@@ -590,7 +594,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
             (repo) => repo.CreateCommit(),
             CreateTrustedCommit);
 
-        driver.WithPendingDeployment((commit) => CreateDeployment(environmentName, commit.Sha));
+        driver.WithPendingDeployment((commit) => CreateDeployment(driver.Repository, driver.Owner, environmentName, commit.Sha));
 
         driver.WithActiveDeployment();
         driver.WithInactiveDeployment();
@@ -715,7 +719,7 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     {
         // Arrange
         var target = Fixture.Services.GetRequiredService<DeploymentStatusHandler>();
-        var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
+        var message = CreatePingEvent();
 
         // Act
         await Should.NotThrowAsync(() => target.HandleAsync(message, TestContext.Current.CancellationToken));
@@ -764,8 +768,8 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
     private void RegisterSkippedDeployment(DeploymentStatusDriver driver)
     {
-        var inactive = CreateDeploymentStatus("inactive");
-        var waiting = CreateDeploymentStatus("waiting");
+        var inactive = CreateDeploymentStatus(driver.Repository, driver.Owner, "inactive");
+        var waiting = CreateDeploymentStatus(driver.Repository, driver.Owner, "waiting");
 
         RegisterGetDeploymentStatuses(
             driver.Repository,
@@ -776,9 +780,9 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
 
     private void RegisterActiveDeployment(DeploymentStatusDriver driver)
     {
-        var success = CreateDeploymentStatus("success");
-        var inProgress = CreateDeploymentStatus("in_progress");
-        var waiting = CreateDeploymentStatus("waiting");
+        var success = CreateDeploymentStatus(driver.Repository, driver.Owner, "success");
+        var inProgress = CreateDeploymentStatus(driver.Repository, driver.Owner, "in_progress");
+        var waiting = CreateDeploymentStatus(driver.Repository, driver.Owner, "waiting");
 
         RegisterGetDeploymentStatuses(
             driver.Repository,
@@ -792,10 +796,10 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     {
         foreach (var deployment in driver.InactiveDeployments)
         {
-            var inactive = CreateDeploymentStatus("inactive");
-            var success = CreateDeploymentStatus("success");
-            var inProgress = CreateDeploymentStatus("in_progress");
-            var waiting = CreateDeploymentStatus("waiting");
+            var inactive = CreateDeploymentStatus(driver.Repository, driver.Owner, "inactive");
+            var success = CreateDeploymentStatus(driver.Repository, driver.Owner, "success");
+            var inProgress = CreateDeploymentStatus(driver.Repository, driver.Owner, "in_progress");
+            var waiting = CreateDeploymentStatus(driver.Repository, driver.Owner, "waiting");
 
             RegisterGetDeploymentStatuses(
                 driver.Repository,

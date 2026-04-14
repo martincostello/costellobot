@@ -22,7 +22,7 @@ public sealed class GitHubCommitBuilder(RepositoryBuilder repository) : Response
         return new
         {
             author = (Author ?? Repository.Owner).Build(),
-            commit = new GitCommitBuilder(Author ?? Repository.Owner) { Message = Message }.Build(),
+            commit = new GitCommitBuilder(Repository, Author ?? Repository.Owner) { Message = Message }.Build(),
             parents = Parents.Select((p) => new { sha = p }).ToArray(),
             sha = Sha,
         };

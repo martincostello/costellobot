@@ -26,7 +26,9 @@ public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppF
         // Arrange
         Fixture.ApproveDeployments();
 
-        var deployment = CreateDeployment("production");
+        var creator = CreateUser();
+        var repository = creator.CreateRepository();
+        var deployment = CreateDeployment(repository, creator, "production");
         var driver = new DeploymentProtectionRuleDriver(deployment);
 
         RegisterGetAccessToken();
@@ -47,7 +49,9 @@ public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppF
         // Arrange
         Fixture.ApproveDeployments(false);
 
-        var deployment = CreateDeployment("production");
+        var creator = CreateUser();
+        var repository = creator.CreateRepository();
+        var deployment = CreateDeployment(repository, creator, "production");
         var driver = new DeploymentProtectionRuleDriver(deployment);
 
         var deploymentApproved = RegisterApprovePendingDeployment(driver);
@@ -68,7 +72,9 @@ public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppF
         Fixture.ChangeClock(new(2023, 12, 25, 12, 00, 00, TimeSpan.Zero));
         Fixture.ApproveDeployments();
 
-        var deployment = CreateDeployment("production");
+        var creator = CreateUser();
+        var repository = creator.CreateRepository();
+        var deployment = CreateDeployment(repository, creator, "production");
         var driver = new DeploymentProtectionRuleDriver(deployment);
 
         RegisterGetAccessToken();
@@ -88,7 +94,7 @@ public sealed class DeploymentProtectionRuleHandlerTests : IntegrationTests<AppF
     {
         // Arrange
         var target = Fixture.Services.GetRequiredService<DeploymentProtectionRuleHandler>();
-        var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
+        var message = CreatePingEvent();
 
         // Act
         await Should.NotThrowAsync(() => target.HandleAsync(message, TestContext.Current.CancellationToken));

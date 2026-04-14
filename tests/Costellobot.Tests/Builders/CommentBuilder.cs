@@ -3,11 +3,19 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public sealed class CommentBuilder(string body, string authorAssociation = "OWNER") : ResponseBuilder
+public sealed class CommentBuilder(
+    IssueBuilder issue,
+    UserBuilder user,
+    string body,
+    string authorAssociation = "OWNER") : ResponseBuilder
 {
     public string AuthorAssociation { get; set; } = authorAssociation;
 
     public string Body { get; set; } = body;
+
+    public IssueBuilder Issue { get; set; } = issue;
+
+    public UserBuilder User { get; set; } = user;
 
     public override object Build()
     {
@@ -16,6 +24,11 @@ public sealed class CommentBuilder(string body, string authorAssociation = "OWNE
             id = Id,
             author_association = AuthorAssociation,
             body = Body,
+            html_url = $"{Issue.HtmlUrl}#issuecomment-{Id}",
+            issue_url = Issue.Url,
+            node_id = NodeId,
+            url = $"{Issue.Repository.Url}/issues/comments/{Id}",
+            user = User.Build(),
         };
     }
 }

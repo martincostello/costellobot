@@ -3,16 +3,21 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public sealed class LabelBuilder(string? name = null) : ResponseBuilder
+public sealed class LabelBuilder(RepositoryBuilder repo, string? name = null) : ResponseBuilder
 {
     public string Name { get; set; } = name ?? RandomString();
+
+    public RepositoryBuilder Repository { get; set; } = repo;
 
     public override object Build()
     {
         return new
         {
             id = Id,
+            node_id = NodeId,
+            url = $"{Repository.Url}/labels/{Name}",
             name = Name,
+            color = "7121c6",
             @default = false,
         };
     }

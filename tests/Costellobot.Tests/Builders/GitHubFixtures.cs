@@ -20,7 +20,31 @@ public static class GitHubFixtures
 
     public const string InstallationId = "24364748";
 
+    public const string InstallationNodeId = "MDIzOkludGVncmF0aW9uSW5zdGFsbGF0aW9uMjQzNjQ3NDg=";
+
     public const string RenovateCommitter = "renovate[bot]";
+
+    public static WebhookEvent CreatePingEvent() => new Octokit.Webhooks.Events.PingEvent()
+    {
+        Hook = new()
+        {
+            Active = true,
+            Config = new()
+            {
+                ContentType = "json",
+                InsecureSsl = "0",
+                Url = "https://costellobot.martincostello.local/github-webhook",
+            },
+            DeliveriesUrl = "https://api.github.com/app/hook/deliveries",
+            Events = ["*"],
+            Id = 109948940,
+            Name = "web",
+            PingUrl = "https://api.github.com/app/hook/109948940/pings",
+            Type = "App",
+            Url = "https://api.github.com/app/hook/109948940",
+        },
+        Zen = "You tried your best and you failed miserably. The lesson is, never try.",
+    };
 
     public static CheckRunBuilder CreateCheckRun(
         PullRequestBuilder pullRequest,
@@ -29,14 +53,14 @@ public static class GitHubFixtures
         string? conclusion = null,
         string? applicationName = null)
     {
-        var builder = new CheckRunBuilder(status, conclusion)
+        var builder = new CheckRunBuilder(pullRequest.Repository, status, conclusion)
         {
             Name = name,
         };
 
         if (applicationName is not null)
         {
-            builder.ApplicationName = applicationName;
+            builder.App.Name = applicationName;
         }
 
         builder.PullRequests.Add(pullRequest);
@@ -69,13 +93,15 @@ public static class GitHubFixtures
     }
 
     public static DeploymentBuilder CreateDeployment(GitHubCommitBuilder commit)
-        => CreateDeployment(sha: commit.Sha);
+        => CreateDeployment(commit.Repository, commit.Committer ?? commit.Repository.Owner, sha: commit.Sha);
 
     public static DeploymentBuilder CreateDeployment(
+        RepositoryBuilder repository,
+        UserBuilder creator,
         string? environment = null,
         string? sha = null)
     {
-        var builder = new DeploymentBuilder()
+        var builder = new DeploymentBuilder(repository, creator)
         {
             Environment = environment ?? "production",
         };
@@ -88,9 +114,12 @@ public static class GitHubFixtures
         return builder;
     }
 
-    public static DeploymentStatusBuilder CreateDeploymentStatus(string state = "waiting")
+    public static DeploymentStatusBuilder CreateDeploymentStatus(
+        RepositoryBuilder repository,
+        UserBuilder creator,
+        string state = "waiting")
     {
-        return new(state);
+        return new(repository, creator, state);
     }
 
     public static GitHubEvent CreateEvent(
@@ -116,6 +145,7 @@ public static class GitHubFixtures
             installation = new
             {
                 id = installationId.Value,
+                node_id = InstallationNodeId,
             },
         });
 

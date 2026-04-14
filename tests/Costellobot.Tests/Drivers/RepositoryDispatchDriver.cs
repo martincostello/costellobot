@@ -35,6 +35,7 @@ public sealed class RepositoryDispatchDriver
             installation = new
             {
                 id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
+                node_id = InstallationNodeId,
             },
         };
     }

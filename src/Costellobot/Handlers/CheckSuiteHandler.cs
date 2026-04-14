@@ -33,10 +33,8 @@ public sealed partial class CheckSuiteHandler(
 
         long checkSuiteId = checkSuite.Id;
 
-        var pullRequest = checkSuite.PullRequests.FirstOrDefault();
-
-        if (pullRequest is not null &&
-            !await IsPullRequestFromTrustedUserAsync(repository, checkSuiteId, pullRequest))
+        if (checkSuite.PullRequests is { Count: > 0 } prs &&
+            !await IsPullRequestFromTrustedUserAsync(repository, checkSuiteId, prs[0]))
         {
             return;
         }

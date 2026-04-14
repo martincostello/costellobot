@@ -11,12 +11,14 @@ public sealed class PushDriver
 {
     public PushDriver(bool isFork = false, string language = "C#")
     {
-        Owner = Sender = User = CreateUser();
+        Owner = Pusher = Sender = User = CreateUser();
         Repository = Owner.CreateRepository(isFork: isFork);
         Repository.Language = language;
     }
 
     public string After { get; set; } = Guid.NewGuid().ToString();
+
+    public string Before { get; set; } = Guid.NewGuid().ToString();
 
     public bool Created { get; set; }
 
@@ -27,6 +29,8 @@ public sealed class PushDriver
     public bool Forced { get; set; }
 
     public UserBuilder Owner { get; set; }
+
+    public UserBuilder Pusher { get; set; }
 
     public string Ref { get; set; } = "refs/heads/main";
 
@@ -42,11 +46,15 @@ public sealed class PushDriver
         {
             @ref = Ref,
             after = After,
+            before = Before,
+            compare = $"{Repository.HtmlUrl}/compare/{Before}...{After}",
             repository = Repository.Build(),
             installation = new
             {
                 id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
+                node_id = InstallationNodeId,
             },
+            pusher = Pusher.Build(),
             sender = Sender.Build(),
             created = Created,
             deleted = Deleted,

@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using MartinCostello.Costellobot.Builders;
+using MartinCostello.Costellobot.Drivers;
 using MartinCostello.Costellobot.Handlers;
 using NSubstitute;
 using Octokit.Webhooks;
@@ -17,7 +18,10 @@ public class GitHubWebhookDispatcherTests(ITestOutputHelper outputHelper)
         var handlerFactory = Substitute.For<IHandlerFactory>();
         var target = CreateTarget(handlerFactory, installationId: 37);
 
-        var message = Builders.GitHubFixtures.CreateEvent("pull_request", installationId: 99);
+        var driver = PullRequestDriver.ForDependabot();
+        var payload = driver.CreateWebhook("opened", installationId: 99);
+
+        var message = Builders.GitHubFixtures.CreateEvent("pull_request", payload, installationId: 99);
 
         // Act and Assert
         await Should.NotThrowAsync(() => target.DispatchAsync(message, TestContext.Current.CancellationToken));
@@ -40,7 +44,10 @@ public class GitHubWebhookDispatcherTests(ITestOutputHelper outputHelper)
         handlerFactory.Create(eventName)
                       .Returns(handler);
 
-        var message = Builders.GitHubFixtures.CreateEvent(eventName, installationId: installationId);
+        var driver = PullRequestDriver.ForDependabot();
+        var payload = driver.CreateWebhook(eventName, installationId);
+
+        var message = Builders.GitHubFixtures.CreateEvent(eventName, payload, installationId: installationId);
 
         var target = CreateTarget(handlerFactory, installationId);
 

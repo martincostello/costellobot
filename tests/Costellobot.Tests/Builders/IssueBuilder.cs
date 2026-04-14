@@ -7,6 +7,8 @@ public sealed class IssueBuilder(RepositoryBuilder repository, UserBuilder? user
 {
     public string AuthorAssociation { get; set; } = "owner";
 
+    public string HtmlUrl => $"{Repository.HtmlUrl}/issues/{Number}";
+
     public int Number { get; set; } = RandomNumber();
 
     public RepositoryBuilder Repository { get; set; } = repository;
@@ -16,6 +18,8 @@ public sealed class IssueBuilder(RepositoryBuilder repository, UserBuilder? user
     public string State { get; set; } = "open";
 
     public string Title { get; set; } = RandomString();
+
+    public string Url => $"{Repository.Url}/issues/{Number}";
 
     public UserBuilder? User { get; set; } = user;
 
@@ -33,17 +37,24 @@ public sealed class IssueBuilder(RepositoryBuilder repository, UserBuilder? user
 
     public override object Build()
     {
+        var user = (User ?? Repository.Owner).Build();
         return new
         {
             id = Id,
+            assignees = new object[] { user },
             author_association = AuthorAssociation,
-            html_url = $"https://github.com/{Repository.FullName}/issues/{Number}",
+            comments_url = $"{Repository.Url}/comments{{/number}}",
+            events_url = $"{Repository.Url}/events{{/privacy}}",
+            html_url = HtmlUrl,
+            labels_url = $"{Repository.Url}/labels{{/name}}",
+            node_id = NodeId,
             number = Number,
             pull_request = PullRequest?.Build(),
+            repository_url = Repository.Url,
             state = State,
             title = Title,
-            url = $"https://api.github.com/repos/{Repository.FullName}/issues/{Number}",
-            user = (User ?? Repository.Owner).Build(),
+            url = Url,
+            user,
         };
     }
 }

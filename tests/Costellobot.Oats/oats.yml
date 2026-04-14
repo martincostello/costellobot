@@ -24,18 +24,24 @@ input:
           "id": 109948940,
           "name": "web",
           "active": true,
-          "events": ["*"]
-        },
-        "config": {
-          "content_type": "json",
-          "insecure_ssl": "0",
-          "secret": "my-secret",
-          "url": "https://costellobot.martincostello.local/github-webhook"
+          "config": {
+            "content_type": "json",
+            "insecure_ssl": "0",
+            "secret": "my-secret",
+            "url": "https://costellobot.martincostello.local/github-webhook"
+          },
+          "deliveries_url": "https://api.github.com/app/hook/deliveries",
+          "events": ["*"],
+          "ping_url": "https://api.github.com/app/hook/109948940/pings",
+          "url": "https://api.github.com/app/hook/109948940"
         },
         "updated_at": "2022-03-23T23:13:43Z",
         "created_at": "2022-03-23T23:13:43Z",
         "app_id": 349596565,
-        "deliveries_url": "https://api.github.com/app/hook/deliveries"
+        "installation": {
+          "id": 183256,
+          "node_id": "c0dctApWjo2ooEXO0RATfhWfiQrE2og7axfcZRs6gEk="
+        }
       }
 interval: 500ms
 expected:

@@ -7,6 +7,10 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
 {
     public string AuthorAssociation { get; set; } = "owner";
 
+    public string CommentsUrl => $"{Repository.Url}/issues/{Number}/comments";
+
+    public string CommitsUrl => $"{Url}/commits";
+
     public string Diff { get; set; } = string.Empty;
 
     public string DiffUrl => $"{Url}.diff";
@@ -17,9 +21,9 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
 
     public bool? IsMergeable { get; set; }
 
-    public IList<LabelBuilder> Labels { get; set; } = [];
+    public string IssueUrl => $"{Repository.Url}/issues/{Number}";
 
-    public string NodeId { get; set; } = RandomString();
+    public IList<LabelBuilder> Labels { get; set; } = [];
 
     public int Number { get; set; } = RandomNumber();
 
@@ -29,15 +33,21 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
 
     public string RefHead { get; set; } = "dependabot/nuget/Foo-1.2.3";
 
+    public string ReviewCommentUrl => $"{Url}/comments{{/number}}";
+
+    public string ReviewCommentsUrl => $"{Url}/comments";
+
     public string ShaBase { get; set; } = RandomGitSha();
 
     public string ShaHead { get; set; } = RandomGitSha();
 
     public string State { get; set; } = "open";
 
+    public string StatusesUrl => $"{Repository.Url}/statuses/{ShaHead}";
+
     public string Title { get; set; } = RandomString();
 
-    public string Url => $"https://api.github.com/repos/{Repository.FullName}/pulls/{Number}";
+    public string Url => $"{Repository.Url}/pulls/{Number}";
 
     public UserBuilder? User { get; set; } = user;
 
@@ -46,7 +56,7 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
 
     public PullRequestBuilder WithLabel(string name)
     {
-        Labels.Add(new(name));
+        Labels.Add(new(Repository, name));
         return this;
     }
 
@@ -65,31 +75,90 @@ public sealed class PullRequestBuilder(RepositoryBuilder repository, UserBuilder
 
     public override object Build()
     {
+        var repo = Repository.Build();
+        var prUser = User ?? Repository.Owner;
+        var user = prUser.Build();
         return new
         {
+            assignees = Array.Empty<object>(),
             author_association = AuthorAssociation,
             @base = new
             {
+                label = $"{prUser.Login}:{RefBase}",
                 @ref = RefBase,
                 sha = ShaBase,
-                repo = Repository.Build(),
+                repo,
+                user,
             },
             draft = IsDraft,
             head = new
             {
+                label = $"{prUser.Login}:{RefHead}",
                 @ref = RefHead,
                 sha = ShaHead,
+                repo,
+                user,
             },
+            commits_url = CommitsUrl,
             diff_url = DiffUrl,
             html_url = HtmlUrl,
+            issue_url = IssueUrl,
             labels = Labels.Build(),
             mergeable = IsMergeable,
+            mergeable_state = IsMergeable switch
+            {
+                true => "clean",
+                false => "dirty",
+                null => "unknown",
+            },
             node_id = NodeId,
             number = Number,
+            patch_url = $"{Url}.patch",
+            requested_reviewers = Array.Empty<object>(),
+            requested_teams = Array.Empty<object>(),
+            review_comments_url = ReviewCommentsUrl,
+            review_comment_url = ReviewCommentUrl,
+            comments_url = CommentsUrl,
+            statuses_url = StatusesUrl,
             state = State,
             title = Title,
             url = Url,
-            user = (User ?? Repository.Owner).Build(),
+            user,
+            _links = new
+            {
+                self = new
+                {
+                    href = Url,
+                },
+                html = new
+                {
+                    href = HtmlUrl,
+                },
+                issue = new
+                {
+                    href = IssueUrl,
+                },
+                comments = new
+                {
+                    href = CommentsUrl,
+                },
+                review_comments = new
+                {
+                    href = ReviewCommentsUrl,
+                },
+                review_comment = new
+                {
+                    href = ReviewCommentUrl,
+                },
+                commits = new
+                {
+                    href = CommitsUrl,
+                },
+                statuses = new
+                {
+                    href = StatusesUrl,
+                },
+            },
         };
     }
 }

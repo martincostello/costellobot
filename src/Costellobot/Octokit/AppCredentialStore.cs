@@ -34,7 +34,7 @@ public sealed class AppCredentialStore(
 
     private string CreateJwtForApp()
     {
-        // See https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
+        // See https://docs.github.com/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
         var app = _options.CurrentValue.Apps[AppId];
         var utcNow = timeProvider.GetUtcNow().UtcDateTime;
 

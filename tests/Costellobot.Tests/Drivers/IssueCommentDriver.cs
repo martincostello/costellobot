@@ -14,7 +14,7 @@ public sealed class IssueCommentDriver
         Owner = Sender = User = CreateUser();
         Repository = Owner.CreateRepository();
         Issue = Repository.CreateIssue(User);
-        Comment = new CommentBuilder(body, authorAssociation);
+        Comment = new CommentBuilder(Issue, User, body, authorAssociation);
     }
 
     public CommentBuilder Comment { get; set; }
@@ -34,10 +34,12 @@ public sealed class IssueCommentDriver
         return new
         {
             action,
+            changes = new object(),
             comment = Comment.Build(),
             installation = new
             {
                 id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
+                node_id = InstallationNodeId,
             },
             issue = Issue.Build(),
             repository = Repository.Build(),

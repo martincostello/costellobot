@@ -234,7 +234,7 @@ public static class AdminEndpoints
                     return Results.NotFound();
                 }
 
-                // See https://docs.github.com/en/rest/apps/webhooks#get-a-delivery-for-an-app-webhook
+                // See https://docs.github.com/rest/apps/webhooks#get-a-delivery-for-an-app-webhook
                 var uri = new Uri($"app/hook/deliveries/{id}", UriKind.Relative);
 
                 IApiResponse<Stream> apiResponse;
@@ -330,7 +330,7 @@ public static class AdminEndpoints
                     return Results.RedirectToRoute(DeliveryRoute, routeValues);
                 }
 
-                // See https://docs.github.com/en/rest/apps/webhooks#redeliver-a-delivery-for-an-app-webhook
+                // See https://docs.github.com/rest/apps/webhooks#redeliver-a-delivery-for-an-app-webhook
                 var uri = new Uri($"app/hook/deliveries/{id}/attempts", UriKind.Relative);
 
                 await client.Connection.Post(uri);
@@ -489,7 +489,7 @@ public static class AdminEndpoints
         IGitHubClientForApp client,
         string? cursor = null)
     {
-        // See https://docs.github.com/en/rest/apps/webhooks#list-deliveries-for-an-app-webhook
+        // See https://docs.github.com/rest/apps/webhooks#list-deliveries-for-an-app-webhook
         var uri = new Uri("app/hook/deliveries", UriKind.Relative);
 
         var parameters = new Dictionary<string, string>(2)

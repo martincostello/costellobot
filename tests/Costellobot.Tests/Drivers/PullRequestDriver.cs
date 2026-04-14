@@ -51,17 +51,24 @@ public class PullRequestDriver
         return this;
     }
 
-    public virtual object CreateWebhook(string action)
+    public virtual object CreateWebhook(string action, long? installationId = null)
     {
+        installationId ??= long.Parse(InstallationId, CultureInfo.InvariantCulture);
+
         return new
         {
             action,
+            after = PullRequest.ShaHead,
+            assignee = User.Build(),
+            before = PullRequest.ShaBase,
+            changes = new object(),
             number = PullRequest.Number,
             pull_request = PullRequest.Build(),
             repository = PullRequest.Repository.Build(),
             installation = new
             {
-                id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
+                id = installationId.GetValueOrDefault(),
+                node_id = InstallationNodeId,
             },
             label = Label?.Build(),
             sender = Sender.Build(),

@@ -260,7 +260,7 @@ public sealed partial class DeploymentStatusHandler(
         string sha,
         CancellationToken cancellationToken)
     {
-        // See https://docs.github.com/en/rest/commits/commits#list-pull-requests-associated-with-a-commit.
+        // See https://docs.github.com/rest/commits/commits#list-pull-requests-associated-with-a-commit.
         var pullRequests = await context.InstallationClient.Connection.GetResponse<PullRequest[]>(
             new($"repos/{repository.FullName}/commits/{sha}/pulls", UriKind.Relative),
             cancellationToken);

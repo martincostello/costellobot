@@ -7,6 +7,7 @@ using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Drivers;
 using MartinCostello.Costellobot.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot.Handlers;
 
@@ -43,7 +44,7 @@ public class PushHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper
             Ref = reference,
         };
 
-        driver.Commits.Add(new(new("some-person"))
+        driver.Commits.Add(new(driver.Repository, new("some-person"))
         {
             Added = added,
             Modified = modified,
@@ -92,7 +93,7 @@ public class PushHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper
             Deleted = deleted,
         };
 
-        driver.Commits.Add(new(new("some-person"))
+        driver.Commits.Add(new(driver.Repository, new("some-person"))
         {
             Added = added,
             Modified = modified,
@@ -117,7 +118,7 @@ public class PushHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper
     {
         // Arrange
         var target = Fixture.Services.GetRequiredService<PushHandler>();
-        var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
+        var message = CreatePingEvent();
 
         // Act
         await Should.NotThrowAsync(() => target.HandleAsync(message, TestContext.Current.CancellationToken));

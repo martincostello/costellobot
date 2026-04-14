@@ -11,7 +11,11 @@ public sealed class RepositoryBuilder(UserBuilder owner, string? name = null) : 
 
     public bool? AllowSquashMerge { get; set; } = true;
 
+    public string DefaultBranch { get; set; } = "main";
+
     public string FullName => $"{Owner.Login}/{Name}";
+
+    public string HtmlUrl => $"https://github.com/{FullName}";
 
     public bool IsArchived { get; set; }
 
@@ -24,6 +28,8 @@ public sealed class RepositoryBuilder(UserBuilder owner, string? name = null) : 
     public string Name { get; set; } = name ?? RandomString();
 
     public UserBuilder Owner { get; set; } = owner;
+
+    public string Url => $"https://api.github.com/repos/{FullName}";
 
     public GitHubCommitBuilder CreateCommit(UserBuilder? author = null)
         => new(this) { Author = author };
@@ -45,15 +51,17 @@ public sealed class RepositoryBuilder(UserBuilder owner, string? name = null) : 
             allow_rebase_merge = AllowRebaseMerge,
             allow_squash_merge = AllowSquashMerge,
             archived = IsArchived,
+            default_branch = DefaultBranch,
             fork = IsFork,
             full_name = FullName,
-            html_url = $"https://github.com/{FullName}",
+            html_url = HtmlUrl,
             id = Id,
             language = Language,
             name = Name,
+            node_id = NodeId,
             owner = Owner.Build(),
             @private = IsPrivate,
-            url = $"https://api.github.com/repos/{FullName}",
+            url = Url,
         };
     }
 }

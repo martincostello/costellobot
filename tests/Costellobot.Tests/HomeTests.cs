@@ -102,21 +102,24 @@ public class HomeTests(HttpServerFixture fixture, ITestOutputHelper outputHelper
                     id = 109948940,
                     name = "web",
                     active = true,
+                    config = new
+                    {
+                        content_type = "json",
+                        insecure_ssl = "0",
+                        url = "https://costellobot.martincostello.local/github-webhook",
+                    },
+                    deliveries_url = "https://api.github.com/app/hook/deliveries",
                     events = new[] { "*" },
-                },
-                config = new
-                {
-                    content_type = "json",
-                    insecure_ssl = "0",
-                    url = "https://costellobot.martincostello.local/github-webhook",
+                    ping_url = "https://api.github.com/app/hook/109948940/pings",
+                    url = "https://api.github.com/app/hook/109948940",
                 },
                 updated_at = "2022-03-23T23:13:43Z",
                 created_at = "2022-03-23T23:13:43Z",
                 app_id = Builders.GitHubFixtures.AppId,
-                deliveries_url = "https://api.github.com/app/hook/deliveries",
                 installation = new
                 {
                     id = long.Parse(Builders.GitHubFixtures.InstallationId, CultureInfo.InvariantCulture),
+                    node_id = Builders.GitHubFixtures.InstallationNodeId,
                 },
             };
 
