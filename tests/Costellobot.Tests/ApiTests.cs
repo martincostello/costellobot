@@ -21,18 +21,19 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
     public async Task Can_Accept_GitHub_Check_Suite_Webhook()
     {
         // Arrange
-        // See https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#check_suite
+        // See https://docs.github.com/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#check_suite
+        var user = new Builders.UserBuilder("martincostello");
+        var repo = user.CreateRepository();
+        var checkSuite = new Builders.CheckSuiteBuilder(repo, "completed", "success");
+
         var value = new
         {
             action = "completed",
-            check_suite = new
-            {
-                status = "completed",
-                conclusion = "success",
-            },
+            check_suite = checkSuite.Build(),
             installation = new
             {
                 id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
+                node_id = InstallationNodeId,
             },
         };
 
@@ -59,14 +60,17 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
                 id = 109948940,
                 name = "web",
                 active = true,
+                config = new
+                {
+                    content_type = "json",
+                    insecure_ssl = "0",
+                    secret = options.WebhookSecret,
+                    url = "https://costellobot.martincostello.local/github-webhook",
+                },
+                deliveries_url = "https://api.github.com/app/hook/deliveries",
                 events = new[] { "*" },
-            },
-            config = new
-            {
-                content_type = "json",
-                insecure_ssl = "0",
-                secret = options.WebhookSecret,
-                url = "https://costellobot.martincostello.local/github-webhook",
+                ping_url = "https://api.github.com/app/hook/109948940/pings",
+                url = "https://api.github.com/app/hook/109948940",
             },
             updated_at = "2022-03-23T23:13:43Z",
             created_at = "2022-03-23T23:13:43Z",
@@ -85,13 +89,20 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
     public async Task Can_Accept_GitHub_Installation_Webhook()
     {
         // Arrange
-        // See https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#installation
+        // See https://docs.github.com/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#installation
         var value = new
         {
             action = "created",
             installation = new
             {
+                access_tokens_url = "https://api.github.com/app/installations/42/access_tokens",
+                account = new Builders.UserBuilder("costellobot").Build(),
+                html_url = "https://github.com/apps/costellobot",
                 id = 42,
+                node_id = InstallationNodeId,
+                repository_selection = "https://github.com/martincostello/costellobot",
+                repositories_url = "https://api.github.com/user/installations",
+                target_type = "repository",
             },
         };
 

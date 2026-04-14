@@ -19,12 +19,15 @@ public sealed class DeploymentStatusDriver
         WorkflowRun = Repository.CreateWorkflowRun();
         BaseCommit = baseCommit?.Invoke(Repository) ?? Repository.CreateCommit();
         HeadCommit = headCommit?.Invoke(Repository) ?? Repository.CreateCommit();
+        CheckRun = new CheckRunBuilder(Repository, "completed", "success") { HeadSha = HeadCommit.Sha };
         Commits.Add(HeadCommit);
     }
 
     public GitHubCommitBuilder BaseCommit { get; set; }
 
     public GitHubCommitBuilder HeadCommit { get; set; }
+
+    public CheckRunBuilder CheckRun { get; set; }
 
     public IList<GitHubCommitBuilder> Commits { get; } = [];
 
@@ -51,7 +54,7 @@ public sealed class DeploymentStatusDriver
     [MemberNotNull(nameof(ActiveDeployment))]
     public DeploymentStatusDriver WithActiveDeployment(string? environmentName = null)
     {
-        ActiveDeployment = CreateDeployment(environmentName ?? PendingDeployment!.Environment, BaseCommit.Sha);
+        ActiveDeployment = CreateDeployment(Repository, Owner, environmentName ?? PendingDeployment!.Environment, BaseCommit.Sha);
         return this;
     }
 
@@ -60,7 +63,7 @@ public sealed class DeploymentStatusDriver
         Func<RepositoryBuilder, GitHubCommitBuilder>? commitFactory = null)
     {
         var commit = commitFactory?.Invoke(Repository) ?? Repository.CreateCommit();
-        var deployment = CreateDeployment(environmentName ?? PendingDeployment!.Environment, commit?.Sha);
+        var deployment = CreateDeployment(Repository, Owner, environmentName ?? PendingDeployment!.Environment, commit?.Sha);
 
         InactiveDeployments.Add(deployment);
 
@@ -73,8 +76,8 @@ public sealed class DeploymentStatusDriver
         Func<GitHubCommitBuilder, DeploymentBuilder>? deploymentFactory = null,
         Func<DeploymentStatusBuilder>? statusFactory = null)
     {
-        NextDeployment = deploymentFactory?.Invoke(HeadCommit) ?? CreateDeployment();
-        NextDeploymentStatus = statusFactory?.Invoke() ?? CreateDeploymentStatus();
+        NextDeployment = deploymentFactory?.Invoke(HeadCommit) ?? CreateDeployment(Repository, Owner);
+        NextDeploymentStatus = statusFactory?.Invoke() ?? CreateDeploymentStatus(Repository, Owner);
 
         return this;
     }
@@ -85,8 +88,8 @@ public sealed class DeploymentStatusDriver
         Func<GitHubCommitBuilder, DeploymentBuilder>? deploymentFactory = null,
         Func<DeploymentStatusBuilder>? statusFactory = null)
     {
-        PendingDeployment = deploymentFactory?.Invoke(HeadCommit) ?? CreateDeployment();
-        PendingDeploymentStatus = statusFactory?.Invoke() ?? CreateDeploymentStatus();
+        PendingDeployment = deploymentFactory?.Invoke(HeadCommit) ?? CreateDeployment(Repository, Owner);
+        PendingDeploymentStatus = statusFactory?.Invoke() ?? CreateDeploymentStatus(Repository, Owner);
 
         return this;
     }
@@ -97,7 +100,7 @@ public sealed class DeploymentStatusDriver
         Func<RepositoryBuilder, GitHubCommitBuilder>? commitFactory = null)
     {
         var commit = commitFactory?.Invoke(Repository);
-        SkippedDeployment = CreateDeployment(environmentName ?? PendingDeployment!.Environment, commit?.Sha);
+        SkippedDeployment = CreateDeployment(Repository, Owner, environmentName ?? PendingDeployment!.Environment, commit?.Sha);
         return this;
     }
 
@@ -117,13 +120,24 @@ public sealed class DeploymentStatusDriver
             action,
             deployment_status = PendingDeploymentStatus!.Build(),
             deployment = PendingDeployment!.Build(),
-            check_run = new { },
-            workflow = new { },
+            check_run = CheckRun.Build(),
+            workflow = new
+            {
+                id = WorkflowRun.Id,
+                node_id = WorkflowRun.NodeId,
+                name = WorkflowRun.Name,
+                path = $".github/workflows/{WorkflowRun.Name}.yml",
+                state = "active",
+                url = $"{Repository.Url}/",
+                html_url = $"{Repository.HtmlUrl}/blob/{Repository.DefaultBranch}/.github/workflows/{WorkflowRun.Name}.yml",
+                badge_url = $"{Repository.HtmlUrl}/workflows/{WorkflowRun.Name}/badge.svg",
+            },
             workflow_run = WorkflowRun.Build(),
             repository = Repository.Build(),
             installation = new
             {
                 id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
+                node_id = InstallationNodeId,
             },
         };
     }

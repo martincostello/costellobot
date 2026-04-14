@@ -37,7 +37,11 @@ public static class ILoggerExtensions
 
         if (payload.Sender is { } sender)
         {
-            items["GitHub.Sender.HtmlUrl"] = sender.HtmlUrl;
+            if (sender.HtmlUrl is { Length: > 0 } htmlUrl)
+            {
+                items["GitHub.Sender.HtmlUrl"] = htmlUrl;
+            }
+
             items["GitHub.Sender.Login"] = sender.Login;
         }
 

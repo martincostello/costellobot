@@ -421,7 +421,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
     {
         // Arrange
         var target = Fixture.Services.GetRequiredService<CheckSuiteHandler>();
-        var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
+        var message = CreatePingEvent();
 
         // Act
         await Should.NotThrowAsync(() => target.HandleAsync(message, TestContext.Current.CancellationToken));

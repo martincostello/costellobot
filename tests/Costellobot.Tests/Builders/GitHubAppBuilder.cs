@@ -7,9 +7,9 @@ public sealed class GitHubAppBuilder(string slug, UserBuilder owner) : ResponseB
 {
     public string ClientId { get; set; } = RandomString();
 
-    public string Name { get; set; } = RandomString();
+    public string ExternalUrl { get; set; } = "https://costellobot.martincostello.local";
 
-    public string NodeId { get; set; } = RandomString();
+    public string Name { get; set; } = RandomString();
 
     public UserBuilder Owner { get; set; } = owner;
 
@@ -20,6 +20,8 @@ public sealed class GitHubAppBuilder(string slug, UserBuilder owner) : ResponseB
         return new
         {
             client_id = ClientId,
+            external_url = ExternalUrl,
+            html_url = $"https://github.com/apps/{Slug}",
             id = Id,
             name = Name,
             node_id = NodeId,

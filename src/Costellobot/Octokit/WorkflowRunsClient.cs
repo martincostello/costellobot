@@ -10,7 +10,7 @@ public sealed class WorkflowRunsClient(IApiConnection connection) : IWorkflowRun
         string name,
         long runId)
     {
-        // See https://docs.github.com/en/rest/reference/actions#get-pending-deployments-for-a-workflow-run
+        // See https://docs.github.com/rest/reference/actions#get-pending-deployments-for-a-workflow-run
         var uri = new Uri($"repos/{owner}/{name}/actions/runs/{runId}/pending_deployments", UriKind.Relative);
         return await connection.GetAll<PendingDeployment>(uri);
     }
@@ -20,7 +20,7 @@ public sealed class WorkflowRunsClient(IApiConnection connection) : IWorkflowRun
         ReviewDeploymentProtectionRule review,
         CancellationToken cancellationToken)
     {
-        // See https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#review-custom-deployment-protection-rules-for-a-workflow-run
+        // See https://docs.github.com/rest/actions/workflow-runs?apiVersion=2022-11-28#review-custom-deployment-protection-rules-for-a-workflow-run
         var uri = new Uri(deploymentCallbackUrl, UriKind.Absolute);
         var status = await connection.Connection.Post(uri, review, "application/vnd.github+json", cancellationToken);
 

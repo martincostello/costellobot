@@ -13,7 +13,7 @@ public static class IGitHubClientExtensions
         string pullRequestUrl,
         CancellationToken cancellationToken)
     {
-        // See https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#get-a-pull-request
+        // See https://docs.github.com/rest/pulls/pulls?apiVersion=2022-11-28#get-a-pull-request
         var parameters = new Dictionary<string, string>(0);
 
         var response = await client.Connection.Get<string>(
@@ -32,7 +32,7 @@ public static class IGitHubClientExtensions
         object body,
         CancellationToken cancellationToken)
     {
-        // See https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-dispatch-event
+        // See https://docs.github.com/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-dispatch-event
         var uri = new Uri($"repos/{owner}/{name}/dispatches", UriKind.Relative);
         var status = await client.Connection.Post(uri, body, "application/vnd.github+json", cancellationToken);
 

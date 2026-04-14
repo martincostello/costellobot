@@ -33,18 +33,22 @@ public sealed class PullRequestReviewDriver : PullRequestDriver
         return this;
     }
 
-    public override object CreateWebhook(string action)
+    public override object CreateWebhook(string action, long? installationId = null)
     {
+        installationId ??= long.Parse(InstallationId, CultureInfo.InvariantCulture);
+
         return new
         {
             action,
+            changes = new object(),
             review = Review.Build(),
             pull_request = PullRequest.Build(),
             repository = PullRequest.Repository.Build(),
             sender = Sender.Build(),
             installation = new
             {
-                id = long.Parse(InstallationId, CultureInfo.InvariantCulture),
+                id = installationId,
+                node_id = InstallationNodeId,
             },
         };
     }

@@ -2,7 +2,7 @@
   "profiles": {
     "Costellobot.Benchmarks": {
       "commandName": "Project",
-      "commandLineArgs": ""
+      "commandLineArgs": "--test"
     }
   }
 }

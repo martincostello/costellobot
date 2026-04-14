@@ -3,36 +3,49 @@
 
 namespace MartinCostello.Costellobot.Builders;
 
-public sealed class CheckSuiteBuilder(RepositoryBuilder repository, string status, string? conclusion) : ResponseBuilder
+public sealed class CheckSuiteBuilder : ResponseBuilder
 {
-    public string ApplicationName { get; set; } = "GitHub Actions";
+    public CheckSuiteBuilder(RepositoryBuilder repository, string status, string? conclusion)
+    {
+        Conclusion = conclusion;
+        Repository = repository;
+        Status = status;
+        App = new("github-actions", repository.Owner) { Name = "GitHub Actions" };
+        HeadCommit = new(repository, repository.Owner);
+    }
 
-    public string ApplicationSlug { get; set; } = "github-actions";
+    public string After { get; set; } = RandomGitSha();
 
-    public string? Conclusion { get; set; } = conclusion;
+    public GitHubAppBuilder App { get; set; }
+
+    public string? Conclusion { get; set; }
+
+    public GitCommitBuilder HeadCommit { get; set; }
 
     public IList<PullRequestBuilder> PullRequests { get; set; } = [];
 
-    public RepositoryBuilder Repository { get; set; } = repository;
+    public RepositoryBuilder Repository { get; set; }
 
     public bool Rerequestable { get; set; }
 
-    public string Status { get; set; } = status;
+    public string Status { get; set; }
 
     public override object Build()
     {
         return new
         {
             id = Id,
+            after = After,
+            check_runs_url = $"{Repository.Url}/check-suites/{Id}/check-runs",
             conclusion = Conclusion,
+            head_commit = HeadCommit.Build(),
+            head_sha = HeadCommit.TreeId,
+            node_id = NodeId,
             pull_requests = PullRequests.Build(),
             rerequestable = Rerequestable,
             status = Status,
-            app = new
-            {
-                name = ApplicationName,
-                slug = ApplicationSlug,
-            },
+            url = $"{Repository.Url}/check-suites/{Id}",
+            app = App.Build(),
         };
     }
 }

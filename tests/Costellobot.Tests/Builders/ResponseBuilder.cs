@@ -9,6 +9,8 @@ public abstract class ResponseBuilder
 {
     public int Id { get; set; } = RandomNumber();
 
+    public string NodeId { get; set; } = RandomString();
+
     public abstract object Build();
 
     protected static int RandomNumber() => RandomNumberGenerator.GetInt32(int.MaxValue);

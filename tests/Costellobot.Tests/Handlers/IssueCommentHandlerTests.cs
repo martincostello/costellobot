@@ -7,6 +7,7 @@ using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Drivers;
 using MartinCostello.Costellobot.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
 namespace MartinCostello.Costellobot.Handlers;
 
@@ -81,7 +82,7 @@ public class IssueCommentHandlerTests(AppFixture fixture, ITestOutputHelper outp
     {
         // Arrange
         var target = Fixture.Services.GetRequiredService<IssueCommentHandler>();
-        var message = new Octokit.Webhooks.Events.PullRequest.PullRequestOpenedEvent();
+        var message = CreatePingEvent();
 
         // Act
         await Should.NotThrowAsync(() => target.HandleAsync(message, TestContext.Current.CancellationToken));

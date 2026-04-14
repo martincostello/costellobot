@@ -7,6 +7,12 @@ public sealed class UserBuilder(string? login) : ResponseBuilder
 {
     public string Login { get; set; } = login ?? RandomString();
 
+    public string Name { get; set; } = login ?? RandomString();
+
+    public string HtmlUrl => $"https://github.com/{Login}";
+
+    public string Url => $"https://api.github.com/users/{Login}";
+
     public string UserType { get; set; } = "user";
 
     public RepositoryBuilder CreateRepository(string? name = null, bool isFork = false, bool isPrivate = false)
@@ -23,9 +29,12 @@ public sealed class UserBuilder(string? login) : ResponseBuilder
         return new
         {
             avatar_url = $"https://avatars.githubusercontent.com/u/{Id}?v=4",
+            html_url = HtmlUrl,
             id = Id,
             login = Login,
+            name = Name,
             type = UserType,
+            url = Url,
         };
     }
 }

@@ -139,7 +139,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(UntrustedCommitMessage());
 
-        driver.Label = new(label);
+        driver.Label = new(driver.Repository, label);
         driver.PullRequest.WithLabel("dependencies");
         driver.PullRequest.WithLabel("merge-approved");
         driver.PullRequest.WithLabel(".NET");
@@ -180,7 +180,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(UntrustedCommitMessage());
 
-        driver.Label = new(label);
+        driver.Label = new(driver.Repository, label);
         driver.PullRequest.WithLabel("dependencies");
         driver.PullRequest.WithLabel("merge-approved");
         driver.PullRequest.WithLabel(".NET");
@@ -434,7 +434,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(UntrustedCommitMessage());
 
-        driver.Label = new("merge-approved");
+        driver.Label = new(driver.Repository, "merge-approved");
         driver.PullRequest.WithLabel("dependencies");
         driver.PullRequest.WithLabel("merge-approved");
         driver.PullRequest.WithLabel(".NET");
@@ -466,7 +466,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(UntrustedCommitMessage());
 
-        driver.Label = new("invalid-label");
+        driver.Label = new(driver.Repository, "invalid-label");
         driver.PullRequest.WithLabel("dependencies");
         driver.PullRequest.WithLabel("invalid-label");
         driver.PullRequest.WithLabel(".NET");
@@ -500,7 +500,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(UntrustedCommitMessage());
 
-        driver.Label = new(label);
+        driver.Label = new(driver.Repository, label);
         driver.PullRequest.WithLabel(label);
         driver.PullRequest.WithLabel(".NET");
         driver.Sender = new("repo-collaborator");
@@ -531,7 +531,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         var driver = PullRequestDriver.ForDependabot()
             .WithCommitMessage(UntrustedCommitMessage());
 
-        driver.Label = new("dependencies");
+        driver.Label = new(driver.Repository, "dependencies");
         driver.PullRequest.WithLabel("dependencies");
         driver.PullRequest.WithLabel("merge-approved");
         driver.PullRequest.WithLabel(".NET");
@@ -594,7 +594,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     {
         // Arrange
         var target = Fixture.Services.GetRequiredService<PullRequestHandler>();
-        var message = new Octokit.Webhooks.Events.IssueComment.IssueCommentCreatedEvent();
+        var message = CreatePingEvent();
 
         // Act
         await Should.NotThrowAsync(() => target.HandleAsync(message, TestContext.Current.CancellationToken));
