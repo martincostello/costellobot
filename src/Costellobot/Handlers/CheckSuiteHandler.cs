@@ -250,6 +250,10 @@ public sealed partial class CheckSuiteHandler(
 
             Log.RerunningFailedJobs(logger, run.Name, run.Id, repository);
         }
+        catch (ForbiddenException ex)
+        {
+            Log.FailedToRerunFailedJobsAsAlreadyRunning(logger, ex, run.Name, run.Id, repository);
+        }
         catch (Exception ex)
         {
             Log.FailedToRerunFailedJobs(logger, ex, run.Name, run.Id, repository);
@@ -406,6 +410,17 @@ public sealed partial class CheckSuiteHandler(
             long checkSuiteId,
             RepositoryId repository,
             string login);
+
+        [LoggerMessage(
+            EventId = 16,
+            Level = LogLevel.Information,
+            Message = "Workflow {Name} with run ID {RunId} in {Repository} failed to re-run failed jobs as the workflow is already running.")]
+        public static partial void FailedToRerunFailedJobsAsAlreadyRunning(
+            ILogger logger,
+            Exception exception,
+            string name,
+            long runId,
+            RepositoryId repository);
     }
 
     private sealed class PullRequestAuthorAssociation
