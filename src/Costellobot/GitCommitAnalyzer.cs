@@ -208,7 +208,7 @@ public sealed partial class GitCommitAnalyzer(
         {
             // Look for renovate Markdown metadata in the commit message.
             start = commitMessage.IndexOf('|', StringComparison.Ordinal);
-            end = commitMessage.LastIndexOf('|');
+            end = commitMessage.LastIndexOf('|', StringComparison.Ordinal);
 
             if (start > -1 && ((end - start) > 1))
             {
@@ -390,7 +390,7 @@ public sealed partial class GitCommitAnalyzer(
         // First do a simple lookup by name
         var trustedDependencies = context.WebhookOptions.TrustedEntities.Dependencies;
 
-        Dictionary<string, (bool Trusted, string? Version)> dependencyTrust = new(dependencies.Count);
+        Dictionary<string, (bool Trusted, string? Version)> dependencyTrust = [with(dependencies.Count)];
 
         foreach (var dependency in dependencies)
         {
