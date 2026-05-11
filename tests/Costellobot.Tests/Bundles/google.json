@@ -19,7 +19,7 @@
     },
     {
       "comment": "https://developers.google.com/workspace/calendar/api/v3/reference/events/list",
-      "uri": "https://www.googleapis.com/calendar/v3/calendars/google-calendar-id/events?singleEvents=true&timeMax=2023-09-02T00%3A00%3A00Z&timeMin=2023-09-01T00%3A00%3A00Z&fields=items%28start%2Cend%2Csummary%2Ctransparency%2CeventType%29",
+      "uri": "https://www.googleapis.com/calendar/v3/calendars/google-calendar-id/events?singleEvents=true&timeMax=2023-09-02T00%3A00%3A00Z&timeMin=2023-09-01T00%3A00%3A00Z&timeZone=UTC&fields=items%28start%2Cend%2Csummary%2Ctransparency%2CeventType%29",
       "method": "GET",
       "contentFormat": "json",
       "contentJson": {
@@ -37,7 +37,7 @@
     },
     {
       "comment": "https://developers.google.com/workspace/calendar/api/v3/reference/events/list",
-      "uri": "https://www.googleapis.com/calendar/v3/calendars/24-hour-event/events?singleEvents=true&timeMax=2023-09-02T00%3A00%3A00Z&timeMin=2023-09-01T00%3A00%3A00Z&fields=items%28start%2Cend%2Csummary%2Ctransparency%2CeventType%29",
+      "uri": "https://www.googleapis.com/calendar/v3/calendars/24-hour-event/events?singleEvents=true&timeMax=2023-09-02T00%3A00%3A00Z&timeMin=2023-09-01T00%3A00%3A00Z&timeZone=UTC&fields=items%28start%2Cend%2Csummary%2Ctransparency%2CeventType%29",
       "method": "GET",
       "contentFormat": "json",
       "contentJson": {
@@ -122,7 +122,7 @@
     },
     {
       "comment": "https://developers.google.com/workspace/calendar/api/v3/reference/events/list",
-      "uri": "https://www.googleapis.com/calendar/v3/calendars/all-day-event/events?singleEvents=true&timeMax=2023-09-02T00%3A00%3A00Z&timeMin=2023-09-01T00%3A00%3A00Z&fields=items%28start%2Cend%2Csummary%2Ctransparency%2CeventType%29",
+      "uri": "https://www.googleapis.com/calendar/v3/calendars/all-day-event/events?singleEvents=true&timeMax=2023-09-02T00%3A00%3A00Z&timeMin=2023-09-01T00%3A00%3A00Z&timeZone=UTC&fields=items%28start%2Cend%2Csummary%2Ctransparency%2CeventType%29",
       "method": "GET",
       "contentFormat": "json",
       "contentJson": {
@@ -207,7 +207,7 @@
     },
     {
       "comment": "https://developers.google.com/workspace/calendar/api/v3/reference/events/list",
-      "uri": "https://www.googleapis.com/calendar/v3/calendars/google-calendar-id/events?singleEvents=true&timeMax=2023-12-26T00%3A00%3A00Z&timeMin=2023-12-25T00%3A00%3A00Z&fields=items%28start%2Cend%2Csummary%2Ctransparency%2CeventType%29",
+      "uri": "https://www.googleapis.com/calendar/v3/calendars/google-calendar-id/events?singleEvents=true&timeMax=2023-12-26T00%3A00%3A00Z&timeMin=2023-12-25T00%3A00%3A00Z&timeZone=UTC&fields=items%28start%2Cend%2Csummary%2Ctransparency%2CeventType%29",
       "method": "GET",
       "contentFormat": "json",
       "contentJson": {
