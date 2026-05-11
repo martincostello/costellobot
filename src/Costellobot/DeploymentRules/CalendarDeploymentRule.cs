@@ -28,7 +28,7 @@ public sealed partial class CalendarDeploymentRule(
     {
         if (options.CurrentValue.CalendarIds is { Count: > 0 } calendarIds)
         {
-            var today = timeProvider.GetUtcNow().Date;
+            var today = DateTime.SpecifyKind(timeProvider.GetUtcNow().Date, DateTimeKind.Utc);
 
             foreach (var calendarId in calendarIds.Where((p) => !string.IsNullOrEmpty(p)))
             {
@@ -48,6 +48,7 @@ public sealed partial class CalendarDeploymentRule(
                         request.SingleEvents = true;
                         request.TimeMinDateTimeOffset = minTime;
                         request.TimeMaxDateTimeOffset = maxTime;
+                        request.TimeZone = "UTC";
 
                         return await request.ExecuteAsync(cancellationToken);
                     },
