@@ -279,16 +279,22 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
         await AssertNotTrustedAsync(trustStoreUpdated);
     }
 
-    [Fact]
-    public async Task Trust_Store_Is_Not_Updated_For_Pull_Request_From_Untrusted_User()
+    [Theory]
+    [InlineData("costellobot", 123456, "COLLABORATOR")]
+    [InlineData("rando-calrissian", 1138, "NONE")]
+    public async Task Trust_Store_Is_Not_Updated_For_Pull_Request_From_Untrusted_User(
+        string login,
+        int id,
+        string authorAssociation)
     {
         // Arrange
         var dependency = ("foo", "1.2.3");
 
         var driver = await ConfigureAsync(
             dependency,
-            pullRequestAuthorAssociation: "NONE",
-            pullRequestAuthorLogin: "rando-calrissian");
+            pullRequestAuthorAssociation: authorAssociation,
+            pullRequestAuthorLogin: login,
+            pullRequestAuthorId: id);
 
         var trustStoreUpdated = RegisterTrusted(DependencyEcosystem.NuGet, dependency);
 
@@ -413,6 +419,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
             user = new
             {
                 login = "costellobot[bot]",
+                id = 102247573,
                 type = "Bot",
             },
         };
@@ -508,6 +515,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
         string reviewState = "approved",
         string? pullRequestAuthorAssociation = null,
         string? pullRequestAuthorLogin = null,
+        int? pullRequestAuthorId = null,
         bool isCollaborator = true,
         bool isEnabled = true,
         IEnumerable<object>? reviews = null,
@@ -530,6 +538,11 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
         {
             driver.PullRequest.User ??= CreateUser(pullRequestAuthorLogin);
             driver.PullRequest.User.Login = pullRequestAuthorLogin;
+
+            if (pullRequestAuthorId is { } userId)
+            {
+                driver.PullRequest.User.Id = userId;
+            }
         }
 
         RegisterGetAccessToken();

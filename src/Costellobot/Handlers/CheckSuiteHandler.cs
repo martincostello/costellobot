@@ -207,7 +207,7 @@ public sealed partial class CheckSuiteHandler(
 
         var options = context.WebhookOptions;
 
-        if (options.TrustedEntities.Users.Contains(author.User.Login, StringComparer.Ordinal))
+        if (options.TrustedEntities.Users.TryGetValue(author.User.Login, out var id) && author.User.Id == id)
         {
             return true;
         }
@@ -221,7 +221,7 @@ public sealed partial class CheckSuiteHandler(
 
         if (!isTrusted)
         {
-            Log.IgnoringUntrustedUser(logger, checkSuiteId, repository, author.User.Login);
+            Log.IgnoringUntrustedUser(logger, checkSuiteId, repository, author.User.Login, author.User.Id);
         }
 
         return isTrusted;
@@ -404,12 +404,13 @@ public sealed partial class CheckSuiteHandler(
         [LoggerMessage(
             EventId = 15,
             Level = LogLevel.Debug,
-            Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as it is associated with a pull request from untrusted user {Login}.")]
+            Message = "Ignoring check suite ID {CheckSuiteId} for {Repository} as it is associated with a pull request from untrusted user {Login} ({UserId}).")]
         public static partial void IgnoringUntrustedUser(
             ILogger logger,
             long checkSuiteId,
             RepositoryId repository,
-            string login);
+            string login,
+            long userId);
 
         [LoggerMessage(
             EventId = 16,

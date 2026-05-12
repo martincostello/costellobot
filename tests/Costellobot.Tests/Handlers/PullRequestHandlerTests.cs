@@ -289,13 +289,15 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         await AssertTaskNotRun(pullRequestApproved);
     }
 
-    [Fact]
-    public async Task Pull_Request_Is_Not_Approved_For_Untrusted_User()
+    [Theory]
+    [InlineData("costellobot", 123456)]
+    [InlineData("rando-calrissian", 1138)]
+    public async Task Pull_Request_Is_Not_Approved_For_Untrusted_User(string login, int id)
     {
         // Arrange
         Fixture.ApprovePullRequests();
 
-        var driver = new PullRequestDriver("rando-calrissian")
+        var driver = new PullRequestDriver(login, id)
             .WithCommitMessage(TrustedCommitMessage());
 
         RegisterGetAccessToken();

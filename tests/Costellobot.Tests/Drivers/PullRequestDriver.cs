@@ -9,9 +9,9 @@ namespace MartinCostello.Costellobot.Drivers;
 
 public class PullRequestDriver
 {
-    public PullRequestDriver(string? login = null)
+    public PullRequestDriver(string? login = null, int? id = null)
     {
-        User = CreateUser(login);
+        User = CreateUser(login, id);
         Sender = User;
         Owner = CreateUser();
         Repository = Owner.CreateRepository();
@@ -34,10 +34,10 @@ public class PullRequestDriver
     public UserBuilder User { get; set; }
 
     public static PullRequestDriver ForDependabot()
-        => new(DependabotCommitter);
+        => new(DependabotCommitter, DependabotId);
 
     public static PullRequestDriver ForRenovate()
-        => new(RenovateCommitter);
+        => new(RenovateCommitter, RenovateId);
 
     public PullRequestDriver WithCommitMessage(string message)
     {

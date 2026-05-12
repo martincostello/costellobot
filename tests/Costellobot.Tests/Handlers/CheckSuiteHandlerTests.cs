@@ -106,7 +106,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Arrange
         Fixture.FailedCheckRerunAttempts(2);
 
-        var driver = new CheckSuiteDriver(DependabotCommitter);
+        var driver = new CheckSuiteDriver(DependabotCommitter, DependabotId);
         driver.CheckSuite.PullRequests.Add(driver.PullRequest);
 
         for (int i = 0; i < 2; i++)
@@ -134,7 +134,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Arrange
         Fixture.FailedCheckRerunAttempts(2);
 
-        var driver = new CheckSuiteDriver(DependabotCommitter);
+        var driver = new CheckSuiteDriver(DependabotCommitter, DependabotId);
         driver.CheckSuite.PullRequests.Add(driver.PullRequest);
 
         driver.WithCheckRun((p) => CreateCheckRun(p, "ubuntu-latest", "completed", "failure"));
@@ -369,18 +369,20 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
     }
 
     [Theory]
-    [InlineData("rando-calrissian", "COLLABORATOR")]
-    [InlineData("rando-calrissian", "CONTRIBUTOR")]
-    [InlineData("rando-calrissian", "FIRST_TIMER")]
-    [InlineData("rando-calrissian", "FIRST_TIME_CONTRIBUTOR")]
+    [InlineData("costellobot", 123456, "COLLABORATOR")]
+    [InlineData("rando-calrissian", 1977, "COLLABORATOR")]
+    [InlineData("rando-calrissian", 1977, "CONTRIBUTOR")]
+    [InlineData("rando-calrissian", 1977, "FIRST_TIMER")]
+    [InlineData("rando-calrissian", 1977, "FIRST_TIME_CONTRIBUTOR")]
     public async Task Failed_Jobs_Are_Not_Rerun_If_Pull_Request_Is_Not_From_A_Trusted_User(
         string login,
+        int id,
         string authorAssociation)
     {
         // Arrange
         Fixture.FailedCheckRerunAttempts(1);
 
-        var driver = new CheckSuiteDriver(login);
+        var driver = new CheckSuiteDriver(login, id);
 
         driver.CheckSuite.PullRequests.Add(driver.PullRequest);
         driver.PullRequest.AuthorAssociation = authorAssociation;
