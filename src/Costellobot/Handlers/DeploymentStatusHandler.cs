@@ -336,7 +336,8 @@ public sealed partial class DeploymentStatusHandler(
                 continue;
             }
 
-            if (!context.WebhookOptions.TrustedEntities.Users.Contains(commit.Author.Login))
+            if (!context.WebhookOptions.TrustedEntities.Users.TryGetValue(commit.Author.Login, out var id) ||
+                commit.Author.Id != id)
             {
                 Log.UntrustedCommitAuthorFound(logger, pendingDeployment.Id, repository, commit.Sha, commit.Author.Login);
                 return false;

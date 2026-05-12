@@ -207,7 +207,7 @@ public sealed partial class CheckSuiteHandler(
 
         var options = context.WebhookOptions;
 
-        if (options.TrustedEntities.Users.Contains(author.User.Login, StringComparer.Ordinal))
+        if (options.TrustedEntities.Users.TryGetValue(author.User.Login, out var id) && author.User.Id == id)
         {
             return true;
         }

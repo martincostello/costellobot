@@ -342,7 +342,7 @@
                                     </div>
                                     <div class="card-body">
                                         <ul id="trusted-reviewers">
-                                            @foreach (var user in Model.Webhook.TrustedEntities.Reviewers)
+                                            @foreach (var user in Model.Webhook.TrustedEntities.Reviewers.Keys)
                                             {
                                                 <li>
                                                     <a href="@(GitHubUserUrl(user))" target="_blank" rel="noopener" aria-label="View @(user)'s GitHub profile">
@@ -361,7 +361,7 @@
                                     </div>
                                     <div class="card-body">
                                         <ul id="trusted-users">
-                                            @foreach (var user in Model.Webhook.TrustedEntities.Users)
+                                            @foreach (var user in Model.Webhook.TrustedEntities.Users.Keys)
                                             {
                                                 <li>
                                                     <a href="@(GitHubUserUrl(user))" target="_blank" rel="noopener" aria-label="View @(user)'s GitHub profile">

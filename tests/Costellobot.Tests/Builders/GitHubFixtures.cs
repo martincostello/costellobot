@@ -16,6 +16,8 @@ public static class GitHubFixtures
 
     public const string DependabotCommitter = "dependabot[bot]";
 
+    public const int DependabotId = 49699333;
+
     public const string GitHubActionsBotName = "app/github-actions";
 
     public const string InstallationId = "24364748";
@@ -23,6 +25,8 @@ public static class GitHubFixtures
     public const string InstallationNodeId = "MDIzOkludGVncmF0aW9uSW5zdGFsbGF0aW9uMjQzNjQ3NDg=";
 
     public const string RenovateCommitter = "renovate[bot]";
+
+    public const int RenovateId = 29139614;
 
     public static WebhookEvent CreatePingEvent() => new Octokit.Webhooks.Events.PingEvent()
     {
@@ -174,7 +178,7 @@ public static class GitHubFixtures
     }
 
     public static UserBuilder CreateUserForDependabot()
-        => CreateUser(DependabotCommitter);
+        => CreateUser(DependabotCommitter, DependabotId);
 
     public static UserBuilder CreateUser(
         string? login = null,

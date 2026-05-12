@@ -9,9 +9,9 @@ namespace MartinCostello.Costellobot.Drivers;
 
 public sealed class CheckSuiteDriver
 {
-    public CheckSuiteDriver(string? login = null, string? conclusion = null)
+    public CheckSuiteDriver(string? login = null, int? id = null, string? conclusion = null)
     {
-        Owner = CreateUser(login);
+        Owner = CreateUser(login, id);
         Repository = Owner.CreateRepository();
         PullRequest = Repository.CreatePullRequest();
         WorkflowRun = Repository.CreateWorkflowRun();

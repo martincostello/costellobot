@@ -51,7 +51,8 @@ public sealed partial class PullRequestAnalyzer(
         return reviews.Any((p) =>
             p.State is { Value: PullRequestReviewState.Approved } &&
             p.User.Login != authorLogin &&
-            options.TrustedEntities.Reviewers.Contains(p.User.Login, StringComparer.Ordinal));
+            options.TrustedEntities.Reviewers.TryGetValue(p.User.Login, out var id) &&
+            p.User.Id == id);
     }
 
     public async Task<bool> IsApprovedByAsync(IssueId id, string authorLogin)
@@ -73,11 +74,11 @@ public sealed partial class PullRequestAnalyzer(
     public bool IsFromTrustedUser(IssueId id, PullRequestEvent message)
     {
         var pr = message.PullRequest!;
-        return IsFromTrustedUser(id, pr.User.Login, pr.Draft);
+        return IsFromTrustedUser(id, pr.User.Login, pr.User.Id, pr.Draft);
     }
 
     public bool IsFromTrustedUser(IssueId id, SimplePullRequest pullRequest)
-        => IsFromTrustedUser(id, pullRequest.User.Login, pullRequest.Draft);
+        => IsFromTrustedUser(id, pullRequest.User.Login, pullRequest.User.Id, pullRequest.Draft);
 
     public async Task<bool> IsTrustedDependencyUpdateAsync(
         RepositoryId repository,
@@ -116,7 +117,7 @@ public sealed partial class PullRequestAnalyzer(
         }
     }
 
-    private bool IsFromTrustedUser(IssueId id, string authorLogin, bool isDraft)
+    private bool IsFromTrustedUser(IssueId id, string authorLogin, long authorId, bool isDraft)
     {
         var options = context.WebhookOptions;
 
@@ -132,9 +133,9 @@ public sealed partial class PullRequestAnalyzer(
             return false;
         }
 
-        bool isTrusted = options.TrustedEntities.Users.Contains(
-            authorLogin,
-            StringComparer.Ordinal);
+        bool isTrusted =
+            options.TrustedEntities.Users.TryGetValue(authorLogin, out var expectedId) &&
+            authorId == expectedId;
 
         if (!isTrusted)
         {

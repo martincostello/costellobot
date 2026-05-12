@@ -106,7 +106,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Arrange
         Fixture.FailedCheckRerunAttempts(2);
 
-        var driver = new CheckSuiteDriver(DependabotCommitter);
+        var driver = new CheckSuiteDriver(DependabotCommitter, DependabotId);
         driver.CheckSuite.PullRequests.Add(driver.PullRequest);
 
         for (int i = 0; i < 2; i++)
@@ -134,7 +134,7 @@ public class CheckSuiteHandlerTests(AppFixture fixture, ITestOutputHelper output
         // Arrange
         Fixture.FailedCheckRerunAttempts(2);
 
-        var driver = new CheckSuiteDriver(DependabotCommitter);
+        var driver = new CheckSuiteDriver(DependabotCommitter, DependabotId);
         driver.CheckSuite.PullRequests.Add(driver.PullRequest);
 
         driver.WithCheckRun((p) => CreateCheckRun(p, "ubuntu-latest", "completed", "failure"));

@@ -413,6 +413,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
             user = new
             {
                 login = "costellobot[bot]",
+                id = 102247573,
                 type = "Bot",
             },
         };

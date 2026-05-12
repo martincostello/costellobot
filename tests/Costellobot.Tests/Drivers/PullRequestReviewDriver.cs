@@ -19,7 +19,13 @@ public sealed class PullRequestReviewDriver : PullRequestDriver
     public PullRequestReviewBuilder Review { get; set; }
 
     public static PullRequestReviewDriver FromUserForDependabot(string login = "martincostello")
-        => new(login, DependabotCommitter);
+    {
+        var driver = new PullRequestReviewDriver(login, DependabotCommitter);
+
+        driver.PullRequest.User!.Id = DependabotId;
+
+        return driver;
+    }
 
     public PullRequestReviewDriver WithAuthorAssociation(string value)
     {
