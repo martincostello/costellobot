@@ -535,6 +535,48 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Fact]
+    public async Task Deployment_Is_Not_Approved_For_Trusted_User_With_Wrong_UserId()
+    {
+        // Arrange
+        Fixture.ApproveDeployments();
+
+        var driver = new DeploymentStatusDriver(
+            (repo) => repo.CreateCommit(),
+            (repo) =>
+            {
+                var commit = CreateTrustedCommit(repo);
+                commit.Author = CreateUser(DependabotCommitter, 123456789);
+                return commit;
+            });
+
+        driver.WithPendingDeployment(CreateDeployment);
+
+        driver.WithActiveDeployment();
+        driver.WithInactiveDeployment();
+
+        RegisterGetAccessToken();
+
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
+        RegisterPullRequestForCommit(driver.HeadCommit);
+
+        var deploymentApproved = RegisterApprovePendingDeployment(driver);
+
+        RegisterGetAccessToken();
+
+        RegisterAllDeployments(driver);
+        RegisterCommitComparison(driver);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await AssertTaskNotRun(deploymentApproved);
+    }
+
+    [Fact]
     public async Task Deployment_Is_Not_Approved_For_Trusted_User_And_Untrusted_Dependency()
     {
         // Arrange

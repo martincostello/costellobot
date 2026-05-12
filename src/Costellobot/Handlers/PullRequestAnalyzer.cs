@@ -51,8 +51,8 @@ public sealed partial class PullRequestAnalyzer(
         return reviews.Any((p) =>
             p.State is { Value: PullRequestReviewState.Approved } &&
             p.User.Login != authorLogin &&
-            options.TrustedEntities.Reviewers.TryGetValue(p.User.Login, out var id) &&
-            p.User.Id == id);
+            options.TrustedEntities.Reviewers.TryGetValue(p.User.Login, out var userId) &&
+            p.User.Id == userId);
     }
 
     public async Task<bool> IsApprovedByAsync(IssueId id, string authorLogin)
@@ -139,7 +139,7 @@ public sealed partial class PullRequestAnalyzer(
 
         if (!isTrusted)
         {
-            Log.IgnoringPullRequestFromUntrustedUser(logger, id, authorLogin);
+            Log.IgnoringPullRequestFromUntrustedUser(logger, id, authorLogin, authorId);
         }
 
         return isTrusted;
@@ -159,11 +159,12 @@ public sealed partial class PullRequestAnalyzer(
         [LoggerMessage(
             EventId = 2,
             Level = LogLevel.Debug,
-            Message = "Ignoring pull request {PullRequest} from {Login} as it is not from a trusted user.")]
+            Message = "Ignoring pull request {PullRequest} from {Login} ({UserId}) as it is not from a trusted user.")]
         public static partial void IgnoringPullRequestFromUntrustedUser(
             ILogger logger,
             IssueId pullRequest,
-            string? login);
+            string? login,
+            long userId);
 
         [LoggerMessage(
             EventId = 3,

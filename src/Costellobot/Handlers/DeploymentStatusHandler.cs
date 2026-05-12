@@ -339,7 +339,14 @@ public sealed partial class DeploymentStatusHandler(
             if (!context.WebhookOptions.TrustedEntities.Users.TryGetValue(commit.Author.Login, out var id) ||
                 commit.Author.Id != id)
             {
-                Log.UntrustedCommitAuthorFound(logger, pendingDeployment.Id, repository, commit.Sha, commit.Author.Login);
+                Log.UntrustedCommitAuthorFound(
+                    logger,
+                    pendingDeployment.Id,
+                    repository,
+                    commit.Sha,
+                    commit.Author.Login,
+                    commit.Author.Id);
+
                 return false;
             }
 
@@ -457,13 +464,14 @@ public sealed partial class DeploymentStatusHandler(
         [LoggerMessage(
             EventId = 10,
             Level = LogLevel.Debug,
-            Message = "Deployment ID {DeploymentId} for {Repository} cannot be auto-deployed as it contains commit {Sha} from untrusted author {Login}.")]
+            Message = "Deployment ID {DeploymentId} for {Repository} cannot be auto-deployed as it contains commit {Sha} from untrusted author {Login} ({UserId}).")]
         public static partial void UntrustedCommitAuthorFound(
             ILogger logger,
             long deploymentId,
             RepositoryId repository,
             string sha,
-            string login);
+            string login,
+            long userId);
 
         [LoggerMessage(
             EventId = 11,
