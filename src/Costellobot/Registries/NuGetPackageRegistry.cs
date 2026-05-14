@@ -9,15 +9,76 @@ using Microsoft.Extensions.Caching.Hybrid;
 
 namespace MartinCostello.Costellobot.Registries;
 
-public sealed partial class NuGetPackageRegistry(
-    HttpClient client,
-    HybridCache cache,
-    ILogger<NuGetPackageRegistry> logger) : PackageRegistry(client)
+public sealed partial class NuGetPackageRegistry : PackageRegistry
 {
     private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromHours(1) };
     private static readonly string[] CacheTags = ["all", "nuget"];
 
+    private readonly HybridCache _cache;
+    private readonly string _cacheKeyPrefix;
+    private readonly ILogger _logger;
+    private readonly bool _private;
+    private readonly string[] _registryOwners;
+
+    public NuGetPackageRegistry(
+        HttpClient client,
+        HybridCache cache,
+        ILogger<NuGetPackageRegistry> logger)
+        : base(client)
+    {
+        _cache = cache;
+        _cacheKeyPrefix = client.BaseAddress?.ToString() ?? string.Empty;
+        _logger = logger;
+        _private = false;
+        _registryOwners = [];
+
+        if (client.BaseAddress?.Host is "f.feedz.io")
+        {
+            // Example: https://f.feedz.io/martincostello/costellobot/nuget/index.json
+            var segments = client.BaseAddress.Segments;
+            var owner = segments.Length switch
+            {
+                5 when string.Equals(segments[3], "nuget/", StringComparison.Ordinal) => segments[1].TrimEnd('/'),
+                _ => string.Empty,
+            };
+
+            if (!string.IsNullOrEmpty(owner))
+            {
+                _private = true;
+                _registryOwners = [owner];
+            }
+        }
+        else if (client.BaseAddress?.Host is "www.myget.org")
+        {
+            // Example https://www.myget.org/F/opentelemetry/api/v3/index.json
+            var segments = client.BaseAddress.Segments;
+            var owner = segments.Length switch
+            {
+                6 when string.Equals(segments[1], "F/", StringComparison.Ordinal) => segments[2].TrimEnd('/'),
+                _ => string.Empty,
+            };
+
+            if (!string.IsNullOrEmpty(owner))
+            {
+                _private = true;
+                _registryOwners = [owner];
+            }
+        }
+    }
+
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.NuGet;
+
+    public override Task<bool> AreOwnersTrustedAsync(IReadOnlyList<string> owners, CancellationToken cancellationToken)
+    {
+        bool trusted = false;
+
+        if (_private && owners.Count > 0)
+        {
+            trusted = owners.SequenceEqual(_registryOwners, StringComparer.Ordinal);
+        }
+
+        return Task.FromResult(trusted);
+    }
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
         RepositoryId repository,
@@ -27,12 +88,16 @@ public sealed partial class NuGetPackageRegistry(
     {
         if (!NuGet.Versioning.NuGetVersion.TryParse(version, out var _))
         {
-            Log.InvalidNuGetPackageVersion(logger, version);
+            Log.InvalidNuGetPackageVersion(_logger, version);
             return [];
         }
 
         // https://docs.microsoft.com/nuget/api/search-query-service-resource#versioning
+        // NuGet.org has multiple entries for fallback, so we could extend to support that in future
         var baseAddress = await GetBaseAddressAsync("SearchQueryService/3.5.0", cancellationToken);
+
+        // Fallback resource for other NuGet implementations such as feedz.io and MyGet.org
+        baseAddress ??= await GetBaseAddressAsync("SearchQueryService", cancellationToken);
 
         if (baseAddress is null)
         {
@@ -87,7 +152,7 @@ public sealed partial class NuGetPackageRegistry(
         {
             JsonValueKind.Array => GetPackageOwners(package.Owners),
             JsonValueKind.String => GetPackageOwner(package.Owners),
-            _ => [],
+            _ => _private ? _registryOwners : [],
         };
 
         static IReadOnlyList<string> GetPackageOwner(JsonElement owner)
@@ -119,10 +184,10 @@ public sealed partial class NuGetPackageRegistry(
     }
 
     private async Task<ServiceIndex?> GetServiceIndexAsync(CancellationToken cancellationToken) =>
-        await cache.GetOrCreateAsync(
-            "nuget-service-index",
+        await _cache.GetOrCreateAsync(
+            $"{_cacheKeyPrefix}:nuget-service-index",
             Client,
-            static async (client, token) => await client.GetFromJsonAsync("/v3/index.json", NuGetJsonSerializerContext.Default.ServiceIndex, cancellationToken: token),
+            static async (client, token) => await client.GetFromJsonAsync("index.json", NuGetJsonSerializerContext.Default.ServiceIndex, cancellationToken: token),
             CacheEntryOptions,
             CacheTags,
             cancellationToken);

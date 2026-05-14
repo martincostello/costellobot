@@ -12,6 +12,11 @@ public static class HttpRequestInterceptionBuilderExtensions
     public static HttpClientInterceptorOptions RegisterGoogleBundle(this HttpClientInterceptorOptions options) =>
         options.RegisterBundleFromResourceStream("google");
 
+    public static async Task<HttpClientInterceptorOptions> RegisterMyGetBundleAsync(
+        this HttpClientInterceptorOptions options,
+        CancellationToken cancellationToken = default) =>
+        await options.RegisterBundleFromResourceStreamAsync("myget-search", cancellationToken: cancellationToken);
+
     public static async Task<HttpClientInterceptorOptions> RegisterNuGetBundleAsync(
         this HttpClientInterceptorOptions options,
         CancellationToken cancellationToken = default) =>

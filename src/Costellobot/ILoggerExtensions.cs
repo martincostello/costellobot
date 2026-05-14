@@ -27,7 +27,12 @@ public static class ILoggerExtensions
 
     public static IDisposable? BeginWebhookScope(this ILogger logger, WebhookEvent payload)
     {
-        var items = new Dictionary<string, object>(2);
+        var items = new Dictionary<string, object>(3);
+
+        if (payload.Action is { Length: > 0 } action)
+        {
+            items["GitHub.Action"] = action;
+        }
 
         if (payload.Repository is { } repository)
         {

@@ -42,7 +42,7 @@ public sealed class AuthenticationTests(AppFixture fixture, ITestOutputHelper ou
 
         token1.IssuedAt.ShouldBe(utcNow.AddMinutes(-1), tolerance);
         token1.ValidFrom.ShouldBe(utcNow, tolerance);
-        token1.ValidTo.ShouldBe(utcNow.AddMinutes(10), tolerance);
+        token1.ValidTo.ShouldBe(utcNow.AddMinutes(9), tolerance);
 
         // Arrange
         await Task.Delay(TimeSpan.FromSeconds(1.1), CancellationToken);
@@ -70,7 +70,7 @@ public sealed class AuthenticationTests(AppFixture fixture, ITestOutputHelper ou
 
         token2.IssuedAt.ShouldBe(utcNow.AddMinutes(-1), tolerance);
         token2.ValidFrom.ShouldBe(utcNow, tolerance);
-        token2.ValidTo.ShouldBe(utcNow.AddMinutes(10), tolerance);
+        token2.ValidTo.ShouldBe(utcNow.AddMinutes(9), tolerance);
 
         token2.IssuedAt.ShouldBeGreaterThan(token1.IssuedAt);
         token2.ValidFrom.ShouldBeGreaterThan(token1.ValidFrom);

@@ -9,8 +9,7 @@ public interface IPackageRegistry
 
     DependencyEcosystem Ecosystem { get; }
 
-    Task<bool> AreOwnersTrustedAsync(IReadOnlyList<string> owners, CancellationToken cancellationToken)
-        => Task.FromResult(false);
+    Task<bool> AreOwnersTrustedAsync(IReadOnlyList<string> owners, CancellationToken cancellationToken);
 
     Task<bool?> GetPackageAttestationAsync(
         RepositoryId repository,
