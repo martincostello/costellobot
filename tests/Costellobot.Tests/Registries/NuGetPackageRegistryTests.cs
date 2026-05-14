@@ -28,7 +28,7 @@ public class NuGetPackageRegistryTests(ITestOutputHelper outputHelper)
             .RegisterNuGetBundleAsync(TestContext.Current.CancellationToken);
 
         using var client = options.CreateHttpClient();
-        client.BaseAddress = new Uri("https://api.nuget.org");
+        client.BaseAddress = new Uri("https://api.nuget.org/v3/");
 
         using var cache = new ApplicationCache();
 

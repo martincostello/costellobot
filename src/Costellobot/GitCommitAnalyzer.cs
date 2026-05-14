@@ -570,9 +570,9 @@ public sealed partial class GitCommitAnalyzer(
                 return (false, version);
             }
 
-            var registry = _registries.FirstOrDefault((p) => p.Ecosystem == ecosystem);
+            var registries = _registries.Where((p) => p.Ecosystem == ecosystem).ToList();
 
-            if (registry is null)
+            if (registries.Count == 0)
             {
                 return (false, version);
             }
@@ -584,15 +584,18 @@ public sealed partial class GitCommitAnalyzer(
                 return (false, version);
             }
 
-            if (await IsTrustedDependencyOwnerAsync(
-                    repository,
-                    dependency,
-                    version,
-                    publishers,
-                    registry,
-                    cancellationToken))
+            foreach (var registry in registries)
             {
-                return (true, version);
+                if (await IsTrustedDependencyOwnerAsync(
+                        repository,
+                        dependency,
+                        version,
+                        publishers,
+                        registry,
+                        cancellationToken))
+                {
+                    return (true, version);
+                }
             }
 
             return (await IsTrustedDependencyVersionAsync(repository, ecosystem, dependency, version, cancellationToken), version);

@@ -17,6 +17,8 @@ public sealed partial class NuGetPackageRegistry(
     private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromHours(1) };
     private static readonly string[] CacheTags = ["all", "nuget"];
 
+    private readonly string _cacheKeyPrefix = $"{client.BaseAddress!.Host}:{client.BaseAddress.PathAndQuery}";
+
     public override DependencyEcosystem Ecosystem => DependencyEcosystem.NuGet;
 
     public override async Task<IReadOnlyList<string>> GetPackageOwnersAsync(
@@ -32,7 +34,11 @@ public sealed partial class NuGetPackageRegistry(
         }
 
         // https://docs.microsoft.com/nuget/api/search-query-service-resource#versioning
+        // NuGet.org has multiple entries for fallback, so we could extend to support that in future
         var baseAddress = await GetBaseAddressAsync("SearchQueryService/3.5.0", cancellationToken);
+
+        // Fallback resource for other NuGet implementations such as feedz.io and MyGet.org
+        baseAddress ??= await GetBaseAddressAsync("SearchQueryService", cancellationToken);
 
         if (baseAddress is null)
         {
@@ -120,9 +126,9 @@ public sealed partial class NuGetPackageRegistry(
 
     private async Task<ServiceIndex?> GetServiceIndexAsync(CancellationToken cancellationToken) =>
         await cache.GetOrCreateAsync(
-            "nuget-service-index",
+            $"{_cacheKeyPrefix}:nuget-service-index",
             Client,
-            static async (client, token) => await client.GetFromJsonAsync("/v3/index.json", NuGetJsonSerializerContext.Default.ServiceIndex, cancellationToken: token),
+            static async (client, token) => await client.GetFromJsonAsync("index.json", NuGetJsonSerializerContext.Default.ServiceIndex, cancellationToken: token),
             CacheEntryOptions,
             CacheTags,
             cancellationToken);
