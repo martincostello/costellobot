@@ -43,7 +43,7 @@ public sealed class AppCredentialStore(
 
         var tokenDescriptor = new SecurityTokenDescriptor()
         {
-            Expires = utcNow.Add(TokenLifetime),
+            Expires = utcNow.Add(TokenLifetime).Add(-TokenSkew),
             IssuedAt = utcNow.Add(-TokenSkew),
             Issuer = app.AppId,
             SigningCredentials = CreateSigningCredentials(algorithm),
