@@ -54,7 +54,7 @@ public sealed partial class NuGetPackageRegistry : PackageRegistry
             var segments = client.BaseAddress.Segments;
             var owner = segments.Length switch
             {
-                5 when string.Equals(segments[1], "F/", StringComparison.Ordinal) => segments[2].TrimEnd('/'),
+                6 when string.Equals(segments[1], "F/", StringComparison.Ordinal) => segments[2].TrimEnd('/'),
                 _ => string.Empty,
             };
 
@@ -74,7 +74,7 @@ public sealed partial class NuGetPackageRegistry : PackageRegistry
 
         if (_private && owners.Count > 0)
         {
-            trusted = owners.SequenceEqual(_registryOwners);
+            trusted = owners.SequenceEqual(_registryOwners, StringComparer.Ordinal);
         }
 
         return Task.FromResult(trusted);
