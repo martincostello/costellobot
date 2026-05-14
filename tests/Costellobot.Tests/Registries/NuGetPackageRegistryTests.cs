@@ -59,7 +59,7 @@ public class NuGetPackageRegistryTests(ITestOutputHelper outputHelper)
             .RegisterMyGetBundleAsync(TestContext.Current.CancellationToken);
 
         using var client = options.CreateHttpClient();
-        client.BaseAddress = new Uri("https://www.myget.org/F/opentelemetry/api/v3/");
+        client.BaseAddress = new Uri("https://www.myget.org/F/opentelemetry/api/v3/index.json");
 
         using var cache = new ApplicationCache();
 
