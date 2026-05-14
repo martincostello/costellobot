@@ -27,12 +27,12 @@ public sealed partial class NuGetPackageRegistry : PackageRegistry
         : base(client)
     {
         _cache = cache;
-        _cacheKeyPrefix = $"{client.BaseAddress!.Host}:{client.BaseAddress.PathAndQuery}";
+        _cacheKeyPrefix = client.BaseAddress?.ToString() ?? string.Empty;
         _logger = logger;
         _private = false;
         _registryOwners = [];
 
-        if (client.BaseAddress.Host is "f.feedz.io")
+        if (client.BaseAddress?.Host is "f.feedz.io")
         {
             // Example: https://f.feedz.io/martincostello/costellobot/nuget/index.json
             var segments = client.BaseAddress.Segments;
@@ -48,7 +48,7 @@ public sealed partial class NuGetPackageRegistry : PackageRegistry
                 _registryOwners = [owner];
             }
         }
-        else if (client.BaseAddress.Host is "www.myget.org")
+        else if (client.BaseAddress?.Host is "www.myget.org")
         {
             // Example https://www.myget.org/F/opentelemetry/api/v3/index.json
             var segments = client.BaseAddress.Segments;
