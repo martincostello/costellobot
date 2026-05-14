@@ -269,7 +269,7 @@ public static class AdminEndpoints
                 {
                     // Round deliveredAt to the previous minute
                     var deliveredAt = model.DeliveredAt.UtcDateTime;
-                    deliveredAt = deliveredAt.AddSeconds(-deliveredAt.Second).AddMilliseconds(-deliveredAt.Millisecond);
+                    deliveredAt = new(deliveredAt.Ticks - (deliveredAt.Ticks % TimeSpan.TicksPerMinute), deliveredAt.Kind);
 
                     // Query +/- 5 minutes around the rounded delivery time
                     const string GrafanaTimestampFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fffK";
