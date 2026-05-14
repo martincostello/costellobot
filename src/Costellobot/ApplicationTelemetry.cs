@@ -40,13 +40,20 @@ public static class ApplicationTelemetry
         => Environment.GetEnvironmentVariable("PYROSCOPE_PROFILING_ENABLED") is "1";
 
     [StackTraceHidden]
-    internal static async Task ProfileAsync<T>(T state, Func<T, Task> operation)
+    internal static async Task ProfileAsync<T>(
+        T state,
+        Func<T, Task> operation,
+        Action<LabelSet.Builder, T>? addLabels = null)
     {
-        var labels = GetProfilerLabels();
+        var labelBuilder = GetProfilerLabels();
 
         try
         {
-            labels.Activate();
+            addLabels?.Invoke(labelBuilder, state);
+
+            labelBuilder.Build()
+                        .Activate();
+
             await operation(state);
         }
         finally
@@ -55,7 +62,7 @@ public static class ApplicationTelemetry
         }
     }
 
-    private static LabelSet GetProfilerLabels()
+    private static LabelSet.Builder GetProfilerLabels()
     {
         var builder = LabelSet.Empty.BuildUpon()
             .Add("namespace", ServiceNamespace)
@@ -74,6 +81,6 @@ public static class ApplicationTelemetry
             }
         }
 
-        return builder.Build();
+        return builder;
     }
 }

@@ -45,6 +45,10 @@ public sealed class DeliveryModel(JsonElement delivery)
 
     public string? LogsUrl { get; set; }
 
+    public string? MetricsUrl { get; set; }
+
+    public string? ProfilesUrl { get; set; }
+
     public string? TracesUrl { get; set; }
 
     private JsonElement Delivery { get; set; } = delivery;
