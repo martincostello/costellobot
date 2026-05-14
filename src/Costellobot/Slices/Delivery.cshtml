@@ -47,6 +47,30 @@
           <code id="url">@(Model.RequestUrl)</code>
         </td>
       </tr>
+      @if (!string.IsNullOrWhiteSpace(Model.LogsUrl))
+      {
+        <tr>
+          <td>Logs</td>
+          <td>
+            <a href="@(Model.LogsUrl)" target="_blank">
+              <span class="fa-solid fa-book fa-fw" aria-hidden="true"></span>
+              View logs for this delivery
+            </a>
+          </td>
+        </tr>
+      }
+      @if (!string.IsNullOrWhiteSpace(Model.TracesUrl))
+      {
+        <tr>
+          <td>Traces</td>
+          <td>
+            <a href="@(Model.TracesUrl)" target="_blank">
+              <span class="fa-solid fa-chart-gantt fa-fw" aria-hidden="true"></span>
+              View traces for this delivery
+            </a>
+          </td>
+        </tr>
+      }
     </tbody>
   </table>
   <hr/>

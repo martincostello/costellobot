@@ -227,9 +227,10 @@ public static class AdminEndpoints
                 string app,
                 long id,
                 IGitHubClientFactory factory,
-                IOptionsMonitor<GitHubOptions> options) =>
+                IOptionsMonitor<GitHubOptions> github,
+                IOptionsMonitor<GrafanaOptions> grafana) =>
             {
-                if (options.CurrentValue.TryGetAppId(app) is not { } appId)
+                if (github.CurrentValue.TryGetAppId(app) is not { } appId)
                 {
                     return Results.NotFound();
                 }
@@ -263,6 +264,44 @@ public static class AdminEndpoints
                 }
 
                 var model = new DeliveryModel(delivery);
+
+                if (!string.IsNullOrEmpty(grafana.CurrentValue.Url))
+                {
+                    // Round deliveredAt to the previous minute
+                    var deliveredAt = model.DeliveredAt.UtcDateTime;
+                    deliveredAt = deliveredAt.AddSeconds(-deliveredAt.Second).AddMilliseconds(-deliveredAt.Millisecond);
+
+                    // Query +/- 5 minutes around the rounded delivery time
+                    const string GrafanaTimestampFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fffK";
+                    var window = TimeSpan.FromMinutes(5);
+                    var from = deliveredAt.Add(-window).ToString(GrafanaTimestampFormat, CultureInfo.InvariantCulture);
+                    var to = deliveredAt.Add(window).ToString(GrafanaTimestampFormat, CultureInfo.InvariantCulture);
+
+                    var urlBuilder = new UriBuilder(grafana.CurrentValue.Url)
+                    {
+                        Path = $"a/grafana-lokiexplore-app/explore/service/{ApplicationTelemetry.ServiceName}/logs",
+                    };
+
+                    const string FiltersParameter = "var-filters";
+
+                    var parameters = new Dictionary<string, string?>(5)
+                    {
+                        ["from"] = from,
+                        ["to"] = to,
+                        ["timezone"] = "browser",
+                        ["var-metadata"] = $"GitHub_Delivery|=|{model.DeliveryId}",
+                        [FiltersParameter] = $"service_name|=|{ApplicationTelemetry.ServiceName}",
+                    };
+
+                    model.LogsUrl = QueryHelpers.AddQueryString(urlBuilder.ToString(), parameters);
+
+                    urlBuilder.Path = "a/grafana-exploretraces-app/explore";
+
+                    parameters[FiltersParameter] = $"resource.service.name|=|{ApplicationTelemetry.ServiceName}";
+
+                    model.TracesUrl = QueryHelpers.AddQueryString(urlBuilder.ToString(), parameters);
+                    model.TracesUrl = QueryHelpers.AddQueryString(model.TracesUrl, FiltersParameter, $"span.github.webhook.delivery|=|{model.DeliveryId}");
+                }
 
                 var request = delivery.GetProperty("request");
 

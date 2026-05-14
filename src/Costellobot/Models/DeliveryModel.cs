@@ -43,5 +43,9 @@ public sealed class DeliveryModel(JsonElement delivery)
 
     public int ResponseStatusCode => Delivery.GetProperty("status_code").GetInt32();
 
+    public string? LogsUrl { get; set; }
+
+    public string? TracesUrl { get; set; }
+
     private JsonElement Delivery { get; set; } = delivery;
 }
