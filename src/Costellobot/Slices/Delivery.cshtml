@@ -47,27 +47,42 @@
           <code id="url">@(Model.RequestUrl)</code>
         </td>
       </tr>
-      @if (!string.IsNullOrWhiteSpace(Model.LogsUrl))
+      @if (!string.IsNullOrWhiteSpace(Model.LogsUrl) ||
+           !string.IsNullOrWhiteSpace(Model.MetricsUrl) ||
+           !string.IsNullOrWhiteSpace(Model.ProfilesUrl) ||
+           !string.IsNullOrWhiteSpace(Model.TracesUrl))
       {
         <tr>
-          <td>Logs</td>
+          <td>Telemetry</td>
           <td>
-            <a href="@(Model.LogsUrl)" target="_blank" rel="noopener">
-              <span class="fa-solid fa-book fa-fw" aria-hidden="true"></span>
-              View logs for this delivery
-            </a>
-          </td>
-        </tr>
-      }
-      @if (!string.IsNullOrWhiteSpace(Model.TracesUrl))
-      {
-        <tr>
-          <td>Traces</td>
-          <td>
-            <a href="@(Model.TracesUrl)" target="_blank" rel="noopener">
-              <span class="fa-solid fa-chart-gantt fa-fw" aria-hidden="true"></span>
-              View traces for this delivery
-            </a>
+            @if (!string.IsNullOrWhiteSpace(Model.LogsUrl))
+            {
+              <a href="@(Model.LogsUrl)" target="_blank" rel="noopener">
+                <span class="fa-solid fa-book fa-fw" aria-hidden="true"></span>
+                Logs
+              </a>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.MetricsUrl))
+            {
+              <a href="@(Model.MetricsUrl)" target="_blank" rel="noopener">
+                <span class="fa-solid fa-gauge-high fa-fw" aria-hidden="true"></span>
+                Metrics
+              </a>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.TracesUrl))
+            {
+              <a href="@(Model.TracesUrl)" target="_blank" rel="noopener">
+                <span class="fa-solid fa-chart-gantt fa-fw" aria-hidden="true"></span>
+                Traces
+              </a>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.ProfilesUrl))
+            {
+              <a href="@(Model.ProfilesUrl)" target="_blank" rel="noopener">
+                <span class="fa-solid fa-fire fa-fw" aria-hidden="true"></span>
+                Profiles
+              </a>
+            }
           </td>
         </tr>
       }

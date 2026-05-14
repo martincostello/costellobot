@@ -140,6 +140,7 @@ public static class GitHubExtensions
         services.AddSingleton<GitHubMessageProcessor>();
         services.AddSingleton<GitHubWebhookQueue>();
         services.AddSingleton<GitHubWebhookService>();
+        services.AddSingleton<GrafanaLinkHelper>();
 
         services.AddTransient<GitCommitAnalyzer>();
         services.AddTransient<GitHubWebhookDispatcher>();
