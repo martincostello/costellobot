@@ -267,6 +267,9 @@ public static class AdminEndpoints
 
                 if (!string.IsNullOrEmpty(grafana.CurrentValue.Url))
                 {
+                    // TODO Get from the runtime resource attributes instead of hardcoding
+                    var serviceName = "costellobot-martincostello";
+
                     // Round deliveredAt to the previous minute
                     var deliveredAt = model.DeliveredAt.UtcDateTime;
                     deliveredAt = new(deliveredAt.Ticks - (deliveredAt.Ticks % TimeSpan.TicksPerMinute), deliveredAt.Kind);
@@ -279,7 +282,7 @@ public static class AdminEndpoints
 
                     var urlBuilder = new UriBuilder(grafana.CurrentValue.Url)
                     {
-                        Path = $"a/grafana-lokiexplore-app/explore/service/{ApplicationTelemetry.ServiceName}/logs",
+                        Path = $"a/grafana-lokiexplore-app/explore/service/{serviceName}/logs",
                     };
 
                     const string FiltersParameter = "var-filters";
@@ -290,14 +293,14 @@ public static class AdminEndpoints
                         ["to"] = to,
                         ["timezone"] = "browser",
                         ["var-metadata"] = $"GitHub_Delivery|=|{model.DeliveryId}",
-                        [FiltersParameter] = $"service_name|=|{ApplicationTelemetry.ServiceName}",
+                        [FiltersParameter] = $"service_name|=|{serviceName}",
                     };
 
                     model.LogsUrl = QueryHelpers.AddQueryString(urlBuilder.ToString(), parameters);
 
                     urlBuilder.Path = "a/grafana-exploretraces-app/explore";
 
-                    parameters[FiltersParameter] = $"resource.service.name|=|{ApplicationTelemetry.ServiceName}";
+                    parameters[FiltersParameter] = $"resource.service.name|=|{serviceName}";
 
                     model.TracesUrl = QueryHelpers.AddQueryString(urlBuilder.ToString(), parameters);
                     model.TracesUrl = QueryHelpers.AddQueryString(model.TracesUrl, FiltersParameter, $"span.github.webhook.delivery|=|{model.DeliveryId}");
