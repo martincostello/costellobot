@@ -2422,6 +2422,84 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     }
 
     [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_NuGet_Dependency_From_Private_Feed()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/nuget/opentelemetry.instrumentation.aspnetcore-1.x";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(ecosystem);
+
+        string[] owners = ["opentelemetry"];
+
+        registry.AreOwnersTrustedAsync(owners, CancellationToken)
+                .Returns(Task.FromResult(true));
+
+        registry.GetPackageOwnersAsync(repository, "OpenTelemetry.Instrumentation.AspNetCore", "1.15.3-alpha.0.171", CancellationToken)
+                .Returns(Task.FromResult<IReadOnlyList<string>>(owners));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [ecosystem] = ["aspnet", "Microsoft"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "4d4a1c2c58b84bcb0cddbf28183d0b52e690ae6a";
+        var commitMessage = """
+                            Bump dependency OpenTelemetry.Instrumentation.AspNetCore to 1.15.3-al…
+                            …pha.0.171
+
+                            | datasource | package                                  | from               | to                 |
+                            | ---------- | ---------------------------------------- | ------------------ | ------------------ |
+                            | nuget      | OpenTelemetry.Instrumentation.AspNetCore | 1.15.3-alpha.0.160 | 1.15.3-alpha.0.171 |
+
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actualEcosystem.ShouldBe(ecosystem);
+
+        trust.ShouldContainKeyAndValue("OpenTelemetry.Instrumentation.AspNetCore", (true, "1.15.3-alpha.0.171"));
+        trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Digest_Update_For_Dockerfile()
     {
         // Arrange

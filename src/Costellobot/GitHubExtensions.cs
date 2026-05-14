@@ -153,6 +153,7 @@ public static class GitHubExtensions
         services.AddPackageRegistry<GitSubmodulePackageRegistry>();
         services.AddPackageRegistry<NpmPackageRegistry>("Npm");
         services.AddPackageRegistry<NuGetPackageRegistry>("NuGet");
+        services.AddPackageRegistry<NuGetPackageRegistry>("MyGet-OpenTelemetry");
         services.AddPackageRegistry<RubyGemsPackageRegistry>("RubyGems");
 
         services.AddSingleton<BadgeService>();

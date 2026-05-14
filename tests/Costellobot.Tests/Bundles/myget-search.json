@@ -1,0 +1,418 @@
+{
+  "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
+  "id": "myget-search",
+  "version": 1,
+  "comment": "HTTP bundle for MyGet package search.",
+  "items": [
+    {
+      "comment": "MyGet service index",
+      "uri": "https://www.myget.org/F/opentelemetry/api/v3/index.json",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "version": "3.0.0",
+        "resources": [
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/autocomplete",
+            "@type": "SearchAutocompleteService",
+            "comment": "Autocomplete endpoint of NuGet Search service."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/autocomplete",
+            "@type": "SearchAutocompleteService/3.0.0-beta",
+            "comment": "Autocomplete endpoint of NuGet Search service."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/autocomplete",
+            "@type": "SearchAutocompleteService/3.0.0-rc",
+            "comment": "Autocomplete endpoint of NuGet Search service."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/query",
+            "@type": "SearchQueryService",
+            "comment": "Query endpoint of NuGet Search service."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/query",
+            "@type": "SearchQueryService/3.0.0-beta",
+            "comment": "Query endpoint of NuGet Search service."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/query",
+            "@type": "SearchQueryService/3.0.0-rc",
+            "comment": "Query endpoint of NuGet Search service."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/",
+            "@type": "RegistrationsBaseUrl",
+            "comment": "Base URL of Azure storage where NuGet package registration info is stored."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/",
+            "@type": "RegistrationsBaseUrl/3.0.0-beta",
+            "comment": "Base URL of Azure storage where NuGet package registration info is stored."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/",
+            "@type": "RegistrationsBaseUrl/3.0.0-rc",
+            "comment": "Base URL of Azure storage where NuGet package registration info is stored."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/",
+            "@type": "RegistrationsBaseUrl/3.4.0",
+            "comment": "Base URL of Azure storage where NuGet package registration info is stored in GZIP format."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/",
+            "@type": "RegistrationsBaseUrl/3.6.0",
+            "comment": "Base URL of Azure storage where NuGet package registration info is stored in GZIP format. This base URL includes SemVer 2.0.0 packages."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/",
+            "@type": "RegistrationsBaseUrl/Versioned",
+            "clientVersion": "4.3.0-alpha",
+            "comment": "Base URL of Azure storage where NuGet package registration info is stored in GZIP format. This base URL includes SemVer 2.0.0 packages."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/{id-lower}/index.json",
+            "@type": "PackageDisplayMetadataUriTemplate",
+            "comment": "URI template used by NuGet Client to construct display metadata for Packages using ID."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/{id-lower}/index.json",
+            "@type": "PackageDisplayMetadataUriTemplate/3.0.0-beta",
+            "comment": "URI template used by NuGet Client to construct display metadata for Packages using ID."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/{id-lower}/index.json",
+            "@type": "PackageDisplayMetadataUriTemplate/3.0.0-rc",
+            "comment": "URI template used by NuGet Client to construct display metadata for Packages using ID."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/{id-lower}/{version-lower}.json",
+            "@type": "PackageVersionDisplayMetadataUriTemplate",
+            "comment": "URI template used by NuGet Client to construct display metadata for Packages using ID, Version."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/{id-lower}/{version-lower}.json",
+            "@type": "PackageVersionDisplayMetadataUriTemplate/3.0.0-beta",
+            "comment": "URI template used by NuGet Client to construct display metadata for Packages using ID, Version."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/{id-lower}/{version-lower}.json",
+            "@type": "PackageVersionDisplayMetadataUriTemplate/3.0.0-rc",
+            "comment": "URI template used by NuGet Client to construct display metadata for Packages using ID, Version."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/flatcontainer/",
+            "@type": "PackageBaseAddress/3.0.0",
+            "comment": "Base URL of Azure storage where NuGet package registration info for DNX is stored."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/repository-signatures/index.json",
+            "@type": "RepositorySignatures/4.7.0",
+            "comment": "The endpoint for discovering information about this package source's repository signatures."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v2/symbolpackage/",
+            "@type": "SymbolPackagePublish/4.9.0",
+            "comment": "URI template used by NuGet Client to push the symbol package."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v2",
+            "@type": "LegacyGallery",
+            "comment": "Legacy gallery using the V2 protocol."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v2",
+            "@type": "LegacyGallery/2.0.0",
+            "comment": "Legacy gallery using the V2 protocol."
+          },
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v2/package",
+            "@type": "PackagePublish/2.0.0",
+            "comment": "Legacy gallery publish endpoint using the V2 protocol."
+          }
+        ],
+        "@context": {
+          "@vocab": "http://schema.nuget.org/schema#",
+          "comment": "http://www.w3.org/2000/01/rdf-schema#comment"
+        }
+      }
+    },
+    {
+      "comment": "MyGet search result for OpenTelemetry.Instrumentation.AspNetCore",
+      "uri": "https://www.myget.org/F/opentelemetry/api/v3/query?prerelease=true&q=PackageId%3AOpenTelemetry.Instrumentation.AspNetCore&semVerLevel=2.0.0&take=1",
+      "contentFormat": "json",
+      "contentJson": {
+        "@context": { "@vocab": "http://schema.nuget.org/schema#" },
+        "totalHits": 10001,
+        "index": "opentelemetry",
+        "lastReopen": "2026-05-14T10:08:21.9934227Z",
+        "data": [
+          {
+            "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.3-alpha.0.171.json",
+            "@type": "Package",
+            "registration": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/index.json",
+            "id": "OpenTelemetry.Instrumentation.AspNetCore",
+            "description": "ASP.NET Core instrumentation for OpenTelemetry .NET",
+            "summary": "ASP.NET Core instrumentation for OpenTelemetry .NET",
+            "title": "OpenTelemetry.Instrumentation.AspNetCore",
+            "iconUrl": "",
+            "licenseUrl": null,
+            "projectUrl": "https://opentelemetry.io/",
+            "tags": [ "Observability", "OpenTelemetry", "Monitoring", "Telemetry", "distributed-tracing", "AspNetCore" ],
+            "authors": [ "OpenTelemetry", "Authors" ],
+            "totaldownloads": 26,
+            "verified": true,
+            "version": "1.15.3-alpha.0.171",
+            "versions": [
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.6.0.json",
+                "version": "1.6.0",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.7.0.json",
+                "version": "1.7.0",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.7.1.json",
+                "version": "1.7.1",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.8.0.json",
+                "version": "1.8.0",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.8.1.json",
+                "version": "1.8.1",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.9.0.json",
+                "version": "1.9.0",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.10.0.json",
+                "version": "1.10.0",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.10.1.json",
+                "version": "1.10.1",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.11.0.json",
+                "version": "1.11.0",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.11.1.json",
+                "version": "1.11.1",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.12.0.json",
+                "version": "1.12.0",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.13.0.json",
+                "version": "1.13.0",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.14.0.json",
+                "version": "1.14.0",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.0.json",
+                "version": "1.15.0",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.1-alpha.0.110.json",
+                "version": "1.15.1-alpha.0.110",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.1-alpha.0.111.json",
+                "version": "1.15.1-alpha.0.111",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.1-alpha.0.112.json",
+                "version": "1.15.1-alpha.0.112",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.1.json",
+                "version": "1.15.1",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.4.json",
+                "version": "1.15.2-alpha.0.4",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.14.json",
+                "version": "1.15.2-alpha.0.14",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.32.json",
+                "version": "1.15.2-alpha.0.32",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.39.json",
+                "version": "1.15.2-alpha.0.39",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.67.json",
+                "version": "1.15.2-alpha.0.67",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.77.json",
+                "version": "1.15.2-alpha.0.77",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.78.json",
+                "version": "1.15.2-alpha.0.78",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.86.json",
+                "version": "1.15.2-alpha.0.86",
+                "downloads": 1
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.102.json",
+                "version": "1.15.2-alpha.0.102",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.103.json",
+                "version": "1.15.2-alpha.0.103",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.106.json",
+                "version": "1.15.2-alpha.0.106",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.117.json",
+                "version": "1.15.2-alpha.0.117",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.118.json",
+                "version": "1.15.2-alpha.0.118",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.120.json",
+                "version": "1.15.2-alpha.0.120",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.143.json",
+                "version": "1.15.2-alpha.0.143",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.155.json",
+                "version": "1.15.2-alpha.0.155",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.162.json",
+                "version": "1.15.2-alpha.0.162",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2-alpha.0.174.json",
+                "version": "1.15.2-alpha.0.174",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.2.json",
+                "version": "1.15.2",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.3-alpha.0.47.json",
+                "version": "1.15.3-alpha.0.47",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.3-alpha.0.66.json",
+                "version": "1.15.3-alpha.0.66",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.3-alpha.0.71.json",
+                "version": "1.15.3-alpha.0.71",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.3-alpha.0.78.json",
+                "version": "1.15.3-alpha.0.78",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.3-alpha.0.90.json",
+                "version": "1.15.3-alpha.0.90",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.3-alpha.0.99.json",
+                "version": "1.15.3-alpha.0.99",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.3-alpha.0.118.json",
+                "version": "1.15.3-alpha.0.118",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.3-alpha.0.160.json",
+                "version": "1.15.3-alpha.0.160",
+                "downloads": 0
+              },
+              {
+                "@id": "https://www.myget.org/F/opentelemetry/api/v3/registration1/opentelemetry.instrumentation.aspnetcore/1.15.3-alpha.0.171.json",
+                "version": "1.15.3-alpha.0.171",
+                "downloads": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "comment": "MyGet search result for foo",
+      "uri": "https://www.myget.org/F/opentelemetry/api/v3/query?prerelease=true&q=PackageId%3Afoo&semVerLevel=2.0.0&take=1",
+      "contentFormat": "json",
+      "contentJson": {
+        "@context": { "@vocab": "http://schema.nuget.org/schema#" },
+        "totalHits": 10000,
+        "index": "opentelemetry",
+        "lastReopen": "2026-05-14T10:07:28.5518592Z",
+        "data": []
+      }
+    }
+  ]
+}
