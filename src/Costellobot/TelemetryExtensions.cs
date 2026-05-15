@@ -30,6 +30,7 @@ public static class TelemetryExtensions
                           .AddHttpClientInstrumentation()
                           .AddProcessInstrumentation()
                           .AddMeter(ApplicationTelemetry.ServiceName)
+                          .AddMeter("Microsoft.Extensions.Caching.Memory.MemoryCache")
                           .AddMeter("Polly")
                           .AddMeter("System.Runtime")
                           .SetExemplarFilter(ExemplarFilterType.TraceBased);
