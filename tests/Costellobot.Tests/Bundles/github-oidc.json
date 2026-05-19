@@ -1,0 +1,69 @@
+{
+  "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
+  "id": "github-oidc",
+  "version": 1,
+  "comment": "HTTP bundle for GitHub Actions OIDC.",
+  "items": [
+    {
+      "comment": "GitHub Actions OIDC configuration",
+      "uri": "https://token.actions.githubusercontent.local/.well-known/openid-configuration",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "issuer": "https://token.actions.githubusercontent.local",
+        "jwks_uri": "https://token.actions.githubusercontent.local/.well-known/jwks",
+        "subject_types_supported": [
+          "public",
+          "pairwise"
+        ],
+        "response_types_supported": [
+          "id_token"
+        ],
+        "claims_supported": [
+          "sub",
+          "aud",
+          "exp",
+          "iat",
+          "iss",
+          "jti",
+          "nbf",
+          "ref",
+          "sha",
+          "repository",
+          "repository_id",
+          "repository_owner",
+          "repository_owner_id",
+          "enterprise",
+          "enterprise_id",
+          "run_id",
+          "run_number",
+          "run_attempt",
+          "actor",
+          "actor_id",
+          "workflow",
+          "workflow_ref",
+          "workflow_sha",
+          "head_ref",
+          "base_ref",
+          "event_name",
+          "ref_type",
+          "ref_protected",
+          "environment",
+          "environment_node_id",
+          "job_workflow_ref",
+          "job_workflow_sha",
+          "repository_visibility",
+          "runner_environment",
+          "issuer_scope",
+          "check_run_id"
+        ],
+        "id_token_signing_alg_values_supported": [
+          "RS256"
+        ],
+        "scopes_supported": [
+          "openid"
+        ]
+      }
+    }
+  ]
+}

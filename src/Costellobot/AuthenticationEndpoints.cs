@@ -8,9 +8,13 @@ using MartinCostello.Costellobot.Authorization;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace MartinCostello.Costellobot;
 
@@ -27,6 +31,8 @@ public static class AuthenticationEndpoints
     private const string SignInPath = "/sign-in";
     private const string SignOutPath = "/sign-out";
 
+    private const string GitHubOidcAuthenticationScheme = "GitHub-OIDC";
+
     private const string GitHubAvatarClaim = "urn:github:avatar";
     private const string GitHubProfileClaim = "urn:github:profile";
 
@@ -36,7 +42,7 @@ public static class AuthenticationEndpoints
     {
         services
             .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-            .AddCookie(options =>
+            .AddCookie((options) =>
             {
                 options.AccessDeniedPath = DeniedPath;
                 options.Cookie.Name = CookiePrefix + "authentication";
@@ -46,7 +52,42 @@ public static class AuthenticationEndpoints
                 options.SlidingExpiration = true;
             })
             .AddGitHub()
-            .Services
+            .AddJwtBearer(GitHubOidcAuthenticationScheme);
+
+        services
+            .AddOptions<JwtBearerOptions>(GitHubOidcAuthenticationScheme)
+            .Configure<IOptions<GitHubOptions>, HttpClient>((options, configuration, httpClient) =>
+            {
+                var oidc = configuration.Value.OpenIdConnect;
+
+                options.ConfigurationManager =
+                    new ConfigurationManager<OpenIdConnectConfiguration>(
+                        oidc.MetadataUri,
+                        new OpenIdConnectConfigurationRetriever(),
+                        httpClient);
+
+                options.TokenValidationParameters = new()
+                {
+                    ClockSkew = oidc.ClockSkew,
+                    RequireAudience = true,
+                    RequireExpirationTime = true,
+                    RequireSignedTokens = true,
+                    ValidateAudience = true,
+                    ValidateIssuer = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidateLifetime = true,
+                    ValidAudiences = oidc.Audiences,
+                    ValidIssuers = [oidc.Issuer],
+                    ValidTypes = ["JWT"],
+                };
+            });
+
+        services.AddAuthorizationBuilder()
+            .AddPolicy(
+                GitHubOidcAuthenticationScheme,
+                (policy) => policy.RequireClaim(GitHubOidcClaims.RepositoryOwner, "martincostello"));
+
+        services
             .AddOptions<GitHubAuthenticationOptions>(GitHubAuthenticationDefaults.AuthenticationScheme)
             .Configure<IOptions<GitHubOptions>>((options, configuration) =>
             {
@@ -197,6 +238,37 @@ public static class AuthenticationEndpoints
                 [CookieAuthenticationDefaults.AuthenticationScheme]);
         });
 
+        builder.MapGet("/github-oidc", (ClaimsPrincipal user) =>
+        {
+            // TODO Make configurable
+            if (user.FindFirstValue(GitHubOidcClaims.Ref) != "refs/heads/main" ||
+                user.FindFirstValue(GitHubOidcClaims.Repository) != "martincostello/example-repo" ||
+                user.FindFirstValue(ClaimTypes.NameIdentifier) != "repo:martincostello/example-repo:ref:refs/heads/main")
+            {
+                return Results.Forbid();
+            }
+
+            return Results.Json(new
+            {
+                audience = user.FindFirstValue(JwtRegisteredClaimNames.Aud),
+                issuer = user.FindFirstValue(JwtRegisteredClaimNames.Iss),
+                repository = user.FindFirstValue(GitHubOidcClaims.Repository),
+                @ref = user.FindFirstValue(GitHubOidcClaims.Ref),
+                subject = user.FindFirstValue(ClaimTypes.NameIdentifier),
+            });
+        }).RequireAuthorization(new AuthorizeAttribute()
+        {
+            AuthenticationSchemes = GitHubOidcAuthenticationScheme,
+            Policy = GitHubOidcAuthenticationScheme,
+        });
+
         return builder;
+    }
+
+    private static class GitHubOidcClaims
+    {
+        public const string Repository = "repository";
+        public const string RepositoryOwner = "repository_owner";
+        public const string Ref = "ref";
     }
 }

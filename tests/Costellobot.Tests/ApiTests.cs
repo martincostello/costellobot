@@ -4,11 +4,13 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using NuGet.Versioning;
 using static MartinCostello.Costellobot.Builders.GitHubFixtures;
 
@@ -171,5 +173,29 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         var response = await actual.Content.ReadFromJsonAsync<ProblemDetails>(CancellationToken);
         response.ShouldNotBeNull();
         response.Status.ShouldBe(StatusCodes.Status404NotFound);
+    }
+
+    [Fact]
+    public async Task Can_Authenticate_With_GitHub_Oidc()
+    {
+        // Arrange
+        var key = JsonWebKeyConverter.ConvertFromRSASecurityKey(CertificateFixture.GetSecurityKey());
+
+        var keySet = new JsonWebKeySet();
+        keySet.Keys.Add(key);
+
+        await Fixture.Interceptor.RegisterBundleFromResourceStreamAsync("github-oidc", cancellationToken: CancellationToken);
+        Fixture.Interceptor.RegisterGet("https://token.actions.githubusercontent.local/.well-known/jwks", JsonSerializer.Serialize(keySet));
+
+        using var client = Fixture.CreateHttpClientForApp();
+        client.DefaultRequestHeaders.Authorization = new("Bearer", CertificateFixture.CreateToken());
+
+        // Act
+        var actual = await client.GetFromJsonAsync<JsonElement>("/github-oidc", CancellationToken);
+
+        // Assert
+        actual.TryGetProperty("subject", out var subject).ShouldBeTrue();
+        subject.ValueKind.ShouldBe(JsonValueKind.String);
+        subject.GetString().ShouldBe("repo:martincostello/example-repo:ref:refs/heads/main");
     }
 }

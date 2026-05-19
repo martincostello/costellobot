@@ -21,6 +21,8 @@ public sealed class GitHubOptions
 
     public string OAuthId { get; set; } = string.Empty;
 
+    public GitHubOpenIdConnectOptions OpenIdConnect { get; set; } = new();
+
     public IList<string> Scopes { get; set; } = [];
 
     public string WebhookSecret { get; set; } = string.Empty;
