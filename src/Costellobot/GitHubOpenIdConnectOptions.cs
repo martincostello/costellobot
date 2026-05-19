@@ -9,7 +9,5 @@ public sealed class GitHubOpenIdConnectOptions
 
     public TimeSpan ClockSkew { get; set; } = TimeSpan.FromMinutes(1);
 
-    public string Issuer { get; set; } = string.Empty;
-
     public string MetadataUri { get; set; } = string.Empty;
 }

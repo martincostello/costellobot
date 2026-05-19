@@ -1,0 +1,17 @@
+﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
+// Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+
+namespace MartinCostello.Costellobot.Authorization;
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+public sealed class GitHubOidcAttribute : AuthorizeAttribute
+{
+    public GitHubOidcAttribute()
+        : base(AuthenticationEndpoints.GitHubOidcPolicyName)
+    {
+        AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme;
+    }
+}

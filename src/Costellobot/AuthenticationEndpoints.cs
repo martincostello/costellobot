@@ -21,6 +21,7 @@ namespace MartinCostello.Costellobot;
 public static class AuthenticationEndpoints
 {
     internal const string AdminPolicyName = "costellobot-admin";
+    internal const string GitHubOidcPolicyName = "GitHub-OIDC";
 
     private const string ApplicationName = "costellobot";
     private const string CookiePrefix = ".costellobot.";
@@ -30,8 +31,6 @@ public static class AuthenticationEndpoints
     private const string RootPath = "/";
     private const string SignInPath = "/sign-in";
     private const string SignOutPath = "/sign-out";
-
-    private const string GitHubOidcAuthenticationScheme = "GitHub-OIDC";
 
     private const string GitHubAvatarClaim = "urn:github:avatar";
     private const string GitHubProfileClaim = "urn:github:profile";
@@ -52,10 +51,10 @@ public static class AuthenticationEndpoints
                 options.SlidingExpiration = true;
             })
             .AddGitHub()
-            .AddJwtBearer(GitHubOidcAuthenticationScheme);
+            .AddJwtBearer();
 
         services
-            .AddOptions<JwtBearerOptions>(GitHubOidcAuthenticationScheme)
+            .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
             .Configure<IOptions<GitHubOptions>, HttpClient>((options, configuration, httpClient) =>
             {
                 var oidc = configuration.Value.OpenIdConnect;
@@ -77,14 +76,13 @@ public static class AuthenticationEndpoints
                     ValidateIssuerSigningKey = true,
                     ValidateLifetime = true,
                     ValidAudiences = oidc.Audiences,
-                    ValidIssuers = [oidc.Issuer],
                     ValidTypes = ["JWT"],
                 };
             });
 
         services.AddAuthorizationBuilder()
             .AddPolicy(
-                GitHubOidcAuthenticationScheme,
+                GitHubOidcPolicyName,
                 (policy) => policy.RequireClaim(GitHubOidcClaims.RepositoryOwner, "martincostello"));
 
         services
@@ -256,11 +254,7 @@ public static class AuthenticationEndpoints
                 @ref = user.FindFirstValue(GitHubOidcClaims.Ref),
                 subject = user.FindFirstValue(ClaimTypes.NameIdentifier),
             });
-        }).RequireAuthorization(new AuthorizeAttribute()
-        {
-            AuthenticationSchemes = GitHubOidcAuthenticationScheme,
-            Policy = GitHubOidcAuthenticationScheme,
-        });
+        }).RequireAuthorization(new GitHubOidcAttribute());
 
         return builder;
     }
