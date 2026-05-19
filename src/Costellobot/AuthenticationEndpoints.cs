@@ -80,7 +80,8 @@ public static class AuthenticationEndpoints
                 };
             });
 
-        services.AddAuthorizationBuilder()
+        services
+            .AddAuthorizationBuilder()
             .AddPolicy(
                 GitHubOidcPolicyName,
                 (policy) => policy.RequireClaim(GitHubOidcClaims.RepositoryOwner, "martincostello"));
