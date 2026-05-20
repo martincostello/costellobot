@@ -59,7 +59,7 @@ public class NuGetPackageRegistryTests(ITestOutputHelper outputHelper)
             .RegisterMyGetBundleAsync(TestContext.Current.CancellationToken);
 
         using var client = options.CreateHttpClient();
-        client.BaseAddress = new Uri("https://www.myget.org/F/opentelemetry/api/v3/index.json");
+        client.BaseAddress = new Uri("https://www.myget.org/F/opentelemetry/api/v3/");
 
         using var cache = new ApplicationCache();
 
@@ -84,14 +84,14 @@ public class NuGetPackageRegistryTests(ITestOutputHelper outputHelper)
     [InlineData("https://api.nuget.org/v3/", new string[] { "microsoft" }, false)]
     [InlineData("https://f.feedz.io", new string[] { "foo" }, false)]
     [InlineData("https://f.feedz.io", new string[] { "martincostello" }, false)]
-    [InlineData("https://f.feedz.io/martincostello/costellobot/nuget/index.json", new string[0], false)]
-    [InlineData("https://f.feedz.io/martincostello/costellobot/nuget/index.json", new string[] { "foo" }, false)]
-    [InlineData("https://f.feedz.io/martincostello/costellobot/nuget/index.json", new string[] { "martincostello" }, true)]
+    [InlineData("https://f.feedz.io/martincostello/costellobot/nuget/", new string[0], false)]
+    [InlineData("https://f.feedz.io/martincostello/costellobot/nuget/", new string[] { "foo" }, false)]
+    [InlineData("https://f.feedz.io/martincostello/costellobot/nuget/", new string[] { "martincostello" }, true)]
     [InlineData("https://www.myget.org", new string[] { "foo" }, false)]
     [InlineData("https://www.myget.org", new string[] { "opentelemetry" }, false)]
-    [InlineData("https://www.myget.org/F/opentelemetry/api/v3/index.json", new string[0], false)]
-    [InlineData("https://www.myget.org/F/opentelemetry/api/v3/index.json", new string[] { "foo" }, false)]
-    [InlineData("https://www.myget.org/F/opentelemetry/api/v3/index.json", new string[] { "opentelemetry" }, true)]
+    [InlineData("https://www.myget.org/F/opentelemetry/api/v3/", new string[0], false)]
+    [InlineData("https://www.myget.org/F/opentelemetry/api/v3/", new string[] { "foo" }, false)]
+    [InlineData("https://www.myget.org/F/opentelemetry/api/v3/", new string[] { "opentelemetry" }, true)]
     public async Task Owners_Trusted_For_Private_Feeds(string baseAddress, string[] owners, bool expected)
     {
         // Arrange
