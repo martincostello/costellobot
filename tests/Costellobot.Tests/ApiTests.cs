@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Infrastructure;
+using MartinCostello.Costellobot.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -176,7 +177,7 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
     }
 
     [Fact]
-    public async Task Can_Authenticate_With_GitHub_Oidc()
+    public async Task Can_Request_Token_With_GitHub_Oidc_Authentication()
     {
         // Arrange
         var key = JsonWebKeyConverter.ConvertFromRSASecurityKey(CertificateFixture.GetSecurityKey());
@@ -187,15 +188,22 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         await Fixture.Interceptor.RegisterBundleFromResourceStreamAsync("github-oidc", cancellationToken: CancellationToken);
         Fixture.Interceptor.RegisterGet("https://token.actions.githubusercontent.local/.well-known/jwks", JsonSerializer.Serialize(keySet));
 
+        var token = CertificateFixture.CreateToken(repository: "martincostello/costellobot");
+        var request = new GitHubTokenRequest() { Profile = "benchmarks" };
+
         using var client = Fixture.CreateHttpClientForApp();
-        client.DefaultRequestHeaders.Authorization = new("Bearer", CertificateFixture.CreateToken());
+        client.DefaultRequestHeaders.Authorization = new("Bearer", token);
 
         // Act
-        var actual = await client.GetFromJsonAsync<JsonElement>("/github-oidc", CancellationToken);
+        using var actual = await client.PostAsJsonAsync("/github-oidc", request, CancellationToken);
 
         // Assert
-        actual.TryGetProperty("subject", out var subject).ShouldBeTrue();
+        actual.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var response = await actual.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
+
+        response.TryGetProperty("token", out var subject).ShouldBeTrue();
         subject.ValueKind.ShouldBe(JsonValueKind.String);
-        subject.GetString().ShouldBe("repo:martincostello/example-repo:ref:refs/heads/main");
+        subject.GetString().ShouldBe("costellobot-benchmarks-write");
     }
 }

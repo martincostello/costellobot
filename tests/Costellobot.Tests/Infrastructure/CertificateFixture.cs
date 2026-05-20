@@ -13,7 +13,12 @@ public static class CertificateFixture
 {
     private static X509Certificate2? _certificate;
 
-    public static string CreateToken()
+    public static string CreateToken(
+        string repository = "martincostello/example-repo",
+        string repositoryOwner = "martincostello",
+        string reference = "refs/heads/main",
+        string? subject = null,
+        Action<List<Claim>>? configureClaims = null)
     {
         var key = GetSecurityKey();
 
@@ -22,15 +27,17 @@ public static class CertificateFixture
         var notBefore = utcNow.AddMinutes(-1);
         var expiresAt = utcNow.AddMinutes(1);
 
-        Claim[] claims =
+        List<Claim> claims =
         [
-            new(JwtRegisteredClaimNames.Sub, "repo:martincostello/example-repo:ref:refs/heads/main"),
-            new("ref", "refs/heads/main"),
-            new("repository", "martincostello/example-repo"),
-            new("repository_owner", "martincostello"),
+            new(JwtRegisteredClaimNames.Sub, subject ?? $"repo:{repository}:ref:{reference}"),
+            new("ref", reference),
+            new("repository", repository),
+            new("repository_owner", repositoryOwner),
         ];
 
-        var subject = new ClaimsIdentity(claims);
+        configureClaims?.Invoke(claims);
+
+        var identity = new ClaimsIdentity(claims);
 
         var tokenDescriptor = new SecurityTokenDescriptor()
         {
@@ -40,7 +47,7 @@ public static class CertificateFixture
             Issuer = "https://token.actions.githubusercontent.local",
             NotBefore = notBefore,
             SigningCredentials = credentials,
-            Subject = subject,
+            Subject = identity,
         };
 
         var handler = new JsonWebTokenHandler();

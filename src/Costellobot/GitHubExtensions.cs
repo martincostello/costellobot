@@ -10,11 +10,12 @@ using Google.Apis.Calendar.v3;
 using MartinCostello.Costellobot.Authorization;
 using MartinCostello.Costellobot.DeploymentRules;
 using MartinCostello.Costellobot.Handlers;
+using MartinCostello.Costellobot.Models;
 using MartinCostello.Costellobot.Registries;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Octokit;
 using Octokit.Internal;
@@ -205,31 +206,62 @@ public static class GitHubExtensions
 
     public static IEndpointRouteBuilder MapGitHubRoutes(this IEndpointRouteBuilder builder)
     {
-        builder.MapGet("/github-oidc", async (
+        builder.MapPost("/github-oidc", async (
             ClaimsPrincipal user,
+            [FromBody] GitHubTokenRequest request,
             SecretClient client,
+            IOptionsMonitor<GitHubOptions> githubOptions,
             CancellationToken cancellationToken) =>
         {
+            var @ref = user.FindFirstValue(GitHubOidcClaims.Ref) ?? string.Empty;
+
             // TODO Make configurable
-            if (user.FindFirstValue(GitHubOidcClaims.Ref) != "refs/heads/main" ||
-                user.FindFirstValue(GitHubOidcClaims.Repository) != "martincostello/example-repo" ||
-                user.FindFirstValue(ClaimTypes.NameIdentifier) != "repo:martincostello/example-repo:ref:refs/heads/main")
+            const string RequiredReference = "refs/heads/main";
+
+            if (!string.Equals(@ref, RequiredReference, StringComparison.Ordinal))
             {
-                return Results.Forbid();
+                return Results.Problem($"Reference '{@ref}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
             }
 
+            var options = githubOptions.CurrentValue.SecretBroker;
+            var owner = user.FindFirstValue(GitHubOidcClaims.RepositoryOwner) ?? string.Empty;
+            var repository = user.FindFirstValue(GitHubOidcClaims.Repository) ?? string.Empty;
+            var subject = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+
             // TODO Make configurable
-            var secret = await client.GetSecretAsync("costellobot-public-read", cancellationToken: cancellationToken);
+            if (!string.Equals(subject, $"repo:{repository}:ref:{RequiredReference}", StringComparison.Ordinal))
+            {
+                return Results.Problem($"Subject '{subject}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
+            }
+
+            var segments = repository.Split('/');
+
+            if (segments.Length != 2)
+            {
+                return Results.Problem($"Repository '{repository}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
+            }
+
+            if (!string.Equals(segments[0], owner, StringComparison.Ordinal))
+            {
+                return Results.Problem($"Repository '{repository}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
+            }
+
+            // TODO Add support for requesting a GitHub App token for the installation with a set of permissions instead of a secret from Key Vault
+            if (!options.Repositories.TryGetValue(owner, out var repositories) ||
+                !repositories.TryGetValue(segments[1], out var profiles))
+            {
+                return Results.Problem($"Repository '{repository}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
+            }
+
+            if (!profiles.TryGetValue(request.Profile, out var tokenId) || !options.Tokens.Contains(tokenId))
+            {
+                return Results.Problem($"Profile '{request.Profile}' not found.", statusCode: StatusCodes.Status404NotFound);
+            }
+
+            var secret = await client.GetSecretAsync(tokenId, cancellationToken: cancellationToken);
             var token = secret.Value.Value;
 
-            return Results.Json(new
-            {
-                audience = user.FindFirstValue(JwtRegisteredClaimNames.Aud),
-                issuer = user.FindFirstValue(JwtRegisteredClaimNames.Iss),
-                repository = user.FindFirstValue(GitHubOidcClaims.Repository),
-                @ref = user.FindFirstValue(GitHubOidcClaims.Ref),
-                subject = user.FindFirstValue(ClaimTypes.NameIdentifier),
-            });
+            return Results.Json(new() { Token = token }, AppJsonSerializerContext.Default.GitHubTokenResponse);
         }).RequireAuthorization(new GitHubOidcAttribute());
 
         return builder;
