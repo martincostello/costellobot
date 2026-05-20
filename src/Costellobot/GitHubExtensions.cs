@@ -139,6 +139,14 @@ public static class GitHubExtensions
             });
         }
 
+        services.AddSingleton((provider) =>
+        {
+            var options = provider.GetRequiredService<IOptionsMonitor<GitHubOptions>>().CurrentValue;
+            var credentials = provider.GetRequiredService<TokenCredential>();
+
+            return new SecretClient(options.SecretBroker.VaultUri, credentials);
+        });
+
         services.TryAddSingleton<ITrustStore, AzureTableTrustStore>();
 
         services.AddSingleton<WebhookEventProcessor, GitHubEventProcessor>();
@@ -180,14 +188,6 @@ public static class GitHubExtensions
         services.AddTransient<PullRequestHandler>();
         services.AddTransient<PullRequestReviewHandler>();
         services.AddTransient<PushHandler>();
-
-        services.AddTransient((provider) =>
-        {
-            var options = provider.GetRequiredService<IOptionsMonitor<GitHubOptions>>().CurrentValue;
-            var credentials = provider.GetRequiredService<TokenCredential>();
-
-            return new SecretClient(options.SecretBroker.VaultUri, credentials);
-        });
 
         services.AddHttpClient<RepositoryDispatchHandler>((provider, client) =>
         {
