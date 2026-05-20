@@ -2,14 +2,19 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Claims;
+using Azure.Core;
+using Azure.Security.KeyVault.Secrets;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Calendar.v3;
+using MartinCostello.Costellobot.Authorization;
 using MartinCostello.Costellobot.DeploymentRules;
 using MartinCostello.Costellobot.Handlers;
 using MartinCostello.Costellobot.Registries;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Octokit;
 using Octokit.Internal;
@@ -175,6 +180,14 @@ public static class GitHubExtensions
         services.AddTransient<PullRequestReviewHandler>();
         services.AddTransient<PushHandler>();
 
+        services.AddTransient((provider) =>
+        {
+            var options = provider.GetRequiredService<IOptionsMonitor<GitHubOptions>>().CurrentValue;
+            var credentials = provider.GetRequiredService<TokenCredential>();
+
+            return new SecretClient(options.SecretBroker.VaultUri, credentials);
+        });
+
         services.AddHttpClient<RepositoryDispatchHandler>((provider, client) =>
         {
             var options = provider.GetRequiredService<IOptionsMonitor<GrafanaOptions>>().CurrentValue;
@@ -188,6 +201,38 @@ public static class GitHubExtensions
         services.AddHostedService<GitHubWebhookService>();
 
         return services;
+    }
+
+    public static IEndpointRouteBuilder MapGitHubRoutes(this IEndpointRouteBuilder builder)
+    {
+        builder.MapGet("/github-oidc", async (
+            ClaimsPrincipal user,
+            SecretClient client,
+            CancellationToken cancellationToken) =>
+        {
+            // TODO Make configurable
+            if (user.FindFirstValue(GitHubOidcClaims.Ref) != "refs/heads/main" ||
+                user.FindFirstValue(GitHubOidcClaims.Repository) != "martincostello/example-repo" ||
+                user.FindFirstValue(ClaimTypes.NameIdentifier) != "repo:martincostello/example-repo:ref:refs/heads/main")
+            {
+                return Results.Forbid();
+            }
+
+            // TODO Make configurable
+            var secret = await client.GetSecretAsync("costellobot-public-read", cancellationToken: cancellationToken);
+            var token = secret.Value.Value;
+
+            return Results.Json(new
+            {
+                audience = user.FindFirstValue(JwtRegisteredClaimNames.Aud),
+                issuer = user.FindFirstValue(JwtRegisteredClaimNames.Iss),
+                repository = user.FindFirstValue(GitHubOidcClaims.Repository),
+                @ref = user.FindFirstValue(GitHubOidcClaims.Ref),
+                subject = user.FindFirstValue(ClaimTypes.NameIdentifier),
+            });
+        }).RequireAuthorization(new GitHubOidcAttribute());
+
+        return builder;
     }
 
     private static Dictionary<string, string> GetInstallations(IConfiguration configuration)

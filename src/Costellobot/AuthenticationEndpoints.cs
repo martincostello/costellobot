@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
@@ -237,33 +236,6 @@ public static class AuthenticationEndpoints
                 [CookieAuthenticationDefaults.AuthenticationScheme]);
         });
 
-        builder.MapGet("/github-oidc", (ClaimsPrincipal user) =>
-        {
-            // TODO Make configurable
-            if (user.FindFirstValue(GitHubOidcClaims.Ref) != "refs/heads/main" ||
-                user.FindFirstValue(GitHubOidcClaims.Repository) != "martincostello/example-repo" ||
-                user.FindFirstValue(ClaimTypes.NameIdentifier) != "repo:martincostello/example-repo:ref:refs/heads/main")
-            {
-                return Results.Forbid();
-            }
-
-            return Results.Json(new
-            {
-                audience = user.FindFirstValue(JwtRegisteredClaimNames.Aud),
-                issuer = user.FindFirstValue(JwtRegisteredClaimNames.Iss),
-                repository = user.FindFirstValue(GitHubOidcClaims.Repository),
-                @ref = user.FindFirstValue(GitHubOidcClaims.Ref),
-                subject = user.FindFirstValue(ClaimTypes.NameIdentifier),
-            });
-        }).RequireAuthorization(new GitHubOidcAttribute());
-
         return builder;
-    }
-
-    private static class GitHubOidcClaims
-    {
-        public const string Repository = "repository";
-        public const string RepositoryOwner = "repository_owner";
-        public const string Ref = "ref";
     }
 }
