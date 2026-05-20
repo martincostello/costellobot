@@ -19,6 +19,7 @@ public static class CertificateFixture
         string repositoryOwner = "martincostello",
         string reference = "refs/heads/main",
         string? subject = null,
+        string? workflow = null,
         Action<List<Claim>>? configureClaims = null)
     {
         var key = GetSecurityKey();
@@ -34,6 +35,7 @@ public static class CertificateFixture
             new("ref", reference),
             new("repository", repository),
             new("repository_owner", repositoryOwner),
+            new("workflow", workflow ?? "build"),
         ];
 
         configureClaims?.Invoke(claims);

@@ -213,55 +213,60 @@ public static class GitHubExtensions
             IOptionsMonitor<GitHubOptions> githubOptions,
             CancellationToken cancellationToken) =>
         {
-            var @ref = user.FindFirstValue(GitHubOidcClaims.Ref) ?? string.Empty;
-
-            // TODO Make configurable
-            const string RequiredReference = "refs/heads/main";
-
-            if (!string.Equals(@ref, RequiredReference, StringComparison.Ordinal))
-            {
-                return Results.Problem($"Reference '{@ref}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
-            }
-
             var options = githubOptions.CurrentValue.SecretBroker;
             var owner = user.FindFirstValue(GitHubOidcClaims.RepositoryOwner) ?? string.Empty;
             var repository = user.FindFirstValue(GitHubOidcClaims.Repository) ?? string.Empty;
-            var subject = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-
-            // TODO Make configurable
-            if (!string.Equals(subject, $"repo:{repository}:ref:{RequiredReference}", StringComparison.Ordinal))
-            {
-                return Results.Problem($"Subject '{subject}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
-            }
 
             var segments = repository.Split('/');
 
             if (segments.Length != 2)
             {
-                return Results.Problem($"Repository '{repository}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
+                return ForbiddenRepository(repository);
             }
 
             if (!string.Equals(segments[0], owner, StringComparison.Ordinal))
             {
-                return Results.Problem($"Repository '{repository}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
+                return ForbiddenRepository(repository);
             }
 
-            // TODO Add support for requesting a GitHub App token for the installation with a set of permissions instead of a secret from Key Vault
             if (!options.Repositories.TryGetValue(owner, out var repositories) ||
                 !repositories.TryGetValue(segments[1], out var profiles))
             {
-                return Results.Problem($"Repository '{repository}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
+                return ForbiddenRepository(repository);
             }
 
-            if (!profiles.TryGetValue(request.Profile, out var tokenId) || !options.Tokens.Contains(tokenId))
+            if (!profiles.TryGetValue(request.Profile, out var profile))
             {
                 return Results.Problem($"Profile '{request.Profile}' not found.", statusCode: StatusCodes.Status404NotFound);
             }
 
-            var secret = await client.GetSecretAsync(tokenId, cancellationToken: cancellationToken);
-            var token = secret.Value.Value;
+            if (!profile.IsAuthorized(user))
+            {
+                return Results.Problem($"Profile '{request.Profile}' is not authorized for use in this workflow run.", statusCode: StatusCodes.Status403Forbidden);
+            }
+
+            string token;
+
+            if (!string.IsNullOrWhiteSpace(profile.AppId))
+            {
+                // TODO Get a token for the GitHub App installation instead of a secret from Key Vault
+                return Results.Problem("GitHub App token exchange is not implemented.", statusCode: StatusCodes.Status501NotImplemented);
+            }
+            else
+            {
+                if (profile.TokenId is null || !options.Tokens.Contains(profile.TokenId))
+                {
+                    return Results.Problem($"Profile '{request.Profile}' does not have a token configured.", statusCode: StatusCodes.Status404NotFound);
+                }
+
+                var secret = await client.GetSecretAsync(profile.TokenId, cancellationToken: cancellationToken);
+                token = secret.Value.Value;
+            }
 
             return Results.Json(new() { Token = token }, AppJsonSerializerContext.Default.GitHubTokenResponse);
+
+            static IResult ForbiddenRepository(string repository)
+                => Results.Problem($"Repository '{repository}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
         }).RequireAuthorization(new GitHubOidcAttribute());
 
         return builder;

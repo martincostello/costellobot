@@ -5,7 +5,11 @@ namespace MartinCostello.Costellobot;
 
 public static class GitHubOidcClaims
 {
+    public const string Environment = "environment";
+    public const string EventName = "event_name";
     public const string Repository = "repository";
     public const string RepositoryOwner = "repository_owner";
     public const string Ref = "ref";
+    public const string RefType = "ref_type";
+    public const string Workflow = "workflow";
 }
