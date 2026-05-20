@@ -11,6 +11,7 @@ namespace MartinCostello.Costellobot.Infrastructure;
 
 public static class CertificateFixture
 {
+    private static readonly string _keyId = Guid.NewGuid().ToString();
     private static X509Certificate2? _certificate;
 
     public static string CreateToken(
@@ -61,7 +62,7 @@ public static class CertificateFixture
 
         return new(privateKey)
         {
-            KeyId = Guid.NewGuid().ToString(),
+            KeyId = _keyId,
         };
     }
 
