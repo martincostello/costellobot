@@ -34,11 +34,11 @@ public sealed partial class NuGetPackageRegistry : PackageRegistry
 
         if (client.BaseAddress?.Host is "f.feedz.io")
         {
-            // Example: https://f.feedz.io/martincostello/costellobot/nuget/index.json
+            // Example: https://f.feedz.io/martincostello/costellobot/nuget/
             var segments = client.BaseAddress.Segments;
             var owner = segments.Length switch
             {
-                5 when string.Equals(segments[3], "nuget/", StringComparison.Ordinal) => segments[1].TrimEnd('/'),
+                4 when string.Equals(segments[3], "nuget/", StringComparison.Ordinal) => segments[1].TrimEnd('/'),
                 _ => string.Empty,
             };
 
@@ -50,11 +50,11 @@ public sealed partial class NuGetPackageRegistry : PackageRegistry
         }
         else if (client.BaseAddress?.Host is "www.myget.org")
         {
-            // Example https://www.myget.org/F/opentelemetry/api/v3/index.json
+            // Example https://www.myget.org/F/opentelemetry/api/v3/
             var segments = client.BaseAddress.Segments;
             var owner = segments.Length switch
             {
-                6 when string.Equals(segments[1], "F/", StringComparison.Ordinal) => segments[2].TrimEnd('/'),
+                5 when string.Equals(segments[1], "F/", StringComparison.Ordinal) => segments[2].TrimEnd('/'),
                 _ => string.Empty,
             };
 
