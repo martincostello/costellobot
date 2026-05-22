@@ -45,31 +45,25 @@ public sealed class GitHubTokenProfileOptions
             }
         }
 
-        if (!Environments.SequenceEqual(AnyArray, StringComparer.Ordinal))
+        if (!Environments.SequenceEqual(AnyArray, StringComparer.Ordinal) &&
+            (user.FindFirstValue(GitHubOidcClaims.Environment) is not { Length: > 0 } environment ||
+             !Environments.Contains(environment, StringComparer.Ordinal)))
         {
-            if (user.FindFirstValue(GitHubOidcClaims.Environment) is not { Length: > 0 } environment ||
-                !Environments.Contains(environment, StringComparer.Ordinal))
-            {
-                return false;
-            }
+            return false;
         }
 
-        if (!Events.SequenceEqual(AnyArray, StringComparer.Ordinal))
+        if (!Events.SequenceEqual(AnyArray, StringComparer.Ordinal) &&
+            (user.FindFirstValue(GitHubOidcClaims.EventName) is not { Length: > 0 } @event ||
+             !Events.Contains(@event, StringComparer.Ordinal)))
         {
-            if (user.FindFirstValue(GitHubOidcClaims.EventName) is not { Length: > 0 } @event ||
-                !Events.Contains(@event, StringComparer.Ordinal))
-            {
-                return false;
-            }
+            return false;
         }
 
-        if (!Workflows.SequenceEqual(AnyArray, StringComparer.Ordinal))
+        if (!Workflows.SequenceEqual(AnyArray, StringComparer.Ordinal) &&
+            (user.FindFirstValue(GitHubOidcClaims.Workflow) is not { Length: > 0 } workflow ||
+             !Workflows.Contains(workflow, StringComparer.Ordinal)))
         {
-            if (user.FindFirstValue(GitHubOidcClaims.Workflow) is not { Length: > 0 } workflow ||
-                !Workflows.Contains(workflow, StringComparer.Ordinal))
-            {
-                return false;
-            }
+            return false;
         }
 
         return true;
