@@ -48,13 +48,11 @@ public sealed class GitHubTokenProfileOptions
             return false;
         }
 
-        if (Workflows.Count > 0)
+        if (Workflows.Count > 0 &&
+            user.FindFirstValue(GitHubOidcClaims.Workflow) is { Length: > 0 } workflow &&
+            !Workflows.Contains(workflow, StringComparer.Ordinal))
         {
-            if (user.FindFirstValue(GitHubOidcClaims.Workflow) is { Length: > 0 } workflow &&
-                !Workflows.Contains(workflow, StringComparer.Ordinal))
-            {
-                return false;
-            }
+            return false;
         }
 
         return true;

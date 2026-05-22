@@ -21,7 +21,7 @@ internal sealed class InMemorySecretClient : SecretClient
         SecretContentType? outContentType = null,
         CancellationToken cancellationToken = default)
     {
-        var secret = new KeyVaultSecret(name, name);
+        var secret = new KeyVaultSecret(name, $"{name}-secret");
         return Task.FromResult(Response.FromValue(secret, new SecretResponse(200)));
     }
 

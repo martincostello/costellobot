@@ -188,14 +188,14 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         await Fixture.Interceptor.RegisterBundleFromResourceStreamAsync("github-oidc", cancellationToken: CancellationToken);
         Fixture.Interceptor.RegisterGet("https://token.actions.githubusercontent.local/.well-known/jwks", JsonSerializer.Serialize(keySet));
 
-        var token = CertificateFixture.CreateToken(
+        var jwt = CertificateFixture.CreateToken(
             repository: "martincostello/costellobot",
             workflow: "benchmark");
 
         var request = new GitHubTokenRequest() { Profile = "benchmarks" };
 
         using var client = Fixture.CreateHttpClientForApp();
-        client.DefaultRequestHeaders.Authorization = new("Bearer", token);
+        client.DefaultRequestHeaders.Authorization = new("Bearer", jwt);
 
         // Act
         using var actual = await client.PostAsJsonAsync("/github-oidc", request, CancellationToken);
@@ -205,9 +205,9 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
 
         var response = await actual.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
 
-        response.TryGetProperty("token", out var subject).ShouldBeTrue();
-        subject.ValueKind.ShouldBe(JsonValueKind.String);
-        subject.GetString().ShouldBe("costellobot-benchmarks-write");
+        response.TryGetProperty("token", out var token).ShouldBeTrue();
+        token.ValueKind.ShouldBe(JsonValueKind.String);
+        token.GetString().ShouldBe("costellobot-benchmarks-write-secret");
     }
 
     [Fact]
