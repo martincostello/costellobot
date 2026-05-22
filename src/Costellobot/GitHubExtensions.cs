@@ -213,6 +213,11 @@ public static class GitHubExtensions
             IOptionsMonitor<GitHubOptions> githubOptions,
             CancellationToken cancellationToken) =>
         {
+            if (request.Profile is not { Length: > 0 } profileName)
+            {
+                return Results.Problem("No profile name specified.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
             var options = githubOptions.CurrentValue.SecretBroker;
             var repository = user.FindFirstValue(GitHubOidcClaims.Repository) ?? string.Empty;
 
@@ -221,14 +226,14 @@ public static class GitHubExtensions
                 return ForbiddenRepository(repository);
             }
 
-            if (request.Profile is null || !profiles.TryGetValue(request.Profile, out var profile))
+            if (!profiles.TryGetValue(profileName, out var profile))
             {
-                return Results.Problem($"Profile '{request.Profile}' not found.", statusCode: StatusCodes.Status404NotFound);
+                return Results.Problem($"Profile '{profileName}' not found.", statusCode: StatusCodes.Status404NotFound);
             }
 
             if (!profile.IsAuthorized(user))
             {
-                return Results.Problem($"Profile '{request.Profile}' is not authorized for use in this workflow run.", statusCode: StatusCodes.Status403Forbidden);
+                return Results.Problem($"Profile '{profileName}' is not authorized for use in this workflow run.", statusCode: StatusCodes.Status403Forbidden);
             }
 
             string token;
@@ -242,7 +247,7 @@ public static class GitHubExtensions
             {
                 if (profile.TokenId is null || !options.Tokens.Contains(profile.TokenId))
                 {
-                    return Results.Problem($"Profile '{request.Profile}' does not have a token configured.", statusCode: StatusCodes.Status404NotFound);
+                    return Results.Problem($"Profile '{profileName}' does not have a token configured.", statusCode: StatusCodes.Status404NotFound);
                 }
 
                 var secret = await client.GetSecretAsync(profile.TokenId, cancellationToken: cancellationToken);
