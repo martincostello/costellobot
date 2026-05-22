@@ -221,7 +221,7 @@ public static class GitHubExtensions
                 return ForbiddenRepository(repository);
             }
 
-            if (!profiles.TryGetValue(request.Profile, out var profile))
+            if (request.Profile is null || !profiles.TryGetValue(request.Profile, out var profile))
             {
                 return Results.Problem($"Profile '{request.Profile}' not found.", statusCode: StatusCodes.Status404NotFound);
             }
