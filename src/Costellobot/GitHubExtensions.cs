@@ -214,23 +214,9 @@ public static class GitHubExtensions
             CancellationToken cancellationToken) =>
         {
             var options = githubOptions.CurrentValue.SecretBroker;
-            var owner = user.FindFirstValue(GitHubOidcClaims.RepositoryOwner) ?? string.Empty;
             var repository = user.FindFirstValue(GitHubOidcClaims.Repository) ?? string.Empty;
 
-            var segments = repository.Split('/');
-
-            if (segments.Length != 2)
-            {
-                return ForbiddenRepository(repository);
-            }
-
-            if (!string.Equals(segments[0], owner, StringComparison.Ordinal))
-            {
-                return ForbiddenRepository(repository);
-            }
-
-            if (!options.Repositories.TryGetValue(owner, out var repositories) ||
-                !repositories.TryGetValue(segments[1], out var profiles))
+            if (!options.Repositories.TryGetValue(repository, out var profiles))
             {
                 return ForbiddenRepository(repository);
             }
