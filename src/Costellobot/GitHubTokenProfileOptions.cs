@@ -7,52 +7,69 @@ namespace MartinCostello.Costellobot;
 
 public sealed class GitHubTokenProfileOptions
 {
+    public static readonly string Any = "*";
+
+    public static readonly string[] AnyArray = [Any];
+
     public string? AppId { get; set; }
 
     public Dictionary<string, string> AppPermissions { get; set; } = [];
 
-    public string? Branch { get; set; }
+    public IList<string> Branches { get; set; } = [Any];
 
-    public string? Environment { get; set; }
+    public IList<string> Environments { get; set; } = [Any];
 
-    public string? Event { get; set; }
+    public IList<string> Events { get; set; } = [Any];
 
-    public IList<string> Workflows { get; set; } = [];
+    public IList<string> Workflows { get; set; } = [Any];
 
     public string? TokenId { get; set; }
 
     public bool IsAuthorized(ClaimsPrincipal user)
     {
-        if (Branch is { Length: > 0 } branch)
+        if (!Branches.SequenceEqual(AnyArray, StringComparer.Ordinal))
         {
             if (user.FindFirstValue(GitHubOidcClaims.RefType) is not "branch")
             {
                 return false;
             }
 
-            if (!string.Equals(user.FindFirstValue(GitHubOidcClaims.Ref), $"refs/heads/{branch}", StringComparison.Ordinal))
+            if (user.FindFirstValue(GitHubOidcClaims.Ref) is not { Length: > 0 } @ref)
+            {
+                return false;
+            }
+
+            if (!Branches.Any((branch) => string.Equals(@ref, $"refs/heads/{branch}", StringComparison.Ordinal)))
             {
                 return false;
             }
         }
 
-        if (Environment is { Length: > 0 } environment &&
-            !string.Equals(user.FindFirstValue(GitHubOidcClaims.Environment), environment, StringComparison.Ordinal))
+        if (!Environments.SequenceEqual(AnyArray, StringComparer.Ordinal))
         {
-            return false;
+            if (user.FindFirstValue(GitHubOidcClaims.Environment) is not { Length: > 0 } environment ||
+                !Environments.Contains(environment, StringComparer.Ordinal))
+            {
+                return false;
+            }
         }
 
-        if (Event is { Length: > 0 } @event &&
-            !string.Equals(user.FindFirstValue(GitHubOidcClaims.EventName), @event, StringComparison.Ordinal))
+        if (!Events.SequenceEqual(AnyArray, StringComparer.Ordinal))
         {
-            return false;
+            if (user.FindFirstValue(GitHubOidcClaims.EventName) is not { Length: > 0 } @event ||
+                !Events.Contains(@event, StringComparer.Ordinal))
+            {
+                return false;
+            }
         }
 
-        if (Workflows.Count > 0 &&
-            user.FindFirstValue(GitHubOidcClaims.Workflow) is { Length: > 0 } workflow &&
-            !Workflows.Contains(workflow, StringComparer.Ordinal))
+        if (!Workflows.SequenceEqual(AnyArray, StringComparer.Ordinal))
         {
-            return false;
+            if (user.FindFirstValue(GitHubOidcClaims.Workflow) is not { Length: > 0 } workflow ||
+                !Workflows.Contains(workflow, StringComparer.Ordinal))
+            {
+                return false;
+            }
         }
 
         return true;
