@@ -211,6 +211,33 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
     }
 
     [Fact]
+    public async Task Cannot_Request_Token_Without_Authentication()
+    {
+        // Arrange
+        var key = JsonWebKeyConverter.ConvertFromRSASecurityKey(CertificateFixture.GetSecurityKey());
+
+        var keySet = new JsonWebKeySet();
+        keySet.Keys.Add(key);
+
+        await Fixture.Interceptor.RegisterBundleFromResourceStreamAsync("github-oidc", cancellationToken: CancellationToken);
+        Fixture.Interceptor.RegisterGet("https://token.actions.githubusercontent.local/.well-known/jwks", JsonSerializer.Serialize(keySet));
+
+        var request = new GitHubTokenRequest() { Profile = "benchmarks" };
+
+        using var client = Fixture.CreateHttpClientForApp();
+
+        // Act
+        using var actual = await client.PostAsJsonAsync("/github-oidc", request, CancellationToken);
+
+        // Assert
+        actual.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+
+        var response = await actual.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
+
+        response.TryGetProperty("token", out var subject).ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task Cannot_Request_Token_Without_GitHub_Oidc_Authentication()
     {
         // Arrange
