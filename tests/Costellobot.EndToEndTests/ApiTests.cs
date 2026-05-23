@@ -21,7 +21,7 @@ public class ApiTests(AppFixture fixture, ITestOutputHelper outputHelper) : EndT
 
         using var client = Fixture.CreateClient();
 
-        string jwt;
+        string token;
 
         using (var message = new HttpRequestMessage(HttpMethod.Get, requestUrl))
         {
@@ -35,9 +35,11 @@ public class ApiTests(AppFixture fixture, ITestOutputHelper outputHelper) : EndT
 
             tokenResponse.RootElement.TryGetProperty("value", out var value).ShouldBeTrue();
             value.ValueKind.ShouldBe(JsonValueKind.String);
-            jwt = value.GetString()!;
-            jwt.ShouldNotBeNullOrWhiteSpace();
+            token = value.GetString()!;
+            token.ShouldNotBeNullOrWhiteSpace();
         }
+
+        client.DefaultRequestHeaders.Authorization = new("Bearer", token);
 
         // Act
         using var response = await client.PostAsJsonAsync("/github-token", new { profile = "self-test" }, CancellationToken);
@@ -47,8 +49,8 @@ public class ApiTests(AppFixture fixture, ITestOutputHelper outputHelper) : EndT
 
         var actual = await response.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
 
-        actual.TryGetProperty("token", out var token).ShouldBeTrue();
-        token.ValueKind.ShouldBe(JsonValueKind.String);
-        token.GetString().ShouldBe("not-a-real-secret");
+        actual.TryGetProperty("token", out var secret).ShouldBeTrue();
+        secret.ValueKind.ShouldBe(JsonValueKind.String);
+        secret.GetString().ShouldBe("not-a-real-secret");
     }
 }
