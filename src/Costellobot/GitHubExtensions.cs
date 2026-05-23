@@ -157,6 +157,7 @@ public static class GitHubExtensions
         services.AddSingleton<GrafanaLinkHelper>();
 
         services.AddTransient<GitCommitAnalyzer>();
+        services.AddTransient<GitHubTokenBroker>();
         services.AddTransient<GitHubWebhookDispatcher>();
 
         services.AddTransient<PullRequestAnalyzer>();
@@ -206,11 +207,10 @@ public static class GitHubExtensions
 
     public static IEndpointRouteBuilder MapGitHubRoutes(this IEndpointRouteBuilder builder)
     {
-        builder.MapPost("/github-oidc", async (
-            ClaimsPrincipal user,
+        builder.MapPost("/github-token", async (
             [FromBody] GitHubTokenRequest request,
-            SecretClient client,
-            IOptionsMonitor<GitHubOptions> githubOptions,
+            ClaimsPrincipal user,
+            GitHubTokenBroker broker,
             CancellationToken cancellationToken) =>
         {
             if (request.Profile is not { Length: > 0 } profileName)
@@ -218,46 +218,7 @@ public static class GitHubExtensions
                 return Results.Problem("No profile name specified.", statusCode: StatusCodes.Status400BadRequest);
             }
 
-            var options = githubOptions.CurrentValue.SecretBroker;
-            var repository = user.FindFirstValue(GitHubOidcClaims.Repository) ?? string.Empty;
-
-            if (!options.Repositories.TryGetValue(repository, out var profiles))
-            {
-                return ForbiddenRepository(repository);
-            }
-
-            if (!profiles.TryGetValue(profileName, out var profile))
-            {
-                return Results.Problem($"Profile '{profileName}' not found.", statusCode: StatusCodes.Status404NotFound);
-            }
-
-            if (!profile.IsAuthorized(user))
-            {
-                return Results.Problem($"Profile '{profileName}' is not authorized for use in this workflow run.", statusCode: StatusCodes.Status403Forbidden);
-            }
-
-            string token;
-
-            if (!string.IsNullOrWhiteSpace(profile.AppId))
-            {
-                // TODO Get a token for the GitHub App installation instead of a secret from Key Vault
-                return Results.Problem("GitHub App token exchange is not implemented.", statusCode: StatusCodes.Status501NotImplemented);
-            }
-            else
-            {
-                if (profile.TokenId is null || !options.Tokens.Contains(profile.TokenId))
-                {
-                    return Results.Problem($"Profile '{profileName}' does not have a token configured.", statusCode: StatusCodes.Status404NotFound);
-                }
-
-                var secret = await client.GetSecretAsync(profile.TokenId, cancellationToken: cancellationToken);
-                token = secret.Value.Value;
-            }
-
-            return Results.Json(new() { Token = token }, AppJsonSerializerContext.Default.GitHubTokenResponse);
-
-            static IResult ForbiddenRepository(string repository)
-                => Results.Problem($"Repository '{repository}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
+            return await broker.GetTokenAsync(profileName, user, cancellationToken);
         }).RequireAuthorization(new GitHubOidcAttribute());
 
         return builder;

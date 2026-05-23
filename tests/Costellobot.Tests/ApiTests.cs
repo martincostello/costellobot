@@ -198,7 +198,7 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         client.DefaultRequestHeaders.Authorization = new("Bearer", jwt);
 
         // Act
-        using var actual = await client.PostAsJsonAsync("/github-oidc", request, CancellationToken);
+        using var actual = await client.PostAsJsonAsync("/github-token", request, CancellationToken);
 
         // Assert
         actual.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -227,7 +227,7 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         using var client = Fixture.CreateHttpClientForApp();
 
         // Act
-        using var actual = await client.PostAsJsonAsync("/github-oidc", request, CancellationToken);
+        using var actual = await client.PostAsJsonAsync("/github-token", request, CancellationToken);
 
         // Assert
         actual.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -255,7 +255,7 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         client.DefaultRequestHeaders.Authorization = new("Bearer", "invalid");
 
         // Act
-        using var actual = await client.PostAsJsonAsync("/github-oidc", request, CancellationToken);
+        using var actual = await client.PostAsJsonAsync("/github-token", request, CancellationToken);
 
         // Assert
         actual.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -296,7 +296,7 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         client.DefaultRequestHeaders.Authorization = new("Bearer", token);
 
         // Act
-        using var actual = await client.PostAsJsonAsync("/github-oidc", request, CancellationToken);
+        using var actual = await client.PostAsJsonAsync("/github-token", request, CancellationToken);
 
         // Assert
         actual.StatusCode.ShouldBe(expected);

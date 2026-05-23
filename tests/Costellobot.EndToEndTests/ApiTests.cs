@@ -40,7 +40,7 @@ public class ApiTests(AppFixture fixture, ITestOutputHelper outputHelper) : EndT
         }
 
         // Act
-        using var response = await client.PostAsJsonAsync("/github-oidc", new { profile = "self-test" }, CancellationToken);
+        using var response = await client.PostAsJsonAsync("/github-token", new { profile = "self-test" }, CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
