@@ -88,14 +88,6 @@ public sealed class GitHubTokenProfileOptions
             return workflowReference.StartsWith($"{repository}/.github/workflows/{allowedWorkflow}@refs/heads/", StringComparison.Ordinal);
         }
 
-        foreach (var branch in allowedBranches)
-        {
-            if (string.Equals(workflowReference, $"{repository}/.github/workflows/{allowedWorkflow}@refs/heads/{branch}", StringComparison.Ordinal))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return allowedBranches.Any((branch) => string.Equals(workflowReference, $"{repository}/.github/workflows/{allowedWorkflow}@refs/heads/{branch}", StringComparison.Ordinal));
     }
 }
