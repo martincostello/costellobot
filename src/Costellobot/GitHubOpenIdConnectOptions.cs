@@ -7,6 +7,8 @@ public sealed class GitHubOpenIdConnectOptions
 {
     public IList<string> Audiences { get; set; } = [];
 
+    public IList<string> Issuers { get; set; } = [];
+
     public TimeSpan ClockSkew { get; set; } = TimeSpan.FromMinutes(1);
 
     public string MetadataUri { get; set; } = string.Empty;

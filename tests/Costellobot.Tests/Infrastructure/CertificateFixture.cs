@@ -53,7 +53,7 @@ public static class CertificateFixture
             Audience = "https://github.com/martincostello",
             Expires = expiresAt,
             IssuedAt = utcNow,
-            Issuer = "https://token.actions.githubusercontent.local",
+            Issuer = "https://token.actions.githubusercontent.com",
             NotBefore = notBefore,
             SigningCredentials = credentials,
             Subject = identity,

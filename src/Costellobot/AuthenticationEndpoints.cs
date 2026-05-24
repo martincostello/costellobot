@@ -78,6 +78,7 @@ public static class AuthenticationEndpoints
                     ValidateIssuerSigningKey = true,
                     ValidateLifetime = true,
                     ValidAudiences = oidc.Audiences,
+                    ValidIssuers = oidc.Issuers,
                     ValidTypes = ["JWT"],
                 };
             });
