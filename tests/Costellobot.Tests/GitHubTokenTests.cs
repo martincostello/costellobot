@@ -46,6 +46,10 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         response.TryGetProperty("token", out var token).ShouldBeTrue();
         token.ValueKind.ShouldBe(JsonValueKind.String);
         token.GetString().ShouldBe("costellobot-benchmarks-write-secret");
+
+        response.TryGetProperty("type", out var type).ShouldBeTrue();
+        type.ValueKind.ShouldBe(JsonValueKind.String);
+        type.GetString().ShouldBe("user");
     }
 
     [Fact]

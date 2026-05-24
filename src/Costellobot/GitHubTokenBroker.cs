@@ -3,6 +3,7 @@
 
 using System.Security.Claims;
 using Azure.Security.KeyVault.Secrets;
+using MartinCostello.Costellobot.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 
@@ -46,10 +47,23 @@ public sealed partial class GitHubTokenBroker(
         }
 
         string token;
+        string tokenType;
 
         if (!string.IsNullOrWhiteSpace(profile.AppId))
         {
             // TODO Get a token for the GitHub App installation instead of a secret from Key Vault
+            // https://docs.github.com/rest/apps/apps#create-an-installation-access-token-for-an-app
+            // 1. Get the client for the GitHub App
+            // 2. Get the installation for the repository for that app
+            // 3. Get the scoped access token for that installation
+            // POST /app/installations/{installation_id}/access_tokens
+            // {
+            //   "repositories": [name],
+            //   "permissions": profile.AppPermissions
+            // }
+            // {
+            //   "token": "installation-access-token",
+            // }
             return Results.Problem("GitHub App token exchange is not implemented.", statusCode: StatusCodes.Status501NotImplemented);
         }
         else
@@ -60,12 +74,19 @@ public sealed partial class GitHubTokenBroker(
             }
 
             token = await GetTokenAsync(profile.TokenId, cancellationToken);
+            tokenType = "user";
         }
 
         Log.IssuedGitHubToken(logger, profileName, user);
         metrics.TokenIssued(repository, profileName);
 
-        return Results.Json(new() { Token = token }, AppJsonSerializerContext.Default.GitHubTokenResponse);
+        var response = new GitHubTokenResponse()
+        {
+            Token = token,
+            TokenType = tokenType,
+        };
+
+        return Results.Json(response, AppJsonSerializerContext.Default.GitHubTokenResponse);
     }
 
     private async Task<string> GetTokenAsync(string tokenId, CancellationToken cancellationToken)
