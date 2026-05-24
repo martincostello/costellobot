@@ -30,6 +30,7 @@ jobs:
 
     permissions:
       contents: read
+      id-token: write
 
     steps:
 
@@ -67,6 +68,13 @@ jobs:
         $repoName = ${env:GITHUB_REPOSITORY}.Split("/")[-1]
         "repo-name=${repoName}" >> ${env:GITHUB_OUTPUT}
 
+    - name: Get GitHub token
+      id: get-github-token
+      # zizmor: ignore[ref-version-mismatch] False positive
+      uses: martincostello/github-automation/actions/get-github-token@e3392e2dbcda866e5d17df948316f99c81aa76e7 # get-github-token/v4.0.0
+      with:
+        profile-name: benchmarks
+
     - name: Publish results
       uses: martincostello/benchmarkdotnet-results-publisher@0f2a458a28dbd963b1bcb029efaec245b677c7b3 # v2.0.3
       with:
@@ -75,7 +83,7 @@ jobs:
         name: Costellobot
         output-file-path: '${{ steps.get-repo-name.outputs.repo-name }}/data.json'
         repo: '${{ github.repository_owner }}/benchmarks'
-        repo-token: ${{ secrets.BENCHMARKS_TOKEN }}
+        repo-token: ${{ steps.get-github-token.outputs.token }}
 
     - name: Output summary
       shell: pwsh
