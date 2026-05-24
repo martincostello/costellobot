@@ -39,4 +39,11 @@ public static class AppFixtureExtensions
         fixture.OverrideConfiguration("Webhook:ImplicitTrust", enabled.ToString());
         return fixture;
     }
+
+    public static T DisableGitHubTokenExchange<T>(this T fixture, bool enabled = true)
+        where T : AppFixture
+    {
+        fixture.OverrideConfiguration("GitHub:TokenBroker:IsEnabled", enabled.ToString());
+        return fixture;
+    }
 }

@@ -10,15 +10,20 @@ namespace MartinCostello.Costellobot;
 
 public sealed partial class GitHubTokenBroker(
     SecretClient client,
-    IOptionsMonitor<GitHubOptions> githubOptions,
+    IOptionsMonitor<GitHubOptions> monitor,
     ILogger<GitHubTokenBroker> logger)
 {
     public async Task<IResult> GetTokenAsync(string profileName, ClaimsPrincipal user, CancellationToken cancellationToken)
     {
         Log.ReceivedRequestWithOidcToken(logger, user);
 
-        var options = githubOptions.CurrentValue.TokenBroker;
+        var options = monitor.CurrentValue.TokenBroker;
         var repository = user.FindFirstValue(GitHubOidcClaims.Repository) ?? string.Empty;
+
+        if (!options.IsEnabled)
+        {
+            return Results.Problem("GitHub token broker is not enabled.", statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
 
         if (!options.Repositories.TryGetValue(repository, out var profiles))
         {

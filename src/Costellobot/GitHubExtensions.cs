@@ -154,12 +154,12 @@ public static class GitHubExtensions
         services.AddSingleton<WebhookEventProcessor, GitHubEventProcessor>();
         services.AddSingleton<GitHubEventHandler>();
         services.AddSingleton<GitHubMessageProcessor>();
+        services.AddSingleton<GitHubTokenBroker>();
         services.AddSingleton<GitHubWebhookQueue>();
         services.AddSingleton<GitHubWebhookService>();
         services.AddSingleton<GrafanaLinkHelper>();
 
         services.AddTransient<GitCommitAnalyzer>();
-        services.AddTransient<GitHubTokenBroker>();
         services.AddTransient<GitHubWebhookDispatcher>();
 
         services.AddTransient<PullRequestAnalyzer>();
