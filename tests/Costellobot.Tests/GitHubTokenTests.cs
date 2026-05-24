@@ -19,7 +19,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
     public async Task Can_Request_Token_With_GitHub_Oidc_Authentication()
     {
         // Arrange
-        await ConfigureGitHubOdicAsync();
+        await ConfigureGitHubOidcAsync();
 
         var jwt = CertificateFixture.CreateToken(
             repository: "martincostello/costellobot",
@@ -47,7 +47,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
     public async Task Cannot_Request_Token_Without_Authentication()
     {
         // Arrange
-        await ConfigureGitHubOdicAsync();
+        await ConfigureGitHubOidcAsync();
 
         var request = new GitHubTokenRequest() { Profile = "benchmarks" };
 
@@ -68,7 +68,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
     public async Task Cannot_Request_Token_Without_GitHub_Oidc_Authentication()
     {
         // Arrange
-        await ConfigureGitHubOdicAsync();
+        await ConfigureGitHubOidcAsync();
 
         var request = new GitHubTokenRequest() { Profile = "benchmarks" };
 
@@ -98,7 +98,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         HttpStatusCode expected)
     {
         // Arrange
-        await ConfigureGitHubOdicAsync();
+        await ConfigureGitHubOidcAsync();
 
         var token = CertificateFixture.CreateToken(
             repository: repository,
@@ -126,7 +126,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         // Arrange
         Fixture.DisableGitHubTokenExchange(enabled: false);
 
-        await ConfigureGitHubOdicAsync();
+        await ConfigureGitHubOidcAsync();
 
         var jwt = CertificateFixture.CreateToken(
             repository: "martincostello/costellobot",
@@ -144,7 +144,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         actual.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
     }
 
-    private async Task ConfigureGitHubOdicAsync()
+    private async Task ConfigureGitHubOidcAsync()
     {
         var key = JsonWebKeyConverter.ConvertFromRSASecurityKey(CertificateFixture.GetSecurityKey());
 
