@@ -11,6 +11,7 @@ namespace MartinCostello.Costellobot;
 public sealed partial class GitHubTokenBroker(
     SecretClient client,
     GitHubTokenProfileAuthorizer authorizer,
+    CostellobotMetrics metrics,
     IOptionsMonitor<GitHubOptions> monitor,
     ILogger<GitHubTokenBroker> logger)
 {
@@ -62,6 +63,7 @@ public sealed partial class GitHubTokenBroker(
         }
 
         Log.IssuedGitHubToken(logger, profileName, user);
+        metrics.TokenIssued(repository, profileName);
 
         return Results.Json(new() { Token = token }, AppJsonSerializerContext.Default.GitHubTokenResponse);
     }
