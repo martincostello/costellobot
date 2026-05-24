@@ -136,10 +136,16 @@ public static class AuthenticationEndpoints
             .AddOptions<AuthorizationOptions>()
             .Configure((options) =>
             {
+                options.AddPolicy(GitHubOidcPolicyName, (policy) =>
+                {
+                    policy.RequireAuthenticatedUser()
+                          .RequireClaim(GitHubOidcClaims.RepositoryOwner, "martincostello");
+                });
+
                 options.AddPolicy(AdminPolicyName, (policy) =>
                 {
-                    policy.RequireAuthenticatedUser();
-                    policy.AddRequirements(new AdministratorRequirement());
+                    policy.RequireAuthenticatedUser()
+                          .AddRequirements(new AdministratorRequirement());
                 });
             });
 
