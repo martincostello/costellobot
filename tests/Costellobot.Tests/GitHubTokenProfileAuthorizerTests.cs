@@ -5,7 +5,7 @@ using System.Security.Claims;
 
 namespace MartinCostello.Costellobot;
 
-public static class GitHubTokenProfileOptionsTests
+public class GitHubTokenProfileAuthorizerTests(ITestOutputHelper outputHelper)
 {
     public static TheoryData<string, GitHubTokenProfileOptions, Claim[], bool> TestCases() => new()
     {
@@ -344,7 +344,7 @@ public static class GitHubTokenProfileOptionsTests
     [MemberData(nameof(TestCases))]
 #pragma warning restore xUnit1045
 #pragma warning restore xUnit1044
-    public static void IsAuthorized_Returns_Expected_Result(
+    public void IsAuthorized_Returns_Expected_Result(
         string description,
         GitHubTokenProfileOptions options,
         Claim[] claims,
@@ -356,8 +356,10 @@ public static class GitHubTokenProfileOptionsTests
         var user = User(claims);
         var repository = user.FindFirstValue(GitHubOidcClaims.Repository);
 
+        var target = new GitHubTokenProfileAuthorizer(outputHelper.ToLogger<GitHubTokenProfileAuthorizer>());
+
         // Act
-        var actual = options.IsAuthorized(user, repository ?? string.Empty);
+        var actual = target.IsAuthorized(user, options, repository ?? string.Empty);
 
         // Assert
         actual.ShouldBe(expected);

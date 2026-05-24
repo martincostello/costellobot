@@ -157,6 +157,7 @@ public static class GitHubExtensions
         services.AddSingleton<GitHubEventHandler>();
         services.AddSingleton<GitHubMessageProcessor>();
         services.AddSingleton<GitHubTokenBroker>();
+        services.AddSingleton<GitHubTokenProfileAuthorizer>();
         services.AddSingleton<GitHubWebhookQueue>();
         services.AddSingleton<GitHubWebhookService>();
         services.AddSingleton<GrafanaLinkHelper>();

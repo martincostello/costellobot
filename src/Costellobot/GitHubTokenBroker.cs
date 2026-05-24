@@ -10,6 +10,7 @@ namespace MartinCostello.Costellobot;
 
 public sealed partial class GitHubTokenBroker(
     SecretClient client,
+    GitHubTokenProfileAuthorizer authorizer,
     IOptionsMonitor<GitHubOptions> monitor,
     ILogger<GitHubTokenBroker> logger)
 {
@@ -37,7 +38,7 @@ public sealed partial class GitHubTokenBroker(
             return Results.Problem($"Profile '{profileName}' not found.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        if (!profile.IsAuthorized(user, repository))
+        if (!authorizer.IsAuthorized(user, profile, repository))
         {
             Log.ProfileNotAuthorized(logger, profileName, user);
             return Results.Problem($"Profile '{profileName}' is not authorized for use in this workflow run.", statusCode: StatusCodes.Status403Forbidden);
