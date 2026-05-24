@@ -144,7 +144,7 @@ public static class GitHubExtensions
             var options = provider.GetRequiredService<IOptionsMonitor<GitHubOptions>>().CurrentValue;
             var credentials = provider.GetRequiredService<TokenCredential>();
 
-            var vaultUri = options.SecretBroker?.VaultUri ?? throw new InvalidOperationException("No GitHub Vault URI is configured.");
+            var vaultUri = options.TokenBroker?.VaultUri ?? throw new InvalidOperationException("No GitHub Vault URI is configured.");
 
             return new SecretClient(vaultUri, credentials);
         });

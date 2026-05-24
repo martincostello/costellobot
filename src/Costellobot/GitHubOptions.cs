@@ -25,7 +25,7 @@ public sealed class GitHubOptions
 
     public IList<string> Scopes { get; set; } = [];
 
-    public GitHubSecretBrokerOptions SecretBroker { get; set; } = new();
+    public GitHubTokenBrokerOptions TokenBroker { get; set; } = new();
 
     public string WebhookSecret { get; set; } = string.Empty;
 

@@ -3,7 +3,7 @@
 
 namespace MartinCostello.Costellobot;
 
-public sealed class GitHubSecretBrokerOptions
+public sealed class GitHubTokenBrokerOptions
 {
     public Dictionary<string, Dictionary<string, GitHubTokenProfileOptions>> Repositories { get; set; } = [];
 

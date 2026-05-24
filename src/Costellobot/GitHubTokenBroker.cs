@@ -17,7 +17,7 @@ public sealed partial class GitHubTokenBroker(
     {
         Log.ReceivedRequestWithOidcToken(logger, user);
 
-        var options = githubOptions.CurrentValue.SecretBroker;
+        var options = githubOptions.CurrentValue.TokenBroker;
         var repository = user.FindFirstValue(GitHubOidcClaims.Repository) ?? string.Empty;
 
         if (!options.Repositories.TryGetValue(repository, out var profiles))
