@@ -127,7 +127,7 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 KeyValuePair.Create<string, string?>("GitHub:EnterpriseDomain", string.Empty),
                 KeyValuePair.Create<string, string?>("GitHub:OAuthId", "github-oauth"),
                 KeyValuePair.Create<string, string?>("GitHub:OpenIdConnect:MetadataUri", "https://token.actions.githubusercontent.local/.well-known/openid-configuration"),
-                KeyValuePair.Create<string, string?>("GitHub:SecretBroker:VaultUri", "https://github.vault.azure.local/"),
+                KeyValuePair.Create<string, string?>("GitHub:TokenBroker:VaultUri", "https://github.vault.azure.local/"),
                 KeyValuePair.Create<string, string?>("GitHub:WebhookSecret", "github-webhook-secret"),
                 KeyValuePair.Create<string, string?>("Google:CalendarIds:0", "google-calendar-id"),
                 KeyValuePair.Create<string, string?>("Google:ClientEmail", "costellobot@google.local"),
