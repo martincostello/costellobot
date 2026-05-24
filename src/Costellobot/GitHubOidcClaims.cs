@@ -11,5 +11,5 @@ public static class GitHubOidcClaims
     public const string RepositoryOwner = "repository_owner";
     public const string Ref = "ref";
     public const string RefType = "ref_type";
-    public const string Workflow = "workflow";
+    public const string WorkflowRef = "workflow_ref";
 }

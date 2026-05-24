@@ -15,18 +15,23 @@ public sealed class GitHubTokenProfileOptions
 
     public Dictionary<string, string> AppPermissions { get; set; } = [];
 
-    public IList<string> Branches { get; set; } = [Any];
+    public IList<string> Branches { get; set; } = [];
 
-    public IList<string> Environments { get; set; } = [Any];
+    public IList<string> Environments { get; set; } = [];
 
-    public IList<string> Events { get; set; } = [Any];
+    public IList<string> Events { get; set; } = [];
 
-    public IList<string> Workflows { get; set; } = [Any];
+    public IList<string> Workflows { get; set; } = [];
 
     public string? TokenId { get; set; }
 
-    public bool IsAuthorized(ClaimsPrincipal user)
+    public bool IsAuthorized(ClaimsPrincipal user, string repository)
     {
+        if (Branches.Count < 1 || Events.Count < 1 || Workflows.Count < 1)
+        {
+            return false;
+        }
+
         if (!Branches.SequenceEqual(AnyArray, StringComparer.Ordinal))
         {
             if (user.FindFirstValue(GitHubOidcClaims.RefType) is not "branch")
@@ -45,7 +50,7 @@ public sealed class GitHubTokenProfileOptions
             }
         }
 
-        if (!Environments.SequenceEqual(AnyArray, StringComparer.Ordinal) &&
+        if (Environments.Count > 0 &&
             (user.FindFirstValue(GitHubOidcClaims.Environment) is not { Length: > 0 } environment ||
              !Environments.Contains(environment, StringComparer.Ordinal)))
         {
@@ -59,13 +64,38 @@ public sealed class GitHubTokenProfileOptions
             return false;
         }
 
-        if (!Workflows.SequenceEqual(AnyArray, StringComparer.Ordinal) &&
-            (user.FindFirstValue(GitHubOidcClaims.Workflow) is not { Length: > 0 } workflow ||
-             !Workflows.Contains(workflow, StringComparer.Ordinal)))
+        if (user.FindFirstValue(GitHubOidcClaims.WorkflowRef) is not { Length: > 0 } workflowRef)
+        {
+            return false;
+        }
+
+        if (!Workflows.Any((workflow) => IsAllowedWorkflowReference(repository, workflow, Branches, workflowRef)))
         {
             return false;
         }
 
         return true;
+    }
+
+    private static bool IsAllowedWorkflowReference(
+        string repository,
+        string allowedWorkflow,
+        IList<string> allowedBranches,
+        string workflowReference)
+    {
+        if (allowedBranches.SequenceEqual(AnyArray, StringComparer.Ordinal))
+        {
+            return workflowReference.StartsWith($"{repository}/.github/workflows/{allowedWorkflow}@refs/heads/", StringComparison.Ordinal);
+        }
+
+        foreach (var branch in allowedBranches)
+        {
+            if (string.Equals(workflowReference, $"{repository}/.github/workflows/{allowedWorkflow}@refs/heads/{branch}", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

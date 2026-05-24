@@ -19,7 +19,9 @@ public static class CertificateFixture
         string repositoryOwner = "martincostello",
         string reference = "refs/heads/main",
         string? subject = null,
+        string? eventName = null,
         string? workflow = null,
+        string? workflowReference = null,
         Action<List<Claim>>? configureClaims = null)
     {
         var key = GetSecurityKey();
@@ -33,10 +35,13 @@ public static class CertificateFixture
         [
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(JwtRegisteredClaimNames.Sub, subject ?? $"repo:{repository}:ref:{reference}"),
+            new("event_name", eventName ?? "push"),
             new("ref", reference),
+            new("ref_type", "branch"),
             new("repository", repository),
             new("repository_owner", repositoryOwner),
             new("workflow", workflow ?? "build"),
+            new("workflow_ref", workflowReference ?? $"{repository}/.github/workflows/{workflow}@{reference}")
         ];
 
         configureClaims?.Invoke(claims);

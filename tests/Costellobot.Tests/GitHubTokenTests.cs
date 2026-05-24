@@ -23,7 +23,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
 
         var jwt = CertificateFixture.CreateToken(
             repository: "martincostello/costellobot",
-            workflow: "benchmark");
+            workflow: "benchmark.yml");
 
         var request = new GitHubTokenRequest() { Profile = "benchmarks" };
 
@@ -92,9 +92,9 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
     }
 
     [Theory]
-    [InlineData("write", "octo-org/octo-repo", "octo-org", "ci", HttpStatusCode.Forbidden)]
-    [InlineData("benchmarks", "martincostello/costellobot", "martincostello", "build", HttpStatusCode.Forbidden)]
-    [InlineData("benchmarks", "martincostello/sqllocaldb", "martincostello", "benchmark", HttpStatusCode.BadRequest)]
+    [InlineData("write", "octo-org/octo-repo", "octo-org", "ci.yml", HttpStatusCode.Forbidden)]
+    [InlineData("benchmarks", "martincostello/costellobot", "martincostello", "build.yml", HttpStatusCode.Forbidden)]
+    [InlineData("unknown", "martincostello/costellobot", "martincostello", "benchmark.yml", HttpStatusCode.BadRequest)]
     public async Task Cannot_Request_Token_With_GitHub_Oidc_Authentication_With_Incorrect_Claims(
         string profile,
         string repository,
