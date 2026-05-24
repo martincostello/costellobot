@@ -31,6 +31,7 @@ public static class CertificateFixture
 
         List<Claim> claims =
         [
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(JwtRegisteredClaimNames.Sub, subject ?? $"repo:{repository}:ref:{reference}"),
             new("ref", reference),
             new("repository", repository),
