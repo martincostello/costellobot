@@ -175,6 +175,7 @@ public static class CostellobotBuilder
 
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseRateLimiter();
 
         app.UseAntiforgery();
 
@@ -183,8 +184,6 @@ public static class CostellobotBuilder
         app.MapAuthenticationRoutes();
         app.MapApiRoutes();
         app.MapAdminRoutes();
-
-        app.UseRateLimiter();
         app.MapGitHubRoutes();
 
         return app;

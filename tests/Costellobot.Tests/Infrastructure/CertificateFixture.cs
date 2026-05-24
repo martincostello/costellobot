@@ -31,6 +31,8 @@ public static class CertificateFixture
         var notBefore = utcNow.AddMinutes(-1);
         var expiresAt = utcNow.AddMinutes(1);
 
+        workflow ??= "build";
+
         List<Claim> claims =
         [
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
@@ -40,7 +42,7 @@ public static class CertificateFixture
             new("ref_type", "branch"),
             new("repository", repository),
             new("repository_owner", repositoryOwner),
-            new("workflow", workflow ?? "build"),
+            new("workflow", workflow),
             new("workflow_ref", workflowReference ?? $"{repository}/.github/workflows/{workflow}@{reference}")
         ];
 
