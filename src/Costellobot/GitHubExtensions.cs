@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
+using System.Threading.RateLimiting;
 using Azure.Core;
 using Azure.Security.KeyVault.Secrets;
 using Google.Apis.Auth.OAuth2;
@@ -16,6 +17,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Octokit;
 using Octokit.Internal;
@@ -204,6 +206,29 @@ public static class GitHubExtensions
 
         services.AddHostedService<GitHubWebhookService>();
 
+        services.AddRateLimiter((options) =>
+        {
+            options.AddPolicy(AuthenticationEndpoints.GitHubOidcPolicyName, (httpContext) =>
+            {
+                var partitionKey =
+                    httpContext.User.FindFirstValue(JwtRegisteredClaimNames.Jti) ??
+                    httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                    httpContext.User.Identity?.Name ??
+                    httpContext.Connection.RemoteIpAddress?.ToString() ??
+                    "anonymous";
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey,
+                    (_) => new()
+                    {
+                        AutoReplenishment = true,
+                        PermitLimit = 5,
+                        QueueLimit = 0,
+                        Window = TimeSpan.FromMinutes(1),
+                    });
+            });
+        });
+
         return services;
     }
 
@@ -211,17 +236,30 @@ public static class GitHubExtensions
     {
         builder.MapPost("/github-token", async (
             [FromBody] GitHubTokenRequest request,
-            ClaimsPrincipal user,
             GitHubTokenBroker broker,
-            CancellationToken cancellationToken) =>
-        {
-            if (request.Profile is not { Length: > 0 } profileName)
+            HttpContext context) =>
             {
-                return Results.Problem("No profile name specified.", statusCode: StatusCodes.Status400BadRequest);
-            }
+                var headers = context.Response.GetTypedHeaders();
 
-            return await broker.GetTokenAsync(profileName, user, cancellationToken);
-        }).RequireAuthorization(new GitHubOidcAttribute());
+                headers.CacheControl = new()
+                {
+                    NoCache = true,
+                    NoStore = true,
+                };
+
+                headers.Expires = DateTimeOffset.UnixEpoch;
+                headers.Headers.Pragma = "no-cache";
+
+                if (request.Profile is not { Length: > 0 } profileName)
+                {
+                    return Results.Problem("No profile name specified.", statusCode: StatusCodes.Status400BadRequest);
+                }
+
+                return await broker.GetTokenAsync(profileName, context.User, context.RequestAborted);
+            })
+            .CacheOutput((policy) => policy.NoCache())
+            .RequireAuthorization(new GitHubOidcAttribute())
+            .RequireRateLimiting(AuthenticationEndpoints.GitHubOidcPolicyName);
 
         return builder;
     }

@@ -183,6 +183,8 @@ public static class CostellobotBuilder
         app.MapAuthenticationRoutes();
         app.MapApiRoutes();
         app.MapAdminRoutes();
+
+        app.UseRateLimiter();
         app.MapGitHubRoutes();
 
         return app;

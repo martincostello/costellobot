@@ -46,6 +46,11 @@ public class GitHubTokenTests(AppFixture fixture, ITestOutputHelper outputHelper
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Headers.CacheControl.ShouldNotBeNull();
+        response.Headers.CacheControl.NoCache.ShouldBeTrue();
+        response.Headers.CacheControl.NoStore.ShouldBeTrue();
+        response.Headers.GetValues("Pragma").ShouldBe(["no-cache"]);
+        response.Content.Headers.Expires.ShouldBe(DateTimeOffset.UnixEpoch);
 
         var actual = await response.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
 
