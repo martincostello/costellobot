@@ -40,7 +40,7 @@ public static class AppFixtureExtensions
         return fixture;
     }
 
-    public static T DisableGitHubTokenExchange<T>(this T fixture, bool enabled = true)
+    public static T EnableGitHubTokenExchange<T>(this T fixture, bool enabled = true)
         where T : AppFixture
     {
         fixture.OverrideConfiguration("GitHub:TokenBroker:IsEnabled", enabled.ToString());

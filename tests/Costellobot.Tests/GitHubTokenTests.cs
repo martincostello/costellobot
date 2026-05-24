@@ -124,7 +124,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
     public async Task Cannot_Request_Token_When_Disabled()
     {
         // Arrange
-        Fixture.DisableGitHubTokenExchange(enabled: false);
+        Fixture.EnableGitHubTokenExchange(enabled: false);
 
         await ConfigureGitHubOidcAsync();
 
