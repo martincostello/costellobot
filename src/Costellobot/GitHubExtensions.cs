@@ -209,6 +209,8 @@ public static class GitHubExtensions
 
         services.AddRateLimiter((options) =>
         {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
             options.AddPolicy(AuthenticationEndpoints.GitHubOidcPolicyName, (httpContext) =>
             {
                 var partitionKey =
