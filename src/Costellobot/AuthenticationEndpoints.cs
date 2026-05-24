@@ -58,11 +58,14 @@ public static class AuthenticationEndpoints
             {
                 var oidc = configuration.Value.OpenIdConnect;
 
+                var configurationRetriever = new OpenIdConnectConfigurationRetriever();
+                var documentRetriever = new HttpDocumentRetriever(httpClient);
+
                 options.ConfigurationManager =
                     new ConfigurationManager<OpenIdConnectConfiguration>(
                         oidc.MetadataUri,
-                        new OpenIdConnectConfigurationRetriever(),
-                        httpClient);
+                        configurationRetriever,
+                        documentRetriever);
 
                 options.TokenValidationParameters = new()
                 {
