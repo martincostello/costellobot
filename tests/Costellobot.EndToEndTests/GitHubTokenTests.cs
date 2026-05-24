@@ -57,5 +57,9 @@ public class GitHubTokenTests(AppFixture fixture, ITestOutputHelper outputHelper
         actual.TryGetProperty("token", out var secret).ShouldBeTrue();
         secret.ValueKind.ShouldBe(JsonValueKind.String);
         secret.GetString().ShouldBe("not-a-real-secret");
+
+        actual.TryGetProperty("type", out var type).ShouldBeTrue();
+        type.ValueKind.ShouldBe(JsonValueKind.String);
+        type.GetString().ShouldBe("user");
     }
 }

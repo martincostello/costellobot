@@ -9,4 +9,7 @@ public sealed class GitHubTokenResponse
 {
     [JsonPropertyName("token")]
     public required string Token { get; set; }
+
+    [JsonPropertyName("type")]
+    public required string TokenType { get; set; }
 }
