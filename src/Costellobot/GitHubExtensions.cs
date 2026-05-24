@@ -2,14 +2,22 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Claims;
+using System.Threading.RateLimiting;
+using Azure.Core;
+using Azure.Security.KeyVault.Secrets;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Calendar.v3;
+using MartinCostello.Costellobot.Authorization;
 using MartinCostello.Costellobot.DeploymentRules;
 using MartinCostello.Costellobot.Handlers;
+using MartinCostello.Costellobot.Models;
 using MartinCostello.Costellobot.Registries;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Octokit;
 using Octokit.Internal;
@@ -133,11 +141,23 @@ public static class GitHubExtensions
             });
         }
 
+        services.AddSingleton((provider) =>
+        {
+            var options = provider.GetRequiredService<IOptionsMonitor<GitHubOptions>>().CurrentValue;
+            var credentials = provider.GetRequiredService<TokenCredential>();
+
+            var vaultUri = options.TokenBroker?.VaultUri ?? throw new InvalidOperationException("No GitHub Vault URI is configured.");
+
+            return new SecretClient(vaultUri, credentials);
+        });
+
         services.TryAddSingleton<ITrustStore, AzureTableTrustStore>();
 
         services.AddSingleton<WebhookEventProcessor, GitHubEventProcessor>();
         services.AddSingleton<GitHubEventHandler>();
         services.AddSingleton<GitHubMessageProcessor>();
+        services.AddSingleton<GitHubTokenBroker>();
+        services.AddSingleton<GitHubTokenProfileAuthorizer>();
         services.AddSingleton<GitHubWebhookQueue>();
         services.AddSingleton<GitHubWebhookService>();
         services.AddSingleton<GrafanaLinkHelper>();
@@ -187,7 +207,64 @@ public static class GitHubExtensions
 
         services.AddHostedService<GitHubWebhookService>();
 
+        services.AddRateLimiter((options) =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            options.AddPolicy(AuthenticationEndpoints.GitHubOidcPolicyName, (httpContext) =>
+            {
+                var partitionKey =
+                    httpContext.User.FindFirstValue(JwtRegisteredClaimNames.Jti) ??
+                    httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                    httpContext.User.Identity?.Name ??
+                    httpContext.Connection.RemoteIpAddress?.ToString() ??
+                    "anonymous";
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey,
+                    (_) => new()
+                    {
+                        AutoReplenishment = true,
+                        PermitLimit = 5,
+                        QueueLimit = 0,
+                        Window = TimeSpan.FromMinutes(1),
+                    });
+            });
+        });
+
         return services;
+    }
+
+    public static IEndpointRouteBuilder MapGitHubRoutes(this IEndpointRouteBuilder builder)
+    {
+        builder.MapPost("/github-token", async (
+            [FromBody] GitHubTokenRequest request,
+            GitHubTokenBroker broker,
+            HttpContext context) =>
+            {
+                var headers = context.Response.GetTypedHeaders();
+
+                headers.CacheControl = new()
+                {
+                    NoCache = true,
+                    NoStore = true,
+                };
+
+                headers.Expires = DateTimeOffset.UnixEpoch;
+                headers.Headers.Pragma = "no-cache";
+
+                if (request.Profile is not { Length: > 0 } profileName)
+                {
+                    return Results.Problem("No profile name specified.", statusCode: StatusCodes.Status400BadRequest);
+                }
+
+                return await broker.GetTokenAsync(profileName, context.User, context.RequestAborted);
+            })
+            .CacheOutput((policy) => policy.NoCache())
+            .RequireAuthorization(new GitHubOidcAttribute())
+            .RequireRateLimiting(AuthenticationEndpoints.GitHubOidcPolicyName);
+
+        return builder;
     }
 
     private static Dictionary<string, string> GetInstallations(IConfiguration configuration)

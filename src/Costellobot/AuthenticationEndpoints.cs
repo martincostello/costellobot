@@ -8,15 +8,19 @@ using MartinCostello.Costellobot.Authorization;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace MartinCostello.Costellobot;
 
 public static class AuthenticationEndpoints
 {
     internal const string AdminPolicyName = "costellobot-admin";
+    internal const string GitHubOidcPolicyName = "GitHub-OIDC";
 
     private const string ApplicationName = "costellobot";
     private const string CookiePrefix = ".costellobot.";
@@ -36,7 +40,7 @@ public static class AuthenticationEndpoints
     {
         services
             .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-            .AddCookie(options =>
+            .AddCookie((options) =>
             {
                 options.AccessDeniedPath = DeniedPath;
                 options.Cookie.Name = CookiePrefix + "authentication";
@@ -46,7 +50,40 @@ public static class AuthenticationEndpoints
                 options.SlidingExpiration = true;
             })
             .AddGitHub()
-            .Services
+            .AddJwtBearer();
+
+        services
+            .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<IOptions<GitHubOptions>, HttpClient>((options, configuration, httpClient) =>
+            {
+                var oidc = configuration.Value.OpenIdConnect;
+
+                var configurationRetriever = new OpenIdConnectConfigurationRetriever();
+                var documentRetriever = new HttpDocumentRetriever(httpClient);
+
+                options.ConfigurationManager =
+                    new ConfigurationManager<OpenIdConnectConfiguration>(
+                        oidc.MetadataUri,
+                        configurationRetriever,
+                        documentRetriever);
+
+                options.TokenValidationParameters = new()
+                {
+                    ClockSkew = oidc.ClockSkew,
+                    RequireAudience = true,
+                    RequireExpirationTime = true,
+                    RequireSignedTokens = true,
+                    ValidateAudience = true,
+                    ValidateIssuer = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidateLifetime = true,
+                    ValidAudiences = oidc.Audiences,
+                    ValidIssuers = oidc.Issuers,
+                    ValidTypes = ["JWT"],
+                };
+            });
+
+        services
             .AddOptions<GitHubAuthenticationOptions>(GitHubAuthenticationDefaults.AuthenticationScheme)
             .Configure<IOptions<GitHubOptions>>((options, configuration) =>
             {
@@ -94,10 +131,16 @@ public static class AuthenticationEndpoints
             .AddOptions<AuthorizationOptions>()
             .Configure((options) =>
             {
+                options.AddPolicy(GitHubOidcPolicyName, (policy) =>
+                {
+                    policy.RequireAuthenticatedUser()
+                          .RequireClaim(GitHubOidcClaims.RepositoryOwner, "martincostello");
+                });
+
                 options.AddPolicy(AdminPolicyName, (policy) =>
                 {
-                    policy.RequireAuthenticatedUser();
-                    policy.AddRequirements(new AdministratorRequirement());
+                    policy.RequireAuthenticatedUser()
+                          .AddRequirements(new AdministratorRequirement());
                 });
             });
 

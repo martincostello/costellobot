@@ -114,6 +114,7 @@ public static class CostellobotBuilder
                 (options) => options.ForwardedHeaders |= ForwardedHeaders.XForwardedHost);
         }
 
+        builder.Services.AddSingleton<Azure.Core.TokenCredential>(credential);
         builder.Services.AddSingleton<IPostConfigureOptions<HostFilteringOptions>, ConfigureHostFiltering>();
 
         builder.WebHost.ConfigureKestrel((p) => p.AddServerHeader = false);
@@ -174,6 +175,7 @@ public static class CostellobotBuilder
 
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseRateLimiter();
 
         app.UseAntiforgery();
 
@@ -182,6 +184,7 @@ public static class CostellobotBuilder
         app.MapAuthenticationRoutes();
         app.MapApiRoutes();
         app.MapAdminRoutes();
+        app.MapGitHubRoutes();
 
         return app;
     }

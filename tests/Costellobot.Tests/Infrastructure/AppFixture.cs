@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using AspNet.Security.OAuth.GitHub;
 using Azure.Messaging.ServiceBus;
+using Azure.Security.KeyVault.Secrets;
 using JustEat.HttpClientInterception;
 using MartinCostello.Logging.XUnit;
 using Microsoft.AspNetCore.Hosting;
@@ -125,10 +126,12 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
                 KeyValuePair.Create<string, string?>("GitHub:ClientSecret", "github-secret"),
                 KeyValuePair.Create<string, string?>("GitHub:EnterpriseDomain", string.Empty),
                 KeyValuePair.Create<string, string?>("GitHub:OAuthId", "github-oauth"),
+                KeyValuePair.Create<string, string?>("GitHub:OpenIdConnect:MetadataUri", "https://token.actions.githubusercontent.local/.well-known/openid-configuration"),
+                KeyValuePair.Create<string, string?>("GitHub:TokenBroker:VaultUri", "https://github.vault.azure.local/"),
                 KeyValuePair.Create<string, string?>("GitHub:WebhookSecret", "github-webhook-secret"),
                 KeyValuePair.Create<string, string?>("Google:CalendarIds:0", "google-calendar-id"),
                 KeyValuePair.Create<string, string?>("Google:ClientEmail", "costellobot@google.local"),
-                KeyValuePair.Create<string, string?>("Google:PrivateKey", CreateSigningCertificate()),
+                KeyValuePair.Create<string, string?>("Google:PrivateKey", CreateGoogleSigningCertificate()),
                 KeyValuePair.Create<string, string?>("Google:PrivateKeyId", "github-app-client-id"),
                 KeyValuePair.Create<string, string?>("Google:ProjectId", "google-project-id"),
                 KeyValuePair.Create<string, string?>("Grafana:Token", "grafana-token"),
@@ -171,13 +174,14 @@ public class AppFixture : WebApplicationFactory<Program>, ITestOutputHelperAcces
             services.AddScoped<LoopbackOAuthEvents>();
 
             services.AddSingleton<ITrustStore, InMemoryTrustStore>();
+            services.AddSingleton<SecretClient, InMemorySecretClient>();
             services.AddSingleton<ServiceBusClient, InMemoryServiceBusClient>();
         });
 
         Interceptor.RegisterOAuthBundle();
     }
 
-    private static string? CreateSigningCertificate()
+    private static string? CreateGoogleSigningCertificate()
     {
         var notBefore = DateTimeOffset.UtcNow;
         var notAfter = notBefore.AddHours(1);
