@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace MartinCostello.Costellobot;
 
-public class ApiTests(AppFixture fixture, ITestOutputHelper outputHelper) : EndToEndTest(fixture, outputHelper)
+public class GitHubTokenTests(AppFixture fixture, ITestOutputHelper outputHelper) : EndToEndTest(fixture, outputHelper)
 {
     [Fact]
     public async Task Can_Get_Secret_With_GitHub_Oidc_Token()
