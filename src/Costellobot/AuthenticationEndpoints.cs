@@ -83,12 +83,6 @@ public static class AuthenticationEndpoints
             });
 
         services
-            .AddAuthorizationBuilder()
-            .AddPolicy(
-                GitHubOidcPolicyName,
-                (policy) => policy.RequireAuthenticatedUser().RequireClaim(GitHubOidcClaims.RepositoryOwner, "martincostello"));
-
-        services
             .AddOptions<GitHubAuthenticationOptions>(GitHubAuthenticationDefaults.AuthenticationScheme)
             .Configure<IOptions<GitHubOptions>>((options, configuration) =>
             {
