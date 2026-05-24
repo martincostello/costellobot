@@ -151,6 +151,34 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         actual.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
     }
 
+    [Fact]
+    public async Task Token_Requests_Are_Rate_Limited_Per_Token()
+    {
+        // Arrange
+        await ConfigureGitHubOidcAsync();
+
+        var jwt = CertificateFixture.CreateToken(
+            repository: "martincostello/costellobot",
+            workflow: "benchmark.yml");
+
+        var request = new GitHubTokenRequest() { Profile = "benchmarks" };
+
+        using var client = Fixture.CreateHttpClientForApp();
+        client.DefaultRequestHeaders.Authorization = new("Bearer", jwt);
+
+        for (int i = 0; i < 5; i++)
+        {
+            using var permitted = await client.PostAsJsonAsync("/github-token", request, CancellationToken);
+            permitted.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        // Act
+        using var actual = await client.PostAsJsonAsync("/github-token", request, CancellationToken);
+
+        // Assert
+        actual.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
+    }
+
     private async Task ConfigureGitHubOidcAsync()
     {
         var key = JsonWebKeyConverter.ConvertFromRSASecurityKey(CertificateFixture.GetSecurityKey());
