@@ -28,7 +28,7 @@ public sealed partial class GitHubTokenBroker(
         if (!options.Repositories.TryGetValue(repository, out var profiles))
         {
             Log.RepositoryNotConfigured(logger, repository);
-            return ForbiddenRepository(repository);
+            return Results.Problem($"Repository '{repository}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
         }
 
         if (!profiles.TryGetValue(profileName, out var profile))
@@ -63,9 +63,6 @@ public sealed partial class GitHubTokenBroker(
         Log.IssuedGitHubToken(logger, profileName, user);
 
         return Results.Json(new() { Token = token }, AppJsonSerializerContext.Default.GitHubTokenResponse);
-
-        static IResult ForbiddenRepository(string repository)
-                => Results.Problem($"Repository '{repository}' is forbidden.", statusCode: StatusCodes.Status403Forbidden);
     }
 
     private async Task<string> GetTokenAsync(string tokenId, CancellationToken cancellationToken)

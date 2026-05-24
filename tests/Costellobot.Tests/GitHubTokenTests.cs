@@ -93,7 +93,9 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
 
     [Theory]
     [InlineData("write", "octo-org/octo-repo", "octo-org", "ci.yml", HttpStatusCode.Forbidden)]
+    [InlineData("", "martincostello/costellobot", "martincostello", "build.yml", HttpStatusCode.BadRequest)]
     [InlineData("benchmarks", "martincostello/costellobot", "martincostello", "build.yml", HttpStatusCode.Forbidden)]
+    [InlineData("benchmarks", "martincostello/unknown", "martincostello", "build.yml", HttpStatusCode.Forbidden)]
     [InlineData("unknown", "martincostello/costellobot", "martincostello", "benchmark.yml", HttpStatusCode.BadRequest)]
     public async Task Cannot_Request_Token_With_GitHub_Oidc_Authentication_With_Incorrect_Claims(
         string profile,
