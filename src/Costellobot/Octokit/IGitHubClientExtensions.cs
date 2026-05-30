@@ -50,14 +50,14 @@ public static class IGitHubClientExtensions
     public static async Task<AccessToken> CreateInstallationTokenAsync(
         this IGitHubClient client,
         long installationId,
-        string repositoryName,
+        IList<string> targetRepositories,
         IDictionary<string, string> requiredPermissions,
         CancellationToken cancellationToken)
     {
         // See https://docs.github.com/rest/apps/apps?apiVersion=2026-03-10#create-an-installation-access-token-for-an-app
         var body = new
         {
-            repositories = new string[] { repositoryName },
+            repositories = targetRepositories,
             permissions = requiredPermissions,
         };
 
