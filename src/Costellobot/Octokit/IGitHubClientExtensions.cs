@@ -46,4 +46,35 @@ public static class IGitHubClientExtensions
             throw new ApiException($"Failed to create repository dispatch event for {owner}/{name}.", status);
         }
     }
+
+    public static async Task<AccessToken> CreateInstallationTokenAsync(
+        this IGitHubClient client,
+        long installationId,
+        string repositoryName,
+        IDictionary<string, string> requiredPermissions,
+        CancellationToken cancellationToken)
+    {
+        // See https://docs.github.com/rest/apps/apps?apiVersion=2026-03-10#create-an-installation-access-token-for-an-app
+        var body = new
+        {
+            repositories = new string[] { repositoryName },
+            permissions = requiredPermissions,
+        };
+
+        var uri = new Uri($"app/installations/{installationId}/access_tokens", UriKind.Relative);
+
+        var response = await client.Connection.Post<AccessToken>(
+            uri,
+            body,
+            AcceptsJson,
+            "application/json",
+            cancellationToken: cancellationToken);
+
+        if (response.HttpResponse.StatusCode is not HttpStatusCode.Created)
+        {
+            throw new ApiException($"Failed to create token for installation {installationId}.", response.HttpResponse.StatusCode);
+        }
+
+        return response.Body;
+    }
 }

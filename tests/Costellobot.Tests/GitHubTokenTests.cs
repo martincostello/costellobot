@@ -16,7 +16,7 @@ namespace MartinCostello.Costellobot;
 public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<HttpServerFixture>(fixture, outputHelper)
 {
     [Fact]
-    public async Task Can_Request_Token_With_GitHub_Oidc_Authentication()
+    public async Task Can_Request_Token_With_GitHub_Oidc_Authentication_For_App_Installation()
     {
         // Arrange
         await ConfigureGitHubOidcAsync();
@@ -45,7 +45,44 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
 
         response.TryGetProperty("token", out var token).ShouldBeTrue();
         token.ValueKind.ShouldBe(JsonValueKind.String);
-        token.GetString().ShouldBe("costellobot-benchmarks-write-secret");
+        token.GetString().ShouldBe("not-a-real-github-app-installation-token");
+
+        response.TryGetProperty("type", out var type).ShouldBeTrue();
+        type.ValueKind.ShouldBe(JsonValueKind.String);
+        type.GetString().ShouldBe("app");
+    }
+
+    [Fact]
+    public async Task Can_Request_Token_With_GitHub_Oidc_Authentication_For_User()
+    {
+        // Arrange
+        await ConfigureGitHubOidcAsync();
+
+        var jwt = CertificateFixture.CreateToken(
+            repository: "martincostello/costellobot",
+            workflow: "build.yml");
+
+        var request = new GitHubTokenRequest() { Profile = "self-test" };
+
+        using var client = Fixture.CreateHttpClientForApp();
+        client.DefaultRequestHeaders.Authorization = new("Bearer", jwt);
+
+        // Act
+        using var actual = await client.PostAsJsonAsync("/github-token", request, CancellationToken);
+
+        // Assert
+        actual.StatusCode.ShouldBe(HttpStatusCode.OK);
+        actual.Headers.CacheControl.ShouldNotBeNull();
+        actual.Headers.CacheControl.NoCache.ShouldBeTrue();
+        actual.Headers.CacheControl.NoStore.ShouldBeTrue();
+        actual.Headers.GetValues("Pragma").ShouldBe(["no-cache"]);
+        actual.Content.Headers.Expires.ShouldBe(DateTimeOffset.UnixEpoch);
+
+        var response = await actual.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
+
+        response.TryGetProperty("token", out var token).ShouldBeTrue();
+        token.ValueKind.ShouldBe(JsonValueKind.String);
+        token.GetString().ShouldBe("costellobot-self-test-secret");
 
         response.TryGetProperty("type", out var type).ShouldBeTrue();
         type.ValueKind.ShouldBe(JsonValueKind.String);
@@ -58,7 +95,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         // Arrange
         await ConfigureGitHubOidcAsync();
 
-        var request = new GitHubTokenRequest() { Profile = "benchmarks" };
+        var request = new GitHubTokenRequest() { Profile = "self-test" };
 
         using var client = Fixture.CreateHttpClientForApp();
 
@@ -79,7 +116,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         // Arrange
         await ConfigureGitHubOidcAsync();
 
-        var request = new GitHubTokenRequest() { Profile = "benchmarks" };
+        var request = new GitHubTokenRequest() { Profile = "self-test" };
 
         using var client = Fixture.CreateHttpClientForApp();
         client.DefaultRequestHeaders.Authorization = new("Bearer", "invalid");
@@ -141,9 +178,9 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
 
         var jwt = CertificateFixture.CreateToken(
             repository: "martincostello/costellobot",
-            workflow: "benchmark");
+            workflow: "build.yml");
 
-        var request = new GitHubTokenRequest() { Profile = "benchmarks" };
+        var request = new GitHubTokenRequest() { Profile = "self-test" };
 
         using var client = Fixture.CreateHttpClientForApp();
         client.DefaultRequestHeaders.Authorization = new("Bearer", jwt);
@@ -163,9 +200,9 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
 
         var jwt = CertificateFixture.CreateToken(
             repository: "martincostello/costellobot",
-            workflow: "benchmark.yml");
+            workflow: "build.yml");
 
-        var request = new GitHubTokenRequest() { Profile = "benchmarks" };
+        var request = new GitHubTokenRequest() { Profile = "self-test" };
 
         using var client = Fixture.CreateHttpClientForApp();
         client.DefaultRequestHeaders.Authorization = new("Bearer", jwt);
