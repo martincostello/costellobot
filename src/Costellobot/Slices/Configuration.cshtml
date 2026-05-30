@@ -74,7 +74,10 @@
                                     <ul>
                                         @foreach ((var installationId, var installation) in Model.GitHub.Installations)
                                         {
-                                            var app = Model.GitHub.Apps[installation.AppId];
+                                            if (!Model.GitHub.Apps.TryGetValue(installation.AppId, out var app))
+                                            {
+                                                continue;
+                                            }
                                             var installationUrl =
                                                 installation.Organization is { Length: > 0 } organization ?
                                                 $"https://github.com/organizations/{organization}/settings/installations/{installationId}" :
