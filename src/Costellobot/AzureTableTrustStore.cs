@@ -124,10 +124,12 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
     {
         var partitionKey = ecosystem.ToString().ToUpperInvariant();
 
-        var normalizedId = id.ToUpperInvariant().Replace('/', '~').Trim();
-        var normalizedVersion = version.ToUpperInvariant().Trim();
+        var normalizedId = Normalize(id);
+        var normalizedVersion = Normalize(version);
 
         return (partitionKey, $"{normalizedId}@{normalizedVersion}");
+
+        static string Normalize(string value) => value.ToUpperInvariant().Replace('/', '~').Trim();
     }
 
     private TableClient GetClient(string tableName) => client.GetTableClient(tableName);
