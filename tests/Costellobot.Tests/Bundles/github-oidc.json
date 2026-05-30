@@ -67,7 +67,7 @@
     },
     {
       "comment": "https://docs.github.com/rest/apps/apps#get-a-repository-installation-for-the-authenticated-app",
-      "uri": "https://api.github.com/repos/martincostello/costellobot/installation",
+      "uri": "https://api.github.com/repos/martincostello/benchmarks/installation",
       "method": "GET",
       "contentFormat": "json",
       "contentJson": {
