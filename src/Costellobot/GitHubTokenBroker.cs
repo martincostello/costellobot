@@ -105,6 +105,12 @@ public sealed partial class GitHubTokenBroker(
 
                 Log.ReceivedRequestWithOidcToken(logger, tokenId, subject);
             }
+
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                var claims = string.Join(Environment.NewLine, user.Claims.Select(c => $"{c.Type}={c.Value}"));
+                Log.ReceivedRequestWithOidcTokenWithClaims(logger, claims);
+            }
         }
 
         public static void ProfileNotAuthorized(ILogger logger, string profile, ClaimsPrincipal user)
@@ -157,5 +163,12 @@ public sealed partial class GitHubTokenBroker(
             Message = "Issued GitHub token for profile {Profile} for subject {Subject}.",
             SkipEnabledCheck = true)]
         public static partial void IssuedGitHubToken(ILogger logger, string profile, string subject);
+
+        [LoggerMessage(
+            EventId = 6,
+            Level = LogLevel.Debug,
+            Message = "Received request with OIDC token with claims: {Claims}.",
+            SkipEnabledCheck = true)]
+        public static partial void ReceivedRequestWithOidcTokenWithClaims(ILogger logger, string claims);
     }
 }
