@@ -55,7 +55,7 @@ public sealed partial class GitHubTokenBroker(
         {
             var parts = repository.Split('/');
             var owner = parts[0];
-            var repo = profile.TargetRepository ?? parts[1];
+            var repo = profile.TargetRepository is { Length: > 0 } ? profile.TargetRepository : parts[1];
 
             var client = clientFactory.CreateForApp(profile.AppId);
             var installation = await client.GitHubApps.GetRepositoryInstallationForCurrent(owner, repo);
