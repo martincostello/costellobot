@@ -116,7 +116,7 @@
                                 <span class="fa-solid fa-truck-ramp-box fa-fw" aria-hidden="true"></span>
                             </a>
                             <div class="dropdown-menu" aria-labelledby="navbar-dropdown">
-                                @foreach (var app in github.Apps.Values.Where((p) => p.Name is { Length: > 0 }))
+                                @foreach (var app in github.Apps.Values.Where((p) => p.Name is { Length: > 0 }).Where((p) => p.HasWebhook))
                                 {
                                     <a class="dropdown-item" href="@(this.RouteUrl($"~/deliveries/{app.Name}"))" title="@(app.Name) deliveries">
                                         @(app.Name)

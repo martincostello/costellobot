@@ -81,7 +81,8 @@ public sealed partial class GitHubWebhookDispatcher(
             installationId is { } id &&
             options.CurrentValue.Installations.TryGetValue(id.ToString(CultureInfo.InvariantCulture), out var install) &&
             install?.AppId is { Length: > 0 } appId &&
-            options.CurrentValue.Apps.ContainsKey(appId);
+            options.CurrentValue.Apps.TryGetValue(appId, out var app) &&
+            app.HasWebhook;
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
