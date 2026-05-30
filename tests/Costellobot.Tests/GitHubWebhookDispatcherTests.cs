@@ -67,6 +67,7 @@ public class GitHubWebhookDispatcherTests(ITestOutputHelper outputHelper)
         {
             AppId = GitHubFixtures.AppId,
             ClientId = "456",
+            HasWebhook = true,
             Name = "Costellobot",
             PrivateKey = string.Empty,
         };
