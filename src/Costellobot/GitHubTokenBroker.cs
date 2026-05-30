@@ -57,11 +57,9 @@ public sealed partial class GitHubTokenBroker(
             var owner = parts[0];
             var repo = parts[1];
 
-            var appClient = clientFactory.CreateForApp(profile.AppId);
-            var installation = await appClient.GitHubApps.GetRepositoryInstallationForCurrent(owner, repo);
-
-            var installationClient = clientFactory.CreateForInstallation(installation.Id.ToString(CultureInfo.InvariantCulture));
-            var accessToken = await installationClient.CreateInstallationTokenAsync(installation.Id, repo, profile.AppPermissions, cancellationToken);
+            var client = clientFactory.CreateForApp(profile.AppId);
+            var installation = await client.GitHubApps.GetRepositoryInstallationForCurrent(owner, repo);
+            var accessToken = await client.CreateInstallationTokenAsync(installation.Id, repo, profile.AppPermissions, cancellationToken);
 
             token = accessToken.Token;
             tokenType = "app";
