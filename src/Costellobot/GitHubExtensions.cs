@@ -262,7 +262,8 @@ public static class GitHubExtensions
             })
             .CacheOutput((policy) => policy.NoCache())
             .RequireAuthorization(new GitHubOidcAttribute())
-            .RequireRateLimiting(AuthenticationEndpoints.GitHubOidcPolicyName);
+            .RequireRateLimiting(AuthenticationEndpoints.GitHubOidcPolicyName)
+            .WithName("GetGitHubToken");
 
         return builder;
     }
