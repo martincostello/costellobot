@@ -102,7 +102,6 @@ jobs:
       uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
       with:
         flags: ${{ matrix.os-name }}
-        token: ${{ secrets.CODECOV_TOKEN }}
 
     - name: Upload test results to Codecov
       uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
@@ -110,7 +109,6 @@ jobs:
       with:
         flags: ${{ matrix.os-name }}
         report_type: test_results
-        token: ${{ secrets.CODECOV_TOKEN }}
 
     - name: Docker log in
       uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
