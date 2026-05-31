@@ -35,6 +35,12 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="settings-tab-github-token-broker" href="#tab-github-token-broker" role="tab" type="button" aria-controls="tab-github-token-broker" aria-current="page" data-bs-target="#tab-github-token-broker" data-bs-toggle="pill">
+                GitHub Token Broker
+                <span class="fa-solid fa-key" aria-hidden="true"></span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="settings-tab-rate-limits" href="#tab-rate-limits" role="tab" type="button" aria-controls="tab-rate-limits" aria-current="page" data-bs-target="#tab-rate-limits" data-bs-toggle="pill">
                 Rate Limits
                 <span class="fa-solid fa-gauge-high" aria-hidden="true"></span>
@@ -381,6 +387,233 @@
                 </div>
             </div>
         </div>
+        <div class="tab-pane fade" id="tab-github-token-broker" role="tabpanel" aria-labelledby="settings-tab-github-token-broker">
+            <div class="card my-2">
+                <div class="card-header card-title">
+                    GitHub Token Broker
+                </div>
+                <div class="card-body">
+                    <p class="card-text font-weight-light">
+                        The configured GitHub token broker settings and token profiles.
+                    </p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Option</th>
+                                <th scope="col">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Enabled?</td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" id="token-broker-enabled" type="checkbox" checked="@(Model.GitHub.TokenBroker.IsEnabled ? "checked" : null)" disabled>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Vault URI</td>
+                                <td>
+                                    <a href="@(Model.GitHub.TokenBroker.VaultUri)" target="_blank" rel="noopener">
+                                        <code id="token-broker-vault-uri">@(Model.GitHub.TokenBroker.VaultUri)</code>
+                                    </a>
+                                </td>
+                            </tr>
+                            @if (HasValues(Model.GitHub.TokenBroker.Tokens))
+                            {
+                                <tr>
+                                    <td>Tokens</td>
+                                    <td id="token-broker-tokens">
+                                        @(CodeList(Model.GitHub.TokenBroker.Tokens, "token-broker-token-id"))
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <caption class="font-weight-light">
+                            The Costellobot GitHub token broker configuration options.
+                        </caption>
+                    </table>
+                    <hr />
+                    @if (Model.GitHub.TokenBroker.Repositories.Count is 0)
+                    {
+                        <p class="card-text text-muted mb-0">
+                            No repositories are configured for the GitHub token broker.
+                        </p>
+                    }
+                    else
+                    {
+                        <div class="align-items-start d-flex">
+                            <div class="flex-column me-3 nav nav-fill nav-pills" role="tablist" aria-orientation="vertical">
+                                @foreach ((var index, var repository) in Model.GitHub.TokenBroker.Repositories.Index())
+                                {
+                                    var first = index is 0;
+                                    var repositoryId = ToElementId(repository.Key);
+                                    <button class="nav-link text-start token-broker-repository-tab @(first ? "active" : null)" id="settings-tab-github-token-broker-@(repositoryId)" role="tab" type="button" aria-controls="tab-github-token-broker-@(repositoryId)" aria-selected="@(first)" data-bs-target="#tab-github-token-broker-@(repositoryId)" data-bs-toggle="pill" data-repository="@(repository.Key)">
+                                        @(repository.Key)
+                                    </button>
+                                }
+                            </div>
+                            <div class="tab-content w-75" id="tab-content-github-token-broker">
+                                @foreach ((var index, var repository) in Model.GitHub.TokenBroker.Repositories.Index())
+                                {
+                                    var first = index is 0;
+                                    var repositoryId = ToElementId(repository.Key);
+                                    <div class="tab-pane fade show token-broker-repository-pane @(first ? "active" : null)" id="tab-github-token-broker-@(repositoryId)" role="tabpanel" aria-labelledby="settings-tab-github-token-broker-@(repositoryId)" data-repository="@(repository.Key)">
+                                        <div class="card my-2">
+                                            <div class="card-header card-title">
+                                                <code class="token-broker-repository">@(repository.Key)</code>
+                                            </div>
+                                            <div class="card-body">
+                                                @if (repository.Value.Count is 0)
+                                                {
+                                                    <p class="card-text text-muted mb-0">
+                                                        No token profiles are configured for this repository.
+                                                    </p>
+                                                }
+                                                else
+                                                {
+                                                    @foreach (var profileEntry in repository.Value)
+                                                    {
+                                                        var profileName = profileEntry.Key;
+                                                        var profile = profileEntry.Value;
+                                                        var isAppProfile = !string.IsNullOrWhiteSpace(profile.AppId);
+                                                        var defaultRepository = repository.Key.Split('/')[1];
+                                                        var hasAppPermissions = HasPermissions(profile.AppPermissions);
+                                                        var hasBranches = HasValues(profile.Branches);
+                                                        var hasTags = HasValues(profile.Tags);
+                                                        var hasEnvironments = HasValues(profile.Environments);
+                                                        var hasEvents = HasValues(profile.Events);
+                                                        var hasWorkflows = HasValues(profile.Workflows);
+                                                        <div class="card my-2 token-broker-profile">
+                                                            <div class="card-header card-title">
+                                                                <code class="token-broker-profile-name">@(profileName)</code>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <table class="table mb-0">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th scope="col">Option</th>
+                                                                            <th scope="col">Value</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td>Type</td>
+                                                                            <td>
+                                                                                <code class="token-broker-profile-type">@(isAppProfile ? "GitHub App" : "Personal Access Token")</code>
+                                                                            </td>
+                                                                        </tr>
+                                                                        @if (isAppProfile)
+                                                                        {
+                                                                            <tr>
+                                                                                <td>App</td>
+                                                                                <td>
+                                                                                    @{
+                                                                                        var appId = profile.AppId!;
+                                                                                    }
+                                                                                    @if (Model.GitHub.Apps.TryGetValue(appId, out var app))
+                                                                                    {
+                                                                                        var appUrl =
+                                                                                            app.Organization is { Length: > 0 } organization ?
+                                                                                            $"https://github.com/organizations/{organization}/settings/apps/{app.Name}" :
+                                                                                            $"https://github.com/settings/apps/{app.Name}";
+                                                                                        <a href="@(appUrl)" target="_blank" rel="noopener">
+                                                                                            <code class="token-broker-profile-app">@(app.Name) (@(appId))</code>
+                                                                                        </a>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <code class="token-broker-profile-app">@(appId)</code>
+                                                                                    }
+                                                                                </td>
+                                                                            </tr>
+                                                                            @if (hasAppPermissions)
+                                                                            {
+                                                                                <tr>
+                                                                                    <td>App Permissions</td>
+                                                                                    <td>
+                                                                                        @(PermissionList(profile.AppPermissions, "token-broker-profile-app-permission"))
+                                                                                    </td>
+                                                                                </tr>
+                                                                            }
+                                                                            <tr>
+                                                                                <td>Target Repository</td>
+                                                                                <td>
+                                                                                    <code class="token-broker-target-repository">@(profile.TargetRepository ?? defaultRepository)</code>
+                                                                                </td>
+                                                                            </tr>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <tr>
+                                                                                <td>Token ID</td>
+                                                                                <td>
+                                                                                    <code class="token-broker-profile-token-id">@(profile.TokenId)</code>
+                                                                                </td>
+                                                                            </tr>
+                                                                        }
+                                                                        @if (hasBranches)
+                                                                        {
+                                                                            <tr>
+                                                                                <td>Branches</td>
+                                                                                <td>
+                                                                                    @(CodeList(profile.Branches, "token-broker-profile-branch"))
+                                                                                </td>
+                                                                            </tr>
+                                                                        }
+                                                                        @if (hasTags)
+                                                                        {
+                                                                            <tr>
+                                                                                <td>Tags</td>
+                                                                                <td>
+                                                                                    @(CodeList(profile.Tags, "token-broker-profile-tag"))
+                                                                                </td>
+                                                                            </tr>
+                                                                        }
+                                                                        @if (hasEnvironments)
+                                                                        {
+                                                                            <tr>
+                                                                                <td>Environments</td>
+                                                                                <td>
+                                                                                    @(CodeList(profile.Environments, "token-broker-profile-environment"))
+                                                                                </td>
+                                                                            </tr>
+                                                                        }
+                                                                        @if (hasEvents)
+                                                                        {
+                                                                            <tr>
+                                                                                <td>Events</td>
+                                                                                <td>
+                                                                                    @(CodeList(profile.Events, "token-broker-profile-event"))
+                                                                                </td>
+                                                                            </tr>
+                                                                        }
+                                                                        @if (hasWorkflows)
+                                                                        {
+                                                                            <tr>
+                                                                                <td>Workflows</td>
+                                                                                <td>
+                                                                                    @(CodeList(profile.Workflows, "token-broker-profile-workflow"))
+                                                                                </td>
+                                                                            </tr>
+                                                                        }
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
         <div class="tab-pane fade" id="tab-rate-limits" role="tabpanel" aria-labelledby="settings-tab-rate-limits">
             <div class="card my-2">
                 <div class="card-header card-title">
@@ -471,6 +704,58 @@
     {
         var hash = SHA256.HashData(value);
         return "SHA256:" + Convert.ToBase64String(hash);
+    }
+
+    private static bool HasPermissions(IReadOnlyDictionary<string, string> values)
+        => values.Count is > 0;
+
+    private static bool HasValues(IEnumerable<string> values)
+        => values.Any((value) => !string.IsNullOrWhiteSpace(value));
+
+    private IHtmlContent CodeList(IEnumerable<string> values, string? cssClass = null)
+    {
+        var items = values.Where((value) => !string.IsNullOrWhiteSpace(value)).ToArray();
+
+        <ul class="list-unstyled mb-0">
+            @foreach (var item in items)
+            {
+                <li>
+                    <code class="@(cssClass)">@(item)</code>
+                </li>
+            }
+        </ul>
+
+        return HtmlString.Empty;
+    }
+
+    private IHtmlContent PermissionList(IReadOnlyDictionary<string, string> values, string? cssClass = null)
+    {
+        <ul class="list-unstyled mb-0">
+            @foreach ((var name, var permission) in values)
+            {
+                <li>
+                    <code class="@(cssClass)">@(name): @(permission)</code>
+                </li>
+            }
+        </ul>
+
+        return HtmlString.Empty;
+    }
+
+    private string ToElementId(string value)
+    {
+        var builder = new System.Text.StringBuilder(value.Length + 9);
+
+        foreach (var character in value)
+        {
+            builder.Append(char.IsLetterOrDigit(character) ? char.ToLowerInvariant(character) : '-');
+        }
+
+        var prefix = builder.ToString().Trim('-');
+        var bytes = System.Text.Encoding.UTF8.GetBytes(value);
+        var hash = Convert.ToHexString(SHA256.HashData(bytes))[..8].ToLowerInvariant();
+
+        return string.IsNullOrEmpty(prefix) ? $"id-{hash}" : $"{prefix}-{hash}";
     }
 
     private IHtmlContent RateLimitTable(string label, Octokit.MiscellaneousRateLimit? rateLimit)
