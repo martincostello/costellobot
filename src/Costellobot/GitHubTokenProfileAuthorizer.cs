@@ -25,41 +25,35 @@ public sealed partial class GitHubTokenProfileAuthorizer(ILogger<GitHubTokenProf
         string? refType = user.FindFirstValue(GitHubOidcClaims.RefType);
         bool isBranch = refType is "branch";
 
-        if (isBranch)
+        if (isBranch && !profile.Branches.SequenceEqual(AnyArray, StringComparer.Ordinal))
         {
-            if (!profile.Branches.SequenceEqual(AnyArray, StringComparer.Ordinal))
+            if (user.FindFirstValue(GitHubOidcClaims.Ref) is not { Length: > 0 } @ref)
             {
-                if (user.FindFirstValue(GitHubOidcClaims.Ref) is not { Length: > 0 } @ref)
-                {
-                    Log.TokenMissingClaim(logger, GitHubOidcClaims.Ref);
-                    return false;
-                }
+                Log.TokenMissingClaim(logger, GitHubOidcClaims.Ref);
+                return false;
+            }
 
-                if (!profile.Branches.Any((branch) => string.Equals(@ref, $"refs/heads/{branch}", StringComparison.Ordinal)))
-                {
-                    Log.TokenNotAuthorizedForBranch(logger, @ref);
-                    return false;
-                }
+            if (!profile.Branches.Any((branch) => string.Equals(@ref, $"refs/heads/{branch}", StringComparison.Ordinal)))
+            {
+                Log.TokenNotAuthorizedForBranch(logger, @ref);
+                return false;
             }
         }
 
         bool isTag = refType is "tag";
 
-        if (isTag)
+        if (isTag && !profile.Tags.SequenceEqual(AnyArray, StringComparer.Ordinal))
         {
-            if (!profile.Tags.SequenceEqual(AnyArray, StringComparer.Ordinal))
+            if (user.FindFirstValue(GitHubOidcClaims.Ref) is not { Length: > 0 } @ref)
             {
-                if (user.FindFirstValue(GitHubOidcClaims.Ref) is not { Length: > 0 } @ref)
-                {
-                    Log.TokenMissingClaim(logger, GitHubOidcClaims.Ref);
-                    return false;
-                }
+                Log.TokenMissingClaim(logger, GitHubOidcClaims.Ref);
+                return false;
+            }
 
-                if (!profile.Tags.Any((tag) => string.Equals(@ref, $"refs/tags/{tag}", StringComparison.Ordinal)))
-                {
-                    Log.TokenNotAuthorizedForTag(logger, @ref);
-                    return false;
-                }
+            if (!profile.Tags.Any((tag) => string.Equals(@ref, $"refs/tags/{tag}", StringComparison.Ordinal)))
+            {
+                Log.TokenNotAuthorizedForTag(logger, @ref);
+                return false;
             }
         }
 
