@@ -15,6 +15,8 @@ public sealed class GitHubTokenProfileOptions
 
     public IList<string> Events { get; set; } = [];
 
+    public IList<string> Tags { get; set; } = [];
+
     public string? TargetRepository { get; set; }
 
     public IList<string> Workflows { get; set; } = [];
