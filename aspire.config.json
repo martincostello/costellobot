@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "src/Costellobot.AppHost/Costellobot.AppHost.csproj"
+  }
+}
