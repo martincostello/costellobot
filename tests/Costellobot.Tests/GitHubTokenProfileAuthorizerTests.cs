@@ -10,18 +10,53 @@ public class GitHubTokenProfileAuthorizerTests(ITestOutputHelper outputHelper)
     public static TheoryData<string, GitHubTokenProfileOptions, Claim[], bool> TestCases() => new()
     {
         {
+            "Rejects invalid profile configurations",
+            new()
+            {
+                Events = ["*"],
+                Workflows = ["ci.yml"],
+            },
+            [
+                Claim(GitHubOidcClaims.Ref, "refs/heads/main"),
+                Claim(GitHubOidcClaims.RefType, "branch"),
+                Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
+                Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/ci.yml@refs/heads/main"),
+            ],
+            false
+        },
+        {
             "Allows any principal when all filters use the wildcard defaults",
             new()
             {
                 Branches = ["*"],
                 Events = ["*"],
+                Tags = ["*"],
                 Workflows = ["ci.yml"],
             },
             [
+                Claim(GitHubOidcClaims.Ref, "refs/heads/main"),
+                Claim(GitHubOidcClaims.RefType, "branch"),
                 Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
                 Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/ci.yml@refs/heads/main"),
             ],
             true
+        },
+        {
+            "Rejects unknown ref types",
+            new()
+            {
+                Branches = ["*"],
+                Events = ["*"],
+                Tags = ["*"],
+                Workflows = ["ci.yml"],
+            },
+            [
+                Claim(GitHubOidcClaims.Ref, "refs/heads/main"),
+                Claim(GitHubOidcClaims.RefType, "unknown"),
+                Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
+                Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/ci.yml@refs/heads/main"),
+            ],
+            false
         },
         {
             "Rejects non-branch refs when branches are restricted",
@@ -190,6 +225,69 @@ public class GitHubTokenProfileAuthorizerTests(ITestOutputHelper outputHelper)
             true
         },
         {
+            "Rejects non-tag refs when tags are restricted",
+            new()
+            {
+                Events = ["*"],
+                Tags = ["v1.0.0"],
+                Workflows = ["ci.yml"],
+            },
+            [
+                Claim(GitHubOidcClaims.Ref, "refs/heads/main"),
+                Claim(GitHubOidcClaims.RefType, "branch"),
+                Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
+                Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/ci.yml@refs/heads/main"),
+            ],
+            false
+        },
+        {
+            "Rejects missing refs when tags are restricted",
+            new()
+            {
+                Events = ["*"],
+                Tags = ["v1.0.0"],
+                Workflows = ["ci.yml"],
+            },
+            [
+                Claim(GitHubOidcClaims.RefType, "tag"),
+                Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
+                Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/ci.yml@refs/tags/v1.0.0"),
+            ],
+            false
+        },
+        {
+            "Rejects tags that are not allowed",
+            new()
+            {
+                Events = ["*"],
+                Tags = ["v1.0.0"],
+                Workflows = ["ci.yml"],
+            },
+            [
+                Claim(GitHubOidcClaims.Ref, "refs/tags/v1.0.1"),
+                Claim(GitHubOidcClaims.RefType, "tag"),
+                Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
+                Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/ci.yml@refs/tags/v1.0.1"),
+            ],
+            false
+        },
+        {
+            "Allows matching tags",
+            new()
+            {
+                Events = ["*"],
+                Tags = ["v1.0.0", "v1.0.1"],
+                Workflows = ["ci.yml"],
+            },
+            [
+                Claim(GitHubOidcClaims.Ref, "refs/tags/v1.0.1"),
+                Claim(GitHubOidcClaims.RefType, "tag"),
+                Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
+                Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/ci.yml@refs/tags/v1.0.1"),
+            ],
+            true
+        },
+        {
             "Rejects missing workflows when workflows are restricted",
             new()
             {
@@ -277,6 +375,8 @@ public class GitHubTokenProfileAuthorizerTests(ITestOutputHelper outputHelper)
                 Workflows = ["build.yml", "deploy.yml"],
             },
             [
+                Claim(GitHubOidcClaims.Ref, "refs/heads/main"),
+                Claim(GitHubOidcClaims.RefType, "branch"),
                 Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
                 Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/deploy.yml@refs/heads/main"),
             ],
@@ -299,12 +399,29 @@ public class GitHubTokenProfileAuthorizerTests(ITestOutputHelper outputHelper)
             true
         },
         {
+            "Allows matching workflows with matching tag",
+            new()
+            {
+                Events = ["*"],
+                Tags = ["v1.0.0"],
+                Workflows = ["build.yml", "deploy.yml"],
+            },
+            [
+                Claim(GitHubOidcClaims.Ref, "refs/tags/v1.0.0"),
+                Claim(GitHubOidcClaims.RefType, "tag"),
+                Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
+                Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/deploy.yml@refs/tags/v1.0.0"),
+            ],
+            true
+        },
+        {
             "Allows principals that satisfy every restricted filter",
             new()
             {
                 Branches = ["release"],
                 Environments = ["Production"],
                 Events = ["workflow_dispatch"],
+                Tags = ["v1.0.0"],
                 Workflows = ["deploy.yaml"],
             },
             [

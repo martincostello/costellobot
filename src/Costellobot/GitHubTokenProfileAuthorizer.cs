@@ -16,31 +16,57 @@ public sealed partial class GitHubTokenProfileAuthorizer(ILogger<GitHubTokenProf
         GitHubTokenProfileOptions profile,
         string repository)
     {
-        if (profile.Branches.Count < 1 || profile.Events.Count < 1 || profile.Workflows.Count < 1)
+        if ((profile.Branches.Count + profile.Tags.Count < 1) || profile.Events.Count < 1 || profile.Workflows.Count < 1)
         {
             Log.InvalidProfileConfiguration(logger);
             return false;
         }
 
-        if (!profile.Branches.SequenceEqual(AnyArray, StringComparer.Ordinal))
+        string? refType = user.FindFirstValue(GitHubOidcClaims.RefType);
+        bool isBranch = refType is "branch";
+
+        if (isBranch)
         {
-            if (user.FindFirstValue(GitHubOidcClaims.RefType) is not "branch")
+            if (!profile.Branches.SequenceEqual(AnyArray, StringComparer.Ordinal))
             {
-                Log.TokenNotAuthorizedForAnyBranch(logger);
-                return false;
-            }
+                if (user.FindFirstValue(GitHubOidcClaims.Ref) is not { Length: > 0 } @ref)
+                {
+                    Log.TokenMissingClaim(logger, GitHubOidcClaims.Ref);
+                    return false;
+                }
 
-            if (user.FindFirstValue(GitHubOidcClaims.Ref) is not { Length: > 0 } @ref)
-            {
-                Log.TokenMissingClaim(logger, GitHubOidcClaims.Ref);
-                return false;
+                if (!profile.Branches.Any((branch) => string.Equals(@ref, $"refs/heads/{branch}", StringComparison.Ordinal)))
+                {
+                    Log.TokenNotAuthorizedForBranch(logger, @ref);
+                    return false;
+                }
             }
+        }
 
-            if (!profile.Branches.Any((branch) => string.Equals(@ref, $"refs/heads/{branch}", StringComparison.Ordinal)))
+        bool isTag = refType is "tag";
+
+        if (isTag)
+        {
+            if (!profile.Tags.SequenceEqual(AnyArray, StringComparer.Ordinal))
             {
-                Log.TokenNotAuthorizedForBranch(logger, @ref);
-                return false;
+                if (user.FindFirstValue(GitHubOidcClaims.Ref) is not { Length: > 0 } @ref)
+                {
+                    Log.TokenMissingClaim(logger, GitHubOidcClaims.Ref);
+                    return false;
+                }
+
+                if (!profile.Tags.Any((tag) => string.Equals(@ref, $"refs/tags/{tag}", StringComparison.Ordinal)))
+                {
+                    Log.TokenNotAuthorizedForTag(logger, @ref);
+                    return false;
+                }
             }
+        }
+
+        if (!isBranch && !isTag)
+        {
+            Log.TokenNotAuthorizedForAnyBranch(logger);
+            return false;
         }
 
         if (profile.Environments.Count > 0)
@@ -79,7 +105,7 @@ public sealed partial class GitHubTokenProfileAuthorizer(ILogger<GitHubTokenProf
             return false;
         }
 
-        if (!profile.Workflows.Any((workflow) => IsAllowedWorkflowReference(repository, workflow, profile.Branches, workflowRef)))
+        if (!profile.Workflows.Any((workflow) => IsAllowedWorkflowReference(repository, workflow, profile.Branches, profile.Tags, workflowRef)))
         {
             Log.TokenNotAuthorizedForWorkflow(logger, workflowRef);
             return false;
@@ -92,14 +118,24 @@ public sealed partial class GitHubTokenProfileAuthorizer(ILogger<GitHubTokenProf
         string repository,
         string allowedWorkflow,
         IList<string> allowedBranches,
+        IList<string> allowedTags,
         string workflowReference)
     {
-        if (allowedBranches.SequenceEqual(AnyArray, StringComparer.Ordinal))
-        {
-            return workflowReference.StartsWith($"{repository}/.github/workflows/{allowedWorkflow}@refs/heads/", StringComparison.Ordinal);
-        }
+        const string BranchRefType = "heads";
+        const string TagRefType = "tags";
 
-        return allowedBranches.Any((branch) => string.Equals(workflowReference, $"{repository}/.github/workflows/{allowedWorkflow}@refs/heads/{branch}", StringComparison.Ordinal));
+        return
+            IsAllowedRefType(allowedBranches, BranchRefType) ||
+            IsAllowedRefType(allowedTags, TagRefType) ||
+            IsAllowedRef(allowedBranches, BranchRefType) ||
+            IsAllowedRef(allowedTags, TagRefType);
+
+        bool IsAllowedRefType(IList<string> allowed, string refType) =>
+            allowed.SequenceEqual(AnyArray, StringComparer.Ordinal) &&
+            workflowReference.StartsWith($"{repository}/.github/workflows/{allowedWorkflow}@refs/{refType}/", StringComparison.Ordinal);
+
+        bool IsAllowedRef(IList<string> allowed, string refType) =>
+            allowed.Any((value) => string.Equals(workflowReference, $"{repository}/.github/workflows/{allowedWorkflow}@refs/{refType}/{value}", StringComparison.Ordinal));
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -146,5 +182,11 @@ public sealed partial class GitHubTokenProfileAuthorizer(ILogger<GitHubTokenProf
             Level = LogLevel.Trace,
             Message = "The GitHub OIDC token for workflow ref {WorkflowReference} is not authorized for any configured workflow.")]
         public static partial void TokenNotAuthorizedForWorkflow(ILogger logger, string workflowReference);
+
+        [LoggerMessage(
+            EventId = 8,
+            Level = LogLevel.Trace,
+            Message = "The GitHub OIDC token for ref {Reference} is not authorized for any configured tag.")]
+        public static partial void TokenNotAuthorizedForTag(ILogger logger, string reference);
     }
 }
