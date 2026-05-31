@@ -55,10 +55,10 @@ public class ConfigurationTests(HttpServerFixture fixture, ITestOutputHelper out
             var app = await SignInAsync(page);
 
             // Act
-            var dependencies = await app.ConfigurationAsync();
+            var configuration = await app.ConfigurationAsync();
 
             // Assert
-            await dependencies.WaitForContentAsync();
+            await configuration.WaitForContentAsync();
         });
     }
 }
