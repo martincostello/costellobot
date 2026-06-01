@@ -55,10 +55,29 @@ public class ConfigurationTests(HttpServerFixture fixture, ITestOutputHelper out
             var app = await SignInAsync(page);
 
             // Act
-            var dependencies = await app.ConfigurationAsync();
+            var configuration = await app.ConfigurationAsync();
 
             // Assert
-            await dependencies.WaitForContentAsync();
+            await configuration.WaitForContentAsync();
+            await configuration.OpenGitHubTokenBrokerAsync();
+
+            await configuration.GitHubTokenBrokerEnabledAsync().ShouldBeTrue();
+            await configuration.GitHubTokenBrokerVaultUriAsync().ShouldBe("https://github.vault.azure.local/");
+
+            var repositories = await configuration.GetGitHubTokenBrokerRepositoriesAsync();
+
+            repositories.ShouldContain("martincostello/adventofcode");
+
+            var profiles = await configuration.GetGitHubTokenBrokerProfilesAsync("martincostello/adventofcode");
+            var profileNames = await Task.WhenAll(profiles.Select((p) => p.NameAsync()));
+
+            profileNames.ShouldContain("benchmarks");
+            profileNames.ShouldContain("write");
+
+            var profile = profiles[0];
+
+            await profile.NameAsync().ShouldBe("benchmarks");
+            await profile.TypeAsync().ShouldBe("GitHub App");
         });
     }
 }
