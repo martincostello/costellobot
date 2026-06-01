@@ -30,7 +30,7 @@ public sealed class GitHubActionsPackageRegistry(
             // a 'v' but the version extracted from the commit message will just
             // have the version number. Based on what we find, prefer searching
             // for a tag prefixed with 'v' before looking for the verbatim tag.
-            bool hasVersionPrefix = version.StartsWith('v');
+            bool hasVersionPrefix = version.StartsWith('v', StringComparison.Ordinal);
 
             string[] refs = hasVersionPrefix ?
                 [version, version[1..]] :
