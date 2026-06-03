@@ -22,7 +22,8 @@ public sealed partial class GitHubTokenBroker(
     {
         Log.ReceivedRequestWithOidcToken(logger, user);
 
-        var options = monitor.CurrentValue.TokenBroker;
+        var github = monitor.CurrentValue;
+        var options = github.TokenBroker;
         var repository = user.FindFirstValue(GitHubOidcClaims.Repository) ?? string.Empty;
 
         if (!options.IsEnabled)
@@ -48,11 +49,15 @@ public sealed partial class GitHubTokenBroker(
             return Results.Problem($"Profile '{profileName}' is not authorized for use in this workflow run.", statusCode: StatusCodes.Status403Forbidden);
         }
 
-        string token;
-        string tokenType;
+        GitHubTokenResponse response;
 
         if (!string.IsNullOrWhiteSpace(profile.AppId))
         {
+            if (!github.Apps.TryGetValue(profile.AppId, out var app))
+            {
+                return Results.Problem($"Profile '{profileName}' does not have a valid GitHub app configured.", statusCode: StatusCodes.Status404NotFound);
+            }
+
             var parts = repository.Split('/');
             var owner = parts[0];
             var repo = profile.TargetRepository is { Length: > 0 } ? profile.TargetRepository : parts[1];
@@ -61,8 +66,13 @@ public sealed partial class GitHubTokenBroker(
             var installation = await client.GitHubApps.GetRepositoryInstallationForCurrent(owner, repo);
             var accessToken = await client.CreateInstallationTokenAsync(installation.Id, [repo], profile.AppPermissions, cancellationToken);
 
-            token = accessToken.Token;
-            tokenType = "app";
+            response = new()
+            {
+                AppId = long.Parse(app.AppId, CultureInfo.InvariantCulture),
+                AppSlug = app.Name,
+                Token = accessToken.Token,
+                TokenType = "app",
+            };
         }
         else
         {
@@ -71,18 +81,17 @@ public sealed partial class GitHubTokenBroker(
                 return Results.Problem($"Profile '{profileName}' does not have a token configured.", statusCode: StatusCodes.Status404NotFound);
             }
 
-            token = await GetTokenAsync(profile.TokenId, cancellationToken);
-            tokenType = "user";
+            var token = await GetTokenAsync(profile.TokenId, cancellationToken);
+
+            response = new()
+            {
+                Token = token,
+                TokenType = "user",
+            };
         }
 
         Log.IssuedGitHubToken(logger, profileName, user);
         metrics.TokenIssued(repository, profileName);
-
-        var response = new GitHubTokenResponse()
-        {
-            Token = token,
-            TokenType = tokenType,
-        };
 
         return Results.Json(response, AppJsonSerializerContext.Default.GitHubTokenResponse);
     }
