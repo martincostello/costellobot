@@ -23,9 +23,9 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
 
         var jwt = CertificateFixture.CreateToken(
             repository: "martincostello/costellobot",
-            workflow: "benchmark.yml");
+            workflow: "build.yml");
 
-        var request = new GitHubTokenRequest() { Profile = "benchmarks" };
+        var request = new GitHubTokenRequest() { Profile = "self-test-app" };
 
         using var client = Fixture.CreateHttpClientForApp();
         client.DefaultRequestHeaders.Authorization = new("Bearer", jwt);
@@ -50,6 +50,14 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         response.TryGetProperty("type", out var type).ShouldBeTrue();
         type.ValueKind.ShouldBe(JsonValueKind.String);
         type.GetString().ShouldBe("app");
+
+        response.TryGetProperty("appId", out var appId).ShouldBeTrue();
+        appId.ValueKind.ShouldBe(JsonValueKind.Number);
+        appId.GetInt64().ShouldBe(183256);
+
+        response.TryGetProperty("appSlug", out var appSlug).ShouldBeTrue();
+        appSlug.ValueKind.ShouldBe(JsonValueKind.String);
+        appSlug.GetString().ShouldBe("costellobot");
     }
 
     [Fact]
@@ -62,7 +70,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
             repository: "martincostello/costellobot",
             workflow: "build.yml");
 
-        var request = new GitHubTokenRequest() { Profile = "self-test" };
+        var request = new GitHubTokenRequest() { Profile = "self-test-user" };
 
         using var client = Fixture.CreateHttpClientForApp();
         client.DefaultRequestHeaders.Authorization = new("Bearer", jwt);
@@ -87,6 +95,9 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         response.TryGetProperty("type", out var type).ShouldBeTrue();
         type.ValueKind.ShouldBe(JsonValueKind.String);
         type.GetString().ShouldBe("user");
+
+        response.TryGetProperty("appId", out _).ShouldBeFalse();
+        response.TryGetProperty("appSlug", out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -95,7 +106,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         // Arrange
         await ConfigureGitHubOidcAsync();
 
-        var request = new GitHubTokenRequest() { Profile = "self-test" };
+        var request = new GitHubTokenRequest() { Profile = "self-test-user" };
 
         using var client = Fixture.CreateHttpClientForApp();
 
@@ -116,7 +127,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         // Arrange
         await ConfigureGitHubOidcAsync();
 
-        var request = new GitHubTokenRequest() { Profile = "self-test" };
+        var request = new GitHubTokenRequest() { Profile = "self-test-user" };
 
         using var client = Fixture.CreateHttpClientForApp();
         client.DefaultRequestHeaders.Authorization = new("Bearer", "invalid");
@@ -180,7 +191,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
             repository: "martincostello/costellobot",
             workflow: "build.yml");
 
-        var request = new GitHubTokenRequest() { Profile = "self-test" };
+        var request = new GitHubTokenRequest() { Profile = "self-test-user" };
 
         using var client = Fixture.CreateHttpClientForApp();
         client.DefaultRequestHeaders.Authorization = new("Bearer", jwt);
@@ -202,7 +213,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
             repository: "martincostello/costellobot",
             workflow: "build.yml");
 
-        var request = new GitHubTokenRequest() { Profile = "self-test" };
+        var request = new GitHubTokenRequest() { Profile = "self-test-user" };
 
         using var client = Fixture.CreateHttpClientForApp();
         client.DefaultRequestHeaders.Authorization = new("Bearer", jwt);

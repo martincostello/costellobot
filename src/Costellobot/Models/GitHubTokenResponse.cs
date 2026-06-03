@@ -12,4 +12,12 @@ public sealed class GitHubTokenResponse
 
     [JsonPropertyName("type")]
     public required string TokenType { get; set; }
+
+    [JsonPropertyName("appId")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public long? AppId { get; set; }
+
+    [JsonPropertyName("appSlug")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? AppSlug { get; set; }
 }

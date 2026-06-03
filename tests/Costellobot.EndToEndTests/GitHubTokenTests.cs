@@ -42,7 +42,7 @@ public class GitHubTokenTests(AppFixture fixture, ITestOutputHelper outputHelper
         client.DefaultRequestHeaders.Authorization = new("Bearer", token);
 
         // Act
-        using var response = await client.PostAsJsonAsync("/github-token", new { profile = "self-test" }, CancellationToken);
+        using var response = await client.PostAsJsonAsync("/github-token", new { profile = "self-test-user" }, CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
