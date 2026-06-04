@@ -4,6 +4,7 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
@@ -22,14 +23,94 @@ public static class CertificateFixture
         string? eventName = null,
         string? workflow = null,
         string? workflowReference = null,
-        Action<List<Claim>>? configureClaims = null)
+        Action<List<Claim>>? configureClaims = null,
+        string audience = "https://github.com/martincostello",
+        string issuer = "https://token.actions.githubusercontent.com",
+        DateTime? notBefore = null,
+        DateTime? expiresAt = null,
+        DateTime? issuedAt = null)
     {
         var key = GetSecurityKey();
+        var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.RsaSha256);
 
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.RsaSha256);
+        return CreateTokenCore(
+            signingCredentials,
+            repository,
+            repositoryOwner,
+            reference,
+            subject,
+            eventName,
+            workflow,
+            workflowReference,
+            configureClaims,
+            audience,
+            issuer,
+            notBefore,
+            expiresAt,
+            issuedAt);
+    }
+
+    public static string CreateUnsignedToken(
+        string repository = "martincostello/example-repo",
+        string repositoryOwner = "martincostello",
+        string reference = "refs/heads/main",
+        string? subject = null,
+        string? eventName = null,
+        string? workflow = null,
+        string? workflowReference = null,
+        Action<List<Claim>>? configureClaims = null,
+        string audience = "https://github.com/martincostello",
+        string issuer = "https://token.actions.githubusercontent.com",
+        DateTime? notBefore = null,
+        DateTime? expiresAt = null,
+        DateTime? issuedAt = null)
+        => CreateTokenCore(
+            signingCredentials: null,
+            repository,
+            repositoryOwner,
+            reference,
+            subject,
+            eventName,
+            workflow,
+            workflowReference,
+            configureClaims,
+            audience,
+            issuer,
+            notBefore,
+            expiresAt,
+            issuedAt);
+
+    public static RsaSecurityKey GetSecurityKey()
+    {
+        var certificate = GetSharedSigningCertificate();
+        var privateKey = certificate.GetRSAPrivateKey();
+
+        return new(privateKey)
+        {
+            KeyId = _keyId,
+        };
+    }
+
+    private static string CreateTokenCore(
+        SigningCredentials? signingCredentials,
+        string repository,
+        string repositoryOwner,
+        string reference,
+        string? subject,
+        string? eventName,
+        string? workflow,
+        string? workflowReference,
+        Action<List<Claim>>? configureClaims,
+        string audience,
+        string issuer,
+        DateTime? notBefore,
+        DateTime? expiresAt,
+        DateTime? issuedAt)
+    {
         var utcNow = TimeProvider.System.GetUtcNow().UtcDateTime;
-        var notBefore = utcNow.AddMinutes(-1);
-        var expiresAt = utcNow.AddMinutes(1);
+        var tokenNotBefore = notBefore ?? utcNow.AddMinutes(-1);
+        var tokenExpiresAt = expiresAt ?? utcNow.AddMinutes(1);
+        var tokenIssuedAt = issuedAt ?? utcNow;
 
         workflow ??= "build";
 
@@ -48,32 +129,46 @@ public static class CertificateFixture
 
         configureClaims?.Invoke(claims);
 
+        if (signingCredentials is null)
+        {
+            Dictionary<string, object> header = new()
+            {
+                [JwtHeaderParameterNames.Alg] = SecurityAlgorithms.None,
+                [JwtHeaderParameterNames.Typ] = "JWT",
+            };
+
+            Dictionary<string, object> payload = new()
+            {
+                [JwtRegisteredClaimNames.Aud] = audience,
+                [JwtRegisteredClaimNames.Exp] = new DateTimeOffset(tokenExpiresAt).ToUnixTimeSeconds(),
+                [JwtRegisteredClaimNames.Iat] = new DateTimeOffset(tokenIssuedAt).ToUnixTimeSeconds(),
+                [JwtRegisteredClaimNames.Iss] = issuer,
+                [JwtRegisteredClaimNames.Nbf] = new DateTimeOffset(tokenNotBefore).ToUnixTimeSeconds(),
+            };
+
+            foreach (var claim in claims)
+            {
+                payload[claim.Type] = claim.Value;
+            }
+
+            return $"{EncodeTokenSegment(header)}.{EncodeTokenSegment(payload)}.";
+        }
+
         var identity = new ClaimsIdentity(claims);
 
         var tokenDescriptor = new SecurityTokenDescriptor()
         {
-            Audience = "https://github.com/martincostello",
-            Expires = expiresAt,
-            IssuedAt = utcNow,
-            Issuer = "https://token.actions.githubusercontent.com",
-            NotBefore = notBefore,
-            SigningCredentials = credentials,
+            Audience = audience,
+            Expires = tokenExpiresAt,
+            IssuedAt = tokenIssuedAt,
+            Issuer = issuer,
+            NotBefore = tokenNotBefore,
+            SigningCredentials = signingCredentials,
             Subject = identity,
         };
 
         var handler = new JsonWebTokenHandler();
         return handler.CreateToken(tokenDescriptor);
-    }
-
-    public static RsaSecurityKey GetSecurityKey()
-    {
-        var certificate = GetSharedSigningCertificate();
-        var privateKey = certificate.GetRSAPrivateKey();
-
-        return new(privateKey)
-        {
-            KeyId = _keyId,
-        };
     }
 
     private static X509Certificate2 CreateSigningCertificate()
@@ -93,4 +188,7 @@ public static class CertificateFixture
         var rawData = _certificate.Export(X509ContentType.Pfx);
         return X509CertificateLoader.LoadPkcs12(rawData, null);
     }
+
+    private static string EncodeTokenSegment<T>(T value)
+        => Base64UrlEncoder.Encode(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value)));
 }
