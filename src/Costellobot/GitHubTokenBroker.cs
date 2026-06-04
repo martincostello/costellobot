@@ -60,11 +60,12 @@ public sealed partial class GitHubTokenBroker(
 
             var parts = repository.Split('/');
             var owner = parts[0];
-            var repo = profile.TargetRepository is { Length: > 0 } ? profile.TargetRepository : parts[1];
+            var repo = profile.TargetRepositories is { Count: > 0 } ? profile.TargetRepositories[0] : parts[1];
+            var targetRepositories = profile.TargetRepositories is { Count: > 0 } ? profile.TargetRepositories : [repo];
 
             var client = clientFactory.CreateForApp(profile.AppId);
             var installation = await client.GitHubApps.GetRepositoryInstallationForCurrent(owner, repo);
-            var accessToken = await client.CreateInstallationTokenAsync(installation.Id, [repo], profile.AppPermissions, cancellationToken);
+            var accessToken = await client.CreateInstallationTokenAsync(installation.Id, targetRepositories, profile.AppPermissions, cancellationToken);
 
             response = new()
             {

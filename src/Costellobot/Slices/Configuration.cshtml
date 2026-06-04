@@ -538,9 +538,9 @@
                                                                                 </tr>
                                                                             }
                                                                             <tr>
-                                                                                <td>Target Repository</td>
+                                                                                <td>Target Repositories</td>
                                                                                 <td>
-                                                                                    <code class="token-broker-target-repository">@(profile.TargetRepository ?? defaultRepository)</code>
+                                                                                    @(CodeList(profile.TargetRepositories ?? [], "token-broker-target-repository"))
                                                                                 </td>
                                                                             </tr>
                                                                         }

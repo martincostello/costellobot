@@ -17,7 +17,7 @@ public sealed class GitHubTokenProfileOptions
 
     public IList<string> Tags { get; set; } = [];
 
-    public string? TargetRepository { get; set; }
+    public IList<string>? TargetRepositories { get; set; }
 
     public IList<string> Workflows { get; set; } = [];
 
