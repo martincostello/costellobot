@@ -540,7 +540,7 @@
                                                                             <tr>
                                                                                 <td>Target Repositories</td>
                                                                                 <td>
-                                                                                    @(CodeList(profile.TargetRepositories ?? [], "token-broker-target-repository"))
+                                                                                    @(CodeList(profile.TargetRepositories ?? [defaultRepository], "token-broker-target-repository"))
                                                                                 </td>
                                                                             </tr>
                                                                         }
