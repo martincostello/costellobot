@@ -13,7 +13,8 @@ using Microsoft.IdentityModel.Tokens;
 namespace MartinCostello.Costellobot;
 
 [Collection(HttpServerCollection.Name)]
-public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<HttpServerFixture>(fixture, outputHelper)
+public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelper outputHelper)
+    : IntegrationTests<HttpServerFixture>(fixture, outputHelper)
 {
     [Fact]
     public async Task Can_Request_Token_With_GitHub_Oidc_Authentication_For_App_Installation()
@@ -143,6 +144,93 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         response.TryGetProperty("token", out var subject).ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task Cannot_Request_Token_With_GitHub_Oidc_Authentication_When_Jwt_Is_Not_Yet_Valid()
+    {
+        // Arrange
+        var now = TimeProvider.System.GetUtcNow().UtcDateTime;
+        var jwt = CertificateFixture.CreateToken(
+            repository: "martincostello/costellobot",
+            workflow: "build.yml",
+            notBefore: now.AddMinutes(2),
+            expiresAt: now.AddMinutes(4),
+            issuedAt: now);
+
+        // Act and Assert
+        await AssertGitHubOidcAuthenticationFailsAsync(jwt);
+    }
+
+    [Fact]
+    public async Task Cannot_Request_Token_With_GitHub_Oidc_Authentication_When_Jwt_Has_Expired()
+    {
+        // Arrange
+        var now = TimeProvider.System.GetUtcNow().UtcDateTime;
+        var jwt = CertificateFixture.CreateToken(
+            repository: "martincostello/costellobot",
+            workflow: "build.yml",
+            notBefore: now.AddMinutes(-4),
+            expiresAt: now.AddMinutes(-2),
+            issuedAt: now.AddMinutes(-4));
+
+        // Act and Assert
+        await AssertGitHubOidcAuthenticationFailsAsync(jwt);
+    }
+
+    [Fact]
+    public async Task Cannot_Request_Token_With_GitHub_Oidc_Authentication_When_Jwt_Signature_Is_Invalid()
+    {
+        // Arrange
+        var jwt = CertificateFixture.CreateToken(
+            repository: "martincostello/costellobot",
+            workflow: "build.yml");
+
+        var segments = jwt.Split('.');
+        var signature = Base64UrlEncoder.DecodeBytes(segments[2]);
+        signature[0] ^= 0xFF;
+        segments[2] = Base64UrlEncoder.Encode(signature);
+
+        // Act and Assert
+        await AssertGitHubOidcAuthenticationFailsAsync(string.Join(".", segments));
+    }
+
+    [Fact]
+    public async Task Cannot_Request_Token_With_GitHub_Oidc_Authentication_When_Jwt_Uses_Invalid_Signature_Algorithm()
+    {
+        // Arrange
+        var jwt = CertificateFixture.CreateUnsignedToken(
+            repository: "martincostello/costellobot",
+            workflow: "build.yml");
+
+        // Act and Assert
+        await AssertGitHubOidcAuthenticationFailsAsync(jwt);
+    }
+
+    [Fact]
+    public async Task Cannot_Request_Token_With_GitHub_Oidc_Authentication_When_Issuer_Is_Incorrect()
+    {
+        // Arrange
+        var jwt = CertificateFixture.CreateToken(
+            repository: "martincostello/costellobot",
+            workflow: "build.yml",
+            issuer: "https://token.actions.githubusercontent.invalid");
+
+        // Act and Assert
+        await AssertGitHubOidcAuthenticationFailsAsync(jwt);
+    }
+
+    [Fact]
+    public async Task Cannot_Request_Token_With_GitHub_Oidc_Authentication_When_Audience_Is_Incorrect()
+    {
+        // Arrange
+        var jwt = CertificateFixture.CreateToken(
+            repository: "martincostello/costellobot",
+            workflow: "build.yml",
+            audience: "https://github.com/octocat");
+
+        // Act and Assert
+        await AssertGitHubOidcAuthenticationFailsAsync(jwt);
+    }
+
     [Theory]
     [InlineData("write", "octo-org/octo-repo", "octo-org", "ci.yml", HttpStatusCode.Forbidden)]
     [InlineData("", "martincostello/costellobot", "martincostello", "build.yml", HttpStatusCode.BadRequest)]
@@ -229,6 +317,23 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
 
         // Assert
         actual.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
+    }
+
+    private async Task AssertGitHubOidcAuthenticationFailsAsync(string jwt)
+    {
+        await ConfigureGitHubOidcAsync();
+
+        var request = new GitHubTokenRequest() { Profile = "self-test-user" };
+
+        using var client = Fixture.CreateHttpClientForApp();
+        client.DefaultRequestHeaders.Authorization = new("Bearer", jwt);
+
+        using var actual = await client.PostAsJsonAsync("/github-token", request, CancellationToken);
+
+        actual.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+
+        var response = await actual.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
+        response.TryGetProperty("token", out _).ShouldBeFalse();
     }
 
     private async Task ConfigureGitHubOidcAsync()
