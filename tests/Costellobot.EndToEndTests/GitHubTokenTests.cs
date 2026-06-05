@@ -12,8 +12,11 @@ public class GitHubTokenTests(AppFixture fixture, ITestOutputHelper outputHelper
     [Fact]
     public async Task Can_Get_Secret_With_GitHub_Oidc_Token_For_App()
     {
+        // Arrange
+        using var client = Fixture.CreateClient();
+
         // Act
-        using var response = await GetTokenAsync("self-test-app");
+        using var response = await GetTokenAsync(client, "self-test-app");
 
         // Assert
         var actual = await response.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
@@ -31,11 +34,11 @@ public class GitHubTokenTests(AppFixture fixture, ITestOutputHelper outputHelper
         finally
         {
             // https://docs.github.com/rest/apps/installations#revoke-an-installation-access-token
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new("Bearer", secret.GetString());
-            client.DefaultRequestHeaders.UserAgent.Add(new("Costellobot.EndToEndTests", AppFixture.Version));
+            using var githubClient = new HttpClient();
+            githubClient.DefaultRequestHeaders.Authorization = new("Bearer", secret.GetString());
+            githubClient.DefaultRequestHeaders.UserAgent.Add(new("Costellobot.EndToEndTests", AppFixture.Version));
 
-            using (await client.DeleteAsync("https://api.github.com/installation/token", CancellationToken))
+            using (await githubClient.DeleteAsync("https://api.github.com/installation/token", CancellationToken))
             {
                 // Ignore any errors
             }
@@ -45,8 +48,11 @@ public class GitHubTokenTests(AppFixture fixture, ITestOutputHelper outputHelper
     [Fact]
     public async Task Can_Get_Secret_With_GitHub_Oidc_Token_For_User()
     {
+        // Arrange
+        using var client = Fixture.CreateClient();
+
         // Act
-        using var response = await GetTokenAsync("self-test-user");
+        using var response = await GetTokenAsync(client, "self-test-user");
 
         // Assert
         var actual = await response.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
@@ -60,7 +66,7 @@ public class GitHubTokenTests(AppFixture fixture, ITestOutputHelper outputHelper
         type.GetString().ShouldBe("user");
     }
 
-    private async Task<HttpResponseMessage> GetTokenAsync(string profile)
+    private async Task<HttpResponseMessage> GetTokenAsync(HttpClient client, string profile)
     {
         // Arrange
         var requestUrl = Environment.GetEnvironmentVariable("ACTIONS_ID_TOKEN_REQUEST_URL");
@@ -68,8 +74,6 @@ public class GitHubTokenTests(AppFixture fixture, ITestOutputHelper outputHelper
 
         Assert.SkipWhen(string.IsNullOrEmpty(requestUrl), "GitHub OIDC request URL is not available.");
         Assert.SkipWhen(string.IsNullOrEmpty(requestToken), "GitHub OIDC request token is not available.");
-
-        using var client = Fixture.CreateClient();
 
         string token;
 
