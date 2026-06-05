@@ -10,7 +10,57 @@ namespace MartinCostello.Costellobot;
 public class GitHubTokenTests(AppFixture fixture, ITestOutputHelper outputHelper) : EndToEndTest(fixture, outputHelper)
 {
     [Fact]
-    public async Task Can_Get_Secret_With_GitHub_Oidc_Token()
+    public async Task Can_Get_Secret_With_GitHub_Oidc_Token_For_App()
+    {
+        // Act
+        using var response = await GetTokenAsync("self-test-app");
+
+        // Assert
+        var actual = await response.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
+
+        // The token itself is not asserted on because it is real and we do not want to accidentally leak it
+        actual.TryGetProperty("token", out var secret).ShouldBeTrue();
+        secret.ValueKind.ShouldBe(JsonValueKind.String);
+
+        try
+        {
+            actual.TryGetProperty("type", out var type).ShouldBeTrue();
+            type.ValueKind.ShouldBe(JsonValueKind.String);
+            type.GetString().ShouldBe("app");
+        }
+        finally
+        {
+            // https://docs.github.com/rest/apps/installations#revoke-an-installation-access-token
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new("Bearer", secret.GetString());
+            client.DefaultRequestHeaders.UserAgent.Add(new("Costellobot.EndToEndTests", AppFixture.Version));
+
+            using (await client.DeleteAsync("https://api.github.com/installation/token", CancellationToken))
+            {
+                // Ignore any errors
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Can_Get_Secret_With_GitHub_Oidc_Token_For_User()
+    {
+        // Act
+        using var response = await GetTokenAsync("self-test-user");
+
+        // Assert
+        var actual = await response.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
+
+        actual.TryGetProperty("token", out var secret).ShouldBeTrue();
+        secret.ValueKind.ShouldBe(JsonValueKind.String);
+        secret.GetString().ShouldBe("not-a-real-secret");
+
+        actual.TryGetProperty("type", out var type).ShouldBeTrue();
+        type.ValueKind.ShouldBe(JsonValueKind.String);
+        type.GetString().ShouldBe("user");
+    }
+
+    private async Task<HttpResponseMessage> GetTokenAsync(string profile)
     {
         // Arrange
         var requestUrl = Environment.GetEnvironmentVariable("ACTIONS_ID_TOKEN_REQUEST_URL");
@@ -42,7 +92,7 @@ public class GitHubTokenTests(AppFixture fixture, ITestOutputHelper outputHelper
         client.DefaultRequestHeaders.Authorization = new("Bearer", token);
 
         // Act
-        using var response = await client.PostAsJsonAsync("/github-token", new { profile = "self-test-user" }, CancellationToken);
+        var response = await client.PostAsJsonAsync("/github-token", new { profile }, CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -52,14 +102,6 @@ public class GitHubTokenTests(AppFixture fixture, ITestOutputHelper outputHelper
         response.Headers.GetValues("Pragma").ShouldBe(["no-cache"]);
         response.Content.Headers.Expires.ShouldBe(DateTimeOffset.UnixEpoch);
 
-        var actual = await response.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
-
-        actual.TryGetProperty("token", out var secret).ShouldBeTrue();
-        secret.ValueKind.ShouldBe(JsonValueKind.String);
-        secret.GetString().ShouldBe("not-a-real-secret");
-
-        actual.TryGetProperty("type", out var type).ShouldBeTrue();
-        type.ValueKind.ShouldBe(JsonValueKind.String);
-        type.GetString().ShouldBe("user");
+        return response;
     }
 }

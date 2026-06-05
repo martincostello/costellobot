@@ -30,7 +30,7 @@ public class AppFixture
         }
     }
 
-    private static string Version => Environment.GetEnvironmentVariable("GITHUB_RUN_ID") ?? "0";
+    internal static string Version => Environment.GetEnvironmentVariable("GITHUB_RUN_ID") ?? "0";
 
     public HttpClient CreateClient(bool allowAutoRedirect = false)
     {
