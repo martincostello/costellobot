@@ -13,7 +13,12 @@ jobs:
     runs-on: ubuntu-24.04
     if: github.event.repository.fork == false
 
+    environment:
+      name: write
+      deployment: false
+
     permissions:
+      contents: read
       id-token: write
 
     steps:
@@ -23,33 +28,23 @@ jobs:
       with:
         egress-policy: audit
 
-    - name: Get GitHub token
-      id: get-github-token
-      if: github.event.repository.fork == false
-      uses: martincostello/github-automation/actions/get-github-token@567bf2ea7958064af7863e6004a545a799f57982 # get-github-token/v4.2.0
-      with:
-        profile-name: write
-
     - name: Checkout code
+      id: checkout-code
       uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       with:
         filter: 'tree:0'
-        persist-credentials: true # zizmor: ignore[artipacked] Needed to push commits
+        persist-credentials: false
         show-progress: false
-        token: ${{ steps.get-github-token.outputs.token }}
 
     - name: Update UK bank holidays
       id: update-bank-holidays
       shell: pwsh
-      env:
-        GIT_COMMIT_USER_EMAIL: ${{ vars.GIT_COMMIT_USER_EMAIL }}
-        GIT_COMMIT_USER_NAME: ${{ vars.GIT_COMMIT_USER_NAME }}
       run: |
         $ErrorActionPreference = "Stop"
         $ProgressPreference = "SilentlyContinue"
 
         $BankHolidaysJsonUri = "https://www.gov.uk/bank-holidays.json"
-        $BankHolidaysJsonFileName = (Join-Path "." "src" "Costellobot" "bank-holidays.json")
+        $BankHolidaysJsonFileName = (Join-Path ${env:GITHUB_WORKSPACE} "src" "Costellobot" "bank-holidays.json")
 
         Invoke-WebRequest -Uri $BankHolidaysJsonUri -OutFile $BankHolidaysJsonFileName | Out-Null
 
@@ -57,45 +52,169 @@ jobs:
 
         if ([string]::IsNullOrEmpty($GitStatus)) {
           Write-Output "No changes to commit."
-          exit 0
+          "updated-uk-bank-holidays=false" >> ${env:GITHUB_OUTPUT}
+        } else {
+          "data-url=${BankHolidaysJsonUri}" >> ${env:GITHUB_OUTPUT}
+          "updated-uk-bank-holidays=true" >> ${env:GITHUB_OUTPUT}
         }
 
-        $BranchName = "update-uk-bank-holidays"
+    - name: Get GitHub token
+      id: get-github-token
+      if: steps.update-bank-holidays.outputs.updated-uk-bank-holidays == 'true'
+      uses: martincostello/github-automation/actions/get-github-token@567bf2ea7958064af7863e6004a545a799f57982 # get-github-token/v4.2.0
+      with:
+        profile-name: write
 
-        git config user.email "${env:GIT_COMMIT_USER_EMAIL}" | Out-Null
-        git config user.name "${env:GIT_COMMIT_USER_NAME}" | Out-Null
-        git fetch origin --no-tags | Out-Null
-        git rev-parse --verify --quiet "remotes/origin/${BranchName}" | Out-Null
+    - name: Push changes to GitHub
+      id: push-changes
+      if: steps.update-bank-holidays.outputs.updated-uk-bank-holidays == 'true'
+      shell: pwsh
+      env:
+        APP_SLUG: ${{ steps.get-github-token.outputs.app-slug }}
+        CHECKOUT_COMMIT: ${{ steps.checkout-code.outputs.commit }}
+        DATA_URL: ${{ steps.update-bank-holidays.outputs.data-url }}
+        GH_TOKEN: ${{ steps.get-github-token.outputs.token }}
+        TOKEN_TYPE: ${{ steps.get-github-token.outputs.token-type }}
+      run: |
+        $branchName = "update-uk-bank-holidays"
+        $branchProbe = gh api "repos/${env:GITHUB_REPOSITORY}/git/ref/heads/${branchName}" 2>&1
 
         if ($LASTEXITCODE -eq 0) {
-          Write-Output "Branch ${BranchName} already exists."
+          Write-Output "::notice::Branch ${branchName} already exists."
+          "updated-uk-bank-holidays=false" >> ${env:GITHUB_OUTPUT}
           exit 0
         }
 
-        git checkout -b $BranchName
-        git add $BankHolidaysJsonFileName
-        git commit -m "Update UK Bank Holidays`n`nUpdate UK bank holidays from ${BankHolidaysJsonUri}." -s
-        git push -u origin $BranchName
+        if ((($branchProbe | Out-String) -notmatch 'HTTP 404')) {
+          throw "Failed to check whether branch '${branchName}' exists."
+        }
 
-        "updated-uk-bank-holidays=true" >> $env:GITHUB_OUTPUT
+        if (${env:TOKEN_TYPE} -eq "app") {
+          $gitUserName = "${env:APP_SLUG}[bot]"
+          $gitUserId = gh api "users/${gitUserName}" --jq '.id'
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($gitUserId)) {
+            throw "Failed to resolve user ID for GitHub app ${gitUserName}."
+          }
+          $gitUserEmail = "${gitUserId}+${gitUserName}@users.noreply.github.com"
+        } else {
+          $identity = gh api "user" | ConvertFrom-Json
+          $gitUserName = $identity.login
+          $gitUserEmail = if ([string]::IsNullOrEmpty($identity.email)) {
+            "$($identity.id)+$($identity.login)@users.noreply.github.com"
+          } else {
+            $identity.email
+          }
+        }
+
+        $baseSha = ${env:CHECKOUT_COMMIT}
+
+        $filePath = "src/Costellobot/bank-holidays.json"
+        $fileFullPath = Join-Path ${env:GITHUB_WORKSPACE} $filePath
+        $currentFile = gh api "repos/${env:GITHUB_REPOSITORY}/contents/${filePath}?ref=${baseSha}" | ConvertFrom-Json
+        $currentContent = $currentFile.content.Replace("`r", "").Replace("`n", "")
+        $localContent = [System.Convert]::ToBase64String(
+          [System.IO.File]::ReadAllBytes($fileFullPath))
+
+        if ($currentContent -eq $localContent) {
+          Write-Output "::error::No changes to commit."
+          exit 1
+        }
+
+        @{
+          ref = "refs/heads/${branchName}"
+          sha = $baseSha
+        } | ConvertTo-Json -Compress | gh api --method POST "repos/${env:GITHUB_REPOSITORY}/git/refs" --input -
+
+        $query = @'
+        mutation($input: CreateCommitOnBranchInput!) {
+          createCommitOnBranch(input: $input) {
+            commit {
+              oid
+            }
+          }
+        }
+        '@
+
+        $title = "Update UK Bank Holidays"
+        $body = @(
+          "Update UK bank holidays from ${env:DATA_URL}.",
+          "",
+          "Signed-off-by: ${gitUserName} <${gitUserEmail}>"
+        ) -join "`n"
+
+        $payload = @{
+          query = $query
+          variables = @{
+            input = @{
+              branch = @{
+                repositoryNameWithOwner = ${env:GITHUB_REPOSITORY}
+                branchName = $branchName
+              }
+              expectedHeadOid = $baseSha
+              message = @{
+                headline = $title
+                body = $body
+              }
+              fileChanges = @{
+                additions = @(
+                  @{
+                    path = $filePath
+                    contents = $localContent
+                  }
+                )
+              }
+            }
+          }
+        } | ConvertTo-Json -Depth 20 -Compress
+
+        $headers = @{
+          Authorization = "Bearer ${env:GH_TOKEN}"
+          Accept = "application/vnd.github+json"
+        }
+
+        $result = Invoke-RestMethod `
+          -Method POST `
+          -Uri ${env:GITHUB_GRAPHQL_URL} `
+          -Headers $headers `
+          -ContentType "application/json" `
+          -Body $payload
+
+        if ($null -ne $result.errors) {
+          throw ($result.errors | ConvertTo-Json -Depth 20 -Compress)
+        }
+
+        "branch-name=${branchName}" >> ${env:GITHUB_OUTPUT}
+        "title=${title}" >> ${env:GITHUB_OUTPUT}
+        "updated-uk-bank-holidays=true" >> ${env:GITHUB_OUTPUT}
 
     - name: Create pull request
-      if: steps.update-bank-holidays.outputs.updated-uk-bank-holidays == 'true'
-      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      with:
-        github-token: ${{ steps.get-github-token.outputs.token }}
-        script: |
-          const { repo, owner } = context.repo;
-          const workflowUrl = `${process.env.GITHUB_SERVER_URL}/${owner}/${repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-          await github.rest.pulls.create({
-            title: 'Update UK Bank Holidays',
-            owner,
-            repo,
-            head: 'update-uk-bank-holidays',
-            base: 'main',
-            body: [
-              'Update UK bank holiday dates from [gov.uk](https://www.api.gov.uk/gds/bank-holidays/#bank-holidays).',
-              '',
-              `This pull request was generated by [GitHub Actions](${workflowUrl}).`
-            ].join('\n')
-          });
+      if: steps.push-changes.outputs.updated-uk-bank-holidays == 'true'
+      shell: pwsh
+      env:
+        BASE_BRANCH: ${{ github.event.repository.default_branch }}
+        HEAD_BRANCH: ${{ steps.push-changes.outputs.branch-name }}
+        DATA_URL: ${{ steps.update-bank-holidays.outputs.data-url }}
+        GH_TOKEN: ${{ steps.get-github-token.outputs.token }}
+        PR_TITLE: ${{ steps.push-changes.outputs.title }}
+      run: |
+        $workflowUrl = "${env:GITHUB_SERVER_URL}/${env:GITHUB_REPOSITORY}/actions/runs/${env:GITHUB_RUN_ID}"
+
+        $body = @(
+          "Update UK bank holiday dates from [gov.uk](${env:DATA_URL}).",
+          "",
+          "This pull request was generated by [GitHub Actions](${workflowUrl})."
+        ) -join "`n"
+
+        $prUrl = gh pr create `
+          --title ${env:PR_TITLE} `
+          --body $body `
+          --head ${env:HEAD_BRANCH} `
+          --base ${env:BASE_BRANCH} `
+          --repo ${env:GITHUB_REPOSITORY}
+
+        if ($LASTEXITCODE -ne 0) {
+          throw "Failed to create pull request."
+        }
+
+        $prNumber = ($prUrl -split "/")[-1]
+        Write-Output "::notice::Created pull request ${env:GITHUB_REPOSITORY}#${prNumber}: ${prUrl}"
