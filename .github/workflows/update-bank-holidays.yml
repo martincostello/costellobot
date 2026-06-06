@@ -44,7 +44,7 @@ jobs:
         $ProgressPreference = "SilentlyContinue"
 
         $BankHolidaysJsonUri = "https://www.gov.uk/bank-holidays.json"
-        $BankHolidaysJsonFileName = (Join-Path "." "src" "Costellobot" "bank-holidays.json")
+        $BankHolidaysJsonFileName = (Join-Path ${env:GITHUB_WORKSPACE} "src" "Costellobot" "bank-holidays.json")
 
         Invoke-WebRequest -Uri $BankHolidaysJsonUri -OutFile $BankHolidaysJsonFileName | Out-Null
 
@@ -67,6 +67,7 @@ jobs:
 
     - name: Push changes to GitHub
       id: push-changes
+      if: steps.update-bank-holidays.outputs.updated-uk-bank-holidays == 'true'
       shell: pwsh
       env:
         APP_SLUG: ${{ steps.get-github-token.outputs.app-slug }}
@@ -80,7 +81,7 @@ jobs:
 
         if ($LASTEXITCODE -eq 0) {
           Write-Output "::notice::Branch ${branchName} already exists."
-          "updated-version=false" >> ${env:GITHUB_OUTPUT}
+          "updated-uk-bank-holidays=false" >> ${env:GITHUB_OUTPUT}
           exit 0
         }
 
@@ -107,7 +108,7 @@ jobs:
 
         $baseSha = ${env:CHECKOUT_COMMIT}
 
-        $filePath = "Directory.Build.props"
+        $filePath = "src/Costellobot/bank-holidays.json"
         $fileFullPath = Join-Path ${env:GITHUB_WORKSPACE} $filePath
         $currentFile = gh api "repos/${env:GITHUB_REPOSITORY}/contents/${filePath}?ref=${baseSha}" | ConvertFrom-Json
         $currentContent = $currentFile.content.Replace("`r", "").Replace("`n", "")
@@ -184,18 +185,17 @@ jobs:
 
         "branch-name=${branchName}" >> ${env:GITHUB_OUTPUT}
         "title=${title}" >> ${env:GITHUB_OUTPUT}
-        "updated-version=true" >> ${env:GITHUB_OUTPUT}
-        "version=${env:NEXT_VERSION}" >> ${env:GITHUB_OUTPUT}
+        "updated-uk-bank-holidays=true" >> ${env:GITHUB_OUTPUT}
 
     - name: Create pull request
-      if: steps.update-bank-holidays.outputs.updated-uk-bank-holidays == 'true'
+      if: steps.push-changes.outputs.updated-uk-bank-holidays == 'true'
       shell: pwsh
       env:
         BASE_BRANCH: ${{ github.event.repository.default_branch }}
-        HEAD_BRANCH: ${{ steps.update-bank-holidays.outputs.branch-name }}
+        HEAD_BRANCH: ${{ steps.push-changes.outputs.branch-name }}
         DATA_URL: ${{ steps.update-bank-holidays.outputs.data-url }}
         GH_TOKEN: ${{ steps.get-github-token.outputs.token }}
-        PR_TITLE: ${{ steps.update-bank-holidays.outputs.title }}
+        PR_TITLE: ${{ steps.push-changes.outputs.title }}
       run: |
         $workflowUrl = "${env:GITHUB_SERVER_URL}/${env:GITHUB_REPOSITORY}/actions/runs/${env:GITHUB_RUN_ID}"
 
