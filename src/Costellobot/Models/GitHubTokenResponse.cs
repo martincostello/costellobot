@@ -20,4 +20,8 @@ public sealed class GitHubTokenResponse
     [JsonPropertyName("appSlug")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? AppSlug { get; set; }
+
+    [JsonPropertyName("installationId")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public long? InstallationId { get; set; }
 }
