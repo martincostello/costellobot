@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Collections.Frozen;
 using System.Security.Claims;
 using Azure.Security.KeyVault.Secrets;
 using MartinCostello.Costellobot.Models;
@@ -18,6 +19,8 @@ public sealed partial class GitHubTokenBroker(
     IOptionsMonitor<GitHubOptions> monitor,
     ILogger<GitHubTokenBroker> logger)
 {
+    private static readonly FrozenSet<string> AllRepositories = FrozenSet.Create(["*"]);
+
     public async Task<IResult> GetTokenAsync(string profileName, ClaimsPrincipal user, CancellationToken cancellationToken)
     {
         Log.ReceivedRequestWithOidcToken(logger, user);
@@ -60,8 +63,25 @@ public sealed partial class GitHubTokenBroker(
 
             var parts = repository.Split('/');
             var owner = parts[0];
-            var repo = profile.TargetRepositories is { Count: > 0 } ? profile.TargetRepositories[0] : parts[1];
-            var targetRepositories = profile.TargetRepositories is { Count: > 0 } ? profile.TargetRepositories : [repo];
+
+            string repo;
+            IList<string>? targetRepositories;
+
+            if (profile.TargetRepositories is not { Count: > 0 } targets)
+            {
+                repo = parts[1];
+                targetRepositories = [repo];
+            }
+            else if (targets.SequenceEqual(AllRepositories, StringComparer.Ordinal))
+            {
+                repo = parts[1];
+                targetRepositories = null;
+            }
+            else
+            {
+                repo = profile.TargetRepositories[0];
+                targetRepositories = profile.TargetRepositories;
+            }
 
             var client = clientFactory.CreateForApp(profile.AppId);
             var installation = await client.GitHubApps.GetRepositoryInstallationForCurrent(owner, repo);
