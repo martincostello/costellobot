@@ -59,6 +59,10 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         response.TryGetProperty("appSlug", out var appSlug).ShouldBeTrue();
         appSlug.ValueKind.ShouldBe(JsonValueKind.String);
         appSlug.GetString().ShouldBe("costellobot");
+
+        response.TryGetProperty("installationId", out var installationId).ShouldBeTrue();
+        installationId.ValueKind.ShouldBe(JsonValueKind.Number);
+        installationId.GetInt64().ShouldBe(24364748);
     }
 
     [Fact]
@@ -99,6 +103,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
 
         response.TryGetProperty("appId", out _).ShouldBeFalse();
         response.TryGetProperty("appSlug", out _).ShouldBeFalse();
+        response.TryGetProperty("installationId", out _).ShouldBeFalse();
     }
 
     [Fact]
