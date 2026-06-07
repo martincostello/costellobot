@@ -55,20 +55,14 @@ public static class IGitHubClientExtensions
         CancellationToken cancellationToken)
     {
         // See https://docs.github.com/rest/apps/apps?apiVersion=2026-03-10#create-an-installation-access-token-for-an-app
-        object body;
-
-        if (targetRepositories is null)
-        {
-            body = new { permissions = requiredPermissions };
-        }
-        else
-        {
-            body = new
+        object body =
+            targetRepositories is null ?
+            new { permissions = requiredPermissions } :
+            new
             {
                 repositories = targetRepositories,
                 permissions = requiredPermissions,
             };
-        }
 
         var uri = new Uri($"app/installations/{installationId}/access_tokens", UriKind.Relative);
 
