@@ -28,10 +28,11 @@ public sealed partial class PullRequestHandler(
 
         bool isManualApproval = false;
 
-        if (!IsNewPullRequestFromTrustedUser(body, out var pull))
+        if (!IsPullRequestFromTrustedUser(body, out var pull))
         {
             if (!await IsManuallyApprovedAsync(pull, body))
             {
+                Log.IgnoringPullRequestAction(logger, pull, message.Action);
                 return;
             }
 
@@ -57,17 +58,19 @@ public sealed partial class PullRequestHandler(
         }
     }
 
-    private bool IsNewPullRequestFromTrustedUser(PullRequestEvent message, out IssueId pull)
+    private bool IsPullRequestFromTrustedUser(PullRequestEvent message, out IssueId pull)
     {
         pull = IssueId.Create(message.Repository!, message.PullRequest!.Number);
 
-        if (!string.Equals(message.Action, PullRequestActionValue.Opened, StringComparison.Ordinal))
+        var isReleventAction = message.Action switch
         {
-            if (!string.Equals(message.Action, PullRequestActionValue.Labeled, StringComparison.Ordinal))
-            {
-                Log.IgnoringPullRequestAction(logger, pull, message.Action);
-            }
+            PullRequestActionValue.Opened => true,
+            PullRequestActionValue.ReadyForReview => true,
+            _ => false,
+        };
 
+        if (!isReleventAction)
+        {
             return false;
         }
 

@@ -15,8 +15,10 @@ namespace MartinCostello.Costellobot.Handlers;
 [Collection<AppCollection>]
 public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<AppFixture>(fixture, outputHelper)
 {
-    [Fact]
-    public async Task Pull_Request_Is_Approved_For_Trusted_User_And_Dependency_Name()
+    [Theory]
+    [InlineData("opened")]
+    [InlineData("ready_for_review")]
+    public async Task Pull_Request_Is_Approved_For_Trusted_User_And_Dependency_Name(string action)
     {
         // Arrange
         Fixture.ApprovePullRequests();
@@ -31,7 +33,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         var pullRequestApproved = RegisterReview(driver);
 
         // Act
-        using var response = await PostWebhookAsync(driver);
+        using var response = await PostWebhookAsync(driver, action);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -345,7 +347,6 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     [InlineData("converted_to_draft")]
     [InlineData("edited")]
     [InlineData("locked")]
-    [InlineData("ready_for_review")]
     [InlineData("reopened")]
     [InlineData("review_request_removed")]
     [InlineData("review_requested")]
