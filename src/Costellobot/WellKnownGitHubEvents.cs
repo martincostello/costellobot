@@ -26,6 +26,7 @@ public static class WellKnownGitHubEvents
         (WebhookEventType.Push, null),
         (WebhookEventType.PullRequest, PullRequestActionValue.Labeled),
         (WebhookEventType.PullRequest, PullRequestActionValue.Opened),
+        (WebhookEventType.PullRequest, PullRequestActionValue.ReadyForReview),
         (WebhookEventType.PullRequestReview, PullRequestReviewActionValue.Submitted),
         (WebhookEventType.RepositoryDispatch, RepositoryDispatchActionValue.DeploymentCompleted),
         (WebhookEventType.RepositoryDispatch, RepositoryDispatchActionValue.DeploymentStarted),
