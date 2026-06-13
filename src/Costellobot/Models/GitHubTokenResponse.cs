@@ -17,6 +17,14 @@ public sealed class GitHubTokenResponse
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public long? AppId { get; set; }
 
+    [JsonPropertyName("appPermissions")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IDictionary<string, string>? AppPermissions { get; set; }
+
+    [JsonPropertyName("appRepositories")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IList<string>? AppRepositories { get; set; }
+
     [JsonPropertyName("appSlug")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? AppSlug { get; set; }

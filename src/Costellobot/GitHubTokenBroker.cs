@@ -90,6 +90,8 @@ public sealed partial class GitHubTokenBroker(
             response = new()
             {
                 AppId = long.Parse(app.AppId, CultureInfo.InvariantCulture),
+                AppPermissions = profile.AppPermissions,
+                AppRepositories = targetRepositories,
                 AppSlug = app.Name,
                 InstallationId = installation.Id,
                 Token = accessToken.Token,

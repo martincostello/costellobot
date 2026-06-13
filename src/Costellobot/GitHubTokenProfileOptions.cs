@@ -11,6 +11,8 @@ public sealed class GitHubTokenProfileOptions
 
     public IList<string> Branches { get; set; } = [];
 
+    public Dictionary<string, string> Claims { get; set; } = [];
+
     public IList<string> Environments { get; set; } = [];
 
     public IList<string> Events { get; set; } = [];
