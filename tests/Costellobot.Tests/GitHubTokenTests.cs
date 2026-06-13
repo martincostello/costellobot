@@ -56,6 +56,14 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         appId.ValueKind.ShouldBe(JsonValueKind.Number);
         appId.GetInt64().ShouldBe(183256);
 
+        response.TryGetProperty("appPermissions", out var appPermissions).ShouldBeTrue();
+        appPermissions.ValueKind.ShouldBe(JsonValueKind.Object);
+        appPermissions.Deserialize<Dictionary<string, string>>().ShouldBe(new() { ["contents"] = "read" });
+
+        response.TryGetProperty("appRepositories", out var appRepositories).ShouldBeTrue();
+        appRepositories.ValueKind.ShouldBe(JsonValueKind.Array);
+        appRepositories.Deserialize<string[]>().ShouldBe(["costellobot"]);
+
         response.TryGetProperty("appSlug", out var appSlug).ShouldBeTrue();
         appSlug.ValueKind.ShouldBe(JsonValueKind.String);
         appSlug.GetString().ShouldBe("costellobot");
@@ -102,6 +110,8 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         type.GetString().ShouldBe("user");
 
         response.TryGetProperty("appId", out _).ShouldBeFalse();
+        response.TryGetProperty("appPermissions", out _).ShouldBeFalse();
+        response.TryGetProperty("appRepositories", out _).ShouldBeFalse();
         response.TryGetProperty("appSlug", out _).ShouldBeFalse();
         response.TryGetProperty("installationId", out _).ShouldBeFalse();
     }
