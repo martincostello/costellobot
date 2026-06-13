@@ -105,6 +105,18 @@ public sealed partial class GitHubTokenProfileAuthorizer(ILogger<GitHubTokenProf
             return false;
         }
 
+        if (profile.Claims is { Count: > 0 } claims)
+        {
+            foreach ((string claimId, string claimValue) in claims)
+            {
+                if (!user.HasClaim((p) => p.Type == claimId && string.Equals(p.Value, claimValue, StringComparison.Ordinal)))
+                {
+                    Log.TokenMissingClaim(logger, claimId);
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 

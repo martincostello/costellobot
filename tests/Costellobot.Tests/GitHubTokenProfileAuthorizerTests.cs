@@ -415,20 +415,100 @@ public class GitHubTokenProfileAuthorizerTests(ITestOutputHelper outputHelper)
             true
         },
         {
+            "Rejects missing claims when custom claims are required",
+            new()
+            {
+                Branches = ["*"],
+                Claims = new() { ["custom_claim"] = "true" },
+                Events = ["*"],
+                Workflows = ["deploy.yml"],
+            },
+            [
+                Claim(GitHubOidcClaims.Ref, "refs/heads/main"),
+                Claim(GitHubOidcClaims.RefType, "branch"),
+                Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
+                Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/deploy.yml@refs/heads/main"),
+            ],
+            false
+        },
+        {
+            "Rejects custom claim that is not matched",
+            new()
+            {
+                Branches = ["*"],
+                Claims = new() { ["custom_claim"] = "true" },
+                Events = ["*"],
+                Workflows = ["deploy.yml"],
+            },
+            [
+                Claim("custom_claim", "false"),
+                Claim(GitHubOidcClaims.Ref, "refs/heads/some-branch"),
+                Claim(GitHubOidcClaims.RefType, "branch"),
+                Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
+                Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/deploy.yml@refs/heads/main"),
+            ],
+            false
+        },
+        {
+            "Rejects custom claims where some are not matched",
+            new()
+            {
+                Branches = ["*"],
+                Claims = new()
+                {
+                    ["first"] = "a",
+                    ["second"] = "b",
+                    ["third"] = "c",
+                },
+                Events = ["*"],
+                Workflows = ["deploy.yml"],
+            },
+            [
+                Claim("first", "a"),
+                Claim("second", "a"),
+                Claim("third", "c"),
+                Claim(GitHubOidcClaims.Ref, "refs/heads/some-branch"),
+                Claim(GitHubOidcClaims.RefType, "branch"),
+                Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
+                Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/deploy.yml@refs/heads/main"),
+            ],
+            false
+        },
+        {
+            "Allows matching custom claims",
+            new()
+            {
+                Branches = ["*"],
+                Claims = new() { ["custom_claim"] = "true" },
+                Events = ["*"],
+                Workflows = ["deploy.yml"],
+            },
+            [
+                Claim("custom_claim", "true"),
+                Claim(GitHubOidcClaims.Ref, "refs/heads/main"),
+                Claim(GitHubOidcClaims.RefType, "branch"),
+                Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
+                Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/deploy.yml@refs/heads/main"),
+            ],
+            true
+        },
+        {
             "Allows principals that satisfy every restricted filter",
             new()
             {
                 Branches = ["release"],
+                Claims = new() { ["custom_claim"] = "true" },
                 Environments = ["Production"],
                 Events = ["workflow_dispatch"],
                 Tags = ["v1.0.0"],
                 Workflows = ["deploy.yaml"],
             },
             [
+                Claim("custom_claim", "true"),
                 Claim(GitHubOidcClaims.Environment, "Production"),
                 Claim(GitHubOidcClaims.EventName, "workflow_dispatch"),
-                Claim(GitHubOidcClaims.RefType, "branch"),
                 Claim(GitHubOidcClaims.Ref, "refs/heads/release"),
+                Claim(GitHubOidcClaims.RefType, "branch"),
                 Claim(GitHubOidcClaims.Repository, "martincostello/costellobot"),
                 Claim(GitHubOidcClaims.WorkflowRef, "martincostello/costellobot/.github/workflows/deploy.yaml@refs/heads/release"),
             ],
