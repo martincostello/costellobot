@@ -2,7 +2,7 @@
   <PropertyGroup>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)Costellobot.ruleset</CodeAnalysisRuleSet>
-    <Features>runtime-async=on</Features>
+    <Features>$(Features);runtime-async=on</Features>
     <LangVersion>preview</LangVersion>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <UseArtifactsOutput>true</UseArtifactsOutput>
