@@ -332,7 +332,7 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cosign verify "${CONTAINER_IMAGE}" --certificate-identity "${CERTIFICATE_IDENTITY}" --certificate-oidc-issuer "${CERTIFICATE_OIDC_ISSUER}" || exit 1
-        gh attestation verify --repo "${GITHUB_REPOSITORY}" "${CONTAINER_IMAGE}" || exit 1
+        gh attestation verify --repo "${GITHUB_REPOSITORY}" "oci://${CONTAINER_IMAGE}" || exit 1
       
 
     - name: Deploy container to Azure App Service
