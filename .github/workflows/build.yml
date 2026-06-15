@@ -266,6 +266,7 @@ jobs:
       url: ${{ env.APPLICATION_URL_PROD }}
 
     permissions:
+      attestations: read
       contents: write
       id-token: write
 
@@ -326,8 +327,13 @@ jobs:
       shell: bash
       env:
         CERTIFICATE_IDENTITY: ${{ format('{0}/{1}', github.server_url, github.workflow_ref) }}
+        CERTIFICATE_OIDC_ISSUER: https://token.actions.githubusercontent.com
         CONTAINER_IMAGE: ${{ needs.build.outputs.container-tag }}
-      run: cosign verify "${CONTAINER_IMAGE}" --certificate-identity "${CERTIFICATE_IDENTITY}" --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cosign verify "${CONTAINER_IMAGE}" --certificate-identity "${CERTIFICATE_IDENTITY}" --certificate-oidc-issuer "${CERTIFICATE_OIDC_ISSUER}" || exit 1
+        gh attestation verify --repo "${GITHUB_REPOSITORY}" "oci://${CONTAINER_IMAGE}" || exit 1
+      
 
     - name: Deploy container to Azure App Service
       uses: azure/webapps-deploy@02a81bead70021f5284939794bcec79c271ab383 # v3.0.8
