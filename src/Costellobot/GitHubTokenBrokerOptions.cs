@@ -7,6 +7,8 @@ public sealed class GitHubTokenBrokerOptions
 {
     public bool IsEnabled { get; set; }
 
+    public string Owner { get; set; } = string.Empty;
+
     public Dictionary<string, Dictionary<string, GitHubTokenProfileOptions>> Repositories { get; set; } = [];
 
     public IList<string> Tokens { get; set; } = [];

@@ -129,15 +129,17 @@ public static class AuthenticationEndpoints
         services
             .AddAuthorization()
             .AddOptions<AuthorizationOptions>()
-            .Configure((options) =>
+            .Configure<IOptionsMonitor<GitHubOptions>>((authorization, options) =>
             {
-                options.AddPolicy(GitHubOidcPolicyName, (policy) =>
+                var repositoryOwner = options.CurrentValue.TokenBroker.Owner;
+
+                authorization.AddPolicy(GitHubOidcPolicyName, (policy) =>
                 {
                     policy.RequireAuthenticatedUser()
-                          .RequireClaim(GitHubOidcClaims.RepositoryOwner, "martincostello");
+                          .RequireClaim(GitHubOidcClaims.RepositoryOwner, repositoryOwner);
                 });
 
-                options.AddPolicy(AdminPolicyName, (policy) =>
+                authorization.AddPolicy(AdminPolicyName, (policy) =>
                 {
                     policy.RequireAuthenticatedUser()
                           .AddRequirements(new AdministratorRequirement());
