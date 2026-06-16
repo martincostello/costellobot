@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
-using NuGet.Versioning;
 using Octokit;
 using Activity = System.Diagnostics.Activity;
 
@@ -359,35 +358,20 @@ public static class AdminEndpoints
                     DependencyEcosystem.Ruby,
                 ];
 
-                var comparer = Comparer<string>.Create(static (x, y) =>
-                {
-                    if (NuGetVersion.TryParse(x, out var versionX) &&
-                        NuGetVersion.TryParse(y, out var versionY))
-                    {
-                        return versionX.CompareTo(versionY);
-                    }
-
-                    return string.Compare(x, y, StringComparison.Ordinal);
-                });
-
-                var trusted = new Dictionary<DependencyEcosystem, IReadOnlyList<TrustedDependency>>();
-                var denied = new Dictionary<DependencyEcosystem, IReadOnlyList<DeniedDependency>>();
+                var trusted = new Dictionary<DependencyEcosystem, IReadOnlyList<OrderedDependency<TrustedDependency>>>();
+                var denied = new Dictionary<DependencyEcosystem, IReadOnlyList<OrderedDependency<DeniedDependency>>>();
 
                 foreach (var ecosystem in ecosystems)
                 {
                     var trustedDependencies = await store.GetTrustAsync(ecosystem, cancellationToken);
                     var deniedDependencies = await store.GetDeniedAsync(ecosystem, cancellationToken);
 
-                    trusted[ecosystem] = Sort(trustedDependencies, comparer);
-                    denied[ecosystem] = Sort(deniedDependencies, comparer);
+                    trusted[ecosystem] = DependencyHighlighter.Order(ecosystem, trustedDependencies, (p) => p.TrustedAt);
+                    denied[ecosystem] = DependencyHighlighter.Order(ecosystem, deniedDependencies, (p) => p.DeniedAt);
                 }
 
                 var model = new DependenciesModel(trusted, denied);
                 return Results.RazorSlice<Dependencies, DependenciesModel>(model);
-
-                static IReadOnlyList<T> Sort<T>(IEnumerable<T> collection, Comparer<string> comparer)
-                    where T : IDependency =>
-                    [.. collection.OrderBy((p) => p.Id).ThenByDescending((p) => p.Version, comparer)];
             })
             .AddEndpointFilter<SetAntiforgeryCookieFilter>()
             .WithName(DependenciesRoute)

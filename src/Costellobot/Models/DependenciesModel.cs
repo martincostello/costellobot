@@ -4,10 +4,10 @@
 namespace MartinCostello.Costellobot.Models;
 
 public sealed class DependenciesModel(
-    IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<TrustedDependency>> trusted,
-    IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<DeniedDependency>> denied)
+    IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<OrderedDependency<TrustedDependency>>> trusted,
+    IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<OrderedDependency<DeniedDependency>>> denied)
 {
-    public IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<TrustedDependency>> Trusted { get; } = trusted;
+    public IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<OrderedDependency<TrustedDependency>>> Trusted { get; } = trusted;
 
-    public IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<DeniedDependency>> Denied { get; } = denied;
+    public IReadOnlyDictionary<DependencyEcosystem, IReadOnlyList<OrderedDependency<DeniedDependency>>> Denied { get; } = denied;
 }
