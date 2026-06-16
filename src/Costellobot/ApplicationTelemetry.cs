@@ -24,6 +24,7 @@ public static class ApplicationTelemetry
         .AddProcessRuntimeDetector()
         .AddAttributes(
             [
+                new("service.criticality", "high"),
                 new("vcs.owner.name", GitMetadata.RepositoryOwner),
                 new("vcs.provider.name", "github"),
                 new("vcs.ref.head.name", GitMetadata.Branch),
