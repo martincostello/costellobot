@@ -141,7 +141,7 @@ public static class DependencyHighlighter
     private static bool TrySplitDockerDigest(string version, out string baseVersion)
     {
         // A Docker digest is the SHA-256 hash of the image (i.e. 64 hexadecimal characters).
-        int index = version.LastIndexOf('-');
+        int index = version.LastIndexOf('-', StringComparison.Ordinal);
 
         if (index > 0 && IsDigest(version.AsSpan(index + 1)))
         {
