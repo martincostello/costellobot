@@ -134,7 +134,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
 
         var response = await actual.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
 
-        response.TryGetProperty("token", out var subject).ShouldBeFalse();
+        response.TryGetProperty("token", out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -156,7 +156,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
 
         var response = await actual.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
 
-        response.TryGetProperty("token", out var subject).ShouldBeFalse();
+        response.TryGetProperty("token", out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -279,7 +279,7 @@ public sealed class GitHubTokenTests(HttpServerFixture fixture, ITestOutputHelpe
         actual.StatusCode.ShouldBe(expected);
 
         var response = await actual.Content.ReadFromJsonAsync<JsonElement>(CancellationToken);
-        response.TryGetProperty("token", out var subject).ShouldBeFalse();
+        response.TryGetProperty("token", out _).ShouldBeFalse();
     }
 
     [Fact]
