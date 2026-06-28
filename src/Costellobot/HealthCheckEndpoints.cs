@@ -40,34 +40,33 @@ public static class HealthCheckEndpoints
 
     private static async Task WriteResponse(HttpContext context, HealthReport healthReport)
     {
-        await using (var writer = new Utf8JsonWriter(context.Response.BodyWriter, new() { Indented = true }))
+        context.Response.ContentType = "application/json; charset=utf-8";
+
+        await using var writer = new Utf8JsonWriter(context.Response.BodyWriter, new() { Indented = true });
+
+        writer.WriteStartObject();
         {
-            writer.WriteStartObject();
+            writer.WriteString("status", healthReport.Status.ToString());
+            writer.WriteString("version", GitMetadata.Version);
+            writer.WriteStartObject("results");
+
+            foreach ((var name, var entry) in healthReport.Entries)
             {
-                writer.WriteString("status", healthReport.Status.ToString());
-                writer.WriteString("version", GitMetadata.Version);
-                writer.WriteStartObject("results");
-
-                foreach ((var name, var entry) in healthReport.Entries)
+                writer.WriteStartObject(name);
                 {
-                    writer.WriteStartObject(name);
+                    writer.WriteString("status", entry.Status.ToString());
+
+                    if (entry.Description is { Length: > 0 } description)
                     {
-                        writer.WriteString("status", entry.Status.ToString());
+                        writer.WriteString("description", description);
+                    }
 
-                        if (entry.Description is { Length: > 0 } description)
-                        {
-                            writer.WriteString("description", description);
-                        }
+                    writer.WriteStartObject("data");
 
-                        writer.WriteStartObject("data");
-
-                        foreach ((var key, var item) in entry.Data)
-                        {
-                            writer.WritePropertyName(key);
-                            JsonSerializer.Serialize(writer, item, item?.GetType() ?? typeof(object));
-                        }
-
-                        writer.WriteEndObject();
+                    foreach ((var key, var item) in entry.Data)
+                    {
+                        writer.WritePropertyName(key);
+                        JsonSerializer.Serialize(writer, item, item?.GetType() ?? typeof(object));
                     }
 
                     writer.WriteEndObject();
@@ -79,6 +78,6 @@ public static class HealthCheckEndpoints
             writer.WriteEndObject();
         }
 
-        context.Response.ContentType = "application/json; charset=utf-8";
+        writer.WriteEndObject();
     }
 }
