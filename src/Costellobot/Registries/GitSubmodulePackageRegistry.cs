@@ -45,7 +45,7 @@ public sealed class GitSubmodulePackageRegistry(
             items[0] is { SubmoduleGitUrl: not null } item)
         {
             string url = item.SubmoduleGitUrl;
-            string urlWithoutRepoName = string.Join('/', url.Split('/').SkipLast(1));
+            string urlWithoutRepoName = url[..url.LastIndexOf('/')];
 
             return [urlWithoutRepoName];
         }

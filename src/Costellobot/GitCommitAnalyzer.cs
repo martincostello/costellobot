@@ -434,6 +434,10 @@ public sealed partial class GitCommitAnalyzer(
             }
         }
 
+        var registriesForEcosystem = _registries
+            .Where((p) => p.Ecosystem == ecosystem)
+            .ToList();
+
         // If a dependency is not trusted by name alone, determine whether it is trusted through its owner or implicitly
         foreach ((string dependency, var trust) in dependencyTrust.Where((p) => !p.Value.Trusted))
         {
@@ -470,7 +474,7 @@ public sealed partial class GitCommitAnalyzer(
 
         foreach ((string dependency, var trust) in dependencyTrust.Where((p) => p.Value.Trusted))
         {
-            var registry = _registries.FirstOrDefault((p) => p.Ecosystem == ecosystem);
+            var registry = registriesForEcosystem.FirstOrDefault();
 
             if (registry is null)
             {
@@ -570,9 +574,7 @@ public sealed partial class GitCommitAnalyzer(
                 return (false, version);
             }
 
-            var registries = _registries.Where((p) => p.Ecosystem == ecosystem).ToList();
-
-            if (registries.Count == 0)
+            if (registriesForEcosystem.Count == 0)
             {
                 return (false, version);
             }
@@ -584,7 +586,7 @@ public sealed partial class GitCommitAnalyzer(
                 return (false, version);
             }
 
-            foreach (var registry in registries)
+            foreach (var registry in registriesForEcosystem)
             {
                 if (await IsTrustedDependencyOwnerAsync(
                         repository,
