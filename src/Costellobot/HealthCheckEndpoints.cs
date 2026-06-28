@@ -38,10 +38,9 @@ public static class HealthCheckEndpoints
                .RequireAuthorization((policy) => policy.AddRequirements(new Authorization.HealthProbeRequirement()));
     }
 
-    private static Task WriteResponse(HttpContext context, HealthReport healthReport)
+    private static async Task WriteResponse(HttpContext context, HealthReport healthReport)
     {
-        using var stream = new MemoryStream();
-        using (var writer = new Utf8JsonWriter(stream, new() { Indented = true }))
+        await using (var writer = new Utf8JsonWriter(context.Response.BodyWriter, new() { Indented = true }))
         {
             writer.WriteStartObject();
             {
@@ -81,6 +80,5 @@ public static class HealthCheckEndpoints
         }
 
         context.Response.ContentType = "application/json; charset=utf-8";
-        return context.Response.WriteAsync(Encoding.UTF8.GetString(stream.ToArray()));
     }
 }
