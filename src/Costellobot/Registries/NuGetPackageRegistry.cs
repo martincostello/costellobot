@@ -123,21 +123,18 @@ public sealed partial class NuGetPackageRegistry : PackageRegistry
 
         var package = response.Data.FirstOrDefault((p) => string.Equals(p.Id, id, StringComparison.OrdinalIgnoreCase));
 
-        if (package is null ||
-            !string.Equals(package.Id, id, StringComparison.OrdinalIgnoreCase))
+        if (package is null)
         {
             return [];
         }
 
         var versionFound = package.Versions
-            .Where((p) => string.Equals(p.Version, version, StringComparison.OrdinalIgnoreCase))
-            .Select((p) => p.Version)
-            .FirstOrDefault();
+            .FirstOrDefault((p) => string.Equals(p.Version, version, StringComparison.OrdinalIgnoreCase))
+            ?.Version;
 
         versionFound ??= package.Versions
-            .Where((p) => p.Version.StartsWith(version, StringComparison.Ordinal))
-            .Where((p) => p.Version.Contains('+', StringComparison.Ordinal))
-            .Select((p) => p.Version.Split('+')[0])
+            .Where((p) => p.Version.StartsWith(version, StringComparison.Ordinal) && p.Version.Contains('+', StringComparison.Ordinal))
+            .Select((p) => p.Version[..p.Version.IndexOf('+', StringComparison.Ordinal)])
             .SingleOrDefault();
 
         versionFound ??= package.Version;
@@ -170,8 +167,7 @@ public sealed partial class NuGetPackageRegistry : PackageRegistry
         var index = await GetServiceIndexAsync(cancellationToken);
 
         var resource = index?.Resources?
-            .Where((p) => string.Equals(p.Type, type, StringComparison.Ordinal))
-            .FirstOrDefault();
+            .FirstOrDefault((p) => string.Equals(p.Type, type, StringComparison.Ordinal));
 
         string? baseAddress = null;
 

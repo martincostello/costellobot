@@ -12,7 +12,10 @@ public static class ApplicationTelemetry
 {
     public static readonly string ServiceName = "Costellobot";
     public static readonly string ServiceNamespace = "Costellobot";
-    public static readonly string ServiceVersion = GitMetadata.Version.Split('+')[0];
+    public static readonly string ServiceVersion = GitMetadata.Version.IndexOf('+', StringComparison.Ordinal) is >= 0 and var i
+        ? GitMetadata.Version[..i]
+        : GitMetadata.Version;
+
     public static readonly ActivitySource ActivitySource = new(ServiceName, ServiceVersion);
 
     public static ResourceBuilder ResourceBuilder { get; } = ResourceBuilder.CreateDefault()

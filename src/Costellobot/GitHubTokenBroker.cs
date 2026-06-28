@@ -61,20 +61,20 @@ public sealed partial class GitHubTokenBroker(
                 return Results.Problem($"Profile '{profileName}' does not have a valid GitHub app configured.", statusCode: StatusCodes.Status404NotFound);
             }
 
-            var parts = repository.Split('/');
-            var owner = parts[0];
+            int slash = repository.IndexOf('/', StringComparison.Ordinal);
+            var owner = repository[..slash];
 
             string repo;
             IList<string>? targetRepositories;
 
             if (profile.TargetRepositories is not { Count: > 0 } targets)
             {
-                repo = parts[1];
+                repo = repository[(slash + 1)..];
                 targetRepositories = [repo];
             }
             else if (targets.SequenceEqual(AllRepositories, StringComparer.Ordinal))
             {
-                repo = parts[1];
+                repo = repository[(slash + 1)..];
                 targetRepositories = null;
             }
             else

@@ -143,6 +143,7 @@ public sealed partial class CheckSuiteHandler(
         var retryEligibleRuns = failedRuns
             .Where((p) => options.RerunFailedChecks.Any((pattern) => Regex.IsMatch(p.Name, pattern, RegexOptions.None, RegexTimeout)))
             .GroupBy((p) => p.Name)
+            .Select((g) => (g.Key, Count: g.Count()))
             .ToList();
 
         if (retryEligibleRuns.Count < 1)
@@ -163,8 +164,10 @@ public sealed partial class CheckSuiteHandler(
         // is causing the check suite to fail is the "publish" check run.
         var latestCheckSuites = await context.InstallationClient.Check.Run.GetAllForCheckSuite(repository.Owner, repository.Name, checkSuiteId);
 
+        var eligibleNames = new HashSet<string>(retryEligibleRuns.Select((g) => g.Key), StringComparer.Ordinal);
+
         var latestFailingCheckRuns = latestCheckSuites.CheckRuns
-            .Where((p) => retryEligibleRuns.Any((group) => group.Key == p.Name))
+            .Where((p) => eligibleNames.Contains(p.Name))
             .Where((p) => p.Status.Value == CheckStatus.Completed)
             .Where((p) => p.Conclusion?.Value == CheckConclusion.Failure)
             .ToList();
@@ -187,7 +190,7 @@ public sealed partial class CheckSuiteHandler(
         }
 #pragma warning restore CA1873
 
-        if (retryEligibleRuns.Any((p) => p.Count() > options.RerunFailedChecksAttempts))
+        if (retryEligibleRuns.Any((p) => p.Count > options.RerunFailedChecksAttempts))
         {
             Log.TooManyRetries(logger, checkSuiteId, repository, options.RerunFailedChecksAttempts);
             return false;
