@@ -64,26 +64,26 @@ jobs:
           globs: |
             **/*.md
 
-      - name: Lint PowerShell in workflows
-        uses: martincostello/lint-actions-powershell@e088367ebeb113cd7c1ebee5c541175d93e945b7 # v1.0.1
-        with:
-          powershell-yaml-version: ${{ env.POWERSHELL_YAML_VERSION }}
-          psscriptanalyzer-version: ${{ env.PSSCRIPTANALYZER_VERSION }}
-          treat-warnings-as-errors: true
+    - name: Lint PowerShell in workflows
+      uses: martincostello/lint-actions-powershell@e088367ebeb113cd7c1ebee5c541175d93e945b7 # v1.0.1
+      with:
+        powershell-yaml-version: ${{ env.POWERSHELL_YAML_VERSION }}
+        psscriptanalyzer-version: ${{ env.PSSCRIPTANALYZER_VERSION }}
+        treat-warnings-as-errors: true
 
-      - name: Lint PowerShell scripts
-        shell: pwsh
-        run: |
-          $settings = @{
-            IncludeDefaultRules = $true
-            Severity = @("Error", "Warning")
-          }
-          $issues = Invoke-ScriptAnalyzer -Path ${env:GITHUB_WORKSPACE} -Recurse -ReportSummary -Settings $settings
-          foreach ($issue in $issues) {
-            $severity = $issue.Severity.ToString()
-            $level = $severity.Contains("Error") ? "error" : $severity.Contains("Warning") ? "warning" : "notice"
-            Write-Output "::${level} file=$($issue.ScriptName),line=$($issue.Line),title=PSScriptAnalyzer::$($issue.Message)"
-          }
-          if ($issues.Count -gt 0) {
-            exit 1
-          }
+    - name: Lint PowerShell scripts
+      shell: pwsh
+      run: |
+        $settings = @{
+          IncludeDefaultRules = $true
+          Severity = @("Error", "Warning")
+        }
+        $issues = Invoke-ScriptAnalyzer -Path ${env:GITHUB_WORKSPACE} -Recurse -ReportSummary -Settings $settings
+        foreach ($issue in $issues) {
+          $severity = $issue.Severity.ToString()
+          $level = $severity.Contains("Error") ? "error" : $severity.Contains("Warning") ? "warning" : "notice"
+          Write-Output "::${level} file=$($issue.ScriptName),line=$($issue.Line),title=PSScriptAnalyzer::$($issue.Message)"
+        }
+        if ($issues.Count -gt 0) {
+          exit 1
+        }
