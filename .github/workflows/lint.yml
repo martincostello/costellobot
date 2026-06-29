@@ -46,43 +46,44 @@ jobs:
     - name: Add actionlint problem matcher
       run: echo "::add-matcher::.github/actionlint-matcher.json"
 
-    - name: Lint workflows with actionlint
-      uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
-      with:
-        args: -color
+    - parallel:
+      - name: Lint workflows with actionlint
+        uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+        with:
+          args: -color
 
-    - name: Lint workflows with zizmor
-      uses: zizmorcore/zizmor-action@192e21d79ab29983730a13d1382995c2307fbcaa # v0.5.7
-      with:
-        persona: pedantic
+      - name: Lint workflows with zizmor
+        uses: zizmorcore/zizmor-action@192e21d79ab29983730a13d1382995c2307fbcaa # v0.5.7
+        with:
+          persona: pedantic
 
-    - name: Lint markdown
-      uses: DavidAnson/markdownlint-cli2-action@ded1f9488f68a970bc66ea5619e13e9b52e601cd # v23.2.0
-      with:
-        config: '.markdownlint.json'
-        globs: |
-          **/*.md
+      - name: Lint markdown
+        uses: DavidAnson/markdownlint-cli2-action@ded1f9488f68a970bc66ea5619e13e9b52e601cd # v23.2.0
+        with:
+          config: '.markdownlint.json'
+          globs: |
+            **/*.md
 
-    - name: Lint PowerShell in workflows
-      uses: martincostello/lint-actions-powershell@e088367ebeb113cd7c1ebee5c541175d93e945b7 # v1.0.1
-      with:
-        powershell-yaml-version: ${{ env.POWERSHELL_YAML_VERSION }}
-        psscriptanalyzer-version: ${{ env.PSSCRIPTANALYZER_VERSION }}
-        treat-warnings-as-errors: true
+      - name: Lint PowerShell in workflows
+        uses: martincostello/lint-actions-powershell@e088367ebeb113cd7c1ebee5c541175d93e945b7 # v1.0.1
+        with:
+          powershell-yaml-version: ${{ env.POWERSHELL_YAML_VERSION }}
+          psscriptanalyzer-version: ${{ env.PSSCRIPTANALYZER_VERSION }}
+          treat-warnings-as-errors: true
 
-    - name: Lint PowerShell scripts
-      shell: pwsh
-      run: |
-        $settings = @{
-          IncludeDefaultRules = $true
-          Severity = @("Error", "Warning")
-        }
-        $issues = Invoke-ScriptAnalyzer -Path ${env:GITHUB_WORKSPACE} -Recurse -ReportSummary -Settings $settings
-        foreach ($issue in $issues) {
-          $severity = $issue.Severity.ToString()
-          $level = $severity.Contains("Error") ? "error" : $severity.Contains("Warning") ? "warning" : "notice"
-          Write-Output "::${level} file=$($issue.ScriptName),line=$($issue.Line),title=PSScriptAnalyzer::$($issue.Message)"
-        }
-        if ($issues.Count -gt 0) {
-          exit 1
-        }
+      - name: Lint PowerShell scripts
+        shell: pwsh
+        run: |
+          $settings = @{
+            IncludeDefaultRules = $true
+            Severity = @("Error", "Warning")
+          }
+          $issues = Invoke-ScriptAnalyzer -Path ${env:GITHUB_WORKSPACE} -Recurse -ReportSummary -Settings $settings
+          foreach ($issue in $issues) {
+            $severity = $issue.Severity.ToString()
+            $level = $severity.Contains("Error") ? "error" : $severity.Contains("Warning") ? "warning" : "notice"
+            Write-Output "::${level} file=$($issue.ScriptName),line=$($issue.Line),title=PSScriptAnalyzer::$($issue.Message)"
+          }
+          if ($issues.Count -gt 0) {
+            exit 1
+          }
