@@ -72,7 +72,7 @@ jobs:
         run: |
           Write-Output "Downloading Pyroscope..."
 
-          $pyroscope = (gh api "/repos/grafana/pyroscope-dotnet/releases/tags/pyroscope-v${env:PYROSCOPE_VERSION}" | ConvertFrom-Json)
+          $pyroscope = (gh api "/repos/grafana/pyroscope-dotnet/releases/tags/pyroscope-${env:PYROSCOPE_VERSION}" | ConvertFrom-Json)
           $pyroscopeAsset = $pyroscope.assets | Where-Object { $_.name -eq "pyroscope.${env:PYROSCOPE_VERSION}-${env:PYROSCOPE_VARIANT}-${env:PYROSCOPE_ARCH}.tar.gz" }
           $pyroscopeUrl = $pyroscopeAsset.browser_download_url
 
