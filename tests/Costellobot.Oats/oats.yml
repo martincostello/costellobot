@@ -60,10 +60,10 @@ expected:
   profiles:
     - query: process_cpu:cpu:nanoseconds:cpu:nanoseconds{ service_name="Costellobot" }
       flamebearers:
-        regexp: MartinCostello.Costellobot!
+        regexp: MartinCostello.Costellobot!|total
     - query: alloc:alloc_size:bytes:cpu:nanoseconds{ service_name="Costellobot" }
       flamebearers:
-        regexp: MartinCostello.Costellobot!
+        regexp: MartinCostello.Costellobot!|total
   traces:
     - traceql: '{ span.messaging.operation = "receive" }'
       equals: 'ServiceBusReceiver.Receive'
