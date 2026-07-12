@@ -67,7 +67,7 @@ jobs:
           PYROSCOPE_ARCH: 'x86_64'
           PYROSCOPE_VARIANT: 'glibc'
           # renovate: datasource=github-releases depName=Pyroscope packageName=grafana/pyroscope-dotnet extractVersion=^pyroscope-(?<version>.+)$
-          PYROSCOPE_VERSION: '1.3.0'
+          PYROSCOPE_VERSION: '1.4.0'
           UsePyroscope: 'true'
         run: |
           Write-Output "Downloading Pyroscope ${env:PYROSCOPE_VERSION}..."
