@@ -38,10 +38,10 @@ public static class TelemetryExtensions
                .WithTracing((builder) =>
                {
                    builder.SetResourceBuilder(ApplicationTelemetry.ResourceBuilder)
-                          .AddAspNetCoreInstrumentation()
                           .AddHttpClientInstrumentation()
                           .AddSource(ApplicationTelemetry.ServiceName)
                           .AddSource("Azure.*")
+                          .AddSource("Microsoft.AspNetCore")
                           .AddSource("Microsoft.AspNetCore.SignalR.Server");
 
                    if (environment.IsDevelopment())
