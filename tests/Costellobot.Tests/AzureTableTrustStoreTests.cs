@@ -42,6 +42,7 @@ public class AzureTableTrustStoreTests
         // Assert
         await table.Received().UpsertEntityAsync(
             Arg.Is<TrustEntity>((p) =>
+                p != null &&
                 p.PartitionKey == expectedPartitionKey &&
                 p.RowKey == expectedRowKey &&
                 p.DependencyEcosystem == ecosystem.ToString() &&
