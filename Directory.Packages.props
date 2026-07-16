@@ -25,7 +25,7 @@
     <PackageVersion Include="BenchmarkDotNet" Version="0.16.0-preview.1" />
     <PackageVersion Include="coverlet.msbuild" Version="10.0.1" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.4" />
-    <PackageVersion Include="Google.Apis.Calendar.v3" Version="1.75.0.4200" />
+    <PackageVersion Include="Google.Apis.Calendar.v3" Version="1.75.0.4206" />
     <PackageVersion Include="Humanizer" Version="3.0.10" />
     <PackageVersion Include="JunitXml.TestLogger" Version="8.0.0" />
     <PackageVersion Include="JustEat.HttpClientInterception" Version="5.1.2" />
