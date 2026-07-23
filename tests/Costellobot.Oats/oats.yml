@@ -50,8 +50,8 @@ expected:
   logs:
     - logql: '{ service_name="Costellobot" } |~ `Application started.`'
       match:
-        - match_type: regexp
-          name: Application started
+        - name: Application started
+          match_type: regexp
   metrics:
     - promql: costellobot_github_webhook_delivery_total{ github_webhook_event="ping" }
       value: '>= 1'
@@ -64,8 +64,8 @@ expected:
   profiles:
     - query: process_cpu:cpu:nanoseconds:cpu:nanoseconds{ service_name="Costellobot" }
       match:
-        - match_type: regexp
-          name: MartinCostello.Costellobot!
+        - name: MartinCostello.Costellobot!
+          match_type: regexp
     - query: memory:alloc_size:bytes:space:bytes{ service_name="Costellobot" }
       match:
         - match_type: regexp
@@ -74,6 +74,7 @@ expected:
     - traceql: '{ span.messaging.operation = "receive" }'
       match_spans:
         - name: ServiceBusReceiver.Receive
+          match_type: strict
           attributes:
             - key: az.namespace
               value: Microsoft.ServiceBus
@@ -86,6 +87,7 @@ expected:
     - traceql: '{ span.http.route =~ "/github-webhook" }'
       match_spans:
         - name: POST /github-webhook
+          match_type: strict
           attributes:
             - key: github.webhook.delivery
               value: 09e27db8-e74c-4a28-a951-50552382af03
@@ -99,13 +101,15 @@ expected:
               value: POST
             - key: http.response.status_code
               value: "200"
-        - match_type: regexp
+        - name: POST /github-webhook
+          match_type: regexp
           attributes:
             - key: messaging.message.id
               value: .+
     - traceql: '{ span.http.route =~ "/github-webhook" }'
       match_spans:
         - name: ServiceBusProcessor.ProcessMessage
+          match_type: strict
           attributes:
             - key: az.namespace
               value: Microsoft.ServiceBus
@@ -118,6 +122,7 @@ expected:
     - traceql: '{ span.http.route =~ "/github-webhook" }'
       match_spans:
         - name: ServiceBusReceiver.Complete
+          match_type: strict
           attributes:
             - key: az.namespace
               value: Microsoft.ServiceBus
@@ -130,6 +135,7 @@ expected:
     - traceql: '{ span.http.route =~ "/github-webhook" }'
       match_spans:
         - name: ServiceBusSender.Send
+          match_type: strict
           attributes:
             - key: az.namespace
               value: Microsoft.ServiceBus
@@ -142,6 +148,7 @@ expected:
     - traceql: '{ span.http.route =~ "/version" }'
       match_spans:
         - name: GET /version
+          match_type: strict
           attributes:
             - key: cloud.provider
               value: azure
@@ -163,7 +170,8 @@ expected:
               value: dotnet
             - key: telemetry.sdk.name
               value: opentelemetry
-        - match_type: regexp
+        - name: GET /version
+          match_type: regexp
           attributes:
             - key: container.id
               value: .+
