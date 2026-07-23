@@ -68,8 +68,8 @@ expected:
           match_type: regexp
     - query: memory:alloc_size:bytes:space:bytes{ service_name="Costellobot" }
       match:
-        - match_type: regexp
-          name: MartinCostello.Costellobot!
+        - name: MartinCostello.Costellobot!
+          match_type: regexp
   traces:
     - traceql: '{ span.messaging.operation = "receive" }'
       match_spans:
