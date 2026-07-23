@@ -1,7 +1,10 @@
-oats-schema-version: 2
-docker-compose:
-  files:
-    - ./../../docker-compose.yml
+name: oats
+interval: 500ms
+fixture:
+  compose:
+    file: ./../../docker-compose.yml
+seed:
+  type: app
 input:
   - path: /version
   - path: /github-webhook
@@ -12,8 +15,8 @@ input:
       User-Agent: GitHub-Hookshot/f05835d
       X-GitHub-Delivery: 09e27db8-e74c-4a28-a951-50552382af03
       X-GitHub-Event: ping
-      X-GitHub-Hook-ID: 109948940
-      X-GitHub-Hook-Installation-Target-ID: 183256
+      X-GitHub-Hook-ID: "109948940"
+      X-GitHub-Hook-Installation-Target-ID: "183256"
       X-GitHub-Hook-Installation-Target-Type: integration
     body: |-
       {
@@ -43,11 +46,12 @@ input:
           "node_id": "c0dctApWjo2ooEXO0RATfhWfiQrE2og7axfcZRs6gEk="
         }
       }
-interval: 500ms
 expected:
   logs:
     - logql: '{ service_name="Costellobot" } |~ `Application started.`'
-      regexp: 'Application started'
+      match:
+        - match_type: regexp
+          name: Application started
   metrics:
     - promql: costellobot_github_webhook_delivery_total{ github_webhook_event="ping" }
       value: '>= 1'
@@ -59,72 +63,125 @@ expected:
       value: '>= 1'
   profiles:
     - query: process_cpu:cpu:nanoseconds:cpu:nanoseconds{ service_name="Costellobot" }
-      flamebearers:
-        regexp: MartinCostello.Costellobot!
+      match:
+        - match_type: regexp
+          name: MartinCostello.Costellobot!
     - query: memory:alloc_size:bytes:space:bytes{ service_name="Costellobot" }
-      flamebearers:
-        regexp: MartinCostello.Costellobot!
+      match:
+        - match_type: regexp
+          name: MartinCostello.Costellobot!
   traces:
     - traceql: '{ span.messaging.operation = "receive" }'
-      equals: 'ServiceBusReceiver.Receive'
-      attributes:
-        az.namespace: Microsoft.ServiceBus
-        messaging.destination.name: queue.1
-        messaging.operation: receive
-        messaging.system: servicebus
+      match_spans:
+        - name: ServiceBusReceiver.Receive
+          attributes:
+            - key: az.namespace
+              value: Microsoft.ServiceBus
+            - key: messaging.destination.name
+              value: queue.1
+            - key: messaging.operation
+              value: receive
+            - key: messaging.system
+              value: servicebus
     - traceql: '{ span.http.route =~ "/github-webhook" }'
-      equals: 'POST /github-webhook'
-      attributes:
-        github.webhook.delivery: 09e27db8-e74c-4a28-a951-50552382af03
-        github.webhook.event: ping
-        github.webhook.hook.id: 109948940
-        github.webhook.hook.installation.target.id: 183256
-        http.request.method: POST
-        http.response.status_code: 200
-      attribute-regexp:
-        messaging.message.id: .+
+      match_spans:
+        - name: POST /github-webhook
+          attributes:
+            - key: github.webhook.delivery
+              value: 09e27db8-e74c-4a28-a951-50552382af03
+            - key: github.webhook.event
+              value: ping
+            - key: github.webhook.hook.id
+              value: "109948940"
+            - key: github.webhook.hook.installation.target.id
+              value: "183256"
+            - key: http.request.method
+              value: POST
+            - key: http.response.status_code
+              value: "200"
+        - match_type: regexp
+          attributes:
+            - key: messaging.message.id
+              value: .+
     - traceql: '{ span.http.route =~ "/github-webhook" }'
-      equals: 'ServiceBusProcessor.ProcessMessage'
-      attributes:
-        az.namespace: Microsoft.ServiceBus
-        messaging.destination.name: queue.1
-        messaging.operation: process
-        messaging.system: servicebus
+      match_spans:
+        - name: ServiceBusProcessor.ProcessMessage
+          attributes:
+            - key: az.namespace
+              value: Microsoft.ServiceBus
+            - key: messaging.destination.name
+              value: queue.1
+            - key: messaging.operation
+              value: process
+            - key: messaging.system
+              value: servicebus
     - traceql: '{ span.http.route =~ "/github-webhook" }'
-      equals: 'ServiceBusReceiver.Complete'
-      attributes:
-        az.namespace: Microsoft.ServiceBus
-        messaging.destination.name: queue.1
-        messaging.operation: settle
-        messaging.system: servicebus
+      match_spans:
+        - name: ServiceBusReceiver.Complete
+          attributes:
+            - key: az.namespace
+              value: Microsoft.ServiceBus
+            - key: messaging.destination.name
+              value: queue.1
+            - key: messaging.operation
+              value: settle
+            - key: messaging.system
+              value: servicebus
     - traceql: '{ span.http.route =~ "/github-webhook" }'
-      equals: 'ServiceBusSender.Send'
-      attributes:
-        az.namespace: Microsoft.ServiceBus
-        messaging.destination.name: queue.1
-        messaging.operation: publish
-        messaging.system: servicebus
+      match_spans:
+        - name: ServiceBusSender.Send
+          attributes:
+            - key: az.namespace
+              value: Microsoft.ServiceBus
+            - key: messaging.destination.name
+              value: queue.1
+            - key: messaging.operation
+              value: publish
+            - key: messaging.system
+              value: servicebus
     - traceql: '{ span.http.route =~ "/version" }'
-      equals: 'GET /version'
-      attributes:
-        cloud.provider: azure
-        http.request.method: GET
-        http.response.status_code: 200
-        os.name: Ubuntu
-        os.type: linux
-        process.runtime.name: .NET
-        service.name: Costellobot
-        service.namespace: Costellobot
-        telemetry.sdk.language: dotnet
-        telemetry.sdk.name: opentelemetry
-      attribute-regexp:
-        container.id: .+
-        host.name: .+
-        os.build_id: .+
-        os.description: .+
-        os.version: .+
-        process.runtime.description: .NET.+
-        process.runtime.version: .+
-        service.instance.id: .+
-        service.version: 1.0.\d+
-        telemetry.sdk.version: .+
+      match_spans:
+        - name: GET /version
+          attributes:
+            - key: cloud.provider
+              value: azure
+            - key: http.request.method
+              value: GET
+            - key: http.response.status_code
+              value: "200"
+            - key: os.name
+              value: Ubuntu
+            - key: os.type
+              value: linux
+            - key: process.runtime.name
+              value: .NET
+            - key: service.name
+              value: Costellobot
+            - key: service.namespace
+              value: Costellobot
+            - key: telemetry.sdk.language
+              value: dotnet
+            - key: telemetry.sdk.name
+              value: opentelemetry
+        - match_type: regexp
+          attributes:
+            - key: container.id
+              value: .+
+            - key: host.name
+              value: .+
+            - key: os.build_id
+              value: .+
+            - key: os.description
+              value: .+
+            - key: os.version
+              value: .+
+            - key: process.runtime.description
+              value: .NET.+
+            - key: process.runtime.version
+              value: .+
+            - key: service.instance.id
+              value: .+
+            - key: service.version
+              value: 1.0.\d+
+            - key: telemetry.sdk.version
+              value: .+

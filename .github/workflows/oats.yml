@@ -103,12 +103,14 @@ jobs:
       - name: Install OATS
         env:
           # renovate: datasource=github-releases depName=oats packageName=grafana/oats
-          OATS_VERSION: v0.7.0
+          OATS_VERSION: 122f93ad134b9cee0314e33b165ce567dfd7e280
         run: |
           go install "github.com/grafana/oats@${OATS_VERSION}"
 
       - name: Run OATS
         env:
+          # renovate: datasource=github-releases depName=gcx packageName=grafana/gcx
+          GCX_VERSION: '0.5.0'
           # renovate: datasource=github-releases depName=LGTM packageName=grafana/docker-otel-lgtm
           LGTM_VERSION: '0.29.1'
-        run: oats --lgtm-version="${LGTM_VERSION}" --timeout=5m ./tests/Costellobot.Oats
+        run: oats --gcx-version="${GCX_VERSION}" --lgtm-version="${LGTM_VERSION}" --timeout=5m ./tests/Costellobot.Oats
