@@ -113,4 +113,4 @@ jobs:
           GCX_VERSION: '0.5.0'
           # renovate: datasource=github-releases depName=LGTM packageName=grafana/docker-otel-lgtm
           LGTM_VERSION: '0.29.1'
-        run: oats --gcx-version="${GCX_VERSION}" --lgtm-version="${LGTM_VERSION}" --timeout=5m ./tests/Costellobot.Oats/oats-config.yaml
+        run: oats --gcx-version="${GCX_VERSION}" --lgtm-version="${LGTM_VERSION}" --timeout=5m --config ./tests/Costellobot.Oats/oats-config.yaml
