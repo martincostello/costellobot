@@ -110,7 +110,7 @@ jobs:
       - name: Run OATS
         env:
           # renovate: datasource=github-releases depName=gcx packageName=grafana/gcx
-          GCX_VERSION: '0.5.0'
+          GCX_VERSION: '0.6.0'
           # renovate: datasource=github-releases depName=LGTM packageName=grafana/docker-otel-lgtm
           LGTM_VERSION: '0.29.2'
         run: oats --gcx-version="${GCX_VERSION}" --lgtm-version="${LGTM_VERSION}" --timeout=5m ./tests/Costellobot.Oats
