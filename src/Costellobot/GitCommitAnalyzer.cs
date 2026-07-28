@@ -23,7 +23,7 @@ public sealed partial class GitCommitAnalyzer(
     ILogger<GitCommitAnalyzer> logger)
 {
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
-    private static readonly IDeserializer YamlDeserializer = new DeserializerBuilder()
+    private static readonly IDeserializer YamlDeserializer = new StaticDeserializerBuilder(new DependabotYamlContext())
         .IgnoreUnmatchedProperties()
         .WithNamingConvention(HyphenatedNamingConvention.Instance)
         .Build();
@@ -958,4 +958,9 @@ public sealed partial class GitCommitAnalyzer(
         [YamlMember(Alias = "dependency-group")]
         public string? DependencyGroup { get; set; }
     }
+
+    [YamlStaticContext]
+    [YamlSerializable(typeof(DependabotConfig))]
+    [YamlSerializable(typeof(DependabotMetadata))]
+    private sealed partial class DependabotYamlContext : StaticContext;
 }
