@@ -11,6 +11,7 @@ services:
     ports:
       - '8080:8080'
     environment:
+      - AllowedHosts=costellobot
       - ConnectionStrings__AzureServiceBus=Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
       - ConnectionStrings__AzureTableStorage=UseDevelopmentStorage=true
       - DOTNET_ENVIRONMENT=Production
@@ -34,7 +35,7 @@ services:
       test: ["CMD-SHELL", "curl -fsS -H 'x-health-probe-token:43SBjvAs3HwI+lXWSzfoV2bh5hSbEK2TRxiK2SZN2qA=' http://costellobot:8080/health/readiness > /dev/null || exit 1"]
       interval: 5s
       retries: 30
-      timeout: 3s
+      timeout: 10s
   dependencies-ready:
     image: curlimages/curl:8.21.0@sha256:7c12af72ceb38b7432ab85e1a265cff6ae58e06f95539d539b654f2cfa64bb13
     command: ["sh", "-c", "sleep infinity"]
