@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
-  "id": "nuget-search",
+  "id": "ruby-gems",
   "version": 1,
   "comment": "HTTP bundle for Ruby Gems.",
   "items": [

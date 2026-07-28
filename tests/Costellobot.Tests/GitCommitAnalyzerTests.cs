@@ -185,6 +185,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     [Theory]
     [InlineData("@actions/github", "dependabot/npm_and_yarn/actions/github-5.0.3", "5.0.3", DependencyEcosystem.Npm, new[] { "thboop" }, false)]
     [InlineData("actions/checkout", "dependabot/github_actions/actions/checkout-3", "3", DependencyEcosystem.GitHubActions, new[] { "actions" }, true)]
+    [InlineData("github.com/onsi/gomega", "dependabot/go_modules/github.com/onsi/gomega-1.38.0", "1.38.0", DependencyEcosystem.GoModules, new[] { "github.com/onsi" }, true)]
     [InlineData("boto3", "dependabot/pip/boto3-1.26.0", "1.26.0", DependencyEcosystem.PyPI, new[] { "aws" }, true)]
     [InlineData("JustEat.HttpClientInterception", "dependabot/nuget/JustEat.HttpClientInterception-3.1.1", "3.1.1", DependencyEcosystem.NuGet, new[] { "JUSTEAT_OSS" }, false)]
     [InlineData("Microsoft.EntityFrameworkCore.SqlServer", "dependabot/nuget/Microsoft.EntityFrameworkCore.SqlServer-7.0.0-preview.6.22329.4", "7.0.0-preview.6.22329.4", DependencyEcosystem.NuGet, new[] { "aspnet", "EntityFramework", "Microsoft" }, true)]
@@ -223,6 +224,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.Docker] = ["devcontainers/dotnet"],
                     [DependencyEcosystem.GitHubActions] = ["actions"],
                     [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
+                    [DependencyEcosystem.GoModules] = ["github.com/onsi"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
                     [DependencyEcosystem.PyPI] = ["aws"],
@@ -2898,6 +2900,156 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("zizmorcore/zizmor", (true, "1.12.1"));
+        trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Dependabot_Go_Dependency()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.GoModules;
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/go_modules/github.com/onsi/gomega-1.38.0";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(ecosystem);
+
+        registry.GetPackageOwnersAsync(repository, "github.com/onsi/gomega", "1.38.0", CancellationToken)
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["github.com/onsi"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [ecosystem] = ["github.com/onsi"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "253759311b9f93f4a7c19833b45cee0060d71eee";
+        var commitMessage = """
+                            Bump github.com/onsi/gomega from 1.37.0 to 1.38.0
+                            Bumps [github.com/onsi/gomega](https://github.com/onsi/gomega) from 1.37.0 to 1.38.0.
+                            - [Release notes](https://github.com/onsi/gomega/releases)
+                            - [Changelog](https://github.com/onsi/gomega/blob/master/CHANGELOG.md)
+                            - [Commits](onsi/gomega@v1.37.0...v1.38.0)
+
+                            ---
+                            updated-dependencies:
+                            - dependency-name: github.com/onsi/gomega
+                              dependency-version: 1.38.0
+                              dependency-type: direct:production
+                              update-type: version-update:semver-minor
+                            ...
+
+                            Signed-off-by: dependabot[bot] <support@github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actualEcosystem.ShouldBe(ecosystem);
+
+        trust.ShouldContainKeyAndValue("github.com/onsi/gomega", (true, "1.38.0"));
+        trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Go_Dependency()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.GoModules;
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/go/github.com-spf13-pflag-1.x";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(ecosystem);
+
+        registry.GetPackageOwnersAsync(repository, "github.com/spf13/pflag", "1.0.10", CancellationToken)
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["github.com/spf13"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [ecosystem] = ["github.com/spf13"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "49e62c0a94e56b2d2b007981ae42eb28a09cc245";
+        var commitMessage = """
+                            Update module github.com/spf13/pflag to v1.0.10
+                            | datasource | package                | from   | to      |
+                            | ---------- | ---------------------- | ------ | ------- |
+                            | go         | github.com/spf13/pflag | v1.0.9 | v1.0.10 |
+
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actualEcosystem.ShouldBe(ecosystem);
+
+        trust.ShouldContainKeyAndValue("github.com/spf13/pflag", (true, "1.0.10"));
         trust.Count.ShouldBe(1);
     }
 

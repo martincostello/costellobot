@@ -1,8 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
-  "id": "nuget-search",
+  "id": "microsoft-artifact-registry",
   "version": 1,
-  "comment": "HTTP bundle for Ruby Gems.",
+  "comment": "HTTP bundle for Microsoft Artifact Registry.",
   "items": [
     {
       "comment": "The catalog entry for the devcontainers/dotnet container",

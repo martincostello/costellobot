@@ -79,6 +79,7 @@ public class AzureTableTrustStoreTests
     [Theory]
     [InlineData(DependencyEcosystem.Docker, "devcontainers/dotnet", "latest", "DOCKER", "DEVCONTAINERS~DOTNET@LATEST")]
     [InlineData(DependencyEcosystem.GitHubActions, "martincostello/rebaser", "2.0.1", "GITHUBACTIONS", "MARTINCOSTELLO~REBASER@2.0.1")]
+    [InlineData(DependencyEcosystem.GoModules, "github.com/google/go-cmp", "v0.7.0", "GOMODULES", "GITHUB.COM~GOOGLE~GO-CMP@V0.7.0")]
     [InlineData(DependencyEcosystem.Npm, "@octokit/request", "9.2.2", "NPM", "@OCTOKIT~REQUEST@9.2.2")]
     [InlineData(DependencyEcosystem.NuGet, "Polly.Core", "8.5.2", "NUGET", "POLLY.CORE@8.5.2")]
     [InlineData(DependencyEcosystem.PyPI, "boto3", "1.42.51", "PYPI", "BOTO3@1.42.51")]

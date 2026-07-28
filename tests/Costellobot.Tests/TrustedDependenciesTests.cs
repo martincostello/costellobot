@@ -17,6 +17,7 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
 
         await trustStore.TrustAsync(DependencyEcosystem.Docker, "devcontainers/dotnet", "latest", CancellationToken);
         await trustStore.TrustAsync(DependencyEcosystem.GitHubActions, "DavidAnson/markdownlint-cli2-action", "19.1.0", CancellationToken);
+        await trustStore.TrustAsync(DependencyEcosystem.GoModules, "github.com/onsi/gomega", "1.38.0", CancellationToken);
         await trustStore.TrustAsync(DependencyEcosystem.Npm, "@stylistic/eslint-plugin", "4.0.1", CancellationToken);
         await trustStore.TrustAsync(DependencyEcosystem.NuGet, "Verify.ImageMagick", "3.5.0", CancellationToken);
         await trustStore.TrustAsync(DependencyEcosystem.NuGet, "Verify.ImageMagick", "3.6.0", CancellationToken);
@@ -37,6 +38,7 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
             {
                 ("Docker", "devcontainers/dotnet", "latest"),
                 ("GitHub Actions", "DavidAnson/markdownlint-cli2-action", "19.1.0"),
+                ("Go Modules", "github.com/onsi/gomega", "1.38.0"),
                 ("npm", "@stylistic/eslint-plugin", "4.0.1"),
                 ("NuGet", "Verify.ImageMagick", "3.6.0"),
                 ("NuGet", "Verify.ImageMagick", "3.5.0"),
@@ -67,6 +69,7 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
             [
                 ("Docker", "devcontainers/dotnet", "latest"),
                 ("GitHub Actions", "DavidAnson/markdownlint-cli2-action", "19.1.0"),
+                ("Go Modules", "github.com/onsi/gomega", "1.38.0"),
                 ("npm", "@stylistic/eslint-plugin", "4.0.1"),
                 ("NuGet", "Verify.ImageMagick", "3.6.0"),
                 ("NuGet", "Verify.Playwright", "3.0.0"),
@@ -76,7 +79,7 @@ public class TrustedDependenciesTests(HttpServerFixture fixture, ITestOutputHelp
             ];
 
             // Act
-            await items[4].DistrustAsync();
+            await items[5].DistrustAsync();
 
             // Assert
             await dependencies.WaitForContentAsync();
