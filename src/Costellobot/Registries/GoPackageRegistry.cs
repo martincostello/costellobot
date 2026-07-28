@@ -23,13 +23,14 @@ public sealed partial class GoPackageRegistry(
         string version,
         CancellationToken cancellationToken)
     {
-        var escapedVersion = Uri.EscapeDataString($"v{version}");
+        var normalizedVersion = $"v{version}";
+        var escapedVersion = Uri.EscapeDataString(normalizedVersion);
 
         // https://go.dev/blog/pkgsite-api
         var uri = new Uri($"v1beta/package/{id}?version={escapedVersion}", UriKind.Relative);
 
         Module? module = await cache.GetOrCreateAsync(
-            $"go-pkg:{id}@{version}",
+            $"go-pkg:{id}@{normalizedVersion}",
             (Client, uri),
             static async (context, token) =>
             {
@@ -49,7 +50,7 @@ public sealed partial class GoPackageRegistry(
         // If the module's path is in GitHub, the owner is the first
         // two parts of the path (e.g. "github.com/martincostello").
         if (module is { } &&
-            string.Equals(escapedVersion, module.Version, StringComparison.Ordinal) &&
+            string.Equals(normalizedVersion, module.Version, StringComparison.Ordinal) &&
             module.ModulePath is { } modulePath &&
             modulePath.StartsWith("github.com/", StringComparison.Ordinal))
         {
