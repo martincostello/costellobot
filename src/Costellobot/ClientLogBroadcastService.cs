@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace MartinCostello.Costellobot;
 
-public sealed class ClientLogBroadcastService(ClientLogQueue queue, IHubContext<GitHubWebhookHub, IWebhookClient> context) : BackgroundService()
+public sealed class ClientLogBroadcastService(ClientLogQueue queue, IHubContext<GitHubWebhookHub> context) : BackgroundService()
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -18,7 +18,7 @@ public sealed class ClientLogBroadcastService(ClientLogQueue queue, IHubContext<
                 break;
             }
 
-            await context.Clients.All.LogAsync(logEntry);
+            await context.Clients.All.SendAsync(nameof(IWebhookClient.LogAsync), logEntry, stoppingToken);
         }
     }
 }
