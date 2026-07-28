@@ -288,7 +288,7 @@ public static partial class GitDiffParser
 
         if (text.Split(' ') is { Length: >= 2 } parts)
         {
-            if (parts[0] is "go" or "module")
+            if (parts[0] is "go" or "module" or "toolchain")
             {
                 return false;
             }
