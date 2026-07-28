@@ -391,11 +391,11 @@ public static class AdminEndpoints
                 if (!await antiforgery.IsRequestValidAsync(context))
                 {
                     antiforgery.SetCookieTokenAndHeader(context);
-                    return Results.RedirectToRoute(DependenciesRoute);
+                    return Results.RedirectToRoute(DependenciesRoute, []);
                 }
 
                 await store.DistrustAsync(ecosystem, id, version, cancellationToken);
-                return Results.RedirectToRoute(DependenciesRoute);
+                return Results.RedirectToRoute(DependenciesRoute, []);
             })
             .WithName("DistrustDependencies")
             .WithMetadata(admin);
@@ -411,11 +411,11 @@ public static class AdminEndpoints
                 if (!await antiforgery.IsRequestValidAsync(context))
                 {
                     antiforgery.SetCookieTokenAndHeader(context);
-                    return Results.RedirectToRoute(DependenciesRoute);
+                    return Results.RedirectToRoute(DependenciesRoute, []);
                 }
 
                 await store.DistrustAllAsync(cancellationToken);
-                return Results.RedirectToRoute(DependenciesRoute);
+                return Results.RedirectToRoute(DependenciesRoute, []);
             })
             .WithName("DistrustAllDependencies")
             .WithMetadata(admin);
@@ -434,11 +434,11 @@ public static class AdminEndpoints
                 if (!await antiforgery.IsRequestValidAsync(context))
                 {
                     antiforgery.SetCookieTokenAndHeader(context);
-                    return Results.RedirectToRoute(DependenciesRoute);
+                    return Results.RedirectToRoute(DependenciesRoute, []);
                 }
 
                 await store.DenyAsync(ecosystem, id, version, cancellationToken);
-                return Results.RedirectToRoute(DependenciesRoute);
+                return Results.RedirectToRoute(DependenciesRoute, []);
             })
             .WithName("DenyDependency")
             .WithMetadata(admin);
@@ -457,11 +457,11 @@ public static class AdminEndpoints
                 if (!await antiforgery.IsRequestValidAsync(context))
                 {
                     antiforgery.SetCookieTokenAndHeader(context);
-                    return Results.RedirectToRoute(DependenciesRoute);
+                    return Results.RedirectToRoute(DependenciesRoute, []);
                 }
 
                 await store.AllowAsync(ecosystem, id, version, cancellationToken);
-                return Results.RedirectToRoute(DependenciesRoute);
+                return Results.RedirectToRoute(DependenciesRoute, []);
             })
             .WithName("AllowDependency")
             .WithMetadata(admin);
