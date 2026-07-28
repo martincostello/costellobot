@@ -24,6 +24,8 @@ services:
     command: ["sh", "-c", "sleep infinity"]
     depends_on:
       - costellobot
+      - servicebus-emulator
+      - sql-server
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS -H 'x-health-probe-token:43SBjvAs3HwI+lXWSzfoV2bh5hSbEK2TRxiK2SZN2qA=' http://costellobot:8080/health/readiness > /dev/null || exit 1"]
       interval: 5s

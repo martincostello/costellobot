@@ -3,6 +3,8 @@ interval: 500ms
 fixture:
   compose:
     file: ./../../docker-compose.yml
+    app_service: ready
+    app_port: 8080
 seed:
   type: app
 input:
