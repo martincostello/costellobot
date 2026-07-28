@@ -17,6 +17,7 @@ services:
       - PYROSCOPE_PROFILING_ENABLED=1
       - PYROSCOPE_SERVER_ADDRESS=http://lgtm:4040
       - Webhook__QueueName=queue.1
+      - WEBSITE_AUTH_ENCRYPTION_KEY=1d02ee45-791c-4f23-b448-11f80accfd5c
       - WEBSITE_SITE_NAME=Costellobot
   ready:
     image: curlimages/curl:8.21.0@sha256:7c12af72ceb38b7432ab85e1a265cff6ae58e06f95539d539b654f2cfa64bb13
@@ -24,7 +25,7 @@ services:
     depends_on:
       - costellobot
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://costellobot:8080/health/readiness > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS -H 'x-health-probe-token:43SBjvAs3HwI+lXWSzfoV2bh5hSbEK2TRxiK2SZN2qA=' http://costellobot:8080/health/readiness > /dev/null || exit 1"]
       interval: 5s
       retries: 20
       start_period: 5s
