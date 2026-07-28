@@ -72,6 +72,11 @@ public static class CostellobotBuilder
         builder.Services.AddSingleton<ClientLogQueue>();
         builder.Services.AddHostedService<ClientLogBroadcastService>();
 
+        builder.Services.Configure<Microsoft.AspNetCore.SignalR.JsonHubProtocolOptions>((options) =>
+        {
+            options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+        });
+
         builder.Logging.AddTelemetry();
         builder.Logging.AddSignalR();
 

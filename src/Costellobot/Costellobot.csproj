@@ -8,8 +8,6 @@
     <PyroscopeApplicationName>costellobot-martincostello</PyroscopeApplicationName>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
     <TargetFramework>net10.0</TargetFramework>
-    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
-    <TypeScriptToolsVersion>latest</TypeScriptToolsVersion>
     <UserSecretsId>Costellobot</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
@@ -34,7 +32,6 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" PrivateAssets="all" />
     <PackageReference Include="NuGet.Versioning" />
     <PackageReference Include="Octokit" />
     <PackageReference Include="Octokit.GraphQL" />
@@ -64,7 +61,6 @@
     <EmbeddedResource Include="bank-holidays.json" />
     <None Remove="scripts\ts\**\*.ts" />
     <PyroscopeLabels Include="costellobot" />
-    <TypeScriptCompile Include="scripts\ts\**\*.ts" />
   </ItemGroup>
   <Target Name="BundleAssets" BeforeTargets="BeforeBuild" DependsOnTargets="RestoreNpmPackages">
     <Exec Command="npm run build" Condition=" !Exists('$(MSBuildThisFileDirectory)\wwwroot\static\js\main.js') " />
