@@ -3,7 +3,7 @@ services:
     image: ${DOCKER_REGISTRY-}costellobot:latest
     depends_on:
       servicebus-emulator:
-        condition: 'service_started'
+        condition: service_started
       sql-server:
         condition: service_healthy
     ports:
@@ -27,12 +27,11 @@ services:
     command: ["sh", "-c", "sleep infinity"]
     depends_on:
       costellobot:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS -H 'x-health-probe-token:43SBjvAs3HwI+lXWSzfoV2bh5hSbEK2TRxiK2SZN2qA=' http://costellobot:8080/health/readiness > /dev/null || exit 1"]
       interval: 5s
-      retries: 20
-      start_period: 5s
+      retries: 30
       timeout: 3s
   servicebus-emulator:
     image: mcr.microsoft.com/azure-messaging/servicebus-emulator:2.0.1@sha256:5a96d893b245031740f7d46e0fe5ff282d24b78c4b7d761dd57590f3f010a9b3
@@ -57,5 +56,4 @@ services:
       test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/1433' || exit 1"]
       interval: 5s
       retries: 30
-      start_period: 20s
       timeout: 3s
