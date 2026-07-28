@@ -27,7 +27,7 @@ services:
       - servicebus-emulator
       - sql-server
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS -H 'x-health-probe-token:43SBjvAs3HwI+lXWSzfoV2bh5hSbEK2TRxiK2SZN2qA=' http://costellobot:8080/health/readiness > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://servicebus-emulator:5300/health > /dev/null && curl -fsS -H 'x-health-probe-token:43SBjvAs3HwI+lXWSzfoV2bh5hSbEK2TRxiK2SZN2qA=' http://costellobot:8080/health/readiness > /dev/null || exit 1"]
       interval: 5s
       retries: 20
       start_period: 5s
