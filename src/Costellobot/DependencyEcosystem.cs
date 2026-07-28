@@ -15,4 +15,5 @@ public enum DependencyEcosystem
     Ruby,
     GitHubRelease,
     PyPI,
+    GoModules,
 }

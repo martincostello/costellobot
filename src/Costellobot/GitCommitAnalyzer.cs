@@ -313,6 +313,7 @@ public sealed partial class GitCommitAnalyzer(
             "github-actions" or "github_actions" => DependencyEcosystem.GitHubActions,
             "github-releases" => DependencyEcosystem.GitHubRelease,
             "git-submodules" or "submodules" => DependencyEcosystem.GitSubmodule,
+            "go" or "go_modules" => DependencyEcosystem.GoModules,
             "npm" or "npm_and_yarn" => DependencyEcosystem.Npm,
             "nuget" => DependencyEcosystem.NuGet,
             "pip" or "pypi" => DependencyEcosystem.PyPI,

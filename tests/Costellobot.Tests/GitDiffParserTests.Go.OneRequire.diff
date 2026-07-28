@@ -1,0 +1,19 @@
+diff --git a/go.mod b/go.mod
+index 63ae370..eadb949 100644
+--- a/go.mod
++++ b/go.mod
+@@ -2,4 +2,4 @@ module github.com/martincostello/advent-of-go
+
+ go 1.26.5
+
+-require github.com/google/go-cmp v0.6.0
++require github.com/google/go-cmp v0.7.0
+diff --git a/go.sum b/go.sum
+index 40e761a..5a8d551 100644
+--- a/go.sum
++++ b/go.sum
+@@ -1,2 +1,2 @@
+-github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
+-github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
++github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
++github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=

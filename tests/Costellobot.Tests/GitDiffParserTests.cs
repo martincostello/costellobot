@@ -132,6 +132,52 @@ public static class GitDiffParserTests
         packages.ShouldBeNull();
     }
 
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_Go_Module()
+    {
+        // Arrange
+        string diff = GetDiff("Go.OneFile");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("github.com/onsi/gomega", ("1.37.0", "1.38.0"));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_Go_Module_With_Require()
+    {
+        // Arrange
+        string diff = GetDiff("Go.OneRequire");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("github.com/google/go-cmp", ("0.6.0", "0.7.0"));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_Go_Module_No_Changes()
+    {
+        // Arrange
+        string diff = GetDiff("Go.None");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeFalse();
+        packages.ShouldBeNull();
+    }
+
     private static string GetDiff(string name)
     {
         var type = typeof(GitDiffParserTests);

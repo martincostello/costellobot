@@ -1,0 +1,56 @@
+{
+  "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
+  "id": "go-packages",
+  "version": 1,
+  "comment": "HTTP bundle for Go Packages.",
+  "items": [
+    {
+      "comment": "The owners of the go-cmp module.",
+      "uri": "https://pkg.go.dev/v1beta/package/github.com/google/go-cmp/cmp?version=v0.7.0",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "modulePath": "github.com/google/go-cmp",
+        "version": "v0.7.0",
+        "isLatest": true,
+        "isStandardLibrary": false,
+        "goos": "all",
+        "goarch": "all",
+        "path": "github.com/google/go-cmp/cmp",
+        "name": "cmp",
+        "synopsis": "Package cmp determines equality of values.",
+        "isRedistributable": true
+      }
+    },
+    {
+      "comment": "The owners of the yaml module.",
+      "uri": "https://pkg.go.dev/v1beta/package/go.yaml.in/yaml/v3?version=v3.0.4",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "modulePath": "go.yaml.in/yaml/v3",
+        "version": "v3.0.4",
+        "isLatest": false,
+        "isStandardLibrary": false,
+        "goos": "all",
+        "goarch": "all",
+        "path": "go.yaml.in/yaml/v3",
+        "name": "yaml",
+        "synopsis": "Package yaml implements YAML support for the Go language.",
+        "isRedistributable": true
+      }
+    },
+    {
+      "comment": "A Go package that does not exist",
+      "uri": "https://pkg.go.dev/v1beta/package/foo?version=v1.0.0",
+      "method": "GET",
+      "status": "404",
+      "contentFormat": "json",
+      "contentJson": {
+        "code": 404,
+        "message": "not found",
+        "fixes": null
+      }
+    }
+  ]
+}

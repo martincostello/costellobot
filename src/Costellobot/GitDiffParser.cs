@@ -209,6 +209,10 @@ public static partial class GitDiffParser
         {
             return TryParseDockerImage(fragmentTrimmed, out package);
         }
+        else if (fileName is "go.mod")
+        {
+            return TryParseGoModule(fragmentTrimmed, out package);
+        }
 
         return false;
 
@@ -270,6 +274,41 @@ public static partial class GitDiffParser
                     package = (image, version);
                     return true;
                 }
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryParseGoModule(
+        string text,
+        [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
+    {
+        package = null;
+
+        if (text.Split(' ') is { Length: >= 2 } parts)
+        {
+            if (parts[0] is "go" or "module" or "toolchain")
+            {
+                return false;
+            }
+            else if (parts[0] is "require")
+            {
+                if (parts.Length < 3)
+                {
+                    return false;
+                }
+
+                parts = [.. parts.Skip(1)];
+            }
+
+            var name = parts[0];
+            var versionString = parts[1];
+
+            if (NuGetVersion.TryParse(versionString.TrimStart('v'), out var version))
+            {
+                package = (name, version);
+                return true;
             }
         }
 
