@@ -61,7 +61,6 @@
     <EmbeddedResource Include="bank-holidays.json" />
     <None Remove="scripts\ts\**\*.ts" />
     <PyroscopeLabels Include="costellobot" />
-    <TypeScriptCompile Include="scripts\ts\**\*.ts" />
   </ItemGroup>
   <Target Name="BundleAssets" BeforeTargets="BeforeBuild" DependsOnTargets="RestoreNpmPackages">
     <Exec Command="npm run build" Condition=" !Exists('$(MSBuildThisFileDirectory)\wwwroot\static\js\main.js') " />
