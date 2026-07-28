@@ -2,6 +2,8 @@ services:
   costellobot:
     image: ${DOCKER_REGISTRY-}costellobot:latest
     depends_on:
+      dependencies-ready:
+        condition: service_healthy
       servicebus-emulator:
         condition: service_started
       sql-server:
@@ -22,7 +24,7 @@ services:
       - Webhook__QueueName=queue.1
       - WEBSITE_AUTH_ENCRYPTION_KEY=1d02ee45-791c-4f23-b448-11f80accfd5c
       - WEBSITE_SITE_NAME=Costellobot
-  ready:
+  costellobot-ready:
     image: curlimages/curl:8.21.0@sha256:7c12af72ceb38b7432ab85e1a265cff6ae58e06f95539d539b654f2cfa64bb13
     command: ["sh", "-c", "sleep infinity"]
     depends_on:
@@ -30,6 +32,19 @@ services:
         condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS -H 'x-health-probe-token:43SBjvAs3HwI+lXWSzfoV2bh5hSbEK2TRxiK2SZN2qA=' http://costellobot:8080/health/readiness > /dev/null || exit 1"]
+      interval: 5s
+      retries: 30
+      timeout: 3s
+  dependencies-ready:
+    image: curlimages/curl:8.21.0@sha256:7c12af72ceb38b7432ab85e1a265cff6ae58e06f95539d539b654f2cfa64bb13
+    command: ["sh", "-c", "sleep infinity"]
+    depends_on:
+      servicebus-emulator:
+        condition: service_started
+      sql-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://servicebus-emulator:5300/health > /dev/null || exit 1"]
       interval: 5s
       retries: 30
       timeout: 3s
