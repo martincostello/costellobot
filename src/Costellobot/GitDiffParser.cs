@@ -286,33 +286,30 @@ public static partial class GitDiffParser
     {
         package = null;
 
-        try
+        if (text.Split(' ') is { Length: >= 2 } parts)
         {
-            if (text.Split(' ') is { Length: >= 2 } parts)
+            if (parts[0] is "go" or "module")
             {
-                if (parts[0] is "require")
-                {
-                    if (parts.Length < 3)
-                    {
-                        return false;
-                    }
-
-                    parts = [.. parts.Skip(1)];
-                }
-
-                var name = parts[0];
-                var versionString = parts[1];
-
-                if (NuGetVersion.TryParse(versionString.TrimStart('v'), out var version))
-                {
-                    package = (name, version);
-                    return true;
-                }
+                return false;
             }
-        }
-        catch (Exception)
-        {
-            // Ignore go.mod parsing errors
+            else if (parts[0] is "require")
+            {
+                if (parts.Length < 3)
+                {
+                    return false;
+                }
+
+                parts = [.. parts.Skip(1)];
+            }
+
+            var name = parts[0];
+            var versionString = parts[1];
+
+            if (NuGetVersion.TryParse(versionString.TrimStart('v'), out var version))
+            {
+                package = (name, version);
+                return true;
+            }
         }
 
         return false;

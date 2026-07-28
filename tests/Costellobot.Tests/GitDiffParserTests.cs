@@ -164,6 +164,20 @@ public static class GitDiffParserTests
         packages.Count.ShouldBe(1);
     }
 
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_Go_Module_No_Changes()
+    {
+        // Arrange
+        string diff = GetDiff("Go.None");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeFalse();
+        packages.ShouldBeNull();
+    }
+
     private static string GetDiff(string name)
     {
         var type = typeof(GitDiffParserTests);
