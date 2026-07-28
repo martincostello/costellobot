@@ -3,7 +3,7 @@ interval: 500ms
 fixture:
   compose:
     file: ./../../docker-compose.yml
-    app_service: ready
+    app_service: costellobot
     app_port: 8080
 seed:
   type: app
