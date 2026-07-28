@@ -2,7 +2,10 @@ services:
   costellobot:
     image: ${DOCKER_REGISTRY-}costellobot:latest
     depends_on:
-      - servicebus-emulator
+      servicebus-emulator:
+        condition: service_started
+      sql-server:
+        condition: service_healthy
     ports:
       - '8080:8080'
     environment:
@@ -25,7 +28,8 @@ services:
   servicebus-emulator:
     image: mcr.microsoft.com/azure-messaging/servicebus-emulator:2.0.1@sha256:5a96d893b245031740f7d46e0fe5ff282d24b78c4b7d761dd57590f3f010a9b3
     depends_on:
-      - sql-server
+      sql-server:
+        condition: service_healthy
     ports:
       - '5300:5300'
       - '5672:5672'
@@ -33,6 +37,7 @@ services:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=C0st3ll0b0t$
       - SQL_SERVER=sql-server:1433
+      - SQL_WAIT_INTERVAL=1
   sql-server:
     image: mcr.microsoft.com/mssql/server:2025-latest@sha256:86cc6144ef39bb0fbed2329e1ad79b13ee82e7b2e4739213a0db0800e668a74a
     ports:
@@ -40,3 +45,8 @@ services:
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=C0st3ll0b0t$
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/1433' || exit 1"]
+      interval: 5s
+      retries: 30
+      timeout: 3s
