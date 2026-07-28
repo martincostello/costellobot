@@ -12,7 +12,7 @@ input:
         - sh
         - -c
         - |
-          until curl -fsS http://servicebus-emulator:5300/health > /dev/null &&
+          until curl -fsS -H 'Host: localhost:5300' http://servicebus-emulator:5300/health > /dev/null &&
             curl -fsS -H 'x-health-probe-token:43SBjvAs3HwI+lXWSzfoV2bh5hSbEK2TRxiK2SZN2qA=' http://costellobot:8080/health/readiness > /dev/null
           do
             sleep 2
