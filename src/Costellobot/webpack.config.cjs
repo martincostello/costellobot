@@ -38,6 +38,10 @@ module.exports = {
         filename: '[name]/main.js',
         path: path.resolve(__dirname, 'wwwroot', 'static'),
     },
+    performance: {
+        maxAssetSize: 524288,
+        maxEntrypointSize: 524288,
+    },
     plugins: [
         new miniCssExtractPlugin({
             filename: '[name]/main.css'
