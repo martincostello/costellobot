@@ -103,7 +103,7 @@ jobs:
       - name: Install OATS
         env:
           # renovate: datasource=github-releases depName=oats packageName=grafana/oats
-          OATS_VERSION: 8e52488956da7273f36937a8cbdfe97918e67278
+          OATS_VERSION: v0.10.0
         run: |
           go install "github.com/grafana/oats@${OATS_VERSION}"
 
