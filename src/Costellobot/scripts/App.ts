@@ -11,6 +11,12 @@ export class App {
     private readonly hidden = 'd-none';
     private readonly loaderSelector = '.spinner-border';
 
+    // SignalR methods used by the application. Names must stay in sync with WebhookClientMethods.cs.
+    private readonly signalrMethods = {
+        log: 'application-logs',
+        webhook: 'webhook-logs',
+    };
+
     private logsAutoscroll!: HTMLInputElement;
     private logsContainer!: HTMLInputElement;
     private webhooksCountContainer!: HTMLElement;
@@ -61,11 +67,11 @@ export class App {
 
         moment.locale('en-gb');
 
-        this.connection.on('application-logs', (logEntry: LogEntry) => {
+        this.connection.on(this.signalrMethods.log, (logEntry: LogEntry) => {
             this.onApplicationLog(logEntry);
         });
 
-        this.connection.on('webhook-logs', (webhookHeaders: any, webhookEvent: any) => {
+        this.connection.on(this.signalrMethods.webhook, (webhookHeaders: any, webhookEvent: any) => {
             this.onWebhook(webhookHeaders, webhookEvent);
         });
 

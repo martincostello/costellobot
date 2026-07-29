@@ -13,6 +13,7 @@ export default defineConfig({
             include: ['scripts/**/*.ts'],
             exclude: ['scripts/**/*.test.ts'],
         },
+        environment: 'jsdom',
         reporters: ['default', 'github-actions'],
     },
 });
