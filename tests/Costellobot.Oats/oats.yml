@@ -9,8 +9,8 @@ seed:
 input:
   - path: /version
     retry:
-      timeout: 2s
-      interval: 2s
+      interval: 1s
+      timeout: 15s
   - path: /github-webhook
     method: POST
     headers:
