@@ -60,19 +60,6 @@ public static class HealthCheckEndpoints
                     {
                         writer.WriteString("description", description);
                     }
-
-                    if (entry.Data is { Count: > 0 } data)
-                    {
-                        writer.WriteStartObject("data");
-
-                        foreach ((var key, var item) in data)
-                        {
-                            writer.WritePropertyName(key);
-                            writer.WriteStringValue(item?.ToString());
-                        }
-
-                        writer.WriteEndObject();
-                    }
                 }
 
                 writer.WriteEndObject();
