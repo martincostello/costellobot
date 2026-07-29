@@ -3,11 +3,14 @@ interval: 500ms
 fixture:
   compose:
     file: ./../../docker-compose.yml
+    app_service: costellobot
 seed:
   type: app
 input:
   - path: /version
+    retry: {}
   - path: /github-webhook
+    retry: {}
     method: POST
     headers:
       Accept: '*/*'
