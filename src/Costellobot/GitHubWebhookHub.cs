@@ -12,12 +12,12 @@ public class GitHubWebhookHub(ClientLogQueue logs, GitHubWebhookQueue webhooks) 
     {
         foreach (var logEntry in logs.History())
         {
-            await Clients.Caller.SendAsync(nameof(IWebhookClient.LogAsync), logEntry);
+            await Clients.Caller.SendAsync(WebhookClientMethods.Log, logEntry, Context.ConnectionAborted);
         }
 
         foreach (var @event in webhooks.History())
         {
-            await Clients.Caller.SendAsync(nameof(IWebhookClient.WebhookAsync), @event.RawHeaders, @event.RawPayload, Context.ConnectionAborted);
+            await Clients.Caller.SendAsync(WebhookClientMethods.Webhook, @event.RawHeaders, @event.RawPayload, Context.ConnectionAborted);
         }
     }
 }

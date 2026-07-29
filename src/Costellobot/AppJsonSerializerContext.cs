@@ -10,9 +10,9 @@ namespace MartinCostello.Costellobot;
 
 [ExcludeFromCodeCoverage]
 [JsonSerializable(typeof(ClientLogMessage))]
+[JsonSerializable(typeof(Dictionary<string, string>))]
 [JsonSerializable(typeof(GitHubTokenRequest))]
 [JsonSerializable(typeof(GitHubTokenResponse))]
-[JsonSerializable(typeof(IDictionary<string, string>))]
 [JsonSerializable(typeof(JsonElement))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = false)]
 internal sealed partial class AppJsonSerializerContext : JsonSerializerContext;

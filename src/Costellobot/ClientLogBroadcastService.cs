@@ -18,7 +18,7 @@ public sealed class ClientLogBroadcastService(ClientLogQueue queue, IHubContext<
                 break;
             }
 
-            await context.Clients.All.SendAsync(nameof(IWebhookClient.LogAsync), logEntry, stoppingToken);
+            await context.Clients.All.SendAsync(WebhookClientMethods.Log, logEntry, stoppingToken);
         }
     }
 }

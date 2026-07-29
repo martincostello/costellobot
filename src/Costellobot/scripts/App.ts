@@ -24,6 +24,12 @@ export class App {
     private webhookSignature!: HTMLInputElement;
     private webhookSubmit!: HTMLElement;
 
+    // SignalR methods used by the application. Names must stay in sync with WebhookClientMethods.cs.
+    private signalrMethods = {
+        log: 'application-logs',
+        webhook: 'webhook-logs',
+    };
+
     constructor() {
         this.connection = new signalR.HubConnectionBuilder().withUrl('/admin/git-hub').withAutomaticReconnect().build();
     }
@@ -61,11 +67,11 @@ export class App {
 
         moment.locale('en-gb');
 
-        this.connection.on('application-logs', (logEntry: LogEntry) => {
+        this.connection.on(this.signalrMethods.log, (logEntry: LogEntry) => {
             this.onApplicationLog(logEntry);
         });
 
-        this.connection.on('webhook-logs', (webhookHeaders: any, webhookEvent: any) => {
+        this.connection.on(this.signalrMethods.webhook, (webhookHeaders: any, webhookEvent: any) => {
             this.onWebhook(webhookHeaders, webhookEvent);
         });
 

@@ -88,7 +88,7 @@ public sealed partial class GitHubEventProcessor(
                 }
             }
 
-            await hub.Clients.All.SendAsync(nameof(IWebhookClient.WebhookAsync), webhookHeaders, document, cancellationToken);
+            await hub.Clients.All.SendAsync(WebhookClientMethods.Webhook, webhookHeaders, document, cancellationToken);
 
             return (webhookHeaders, document);
         }
