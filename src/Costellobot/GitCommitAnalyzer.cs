@@ -11,7 +11,6 @@ using MartinCostello.Costellobot.Registries;
 using NuGet.Versioning;
 using Octokit;
 using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 using DependencyUpdate = (string Name, string? Version, string? UpdateType, string? Previous);
 
 namespace MartinCostello.Costellobot;
@@ -23,9 +22,8 @@ public sealed partial class GitCommitAnalyzer(
     ILogger<GitCommitAnalyzer> logger)
 {
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
-    private static readonly IDeserializer YamlDeserializer = new DeserializerBuilder()
+    private static readonly IDeserializer YamlDeserializer = new StaticDeserializerBuilder(new AppYamlSerializerContext())
         .IgnoreUnmatchedProperties()
-        .WithNamingConvention(HyphenatedNamingConvention.Instance)
         .Build();
 
     private readonly ImmutableList<IPackageRegistry> _registries = [.. registries];
@@ -738,6 +736,57 @@ public sealed partial class GitCommitAnalyzer(
         return dependencies;
     }
 
+    internal sealed class DependabotConfig
+    {
+        [YamlMember(Alias = "version")]
+        public long Version { get; set; }
+
+        [YamlMember(Alias = "updates")]
+        public IList<Update> Updates { get; set; } = [];
+    }
+
+    internal sealed class Update
+    {
+        [YamlMember(Alias = "package-ecosystem")]
+        public string? PackageEcosystem { get; set; }
+
+        [YamlMember(Alias = "ignore")]
+        public IList<Ignore> Ignore { get; set; } = [];
+    }
+
+    internal sealed class Ignore
+    {
+        [YamlMember(Alias = "dependency-name")]
+        public string DependencyName { get; set; } = string.Empty;
+
+        [YamlMember(Alias = "update-types")]
+        public IList<string>? UpdateTypes { get; set; }
+    }
+
+    internal sealed class DependabotMetadata
+    {
+        [YamlMember(Alias = "updated-dependencies")]
+        public IList<Dependency> Dependencies { get; set; } = [];
+    }
+
+    internal sealed class Dependency
+    {
+        [YamlMember(Alias = "dependency-name")]
+        public string DependencyName { get; set; } = string.Empty;
+
+        [YamlMember(Alias = "dependency-version")]
+        public string? DependencyVersion { get; set; }
+
+        [YamlMember(Alias = "dependency-type")]
+        public string DependencyType { get; set; } = string.Empty;
+
+        [YamlMember(Alias = "update-type")]
+        public string UpdateType { get; set; } = string.Empty;
+
+        [YamlMember(Alias = "dependency-group")]
+        public string? DependencyGroup { get; set; }
+    }
+
     [ExcludeFromCodeCoverage]
     private static partial class Log
     {
@@ -907,56 +956,5 @@ public sealed partial class GitCommitAnalyzer(
             string packageVersion,
             DependencyEcosystem ecosystem,
             Exception exception);
-    }
-
-    private sealed class DependabotConfig
-    {
-        [YamlMember(Alias = "version")]
-        public long Version { get; set; }
-
-        [YamlMember(Alias = "updates")]
-        public IList<Update> Updates { get; set; } = [];
-    }
-
-    private sealed class Update
-    {
-        [YamlMember(Alias = "package-ecosystem")]
-        public string? PackageEcosystem { get; set; }
-
-        [YamlMember(Alias = "ignore")]
-        public IList<Ignore> Ignore { get; set; } = [];
-    }
-
-    private sealed class Ignore
-    {
-        [YamlMember(Alias = "dependency-name")]
-        public string DependencyName { get; set; } = string.Empty;
-
-        [YamlMember(Alias = "update-types")]
-        public IList<string>? UpdateTypes { get; set; }
-    }
-
-    private sealed class DependabotMetadata
-    {
-        [YamlMember(Alias = "updated-dependencies")]
-        public IList<Dependency> Dependencies { get; set; } = [];
-    }
-
-    private sealed class Dependency
-    {
-        [YamlMember(Alias = "dependency-name")]
-        public string DependencyName { get; set; } = string.Empty;
-
-        [YamlMember(Alias = "dependency-version")]
-        public string? DependencyVersion { get; set; }
-
-        [YamlMember(Alias = "dependency-type")]
-        public string DependencyType { get; set; } = string.Empty;
-
-        [YamlMember(Alias = "update-type")]
-        public string UpdateType { get; set; } = string.Empty;
-
-        [YamlMember(Alias = "dependency-group")]
-        public string? DependencyGroup { get; set; }
     }
 }

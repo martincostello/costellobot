@@ -52,6 +52,7 @@
     <PackageReference Include="Pyroscope.OpenTelemetry" />
     <PackageReference Include="RazorSlices" />
     <PackageReference Include="Sentry.AspNetCore" />
+    <PackageReference Include="Vecc.YamlDotNet.Analyzers.StaticGenerator" PrivateAssets="all" />
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>
   <ItemGroup>
