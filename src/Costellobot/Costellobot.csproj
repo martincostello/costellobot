@@ -1,9 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <ContainerFamily>resolute-chiseled-extra</ContainerFamily>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
     <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
     <InvariantGlobalization>false</InvariantGlobalization>
+    <PublishAot>false</PublishAot>
     <PublishSelfContained>true</PublishSelfContained>
     <PyroscopeApplicationName>costellobot-martincostello</PyroscopeApplicationName>
     <RootNamespace>MartinCostello.Costellobot</RootNamespace>
