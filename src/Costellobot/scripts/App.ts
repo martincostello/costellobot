@@ -11,6 +11,12 @@ export class App {
     private readonly hidden = 'd-none';
     private readonly loaderSelector = '.spinner-border';
 
+    // SignalR methods used by the application. Names must stay in sync with WebhookClientMethods.cs.
+    private readonly signalrMethods = {
+        log: 'application-logs',
+        webhook: 'webhook-logs',
+    };
+
     private logsAutoscroll!: HTMLInputElement;
     private logsContainer!: HTMLInputElement;
     private webhooksCountContainer!: HTMLElement;
@@ -23,12 +29,6 @@ export class App {
     private webhookPayload!: HTMLInputElement;
     private webhookSignature!: HTMLInputElement;
     private webhookSubmit!: HTMLElement;
-
-    // SignalR methods used by the application. Names must stay in sync with WebhookClientMethods.cs.
-    private signalrMethods = {
-        log: 'application-logs',
-        webhook: 'webhook-logs',
-    };
 
     constructor() {
         this.connection = new signalR.HubConnectionBuilder().withUrl('/admin/git-hub').withAutomaticReconnect().build();
