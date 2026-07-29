@@ -8,6 +8,9 @@ seed:
   type: app
 input:
   - path: /version
+    retry:
+      timeout: 2s
+      interval: 2s
   - path: /github-webhook
     method: POST
     headers:
