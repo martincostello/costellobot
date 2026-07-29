@@ -61,15 +61,18 @@ public static class HealthCheckEndpoints
                         writer.WriteString("description", description);
                     }
 
-                    writer.WriteStartObject("data");
-
-                    foreach ((var key, var item) in entry.Data)
+                    if (entry.Data is { Count: > 0 } data)
                     {
-                        writer.WritePropertyName(key);
-                        JsonSerializer.Serialize(writer, item, item?.GetType() ?? typeof(object));
-                    }
+                        writer.WriteStartObject("data");
 
-                    writer.WriteEndObject();
+                        foreach ((var key, var item) in data)
+                        {
+                            writer.WritePropertyName(key);
+                            writer.WriteStringValue(item?.ToString());
+                        }
+
+                        writer.WriteEndObject();
+                    }
                 }
 
                 writer.WriteEndObject();
