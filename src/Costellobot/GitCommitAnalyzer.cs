@@ -410,7 +410,7 @@ public sealed partial class GitCommitAnalyzer(
                 catch (Exception ex) when (ex is RegexMatchTimeoutException or RegexParseException)
                 {
                     Log.FailedToEvaluateRegularExpression(logger, pattern, input, ex);
-                    return false;
+                    return true;
                 }
             }
 
