@@ -401,10 +401,23 @@ public sealed partial class GitCommitAnalyzer(
 
         foreach ((string dependency, string? version, string? updateType, _) in dependencies)
         {
+            static bool IsMatch(string input, string pattern, ILogger logger)
+            {
+                try
+                {
+                    return pattern is "*" || Regex.IsMatch(input, pattern, RegexOptions.None, RegexTimeout);
+                }
+                catch (Exception ex) when (ex is RegexMatchTimeoutException or RegexParseException)
+                {
+                    Log.FailedToEvaluateRegularExpression(logger, pattern, input, ex);
+                    return false;
+                }
+            }
+
             bool ignored = dependenciesToIgnore
                 .Any((p) =>
-                    Regex.IsMatch(dependency, p.Name, RegexOptions.None, RegexTimeout) &&
-                    (p.UpdateType is null || string.Equals(updateType, p.UpdateType, StringComparison.Ordinal)));
+                    (p.UpdateType is null || string.Equals(updateType, p.UpdateType, StringComparison.Ordinal)) &&
+                    IsMatch(dependency, p.Name, logger));
 
             if (ignored)
             {
@@ -955,6 +968,16 @@ public sealed partial class GitCommitAnalyzer(
             string packageId,
             string packageVersion,
             DependencyEcosystem ecosystem,
+            Exception exception);
+
+        [LoggerMessage(
+            EventId = 17,
+            Level = LogLevel.Warning,
+            Message = "Failed to evaluate regular expression {Pattern} for input {Input}.")]
+        public static partial void FailedToEvaluateRegularExpression(
+            ILogger logger,
+            string pattern,
+            string input,
             Exception exception);
     }
 }
