@@ -302,11 +302,16 @@
                                     </div>
                                     <div class="card-body">
                                         <ul id="trusted-dependencies">
-                                            @foreach (var dependency in Model.Webhook.TrustedEntities.Dependencies)
+                                            @foreach ((var ecosystem, var dependencies) in Model.Webhook.TrustedEntities.Dependencies)
                                             {
-                                                <li>
-                                                    <code class="trusted-dependency">@(dependency)</code>
-                                                </li>
+                                                foreach (var dependency in dependencies)
+                                                {
+                                                    (var name, _, var icon) = DependencyHelpers.GetPackageMetadata(ecosystem, dependency, string.Empty);
+                                                    <li>
+                                                        <span class="dependency-ecosystem @(icon)" title="@(name)" aria-hidden="true"></span>
+                                                        <code class="trusted-dependency">@(dependency)</code>
+                                                    </li>
+                                                }
                                             }
                                         </ul>
                                     </div>

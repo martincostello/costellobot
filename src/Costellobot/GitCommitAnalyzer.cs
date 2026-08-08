@@ -387,7 +387,10 @@ public sealed partial class GitCommitAnalyzer(
 #pragma warning restore CA1873
 
         // First do a simple lookup by name
-        var trustedDependencies = context.WebhookOptions.TrustedEntities.Dependencies;
+        if (!context.WebhookOptions.TrustedEntities.Dependencies.TryGetValue(ecosystem, out var trustedDependencies))
+        {
+            trustedDependencies = [];
+        }
 
         Dictionary<string, (bool Trusted, string? Version)> dependencyTrust = new(dependencies.Count);
 

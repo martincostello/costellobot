@@ -104,44 +104,53 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies =
-                [
-                    @"^@actions\/.*$",
-                    @"^@microsoft\/signalr$",
-                    @"^@octokit\/types$",
-                    @"^@types\/.*$",
-                    @"^actions\/.*$",
-                    @"^Amazon.Lambda\\..*$",
-                    @"^AspNet.Security.OAuth\\..*$",
-                    @"^AWSSDK\\..*$",
-                    @"^Azure.Extensions\\..*$",
-                    @"^Azure.Identity$",
-                    @"^BenchmarkDotNet$",
-                    @"^JustEat.HttpClientInterception$",
-                    @"^MartinCostello\\..*$",
-                    @"^martincostello\/update-dotnet-sdk$",
-                    @"^Microsoft.ApplicationInsights\\..*$",
-                    @"^Microsoft.AspNetCore\\..*$",
-                    @"^Microsoft.Azure\\..*$",
-                    @"^Microsoft.EntityFrameworkCore\\..*$",
-                    @"^Microsoft.Extensions\\..*$",
-                    @"^Microsoft.IdentityModel\\..*$",
-                    @"^Microsoft.NET.Sdk$",
-                    @"^Microsoft.NET.Test.Sdk$",
-                    @"^Microsoft.Playwright$",
-                    @"^Microsoft.SourceLink.GitHub$",
-                    @"^Microsoft.TypeScript.MSBuild$",
-                    @"^Newtonsoft.Json$",
-                    @"^Octokit$",
-                    @"^Octokit.GraphQL$",
-                    @"^Octokit.Webhooks.AspNetCore$",
-                    @"^NodaTime$",
-                    @"^NodaTime.Testing$",
-                    @"^System.Text.Json$",
-                    @"^typescript$",
-                    @"^xunit$",
-                    @"^xunit.runner.visualstudio$",
-                ],
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.GitHubActions] =
+                    [
+                        @"^actions\/.*$",
+                        @"^martincostello\/update-dotnet-sdk$",
+                    ],
+                    [DependencyEcosystem.Npm] =
+                    [
+                        @"^@actions\/.*$",
+                        @"^@microsoft\/signalr$",
+                        @"^@octokit\/types$",
+                        @"^@types\/.*$",
+                        @"^typescript$",
+                    ],
+                    [DependencyEcosystem.NuGet] =
+                    [
+                        @"^Amazon.Lambda\\..*$",
+                        @"^AspNet.Security.OAuth\\..*$",
+                        @"^AWSSDK\\..*$",
+                        @"^Azure.Extensions\\..*$",
+                        @"^Azure.Identity$",
+                        @"^BenchmarkDotNet$",
+                        @"^JustEat.HttpClientInterception$",
+                        @"^MartinCostello\\..*$",
+                        @"^Microsoft.ApplicationInsights\\..*$",
+                        @"^Microsoft.AspNetCore\\..*$",
+                        @"^Microsoft.Azure\\..*$",
+                        @"^Microsoft.EntityFrameworkCore\\..*$",
+                        @"^Microsoft.Extensions\\..*$",
+                        @"^Microsoft.IdentityModel\\..*$",
+                        @"^Microsoft.NET.Sdk$",
+                        @"^Microsoft.NET.Test.Sdk$",
+                        @"^Microsoft.Playwright$",
+                        @"^Microsoft.SourceLink.GitHub$",
+                        @"^Microsoft.TypeScript.MSBuild$",
+                        @"^Newtonsoft.Json$",
+                        @"^Octokit$",
+                        @"^Octokit.GraphQL$",
+                        @"^Octokit.Webhooks.AspNetCore$",
+                        @"^NodaTime$",
+                        @"^NodaTime.Testing$",
+                        @"^System.Text.Json$",
+                        @"^xunit$",
+                        @"^xunit.runner.visualstudio$",
+                    ],
+                },
             },
         };
 
@@ -1315,7 +1324,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies = ["^AspNet.Security.OAuth\\..*$"],
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["^AspNet.Security.OAuth\\..*$"],
+                },
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
                     [ecosystem] = ["Microsoft"],
@@ -1445,7 +1457,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies = ["^AspNet.Security.OAuth\\..*$"],
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["^AspNet.Security.OAuth\\..*$"],
+                },
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
                     [ecosystem] = ["Microsoft"],
@@ -1630,7 +1645,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies = ["^AspNet.Security.OAuth\\..*$"],
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["^AspNet.Security.OAuth\\..*$"],
+                },
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
                     [ecosystem] = ["Microsoft"],
@@ -1807,7 +1825,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies = ["^AspNet.Security.OAuth\\..*$"],
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["^AspNet.Security.OAuth\\..*$"],
+                },
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
                     [ecosystem] = ["Microsoft"],
@@ -1983,7 +2004,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies = ["^AspNet.Security.OAuth\\..*$"],
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["^AspNet.Security.OAuth\\..*$"],
+                },
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
                     [ecosystem] = ["Microsoft"],
@@ -2159,7 +2183,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies = ["^AspNet.Security.OAuth\\..*$", "^Microsoft.Extensions\\..*$"],
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["^AspNet.Security.OAuth\\..*$", "^Microsoft.Extensions\\..*$"],
+                },
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
                     [ecosystem] = ["Microsoft"],
@@ -2361,7 +2388,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies = ["^dotnet-sdk$"],
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = ["^dotnet-sdk$"],
+                },
                 Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
                 {
                     [ecosystem] = ["aspnet", "dotnetframework", "Microsoft"],
@@ -2582,11 +2612,14 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies =
-                [
-                    "^@typescript-eslint/eslint-plugin$",
-                    "^@typescript-eslint/parser$"
-                ],
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.Npm] =
+                    [
+                        "^@typescript-eslint/eslint-plugin$",
+                        "^@typescript-eslint/parser$"
+                    ],
+                },
             },
         };
 
@@ -2656,11 +2689,14 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies =
-                [
-                    "^@typescript-eslint/eslint-plugin$",
-                    "^@typescript-eslint/parser$"
-                ],
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.Npm] =
+                    [
+                        "^@typescript-eslint/eslint-plugin$",
+                        "^@typescript-eslint/parser$"
+                    ],
+                },
             },
         };
 
@@ -3134,10 +3170,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies =
-                [
-                    "^eslint-config-prettier$"
-                ],
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.Npm] = ["^eslint-config-prettier$"],
+                },
             },
         };
 
@@ -3422,7 +3458,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         {
             TrustedEntities = new()
             {
-                Dependencies = [@"^Humanizer\.Core$"],
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [DependencyEcosystem.NuGet] = [@"^Humanizer\.Core$"],
+                },
             },
         };
 
