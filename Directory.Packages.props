@@ -48,7 +48,7 @@
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="Newtonsoft.Json.Schema" Version="4.0.1" />
     <PackageVersion Include="NSubstitute" Version="6.1.0" />
-    <PackageVersion Include="NuGet.Versioning" Version="7.6.0" />
+    <PackageVersion Include="NuGet.Versioning" Version="7.9.0" />
     <PackageVersion Include="Octokit" Version="14.0.0" />
     <PackageVersion Include="Octokit.GraphQL" Version="0.4.0-beta" />
     <PackageVersion Include="Octokit.Webhooks.AspNetCore" Version="4.1.1" />
