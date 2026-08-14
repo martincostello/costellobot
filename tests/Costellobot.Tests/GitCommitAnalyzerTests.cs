@@ -3442,6 +3442,77 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     }
 
     [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Go_Toolchain()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.GoModules;
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/gomod/go-1.x";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(ecosystem);
+
+        registry.GetPackageOwnersAsync(repository, "go", "1.26.6", CancellationToken)
+                .Returns(Task.FromResult<IReadOnlyList<string>>([]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [ecosystem] = ["^go$"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "8abef7a39c9e31b88b989a6487ae15457d8521c5";
+        var commitMessage = """
+                            Bump go toolchain directive to v1.26.6
+                            | datasource     | package | from   | to     |
+                            | -------------- | ------- | ------ | ------ |
+                            | golang-version | go      | 1.26.5 | 1.26.6 |
+
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actualEcosystem.ShouldBe(ecosystem);
+
+        trust.ShouldContainKeyAndValue("go", (true, "1.26.6"));
+        trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Commit_Is_Not_Trusted_If_Dependency_Version_Is_Denied()
     {
         // Arrange
