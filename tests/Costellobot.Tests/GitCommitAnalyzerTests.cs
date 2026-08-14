@@ -3442,7 +3442,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     }
 
     [Fact]
-    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Go_Toolchain()
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Dependencies_For_Renovate_Go_Toolchain()
     {
         // Arrange
         var ecosystem = DependencyEcosystem.GoModules;
@@ -3450,13 +3450,6 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         var repo = owner.CreateRepository();
         var repository = new RepositoryId(repo.Owner.Login, repo.Name);
         var reference = "renovate/gomod/go-1.x";
-
-        var registry = Substitute.For<IPackageRegistry>();
-
-        registry.Ecosystem.Returns(ecosystem);
-
-        registry.GetPackageOwnersAsync(repository, "go", "1.26.6", CancellationToken)
-                .Returns(Task.FromResult<IReadOnlyList<string>>([]));
 
         var options = new WebhookOptions()
         {
@@ -3470,7 +3463,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         };
 
         using var scope = Fixture.Services.CreateScope();
-        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+        var target = CreateTarget(scope.ServiceProvider, options);
 
         var diff = string.Empty;
         var sha = "8abef7a39c9e31b88b989a6487ae15457d8521c5";
