@@ -20,6 +20,7 @@ public static class CostellobotBuilder
     {
         var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions()
         {
+            ExcludeManagedIdentityCredential = !builder.Environment.IsProduction(),
             ExcludeVisualStudioCredential = true,
         });
 
