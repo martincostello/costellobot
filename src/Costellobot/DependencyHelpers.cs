@@ -25,7 +25,7 @@ internal static class DependencyHelpers
             DependencyEcosystem.GitHubActions => ("GitHub Actions", GitHubUrl(id), GitHubStyles),
             DependencyEcosystem.GitHubRelease => ("GitHub", GitHubUrl(id), GitHubStyles),
             DependencyEcosystem.GoModules => ("Go Modules", GoPackageUrl($"/{id}@v{version.TrimStart('v')}"), GoStyles),
-            DependencyEcosystem.Html => ("cdnjs", CdnjsUrl($"/libraries/{id}"), HtmlStyles),
+            DependencyEcosystem.Html => ("cdnjs", CdnjsUrl($"/libraries/{CdnjsLibraryName(id)}"), HtmlStyles),
             DependencyEcosystem.Npm => ("npm", NpmUrl($"/package/{id}/v/{version}"), NpmStyles),
             DependencyEcosystem.NuGet => ("NuGet", NuGetUrl($"/packages/{id}/{version}"), NuGetStyles),
             DependencyEcosystem.PyPI => ("PyPI", PyPIUrl($"/project/{id}/"), PyPIStyles),
@@ -44,7 +44,7 @@ internal static class DependencyHelpers
             DependencyEcosystem.GitHubRelease => ("GitHub", GitHubUrl(id), GitHubStyles),
             DependencyEcosystem.GitSubmodule => ("Git Submodule", id, GitHubStyles),
             DependencyEcosystem.GoModules => ("Go Modules", string.Empty, GoStyles),
-            DependencyEcosystem.Html => ("cdnjs", CdnjsUrl($"/libraries/{id}"), HtmlStyles),
+            DependencyEcosystem.Html => ("cdnjs", CdnjsUrl($"/libraries/{CdnjsLibraryName(id)}"), HtmlStyles),
             DependencyEcosystem.Npm => ("npm", NpmUrl($"~{id}"), NpmStyles),
             DependencyEcosystem.NuGet => ("NuGet", NuGetUrl($"/profiles/{id}"), NuGetStyles),
             DependencyEcosystem.PyPI => ("PyPI", PyPIUrl($"/user/{id}/"), PyPIStyles),
@@ -58,6 +58,12 @@ internal static class DependencyHelpers
 
     private static string CdnjsUrl(string path)
         => BuildUrl("cdnjs.com", path);
+
+    private static string CdnjsLibraryName(string id)
+    {
+        int index = id.IndexOf('/', StringComparison.Ordinal);
+        return index > -1 ? id[..index] : id;
+    }
 
     private static string GitHubUrl(string path)
         => BuildUrl("github.com", path);
