@@ -9,6 +9,7 @@ internal static class DependencyHelpers
     private const string DockerStyles = "fa-brands fa-docker text-primary";
     private const string GitHubStyles = "fa-brands fa-square-github text-dark";
     private const string GoStyles = "fa-brands fa-golang text-info";
+    private const string HtmlStyles = "fa-brands fa-html5 text-danger";
     private const string MicrosoftStyles = "fa-brands fa-microsoft text-primary";
     private const string NpmStyles = "fa-brands fa-npm text-danger";
     private const string NuGetStyles = "fa-solid fa-cube text-dotnet"; // Maybe one day... https://bsky.app/profile/martincostello.com/post/3lrkz62rwvs2a
@@ -24,6 +25,7 @@ internal static class DependencyHelpers
             DependencyEcosystem.GitHubActions => ("GitHub Actions", GitHubUrl(id), GitHubStyles),
             DependencyEcosystem.GitHubRelease => ("GitHub", GitHubUrl(id), GitHubStyles),
             DependencyEcosystem.GoModules => ("Go Modules", GoPackageUrl($"/{id}@v{version.TrimStart('v')}"), GoStyles),
+            DependencyEcosystem.Html => ("cdnjs", CdnjsUrl($"/libraries/{id}"), HtmlStyles),
             DependencyEcosystem.Npm => ("npm", NpmUrl($"/package/{id}/v/{version}"), NpmStyles),
             DependencyEcosystem.NuGet => ("NuGet", NuGetUrl($"/packages/{id}/{version}"), NuGetStyles),
             DependencyEcosystem.PyPI => ("PyPI", PyPIUrl($"/project/{id}/"), PyPIStyles),
@@ -42,6 +44,7 @@ internal static class DependencyHelpers
             DependencyEcosystem.GitHubRelease => ("GitHub", GitHubUrl(id), GitHubStyles),
             DependencyEcosystem.GitSubmodule => ("Git Submodule", id, GitHubStyles),
             DependencyEcosystem.GoModules => ("Go Modules", string.Empty, GoStyles),
+            DependencyEcosystem.Html => ("cdnjs", CdnjsUrl($"/libraries/{id}"), HtmlStyles),
             DependencyEcosystem.Npm => ("npm", NpmUrl($"~{id}"), NpmStyles),
             DependencyEcosystem.NuGet => ("NuGet", NuGetUrl($"/profiles/{id}"), NuGetStyles),
             DependencyEcosystem.PyPI => ("PyPI", PyPIUrl($"/user/{id}/"), PyPIStyles),
@@ -52,6 +55,9 @@ internal static class DependencyHelpers
 
     private static string DockerHubUrl(string path)
         => BuildUrl("hub.docker.com", path);
+
+    private static string CdnjsUrl(string path)
+        => BuildUrl("cdnjs.com", path);
 
     private static string GitHubUrl(string path)
         => BuildUrl("github.com", path);

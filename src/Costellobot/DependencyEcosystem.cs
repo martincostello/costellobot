@@ -16,4 +16,5 @@ public enum DependencyEcosystem
     GitHubRelease,
     PyPI,
     GoModules,
+    Html,
 }

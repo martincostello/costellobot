@@ -86,6 +86,11 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     [Theory]
     [InlineData("@actions/github", "dependabot/npm_and_yarn/actions/github-5.0.3", true)]
     [InlineData("actions/checkout", "dependabot/github_actions/actions/checkout-3", true)]
+    [InlineData("bootstrap/css/bootstrap.min.css", "renovate/html/bootstrap-5.x", true)]
+    [InlineData("bootstrap/js/bootstrap.bundle.min.js", "renovate/html/bootstrap-5.x", true)]
+    [InlineData("bootstrap", "renovate/html/bootstrap-5.x", false)]
+    [InlineData("font-awesome/css/all.min.css", "renovate/html/font-awesome-7.x", true)]
+    [InlineData("font-awesome", "renovate/html/font-awesome-7.x", false)]
     [InlineData("JustEat.HttpClientInterception", "dependabot/nuget/JustEat.HttpClientInterception-3.1.1", true)]
     [InlineData("martincostello/update-dotnet-sdk", "dependabot/github_actions/martincostello/update-dotnet-sdk-2", true)]
     [InlineData("Microsoft.NET.Sdk", "update-dotnet-sdk-6.0.302", true)]
@@ -110,6 +115,12 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [
                         @"^actions\/.*$",
                         @"^martincostello\/update-dotnet-sdk$",
+                    ],
+                    [DependencyEcosystem.Html] =
+                    [
+                        @"^bootstrap\/css\/bootstrap\.min\.css$",
+                        @"^bootstrap\/js\/bootstrap\.bundle\.min\.js$",
+                        @"^font-awesome\/css\/all\.min\.css$",
                     ],
                     [DependencyEcosystem.Npm] =
                     [
@@ -3503,6 +3514,149 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         trust.ShouldContainKeyAndValue("go", (true, "1.26.6"));
         trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Dependencies_For_Renovate_Html_Dependency()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.Html;
+        var dependency = "font-awesome/css/all.min.css";
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/html/font-awesome-7.x";
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [ecosystem] =
+                    [
+                        @"^bootstrap\/css\/bootstrap\.min\.css$",
+                        @"^bootstrap\/js\/bootstrap\.bundle\.min\.js$",
+                        @"^font-awesome\/css\/all\.min\.css$",
+                    ],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options);
+
+        var diff = string.Empty;
+        var sha = "26bc5360c9a3c8a623dd91ea4add2852e7f92158";
+        var commitMessage = """
+                            Bump dependency font-awesome to v7.3.1
+
+                            | datasource | package                      | from  | to    |
+                            | ---------- | ---------------------------- | ----- | ----- |
+                            | cdnjs      | font-awesome/css/all.min.css | 7.3.0 | 7.3.1 |
+
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actualEcosystem.ShouldBe(ecosystem);
+
+        trust.ShouldContainKeyAndValue(dependency, (true, "7.3.1"));
+        trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Dependencies_For_Renovate_Html_Dependency_With_Multiple_Packages()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.Html;
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/html/bootstrap-5.x";
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [ecosystem] =
+                    [
+                        @"^bootstrap\/css\/bootstrap\.min\.css$",
+                        @"^bootstrap\/js\/bootstrap\.bundle\.min\.js$",
+                        @"^font-awesome\/css\/all\.min\.css$",
+                    ],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options);
+
+        var diff = string.Empty;
+        var sha = "d8d5f62d717ebeeaf7eb5ad369af7455ddd89da1";
+        var commitMessage = """
+                            Bump dependency bootstrap to v5.3.8
+
+                            | datasource | package                               | from  | to    |
+                            | ---------- | -------------------------------------- | ----- | ----- |
+                            | cdnjs      | bootstrap/js/bootstrap.bundle.min.js  | 5.3.7 | 5.3.8 |
+                            | cdnjs      | bootstrap/css/bootstrap.min.css       | 5.3.7 | 5.3.8 |
+
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actualEcosystem.ShouldBe(ecosystem);
+
+        trust.ShouldContainKeyAndValue("bootstrap/js/bootstrap.bundle.min.js", (true, "5.3.8"));
+        trust.ShouldContainKeyAndValue("bootstrap/css/bootstrap.min.css", (true, "5.3.8"));
+        trust.Count.ShouldBe(2);
     }
 
     [Fact]
