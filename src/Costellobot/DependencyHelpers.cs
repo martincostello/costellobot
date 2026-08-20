@@ -3,7 +3,7 @@
 
 namespace MartinCostello.Costellobot;
 
-internal static class DependencyHelpers
+public static class DependencyHelpers
 {
     private const string DefaultStyles = "fa-solid fa-cube";
     private const string DockerStyles = "fa-brands fa-docker text-primary";
@@ -22,7 +22,7 @@ internal static class DependencyHelpers
         {
             DependencyEcosystem.Docker when id.StartsWith("dotnet/", StringComparison.Ordinal) => ("Docker", MicrosoftArtifactRegistryUrl($"/artifact/mar/{id}/tags"), MicrosoftStyles),
             DependencyEcosystem.Docker => ("Docker", DockerHubUrl($"/r/{id}/tags"), DockerStyles),
-            DependencyEcosystem.GitHubActions => ("GitHub Actions", GitHubUrl(id), GitHubStyles),
+            DependencyEcosystem.GitHubActions => ("GitHub Actions", GitHubActionUrl(id), GitHubStyles),
             DependencyEcosystem.GitHubRelease => ("GitHub", GitHubUrl(id), GitHubStyles),
             DependencyEcosystem.GoModules => ("Go Modules", GoPackageUrl($"/{id}@v{version.TrimStart('v')}"), GoStyles),
             DependencyEcosystem.Html => ("cdnjs", CdnjsUrl($"/libraries/{CdnjsLibraryName(id)}"), HtmlStyles),
@@ -63,6 +63,18 @@ internal static class DependencyHelpers
     {
         int index = id.IndexOf('/', StringComparison.Ordinal);
         return index > -1 ? id[..index] : id;
+    }
+
+    private static string GitHubActionUrl(string id)
+    {
+        var segments = id.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        if (segments.Length > 2)
+        {
+            return GitHubUrl($"/{segments[0]}/{segments[1]}/tree/HEAD/{string.Join('/', segments[2..])}");
+        }
+
+        return GitHubUrl(id);
     }
 
     private static string GitHubUrl(string path)
