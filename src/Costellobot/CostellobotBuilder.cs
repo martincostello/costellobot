@@ -78,6 +78,12 @@ public static class CostellobotBuilder
             options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
         });
 
+        // Workaround for https://github.com/dotnet/extensions/issues/5962
+        if (OperatingSystem.IsLinux() || OperatingSystem.IsWindows())
+        {
+            builder.Services.AddResourceMonitoring();
+        }
+
         builder.Logging.AddTelemetry();
         builder.Logging.AddSignalR();
 
