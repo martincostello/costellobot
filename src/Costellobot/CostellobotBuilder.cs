@@ -57,6 +57,7 @@ public static class CostellobotBuilder
         builder.Services.AddApplicationHealthChecks();
         builder.Services.AddGitHub(builder.Configuration);
         builder.Services.AddHsts((options) => options.MaxAge = TimeSpan.FromDays(180));
+        builder.Services.AddResourceMonitoring();
         builder.Services.AddResponseCaching();
         builder.Services.AddTelemetry(builder.Environment);
 
