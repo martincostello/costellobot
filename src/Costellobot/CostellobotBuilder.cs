@@ -57,7 +57,6 @@ public static class CostellobotBuilder
         builder.Services.AddApplicationHealthChecks();
         builder.Services.AddGitHub(builder.Configuration);
         builder.Services.AddHsts((options) => options.MaxAge = TimeSpan.FromDays(180));
-        builder.Services.AddResourceMonitoring();
         builder.Services.AddResponseCaching();
         builder.Services.AddTelemetry(builder.Environment);
 
@@ -78,6 +77,12 @@ public static class CostellobotBuilder
         {
             options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
         });
+
+        // Workaround for https://github.com/dotnet/extensions/issues/5962
+        if (OperatingSystem.IsLinux() || OperatingSystem.IsWindows())
+        {
+            builder.Services.AddResourceMonitoring();
+        }
 
         builder.Logging.AddTelemetry();
         builder.Logging.AddSignalR();
