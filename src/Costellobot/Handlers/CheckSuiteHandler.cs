@@ -141,7 +141,7 @@ public sealed partial class CheckSuiteHandler(
         var options = context.WebhookOptions;
 
         var retryEligibleRuns = failedRuns
-            .Where((p) => options.RerunFailedChecks.Any((pattern) => Regex.IsMatch(p.Name, pattern, RegexOptions.None, RegexTimeout)))
+            .Where((p) => options.RerunFailedChecks.Any((pattern) => RegexCache.GetOrAdd(pattern, RegexOptions.None, RegexTimeout).IsMatch(p.Name)))
             .GroupBy((p) => p.Name)
             .Select((g) => (g.Key, Count: g.Count()))
             .ToList();
