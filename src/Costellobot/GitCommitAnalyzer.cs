@@ -48,7 +48,7 @@ public sealed partial class GitCommitAnalyzer(
 
         foreach (var pattern in patterns)
         {
-            var match = RegexCache.GetOrAdd(pattern, RegexOptions.Multiline, Regex.InfiniteMatchTimeout).Match(commitMessage);
+            var match = RegexCache.GetOrAdd(pattern, RegexOptions.Multiline, RegexTimeout).Match(commitMessage);
             var group = match.Groups["to"];
 
             if (group.Success)
