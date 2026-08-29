@@ -48,7 +48,7 @@ public sealed partial class GitCommitAnalyzer(
 
         foreach (var pattern in patterns)
         {
-            var match = Regex.Match(commitMessage, pattern, RegexOptions.Multiline);
+            var match = RegexCache.GetOrAdd(pattern, RegexOptions.Multiline, Regex.InfiniteMatchTimeout).Match(commitMessage);
             var group = match.Groups["to"];
 
             if (group.Success)
@@ -409,7 +409,7 @@ public sealed partial class GitCommitAnalyzer(
             {
                 try
                 {
-                    return pattern is "*" || Regex.IsMatch(input, pattern, RegexOptions.None, RegexTimeout);
+                    return pattern is "*" || RegexCache.GetOrAdd(pattern, RegexOptions.None, RegexTimeout).IsMatch(input);
                 }
                 catch (Exception ex) when (ex is RegexMatchTimeoutException or RegexParseException)
                 {
@@ -430,7 +430,7 @@ public sealed partial class GitCommitAnalyzer(
             }
 
             if (!ignored &&
-                trustedDependencies.Any((p) => Regex.IsMatch(dependency, p, RegexOptions.None, RegexTimeout)))
+                trustedDependencies.Any((p) => RegexCache.GetOrAdd(p, RegexOptions.None, RegexTimeout).IsMatch(dependency)))
             {
                 Log.TrustedDependencyNameUpdated(
                     logger,
