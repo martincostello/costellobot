@@ -405,7 +405,7 @@ public sealed partial class GitCommitAnalyzer(
 
         foreach ((string dependency, string? version, string? updateType, _) in dependencies)
         {
-            static bool IsMatch(string input, string pattern, ILogger logger)
+            static bool IsMatch(string input, string pattern, ILogger logger, bool resultOnError)
             {
                 try
                 {
@@ -414,14 +414,14 @@ public sealed partial class GitCommitAnalyzer(
                 catch (Exception ex) when (ex is RegexMatchTimeoutException or RegexParseException)
                 {
                     Log.FailedToEvaluateRegularExpression(logger, pattern, input, ex);
-                    return true;
+                    return resultOnError;
                 }
             }
 
             bool ignored = dependenciesToIgnore
                 .Any((p) =>
                     (p.UpdateType is null || string.Equals(updateType, p.UpdateType, StringComparison.Ordinal)) &&
-                    IsMatch(dependency, p.Name, logger));
+                    IsMatch(dependency, p.Name, logger, resultOnError: true));
 
             if (ignored)
             {
@@ -430,7 +430,7 @@ public sealed partial class GitCommitAnalyzer(
             }
 
             if (!ignored &&
-                trustedDependencies.Any((p) => IsMatch(dependency, p, logger)))
+                trustedDependencies.Any((p) => IsMatch(dependency, p, logger, resultOnError: false)))
             {
                 Log.TrustedDependencyNameUpdated(
                     logger,
