@@ -39,11 +39,13 @@ internal static class RegexCache
             return cached;
         }
 
-        TrimIfOverCapacity();
-
-        return Cache.GetOrAdd(
+        var regex = Cache.GetOrAdd(
             key,
             static (k) => new Regex(k.Pattern, k.Options, k.Timeout));
+
+        TrimIfOverCapacity();
+
+        return regex;
     }
 
     private static void TrimIfOverCapacity()
