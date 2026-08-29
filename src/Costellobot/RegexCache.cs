@@ -30,15 +30,44 @@ internal static class RegexCache
     /// </returns>
     public static Regex GetOrAdd(string pattern, RegexOptions options, TimeSpan timeout)
     {
-        if (Cache.Count > MaximumSize)
-        {
-            Cache.Clear();
-        }
-
         options |= RegexOptions.Compiled;
 
+        var key = (pattern, options, timeout);
+
+        if (Cache.TryGetValue(key, out var cached))
+        {
+            return cached;
+        }
+
+        TrimIfOverCapacity();
+
         return Cache.GetOrAdd(
-            (pattern, options, timeout),
-            static (key) => new Regex(key.Pattern, key.Options, key.Timeout));
+            key,
+            static (k) => new Regex(k.Pattern, k.Options, k.Timeout));
+    }
+
+    private static void TrimIfOverCapacity()
+    {
+        int excess = Cache.Count - MaximumSize;
+
+        if (excess <= 0)
+        {
+            return;
+        }
+
+        int toRemove = excess + (MaximumSize / 2);
+
+        foreach (var key in Cache.Keys)
+        {
+            if (toRemove <= 0)
+            {
+                break;
+            }
+
+            if (Cache.TryRemove(key, out _))
+            {
+                toRemove--;
+            }
+        }
     }
 }

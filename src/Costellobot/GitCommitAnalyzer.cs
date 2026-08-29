@@ -430,7 +430,7 @@ public sealed partial class GitCommitAnalyzer(
             }
 
             if (!ignored &&
-                trustedDependencies.Any((p) => RegexCache.GetOrAdd(p, RegexOptions.None, RegexTimeout).IsMatch(dependency)))
+                trustedDependencies.Any((p) => IsMatch(dependency, p, logger)))
             {
                 Log.TrustedDependencyNameUpdated(
                     logger,
