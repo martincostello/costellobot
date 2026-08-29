@@ -35,8 +35,10 @@ internal static class RegexCache
             Cache.Clear();
         }
 
+        options |= RegexOptions.Compiled;
+
         return Cache.GetOrAdd(
             (pattern, options, timeout),
-            static (key) => new Regex(key.Pattern, key.Options | RegexOptions.Compiled, key.Timeout));
+            static (key) => new Regex(key.Pattern, key.Options, key.Timeout));
     }
 }
