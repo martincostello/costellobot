@@ -66,6 +66,19 @@ public sealed partial class GitHubEventProcessor(
         }
     }
 
+    public override WebhookEvent DeserializeWebhookEvent(WebhookHeaders headers, string body)
+    {
+        try
+        {
+            return base.DeserializeWebhookEvent(headers, body);
+        }
+        catch (JsonException ex)
+        {
+            Log.WebhookDeserializationFailed(logger, headers.Delivery, ex);
+            throw;
+        }
+    }
+
     private async Task<(IDictionary<string, string> Headers, JsonElement Payload)> BroadcastLogAsync(
         IDictionary<string, StringValues> headers,
         string body,
@@ -113,5 +126,11 @@ public sealed partial class GitHubEventProcessor(
             Level = LogLevel.Debug,
             Message = "Processed webhook with ID {HookId}.")]
         public static partial void ProcessedWebhook(ILogger logger, string? hookId);
+
+        [LoggerMessage(
+            EventId = 3,
+            Level = LogLevel.Warning,
+            Message = "Failed to deserialize webhook with ID {HookId}.")]
+        public static partial void WebhookDeserializationFailed(ILogger logger, string? hookId, Exception exception);
     }
 }
