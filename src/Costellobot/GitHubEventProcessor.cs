@@ -131,6 +131,6 @@ public sealed partial class GitHubEventProcessor(
             EventId = 3,
             Level = LogLevel.Warning,
             Message = "Failed to deserialize webhook with ID {HookId}.")]
-        public static partial void WebhookDeserializationFailed(ILogger logger, string? hookId, Exception ex);
+        public static partial void WebhookDeserializationFailed(ILogger logger, string? hookId, Exception exception);
     }
 }
