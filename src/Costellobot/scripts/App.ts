@@ -117,7 +117,13 @@ export class App {
 
             const result = await this.postJson(event, payload, signature);
 
-            badge.textContent = result.status.toString(10);
+            let badgeContent = result.status.toString(10);
+
+            if (!result.isOK && result.error) {
+                badgeContent += ` - ${result.error.title}`;
+            }
+
+            badge.textContent = badgeContent;
             badge.classList.add(result.isOK ? 'bg-success' : 'bg-danger');
             badge.classList.remove(result.isOK ? 'bg-danger' : 'bg-success');
 
@@ -319,10 +325,20 @@ export class App {
 
         const response = await fetch('/github-webhook', init);
 
-        return {
+        const result: WebhookResult = {
             isOK: response.ok,
             status: response.status,
         };
+
+        if (!response.ok) {
+            try {
+                result.error = await response.json();
+            } catch {
+                // Not JSON, ignore
+            }
+        }
+
+        return result;
     }
 }
 
@@ -336,7 +352,17 @@ interface LogEntry {
     timestamp: string;
 }
 
+interface ProblemDetails {
+    type: string;
+    title: string;
+    status: number;
+    detail: string;
+    instance: string;
+    correlation: string;
+}
+
 interface WebhookResult {
     isOK: boolean;
     status: number;
+    error?: ProblemDetails | null;
 }

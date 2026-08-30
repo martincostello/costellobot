@@ -408,6 +408,63 @@ describe('App', () => {
             expect(badge.classList.contains('bg-success')).toBe(false);
         });
 
+        test('appends the problem details title to the badge if the response is not accepted', async () => {
+            setupDebugPage();
+            await initializeApp();
+
+            const problemDetails = {
+                type: 'https://tools.ietf.org/html/rfc9110#section-15.5.5',
+                title: 'Bad Request',
+                status: 400,
+                detail: 'The webhook payload was invalid.',
+                instance: '/github-webhook',
+            };
+
+            const fetch = vi.fn(() =>
+                Promise.resolve({
+                    ok: false,
+                    status: 400,
+                    json: () => Promise.resolve(problemDetails),
+                })
+            );
+            vi.stubGlobal('fetch', fetch);
+
+            setPayload('{}');
+
+            document.getElementById('post-webhook')!.click();
+
+            const badge = document.querySelector('.webhook-status')!;
+
+            await vi.waitFor(() => expect(badge.textContent).toBe('400 - Bad Request'));
+
+            expect(badge.classList.contains('bg-danger')).toBe(true);
+            expect(badge.classList.contains('bg-success')).toBe(false);
+        });
+
+        test('does not append a problem details title if the response body is not JSON', async () => {
+            setupDebugPage();
+            await initializeApp();
+
+            const fetch = vi.fn(() =>
+                Promise.resolve({
+                    ok: false,
+                    status: 500,
+                    json: () => Promise.reject(new Error('Not JSON.')),
+                })
+            );
+            vi.stubGlobal('fetch', fetch);
+
+            setPayload('{}');
+
+            document.getElementById('post-webhook')!.click();
+
+            const badge = document.querySelector('.webhook-status')!;
+
+            await vi.waitFor(() => expect(badge.textContent).toBe('500'));
+
+            expect(badge.classList.contains('bg-danger')).toBe(true);
+        });
+
         test('omits the signature if there is no signature input', async () => {
             setupDebugPage(false);
             await initializeApp();
