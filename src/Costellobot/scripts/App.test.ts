@@ -435,7 +435,7 @@ describe('App', () => {
 
             const badge = document.querySelector('.webhook-status')!;
 
-            await vi.waitFor(() => expect(badge.textContent).toBe('400 - Bad Request'));
+            await vi.waitFor(() => expect(badge.textContent).toBe('400 - The webhook payload was invalid.'));
 
             expect(badge.classList.contains('bg-danger')).toBe(true);
             expect(badge.classList.contains('bg-success')).toBe(false);
@@ -463,6 +463,30 @@ describe('App', () => {
             await vi.waitFor(() => expect(badge.textContent).toBe('500'));
 
             expect(badge.classList.contains('bg-danger')).toBe(true);
+        });
+
+        test('displays a failure if the fetch request throws an exception', async () => {
+            setupDebugPage();
+            await initializeApp();
+
+            const fetch = vi.fn(() => Promise.reject(new Error('Failed to fetch.')));
+            vi.stubGlobal('fetch', fetch);
+
+            setPayload('{}');
+
+            document.getElementById('post-webhook')!.click();
+
+            const badge = document.querySelector('.webhook-status')!;
+
+            await vi.waitFor(() => expect(badge.textContent).toContain('0'));
+
+            expect(badge.classList.contains('bg-danger')).toBe(true);
+            expect(badge.classList.contains('bg-success')).toBe(false);
+
+            const submit = document.getElementById('post-webhook')!;
+
+            expect(submit.hasAttribute('disabled')).toBe(false);
+            expect(submit.querySelector('.spinner-border')!.classList.contains('d-none')).toBe(true);
         });
 
         test('omits the signature if there is no signature input', async () => {

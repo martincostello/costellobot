@@ -119,8 +119,8 @@ export class App {
 
             let badgeContent = result.status.toString(10);
 
-            if (!result.isOK && result.error) {
-                badgeContent += ` - ${result.error.title}`;
+            if (!result.isOK && result.error && result.error.detail) {
+                badgeContent += ` - ${result.error.detail}`;
             }
 
             badge.textContent = badgeContent;
@@ -323,22 +323,32 @@ export class App {
             body: JSON.stringify(payload),
         };
 
-        const response = await fetch('/github-webhook', init);
+        try {
+            const response = await fetch('/github-webhook', init);
 
-        const result: WebhookResult = {
-            isOK: response.ok,
-            status: response.status,
-        };
+            const result: WebhookResult = {
+                isOK: response.ok,
+                status: response.status,
+            };
 
-        if (!response.ok) {
-            try {
-                result.error = await response.json();
-            } catch {
-                // Not JSON, ignore
+            if (!response.ok) {
+                try {
+                    result.error = await response.json();
+                } catch {
+                    // Not JSON, ignore
+                }
             }
-        }
 
-        return result;
+            return result;
+        } catch (err: any) {
+            return {
+                isOK: false,
+                status: 0,
+                error: {
+                    detail: err.message,
+                },
+            };
+        }
     }
 }
 
@@ -353,12 +363,12 @@ interface LogEntry {
 }
 
 interface ProblemDetails {
-    type: string;
-    title: string;
-    status: number;
+    type?: string;
+    title?: string;
+    status?: number;
     detail: string;
-    instance: string;
-    correlation: string;
+    instance?: string;
+    correlation?: string;
 }
 
 interface WebhookResult {
