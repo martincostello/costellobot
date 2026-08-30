@@ -408,7 +408,7 @@ describe('App', () => {
             expect(badge.classList.contains('bg-success')).toBe(false);
         });
 
-        test('appends the problem details title to the badge if the response is not accepted', async () => {
+        test('appends the problem details detail to the badge if the response is not accepted', async () => {
             setupDebugPage();
             await initializeApp();
 
@@ -441,7 +441,7 @@ describe('App', () => {
             expect(badge.classList.contains('bg-success')).toBe(false);
         });
 
-        test('does not append a problem details title if the response body is not JSON', async () => {
+        test('does not append a problem details detail if the response body is not JSON', async () => {
             setupDebugPage();
             await initializeApp();
 
@@ -487,6 +487,25 @@ describe('App', () => {
 
             expect(submit.hasAttribute('disabled')).toBe(false);
             expect(submit.querySelector('.spinner-border')!.classList.contains('d-none')).toBe(true);
+        });
+
+        test('displays a failure if the fetch request rejects with a non-Error value', async () => {
+            setupDebugPage();
+            await initializeApp();
+
+            const fetch = vi.fn(() => Promise.reject('Network down.'));
+            vi.stubGlobal('fetch', fetch);
+
+            setPayload('{}');
+
+            document.getElementById('post-webhook')!.click();
+
+            const badge = document.querySelector('.webhook-status')!;
+
+            await vi.waitFor(() => expect(badge.textContent).toBe('0 - Network down.'));
+
+            expect(badge.classList.contains('bg-danger')).toBe(true);
+            expect(badge.classList.contains('bg-success')).toBe(false);
         });
 
         test('omits the signature if there is no signature input', async () => {

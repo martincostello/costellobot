@@ -340,12 +340,12 @@ export class App {
             }
 
             return result;
-        } catch (err: any) {
+        } catch (err: unknown) {
             return {
                 isOK: false,
                 status: 0,
                 error: {
-                    detail: err.message,
+                    detail: err instanceof Error ? err.message : String(err),
                 },
             };
         }
@@ -366,7 +366,7 @@ interface ProblemDetails {
     type?: string;
     title?: string;
     status?: number;
-    detail: string;
+    detail?: string;
     instance?: string;
     correlation?: string;
 }
