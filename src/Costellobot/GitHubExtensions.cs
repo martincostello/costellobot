@@ -69,12 +69,28 @@ public static class GitHubExtensions
         services.AddHybridCache((p) => p.ReportTagMetrics = true);
         services.AddOptions();
 
-        services.Configure<GitHubOptions>(configuration.GetSection("GitHub"));
-        services.Configure<GitHubWebhookOptions>((p) => p.Secret = configuration["GitHub:WebhookSecret"]);
         services.Configure<GoogleOptions>(configuration.GetSection("Google"));
         services.Configure<GrafanaOptions>(configuration.GetSection("Grafana"));
         services.Configure<SiteOptions>(configuration.GetSection("Site"));
         services.Configure<WebhookOptions>(configuration.GetSection("Webhook"));
+
+        services.Configure<GitHubOptions>(configuration.GetSection("GitHub"));
+        services.Configure<GitHubWebhookOptions>((options) =>
+        {
+            options.Secret = configuration["GitHub:WebhookSecret"];
+            options.ExceptionHandler = (ex, context) =>
+            {
+                bool handled = false;
+
+                if (ex is System.Text.Json.JsonException)
+                {
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    handled = true;
+                }
+
+                return ValueTask.FromResult(handled);
+            };
+        });
 
         services.TryAddSingleton(TimeProvider.System);
 

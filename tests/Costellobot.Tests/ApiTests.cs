@@ -172,4 +172,24 @@ public sealed class ApiTests(HttpServerFixture fixture, ITestOutputHelper output
         response.ShouldNotBeNull();
         response.Status.ShouldBe(StatusCodes.Status404NotFound);
     }
+
+    [Fact]
+    public async Task Invalid_Payload_Responds_With_Json()
+    {
+        // Arrange
+        var options = Fixture.Services.GetRequiredService<IOptions<GitHubOptions>>().Value;
+
+        // Act
+        using var actual = await PostWebhookAsync("ping", new { }, options.WebhookSecret);
+
+        // Assert
+        actual.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        actual.Content.Headers.ContentType.ShouldNotBeNull();
+        actual.Content.Headers.ContentType.MediaType.ShouldBe("application/problem+json");
+
+        var response = await actual.Content.ReadFromJsonAsync<ProblemDetails>(CancellationToken);
+        response.ShouldNotBeNull();
+        response.Status.ShouldBe(StatusCodes.Status400BadRequest);
+    }
 }
