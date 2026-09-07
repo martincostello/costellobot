@@ -12,6 +12,7 @@ namespace MartinCostello.Costellobot;
 public sealed class ResourceTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : IntegrationTests<HttpServerFixture>(fixture, outputHelper)
 {
     [Theory]
+    [InlineData("/.well-known/security.txt", MediaTypeNames.Text.Plain)]
     [InlineData("/bad-request.html", MediaTypeNames.Text.Html)]
     [InlineData("/error.html", MediaTypeNames.Text.Html)]
     [InlineData("/favicon.png", "image/png")]
@@ -19,6 +20,7 @@ public sealed class ResourceTests(HttpServerFixture fixture, ITestOutputHelper o
     [InlineData("/humans.txt", MediaTypeNames.Text.Plain)]
     [InlineData("/manifest.webmanifest", "application/manifest+json")]
     [InlineData("/not-found.html", MediaTypeNames.Text.Html)]
+    [InlineData("/pgp-key.txt", MediaTypeNames.Text.Plain)]
     [InlineData("/robots.txt", MediaTypeNames.Text.Plain)]
     [InlineData("/robots933456.txt", MediaTypeNames.Text.Plain)]
     [InlineData("/sign-in", MediaTypeNames.Text.Html)]
