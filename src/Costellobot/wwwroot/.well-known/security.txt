@@ -1,0 +1,26 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Canonical: https://costellobot.martincostello.com/.well-known/security.txt
+Contact: https://bsky.app/profile/martincostello.com
+Contact: https://keybase.io/encrypt#martincostello
+Encryption: https://costellobot.martincostello.com/pgp-key.txt
+Preferred-Languages: en
+-----BEGIN PGP SIGNATURE-----
+Version: Keybase OpenPGP v2.1.17
+Comment: https://keybase.io/crypto
+
+wsFcBAABCgAGBQJqntopAAoJEHSlsiP3OyrzXoIP/3ka8lYRsv2evxykyV4du6vD
+mXyppYAR3x0vo1wolQIzee2SMvW5DtoePaNz6+1p1CVC/O8hOzO2dRDNgcPwJOiM
+zZbA7Av7yztLOdIeYPrzm02XyBVwIHlPfEe1Z3gypsR4utsP4FwKRLMMZoS3GE8n
+oH4IEq3MXKiUlzv6g92KVwbi45J4UxukdVGy3Oh/odH3juMH0Hcm+MmJ8xD/te5e
+DVkvZ2EAbuVfWyXz/wxRhEHCshKqPefjc0a0VqbXMbGJAvBO31D3IVOpUANVDEzu
+CcXyFvsBpWV5Ur9VJ+Z724A94M0WEA4oj3jdC0Ysjtehy+Np0OlG1bBkAHL8XshH
+gktKEHqnYP49O/Q2CitLCCpUDFbLnQHFGJ5QIrsmMg3veWUEPRz68Ay/xHgGj9sj
+iNe/LFIqKZM7iooSCVjJ991pqQ6eOZPROUX9cS928UUBSY8CLvX+vY7oukJ1tIwx
+jDBBw+d0CUvCyKmfUWvQKUKkFnqk3V7AvGtWzb58rzuq/lKCTzk3OG0SDKeaNKN/
+jiLh80lhqjySKrbelqtSKc4JqPshd+M0BfUOIjYsqoQX4dltRvvi9ApVcthKvqKh
+0gWW/CbzwwPXmy8nEfH496P3uT8kz4wwDcCvMaHsUAo9kthiYJXsH8hP6SUxxNrp
+cwYL/YNXNwT9zE591a0X
+=yval
+-----END PGP SIGNATURE-----
