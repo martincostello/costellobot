@@ -30,6 +30,7 @@ public static class TelemetryExtensions
                           .AddHttpClientInstrumentation()
                           .AddProcessInstrumentation()
                           .AddMeter(ApplicationTelemetry.ServiceName)
+                          .AddMeter("Microsoft.Extensions.Caching.Memory.MemoryCache")
                           .AddMeter("Microsoft.Extensions.Diagnostics.ResourceMonitoring")
                           .AddMeter("Polly")
                           .AddMeter("System.Runtime")
@@ -38,10 +39,10 @@ public static class TelemetryExtensions
                .WithTracing((builder) =>
                {
                    builder.SetResourceBuilder(ApplicationTelemetry.ResourceBuilder)
-                          .AddAspNetCoreInstrumentation()
                           .AddHttpClientInstrumentation()
                           .AddSource(ApplicationTelemetry.ServiceName)
                           .AddSource("Azure.*")
+                          .AddSource("Microsoft.AspNetCore")
                           .AddSource("Microsoft.AspNetCore.SignalR.Server");
 
                    if (environment.IsDevelopment())
