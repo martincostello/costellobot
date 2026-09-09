@@ -10,6 +10,8 @@ using Azure.Identity;
 using Microsoft.AspNetCore.HostFiltering;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Diagnostics.Metrics;
+using Microsoft.Extensions.Diagnostics.Tracing;
 using Microsoft.Extensions.Options;
 
 namespace MartinCostello.Costellobot;
@@ -66,8 +68,10 @@ public static class CostellobotBuilder
             options.Providers.Add<GzipCompressionProvider>();
         });
 
-        builder.Services.AddMetrics();
+        builder.Services.AddMetrics((p) => p.AddConfiguration(builder.Configuration));
         builder.Services.AddSingleton<CostellobotMetrics>();
+
+        builder.Services.AddTracing((p) => p.AddConfiguration(builder.Configuration));
 
         builder.Services.AddSignalR();
         builder.Services.AddSingleton<ClientLogQueue>();
