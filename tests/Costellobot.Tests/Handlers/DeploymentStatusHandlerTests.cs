@@ -757,6 +757,95 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Fact]
+    public async Task Deployment_Is_Not_Approved_If_Calendar_Is_Busy_On_Day_Clocks_Go_Back()
+    {
+        // Arrange
+        await Fixture.ClearCacheAsync();
+        Fixture.ChangeClock(new(2023, 10, 29, 12, 00, 00, TimeSpan.Zero));
+        Fixture.OverrideConfiguration("Google:CalendarIds:0", "dst-transition-event");
+        Fixture.OverrideConfiguration("Google:CalendarTimeZoneId", "Europe/London");
+
+        try
+        {
+            Fixture.ApproveDeployments();
+
+            var driver = new DeploymentStatusDriver(
+                (repo) => repo.CreateCommit(),
+                CreateTrustedCommit);
+
+            driver.WithPendingDeployment(CreateDeployment);
+
+            driver.WithActiveDeployment();
+            driver.WithInactiveDeployment();
+
+            RegisterGetAccessToken();
+
+            RegisterAllDeployments(driver);
+            RegisterCommitComparison(driver);
+            RegisterPullRequestForCommit(driver.HeadCommit);
+
+            var deploymentApproved = RegisterApprovePendingDeployment(driver);
+
+            // Act
+            using var response = await PostWebhookAsync(driver);
+
+            // Assert
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+            await AssertTaskNotRun(deploymentApproved);
+        }
+        finally
+        {
+            await Fixture.ClearCacheAsync();
+        }
+    }
+
+    [Theory]
+    [InlineData("partial-day-event")]
+    [InlineData("malformed-event")]
+    public async Task Deployment_Is_Approved_If_Calendar_Event_Is_Not_An_All_Day_Event(string calendarId)
+    {
+        // Arrange
+        await Fixture.ClearCacheAsync();
+        Fixture.OverrideConfiguration("Google:CalendarIds:0", calendarId);
+
+        try
+        {
+            Fixture.ApproveDeployments();
+
+            var driver = new DeploymentStatusDriver(
+                (repo) => repo.CreateCommit(),
+                CreateTrustedCommit);
+
+            driver.WithPendingDeployment(CreateDeployment);
+
+            driver.WithActiveDeployment();
+            driver.WithInactiveDeployment();
+
+            RegisterGetAccessToken();
+
+            RegisterAllDeployments(driver);
+            RegisterCommitComparison(driver);
+            RegisterDependabotConfiguration(driver);
+            RegisterPullRequestForCommit(driver.HeadCommit);
+
+            var deploymentApproved = RegisterApprovePendingDeployment(driver);
+
+            // Act
+            using var response = await PostWebhookAsync(driver);
+
+            // Assert
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+            await deploymentApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
+        }
+        finally
+        {
+            await Fixture.ClearCacheAsync();
+        }
+    }
+
+    [Fact]
     public async Task Handler_Ignores_Events_That_Are_Not_Deployment_Statuses()
     {
         // Arrange

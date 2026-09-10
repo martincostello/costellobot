@@ -7,6 +7,8 @@ public sealed class GoogleOptions
 {
     public IList<string> CalendarIds { get; set; } = [];
 
+    public string CalendarTimeZoneId { get; set; } = "UTC";
+
     public string ClientEmail { get; set; } = string.Empty;
 
     public string PrivateKeyId { get; set; } = string.Empty;
