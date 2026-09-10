@@ -18,7 +18,6 @@ public sealed partial class CalendarDeploymentRule(
 {
     private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromHours(3) };
     private static readonly string[] CacheTags = ["all", "calendar"];
-    private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
 
     /// <inheritdoc/>
     public override string Name => "Not-Busy-Calendar";
@@ -28,19 +27,21 @@ public sealed partial class CalendarDeploymentRule(
     {
         if (options.CurrentValue.CalendarIds is { Count: > 0 } calendarIds)
         {
-            var today = DateTime.SpecifyKind(timeProvider.GetUtcNow().Date, DateTimeKind.Utc);
+            var timeZoneId = options.CurrentValue.CalendarTimeZoneId;
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            var today = TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), timeZone).Date;
 
             foreach (var calendarId in calendarIds.Where((p) => !string.IsNullOrEmpty(p)))
             {
                 var events = await cache.GetOrCreateAsync(
                     CacheKey(today, calendarId),
-                    (calendar, today, calendarId),
+                    (calendar, today, timeZone, timeZoneId, calendarId),
                     static async (state, cancellationToken) =>
                     {
-                        var (calendar, today, calendarId) = state;
+                        var (calendar, today, timeZone, timeZoneId, calendarId) = state;
 
-                        var minTime = new DateTimeOffset(today, TimeSpan.Zero);
-                        var maxTime = minTime.AddDays(1);
+                        var minTime = new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(today, timeZone), TimeSpan.Zero);
+                        var maxTime = new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(today.AddDays(1), timeZone), TimeSpan.Zero);
 
                         var request = calendar.Events.List(calendarId);
 
@@ -48,7 +49,7 @@ public sealed partial class CalendarDeploymentRule(
                         request.SingleEvents = true;
                         request.TimeMinDateTimeOffset = minTime;
                         request.TimeMaxDateTimeOffset = maxTime;
-                        request.TimeZone = "UTC";
+                        request.TimeZone = timeZoneId;
 
                         return await request.ExecuteAsync(cancellationToken);
                     },
@@ -56,7 +57,7 @@ public sealed partial class CalendarDeploymentRule(
                     CacheTags,
                     cancellationToken);
 
-                var @event = events.Items.FirstOrDefault(IsBusy);
+                var @event = events.Items.FirstOrDefault((item) => IsBusy(item, timeZone));
 
                 if (@event is not null)
                 {
@@ -74,11 +75,11 @@ public sealed partial class CalendarDeploymentRule(
             return FormattableString.Invariant($"calendar:{date:d}:{hash}");
         }
 
-        static bool IsBusy(Event @event)
+        static bool IsBusy(Event @event, TimeZoneInfo timeZone)
         {
             var isAllDayEvent =
                 (@event.Start.Date is not null && @event.End.Date is not null) ||
-                ((@event.End.DateTimeDateTimeOffset - @event.Start.DateTimeDateTimeOffset) == OneDay);
+                IsFullLocalDay(@event.Start.DateTimeDateTimeOffset, @event.End.DateTimeDateTimeOffset, timeZone);
 
             if (!isAllDayEvent)
             {
@@ -87,6 +88,21 @@ public sealed partial class CalendarDeploymentRule(
 
             return @event.Transparency is not "transparent" ||
                    @event.EventType is "outOfOffice";
+        }
+
+        static bool IsFullLocalDay(DateTimeOffset? start, DateTimeOffset? end, TimeZoneInfo timeZone)
+        {
+            if (start is not { } startValue || end is not { } endValue)
+            {
+                return false;
+            }
+
+            var startLocal = TimeZoneInfo.ConvertTime(startValue, timeZone);
+            var endLocal = TimeZoneInfo.ConvertTime(endValue, timeZone);
+
+            return startLocal.TimeOfDay == TimeSpan.Zero &&
+                   endLocal.TimeOfDay == TimeSpan.Zero &&
+                   endLocal.Date == startLocal.Date.AddDays(1);
         }
     }
 

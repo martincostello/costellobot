@@ -757,6 +757,49 @@ public sealed class DeploymentStatusHandlerTests : IntegrationTests<AppFixture>
     }
 
     [Fact]
+    public async Task Deployment_Is_Not_Approved_If_Calendar_Is_Busy_On_Day_Clocks_Go_Back()
+    {
+        // Arrange
+        await Fixture.ClearCacheAsync();
+        Fixture.ChangeClock(new(2023, 10, 29, 12, 00, 00, TimeSpan.Zero));
+        Fixture.OverrideConfiguration("Google:CalendarIds:0", "dst-transition-event");
+
+        try
+        {
+            Fixture.ApproveDeployments();
+
+            var driver = new DeploymentStatusDriver(
+                (repo) => repo.CreateCommit(),
+                CreateTrustedCommit);
+
+            driver.WithPendingDeployment(CreateDeployment);
+
+            driver.WithActiveDeployment();
+            driver.WithInactiveDeployment();
+
+            RegisterGetAccessToken();
+
+            RegisterAllDeployments(driver);
+            RegisterCommitComparison(driver);
+            RegisterPullRequestForCommit(driver.HeadCommit);
+
+            var deploymentApproved = RegisterApprovePendingDeployment(driver);
+
+            // Act
+            using var response = await PostWebhookAsync(driver);
+
+            // Assert
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+            await AssertTaskNotRun(deploymentApproved);
+        }
+        finally
+        {
+            await Fixture.ClearCacheAsync();
+        }
+    }
+
+    [Fact]
     public async Task Handler_Ignores_Events_That_Are_Not_Deployment_Statuses()
     {
         // Arrange
