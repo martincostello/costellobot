@@ -74,7 +74,7 @@
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
     <PackageVersion Include="Vecc.YamlDotNet.Analyzers.StaticGenerator" Version="18.1.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
-    <PackageVersion Include="xunit.v3.mtp-off" Version="4.0.0" />
+    <PackageVersion Include="xunit.v3.mtp-off" Version="4.0.1" />
     <PackageVersion Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
 </Project>
