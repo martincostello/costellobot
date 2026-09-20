@@ -58,7 +58,8 @@ public static class CostellobotBuilder
         builder.Services.AddGitHub(builder.Configuration);
         builder.Services.AddHsts((options) => options.MaxAge = TimeSpan.FromDays(180));
         builder.Services.AddResponseCaching();
-        builder.Services.AddTelemetry(builder.Environment);
+
+        builder.AddTelemetry();
 
         builder.Services.AddResponseCompression((options) =>
         {
@@ -84,7 +85,6 @@ public static class CostellobotBuilder
             builder.Services.AddResourceMonitoring();
         }
 
-        builder.Logging.AddTelemetry();
         builder.Logging.AddSignalR();
 
         builder.Services.ConfigureHttpJsonOptions((options) =>
