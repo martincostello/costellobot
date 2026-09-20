@@ -12,68 +12,73 @@ namespace MartinCostello.Costellobot;
 
 public static class TelemetryExtensions
 {
-    public static void AddTelemetry(this IServiceCollection services, IWebHostEnvironment environment)
+    public static void AddTelemetry(this IHostApplicationBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(builder);
 
-        var builder = services.AddOpenTelemetry();
+        var telemetry = builder.Services.AddOpenTelemetry();
 
         if (ApplicationTelemetry.IsOtlpCollectorConfigured())
         {
-            builder.UseOtlpExporter();
+            telemetry.UseOtlpExporter();
         }
 
-        builder.WithMetrics((builder) =>
-               {
-                   builder.SetResourceBuilder(ApplicationTelemetry.ResourceBuilder)
-                          .AddAspNetCoreInstrumentation()
-                          .AddHttpClientInstrumentation()
-                          .AddProcessInstrumentation()
-                          .AddMeter(ApplicationTelemetry.ServiceName)
-                          .AddMeter("Microsoft.Extensions.Caching.Memory.MemoryCache")
-                          .AddMeter("Microsoft.Extensions.Diagnostics.ResourceMonitoring")
-                          .AddMeter("Polly")
-                          .AddMeter("System.Runtime")
-                          .SetExemplarFilter(ExemplarFilterType.TraceBased);
-               })
-               .WithTracing((builder) =>
-               {
-                   builder.SetResourceBuilder(ApplicationTelemetry.ResourceBuilder)
-                          .AddHttpClientInstrumentation()
-                          .AddSource(ApplicationTelemetry.ServiceName)
-                          .AddSource("Azure.*")
-                          .AddSource("Microsoft.AspNetCore")
-                          .AddSource("Microsoft.AspNetCore.SignalR.Server");
+        telemetry
+            .WithMetrics((metrics) =>
+            {
+                metrics.SetResourceBuilder(ApplicationTelemetry.ResourceBuilder)
+                       .AddAspNetCoreInstrumentation()
+                       .AddHttpClientInstrumentation()
+                       .AddProcessInstrumentation()
+                       .AddMeter(ApplicationTelemetry.ServiceName)
+                       .AddMeter("Microsoft.Extensions.Caching.Memory.MemoryCache")
+                       .AddMeter("Microsoft.Extensions.Diagnostics.ResourceMonitoring")
+                       .AddMeter("Polly")
+                       .AddMeter("System.Runtime")
+                       .SetExemplarFilter(ExemplarFilterType.TraceBased);
+            })
+            .WithTracing((tracing) =>
+            {
+                tracing.SetResourceBuilder(ApplicationTelemetry.ResourceBuilder)
+                       .AddHttpClientInstrumentation()
+                       .AddSource(ApplicationTelemetry.ServiceName)
+                       .AddSource("Azure.*")
+                       .AddSource("Microsoft.AspNetCore")
+                       .AddSource("Microsoft.AspNetCore.SignalR.Server");
 
-                   if (environment.IsDevelopment())
-                   {
-                       builder.SetSampler(new AlwaysOnSampler());
-                   }
-
-                   if (ApplicationTelemetry.IsPyroscopeConfigured())
-                   {
-                       builder.AddProcessor(new Pyroscope.OpenTelemetry.PyroscopeSpanProcessor());
-                   }
-               });
-
-        services.AddOptions<HttpClientTraceInstrumentationOptions>()
-                .Configure((options) =>
+                if (builder.Environment.IsDevelopment())
                 {
-                    options.EnrichWithHttpResponseMessage = EnrichHttpActivity;
-                    options.RecordException = true;
-                });
+                    tracing.SetSampler(new AlwaysOnSampler());
+                }
 
-        services.AddOptions<AspNetCoreTraceInstrumentationOptions>()
-                .Configure((options) =>
+                if (ApplicationTelemetry.IsPyroscopeConfigured())
                 {
-                    options.EnrichWithHttpResponse = static (activity, response) =>
+                    tracing.AddProcessor(new Pyroscope.OpenTelemetry.PyroscopeSpanProcessor());
+                }
+            });
+
+        builder.Services
+            .AddOptions<HttpClientTraceInstrumentationOptions>()
+            .Configure((options) =>
+            {
+                options.EnrichWithHttpResponseMessage = EnrichHttpActivity;
+                options.RecordException = true;
+            });
+
+        builder.Services
+            .AddOptions<AspNetCoreTraceInstrumentationOptions>()
+            .Configure((options) =>
+            {
+                options.EnrichWithHttpResponse = static (activity, response) =>
+                {
+                    if (response.StatusCode is StatusCodes.Status404NotFound)
                     {
-                        if (response.StatusCode is StatusCodes.Status404NotFound)
-                        {
-                            activity.SetStatus(ActivityStatusCode.Ok);
-                        }
-                    };
-                });
+                        activity.SetStatus(ActivityStatusCode.Ok);
+                    }
+                };
+            });
+
+        builder.Logging.AddTelemetry();
     }
 
     private static void EnrichHttpActivity(Activity activity, HttpResponseMessage response)
