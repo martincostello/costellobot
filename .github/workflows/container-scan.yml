@@ -145,30 +145,3 @@ jobs:
           $report += ""
 
           ($report -Join "`n") >> ${env:GITHUB_STEP_SUMMARY}
-
-  rebuild:
-    needs: scan-image
-    runs-on: ubuntu-26.04
-    if: |
-      github.event_name == 'schedule' &&
-      needs.scan-image.outputs.has-vulnerabilities == 'true'
-
-    concurrency:
-      group: ${{ github.workflow }}
-      cancel-in-progress: false
-
-    permissions:
-      actions: write
-
-    steps:
-
-      - name: Harden runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
-        with:
-          egress-policy: audit
-
-      - name: Rebuild container image
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run build.yml --repo ${env:GITHUB_REPOSITORY}
