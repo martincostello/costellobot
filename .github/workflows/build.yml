@@ -97,6 +97,10 @@ jobs:
       with:
         node-version: '24.x'
 
+    - name: Install .NET Tools
+      shell: pwsh
+      run: dotnet tool restore
+
     - name: Build, Test and Publish
       id: build
       shell: pwsh
@@ -427,7 +431,7 @@ jobs:
 
     - name: Run end-to-end tests
       shell: pwsh
-      run: dotnet test ./tests/Costellobot.EndToEndTests --configuration Release --logger "GitHubActions;report-warnings=false"
+      run: dotnet test ./tests/Costellobot.EndToEndTests --configuration Release
       env:
         APPLICATION_URL: ${{ env.APPLICATION_URL_PROD }}
 
