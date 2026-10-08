@@ -47,6 +47,41 @@ public static class IGitHubClientExtensions
         }
     }
 
+    public static async Task<AsyncMergeResponse> MergePullRequestAsync(
+        this IGitHubClient client,
+        string owner,
+        string name,
+        int number,
+        PullRequestMergeMethod mergeMethod)
+    {
+        // See https://docs.github.com/rest/pulls/pulls?apiVersion=2026-03-10#merge-a-pull-request-asynchronously
+        var uri = new Uri($"repos/{owner}/{name}/pulls/{number}/merge-async", UriKind.Relative);
+
+        var body = new
+        {
+            MergeMethod = mergeMethod switch
+            {
+                PullRequestMergeMethod.Squash => "squash",
+                PullRequestMergeMethod.Rebase => "rebase",
+                _ => "merge",
+            },
+        };
+
+        var response = await client.Connection.Put<AsyncMergeResponse>(uri, body);
+
+        var statusCode = response.HttpResponse.StatusCode;
+
+        if ((int)statusCode is < 200 or > 299)
+        {
+            throw new ApiException($"Failed to merge pull request {owner}/{name}#{number}.", statusCode);
+        }
+
+        var result = response.Body ?? new();
+        result.StatusCode = statusCode;
+
+        return result;
+    }
+
     public static async Task<AccessToken> CreateInstallationTokenAsync(
         this IGitHubClient client,
         long installationId,

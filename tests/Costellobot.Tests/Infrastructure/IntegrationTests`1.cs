@@ -279,10 +279,18 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
         CreateDefaultBuilder()
             .Requests()
             .ForPut()
-            .ForPath($"/repos/{driver.PullRequest.Repository.FullName}/pulls/{driver.PullRequest.Number}/merge")
+            .ForPath($"/repos/{driver.PullRequest.Repository.FullName}/pulls/{driver.PullRequest.Number}/merge-async")
             .Responds()
-            .WithStatus(mergeable ? StatusCodes.Status200OK : StatusCodes.Status405MethodNotAllowed)
-            .WithSystemTextJsonContent(new { merged = mergeable })
+            .WithStatus(mergeable ? StatusCodes.Status202Accepted : StatusCodes.Status400BadRequest)
+            .WithSystemTextJsonContent(new
+            {
+                status = "pending",
+                details = new
+                {
+                    message = "Merge request accepted.",
+                    uuid = "7c2e1d3a-0000-4000-8000-000000000000",
+                },
+            })
             .WithInterceptionCallback((_) => pullRequestMerged.SetResult())
             .RegisterWith(Fixture.Interceptor);
 
