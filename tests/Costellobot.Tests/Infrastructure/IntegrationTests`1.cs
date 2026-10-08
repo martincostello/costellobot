@@ -272,18 +272,66 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .RegisterWith(Fixture.Interceptor);
     }
 
-    protected TaskCompletionSource RegisterMergePullRequest(PullRequestDriver driver, bool mergeable = true)
+    protected TaskCompletionSource RegisterMergePullRequest(
+        PullRequestDriver driver,
+        bool mergeable = true,
+        HttpStatusCode? status = null,
+        bool withBody = true,
+        Action<string>? onRequest = null)
     {
         var pullRequestMerged = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        CreateDefaultBuilder()
+        status ??= mergeable ? HttpStatusCode.Accepted : HttpStatusCode.BadRequest;
+
+        object content;
+
+        if (status is HttpStatusCode.OK)
+        {
+            content = new
+            {
+                status = "merged",
+                details = new
+                {
+                    message = "Pull request merged.",
+                    sha = "6dcb09b5b57875f334f61aebed695e2e4193db5e",
+                },
+            };
+        }
+        else
+        {
+            content = new
+            {
+                status = "pending",
+                details = new
+                {
+                    message = "Merge request accepted.",
+                    uuid = "7c2e1d3a-0000-4000-8000-000000000000",
+                },
+            };
+        }
+
+        var builder = CreateDefaultBuilder()
             .Requests()
             .ForPut()
-            .ForPath($"/repos/{driver.PullRequest.Repository.FullName}/pulls/{driver.PullRequest.Number}/merge")
+            .ForPath($"/repos/{driver.PullRequest.Repository.FullName}/pulls/{driver.PullRequest.Number}/merge-async")
             .Responds()
-            .WithStatus(mergeable ? StatusCodes.Status200OK : StatusCodes.Status405MethodNotAllowed)
-            .WithSystemTextJsonContent(new { merged = mergeable })
-            .WithInterceptionCallback((_) => pullRequestMerged.SetResult())
+            .WithStatus(status.Value);
+
+        if (withBody)
+        {
+            builder = builder.WithSystemTextJsonContent(content);
+        }
+
+        builder
+            .WithInterceptionCallback(async (request) =>
+            {
+                if (onRequest is not null && request.Content is { } body)
+                {
+                    onRequest(await body.ReadAsStringAsync(CancellationToken));
+                }
+
+                pullRequestMerged.SetResult();
+            })
             .RegisterWith(Fixture.Interceptor);
 
         return pullRequestMerged;

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using Octokit;
 using Octokit.GraphQL;
 using Octokit.GraphQL.Core.Deserializers;
 using Octokit.GraphQL.Model;
@@ -119,12 +120,21 @@ public sealed partial class PullRequestApprover(
             try
             {
                 // If auto-merge failed as the PR is ready to merge, then just merge it
-                var response = await context.InstallationClient.PullRequest.Merge(pull.Owner, pull.Name, pull.Number, new()
-                {
-                    MergeMethod = Enum.Parse<Octokit.PullRequestMergeMethod>(mergeMethod.ToString()),
-                });
+                var response = await context.InstallationClient.MergePullRequestAsync(
+                    pull.Owner,
+                    pull.Name,
+                    pull.Number,
+                    Enum.Parse<Octokit.PullRequestMergeMethod>(mergeMethod.ToString()));
 
-                if (response.Merged)
+                if (response.StatusCode is System.Net.HttpStatusCode.Accepted)
+                {
+                    Log.MergeRequested(
+                        logger,
+                        pull,
+                        response.Details?.Uuid,
+                        response.Details?.Message);
+                }
+                else
                 {
                     Log.PullRequestMerged(logger, pull);
                 }
@@ -190,5 +200,15 @@ public sealed partial class PullRequestApprover(
             ILogger logger,
             Exception exception,
             IssueId pullRequest);
+
+        [LoggerMessage(
+            EventId = 6,
+            Level = LogLevel.Information,
+            Message = "Requested asynchronous merge of pull request {PullRequest} with merge UUID {MergeUuid}: {MergeMessage}")]
+        public static partial void MergeRequested(
+            ILogger logger,
+            IssueId pullRequest,
+            string? mergeUuid,
+            string? mergeMessage);
     }
 }

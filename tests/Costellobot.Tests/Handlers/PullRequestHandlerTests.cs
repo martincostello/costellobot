@@ -2,7 +2,6 @@
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
 using JustEat.HttpClientInterception;
 using MartinCostello.Costellobot.Drivers;
@@ -235,6 +234,84 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         await pullRequestApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
         await automergeEnabled.Task.WaitAsync(ResultTimeout, CancellationToken);
         await pullRequestMerged.Task.WaitAsync(ResultTimeout, CancellationToken);
+    }
+
+    [Theory]
+    [InlineData(null, null, null, "merge", 202, true)]
+    [InlineData(false, false, true, "squash", 202, true)]
+    [InlineData(false, true, false, "rebase", 202, true)]
+    [InlineData(true, true, true, "merge", 200, true)]
+    [InlineData(false, false, true, "squash", 202, false)]
+    public async Task Pull_Request_Is_Merged_Asynchronously_With_Repository_Merge_Method(
+        bool? allowMergeCommit,
+        bool? allowRebaseMerge,
+        bool? allowSquashMerge,
+        string mergeMethod,
+        int statusCode,
+        bool withBody)
+    {
+        // Arrange
+        Fixture.ApprovePullRequests();
+        Fixture.AutoMergeEnabled();
+
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(UntrustedCommitMessage());
+
+        driver.Repository.AllowMergeCommit = allowMergeCommit;
+        driver.Repository.AllowRebaseMerge = allowRebaseMerge;
+        driver.Repository.AllowSquashMerge = allowSquashMerge;
+
+        driver.Label = new(driver.Repository, "merge-approved");
+        driver.PullRequest.WithLabel("dependencies");
+        driver.PullRequest.WithLabel("merge-approved");
+        driver.PullRequest.WithLabel(".NET");
+        driver.Sender = new("repo-admin");
+
+        RegisterGetAccessToken();
+        RegisterCollaborator(driver, driver.Sender.Login, isCollaborator: true);
+        RegisterCommitAndDiff(driver);
+        RegisterReview(driver);
+
+        string? requestBody = null;
+
+        var pullRequestMerged = RegisterMergePullRequest(
+            driver,
+            status: (HttpStatusCode)statusCode,
+            withBody: withBody,
+            onRequest: (body) => requestBody = body);
+
+        var automergeEnabled = RegisterEnableAutomerge(driver, (p, tcs) =>
+        {
+            p.Responds()
+             .WithStatus(HttpStatusCode.OK)
+             .WithJsonContent(new
+             {
+                 data = new { enablePullRequestAutoMerge = null as object },
+                 errors = new[]
+                 {
+                     new
+                     {
+                         type = "UNPROCESSABLE",
+                         path = new[] { "enablePullRequestAutoMerge" },
+                         locations = new[] { new { line = 1, column = 21 } },
+                         message = "[\"Pull request Pull request is in clean status\"]",
+                     },
+                 },
+             })
+             .WithInterceptionCallback((_) => tcs.SetResult());
+        });
+
+        // Act
+        using var response = await PostWebhookAsync(driver, "labeled");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await automergeEnabled.Task.WaitAsync(ResultTimeout, CancellationToken);
+        await pullRequestMerged.Task.WaitAsync(ResultTimeout, CancellationToken);
+
+        requestBody.ShouldNotBeNull();
+        requestBody.ShouldContain($"\"merge_method\":\"{mergeMethod}\"");
     }
 
     [Fact]
