@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
-using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Octokit.Webhooks;
@@ -26,7 +25,7 @@ public sealed partial class GitHubMessageProcessor(
             return;
         }
 
-        (var rawHeaders, var rawPayload) = ParseRaw(headers, body);
+        var rawHeaders = ParseRawHeaders(headers);
 
         var webhookHeaders = WebhookHeaders.Parse(headers);
 
@@ -37,19 +36,13 @@ public sealed partial class GitHubMessageProcessor(
             using (logger.BeginWebhookScope(webhookEvent))
             {
                 Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
-                await ProcessAsync(new(webhookHeaders, webhookEvent, rawHeaders, rawPayload), cancellationToken);
+                await ProcessAsync(new(webhookHeaders, webhookEvent, rawHeaders, body), cancellationToken);
             }
         }
     }
 
-    private static (IDictionary<string, string> Headers, JsonElement Payload) ParseRaw(
-        IDictionary<string, StringValues> headers,
-        string body)
+    private static Dictionary<string, string> ParseRawHeaders(IDictionary<string, StringValues> headers)
     {
-        // Cannot serialize the parsed webhook objects as-is because DateTimeOffset does not support being serialized and throws an exception.
-        // See https://github.com/octokit/webhooks.net/blob/1a6ce29f8312c555227703057ba45723e3c78574/src/Octokit.Webhooks/Converter/DateTimeOffsetConverter.cs#L14.
-        var document = JsonElement.Parse(body);
-
         var webhookHeaders = new Dictionary<string, string>(headers.Count);
 
         foreach ((var key, var values) in headers)
@@ -57,7 +50,7 @@ public sealed partial class GitHubMessageProcessor(
             webhookHeaders[key] = values.ToString();
         }
 
-        return (webhookHeaders, document);
+        return webhookHeaders;
     }
 
     private async Task ProcessAsync(GitHubEvent message, CancellationToken cancellationToken)

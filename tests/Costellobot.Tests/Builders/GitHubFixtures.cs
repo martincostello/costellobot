@@ -162,6 +162,7 @@ public static class GitHubFixtures
             webhookHeaders,
             webhookEvent!,
             rawHeaders,
+            body,
             document);
     }
 

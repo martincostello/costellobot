@@ -59,6 +59,9 @@
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="Costellobot.Benchmarks" />
+  </ItemGroup>
+  <ItemGroup>
     <ContainerPort Include="8080" Type="tcp" />
     <Content Update=".prettierignore;coverage\**;package.json;package-lock.json;tsconfig.json" CopyToPublishDirectory="Never" />
     <Content Remove="bank-holidays.json" />

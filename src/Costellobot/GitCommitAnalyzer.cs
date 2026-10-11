@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using System.Buffers;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Markdig;
 using Markdig.Extensions.Tables;
@@ -22,9 +24,21 @@ public sealed partial class GitCommitAnalyzer(
     ILogger<GitCommitAnalyzer> logger)
 {
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
+    private static readonly SearchValues<char> NewLineCharacters = SearchValues.Create("\r\n\f\u0085\u2028\u2029");
+    private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder().UsePipeTables().Build();
     private static readonly IDeserializer YamlDeserializer = new StaticDeserializerBuilder(new AppYamlSerializerContext())
         .IgnoreUnmatchedProperties()
         .Build();
+
+    private static readonly (string Prefix, string Suffix)[] VersionPatterns =
+    [
+        (@"(Bumps|Updates) ", @" from (?<from>\d[^ ]*) to (?<to>\d[^ \n]*)\."), // Normal version updates
+        (@"(Bumps|Updates) `", @"` from (?<from>\d[^ ]*) to (?<to>\d[^ \n]*)\.?$"), // Normal version updates with escaped name
+        (@"(Bumps|Updates) \[", @"\]\(.*\) from (?<from>\d[^ ]*) to (?<to>\d[^ \n]*)\.?$"), // Normal version updates with link to repo
+        (@"(Bumps|Updates) `?", @"`? from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ \n]*)\`\.?$"), // Git submodule updates
+        (@"(Bumps|Updates) \[", @"\]\(.*\) from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ \n]*)\`\.?"), // Git submodule updates with link to repo
+        (@"\[", @"\]\(.*\)\.\s+\- \[Commits\]\(.*\/(?<from>\d[^ ]*)\.\.\.(?<to>\d[^ \n]*)\)"), // Grouped version update that updates one package
+    ];
 
     private readonly ImmutableList<IPackageRegistry> _registries = [.. registries];
 
@@ -33,21 +47,22 @@ public sealed partial class GitCommitAnalyzer(
         string dependencyName,
         [NotNullWhen(true)] out string? version)
     {
+        version = null;
+
+        // All of the patterns require the dependency name to appear
+        // verbatim, so avoid evaluating any regular expressions if it does not.
+        if (!commitMessage.Contains(dependencyName, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
         // Extract the version numbers from the commit message.
         // See https://github.com/dependabot/fetch-metadata/blob/d9606730415777cc0dc46d64c4ce0e16624bd714/src/dependabot/update_metadata.ts#L30
         string escapedName = Regex.Escape(dependencyName).Replace("/", @"\/", StringComparison.Ordinal);
-        string[] patterns =
-        [
-            $@"(Bumps|Updates) {escapedName} from (?<from>\d[^ ]*) to (?<to>\d[^ \n]*)\.", // Normal version updates
-            $@"(Bumps|Updates) `{escapedName}` from (?<from>\d[^ ]*) to (?<to>\d[^ \n]*)\.?$", // Normal version updates with escaped name
-            $@"(Bumps|Updates) \[{escapedName}\]\(.*\) from (?<from>\d[^ ]*) to (?<to>\d[^ \n]*)\.?$", // Normal version updates with link to repo
-            $@"(Bumps|Updates) `?{escapedName}`? from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ \n]*)\`\.?$", // Git submodule updates
-            $@"(Bumps|Updates) \[{escapedName}\]\(.*\) from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ \n]*)\`\.?", // Git submodule updates with link to repo
-            $@"\[{escapedName}\]\(.*\)\.\s+\- \[Commits\]\(.*\/(?<from>\d[^ ]*)\.\.\.(?<to>\d[^ \n]*)\)", // Grouped version update that updates one package
-        ];
 
-        foreach (var pattern in patterns)
+        foreach ((var prefix, var suffix) in VersionPatterns)
         {
+            var pattern = string.Concat(prefix, escapedName, suffix);
             var match = RegexCache.GetOrAdd(pattern, RegexOptions.Multiline, RegexTimeout).Match(commitMessage);
             var group = match.Groups["to"];
 
@@ -58,7 +73,6 @@ public sealed partial class GitCommitAnalyzer(
             }
         }
 
-        version = null;
         return false;
     }
 
@@ -161,52 +175,20 @@ public sealed partial class GitCommitAnalyzer(
         return isTrusted;
     }
 
-    private static string? GetUpdateType(string from, string to)
+    internal static List<DependencyUpdate> ParseDependencies(string commitMessage)
     {
-        string? updateType = null;
-
-        if (NuGetVersion.TryParse(from, out var versionFrom) &&
-            NuGetVersion.TryParse(to, out var versionTo))
-        {
-            if (versionFrom.Major < versionTo.Major)
-            {
-                updateType = "version-update:semver-major";
-            }
-            else if (versionFrom.Minor < versionTo.Minor)
-            {
-                updateType = "version-update:semver-minor";
-            }
-            else
-            {
-                updateType = "version-update:semver-patch";
-            }
-        }
-
-        return updateType;
-    }
-
-    private static List<DependencyUpdate> ParseDependencies(string commitMessage)
-    {
-        string[] commitLines = commitMessage
-            .ReplaceLineEndings("\n")
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries);
-
         var updates = new HashSet<DependencyUpdate>();
 
         // Look for dependabot YAML metadata in the commit message
-        int start = Array.IndexOf(commitLines, "---");
-        int end = Array.IndexOf(commitLines, "...");
-
-        if (start > -1 && ((end - start) > 1))
+        if (TryGetDependabotYaml(commitMessage, out var yaml))
         {
-            var yaml = string.Join('\n', commitLines[(start + 1)..(end - 1)]);
             ParseDependabotYaml(yaml, updates);
         }
         else
         {
             // Look for renovate Markdown metadata in the commit message.
-            start = commitMessage.IndexOf('|', StringComparison.Ordinal);
-            end = commitMessage.LastIndexOf('|', StringComparison.Ordinal);
+            int start = commitMessage.IndexOf('|', StringComparison.Ordinal);
+            int end = commitMessage.LastIndexOf('|', StringComparison.Ordinal);
 
             if (start > -1 && ((end - start) > 1))
             {
@@ -217,13 +199,102 @@ public sealed partial class GitCommitAnalyzer(
 
         return [.. updates];
 
+        static bool TryGetDependabotYaml(string commitMessage, [NotNullWhen(true)] out string? yaml)
+        {
+            // Find the non-empty lines of the commit message, where a line can be
+            // terminated by any of the characters that string.ReplaceLineEndings() recognizes.
+            var lines = new List<System.Range>();
+            var remaining = commitMessage.AsSpan();
+            int position = 0;
+
+            while (!remaining.IsEmpty)
+            {
+                int index = remaining.IndexOfAny(NewLineCharacters);
+                int length = index < 0 ? remaining.Length : index;
+
+                if (length > 0)
+                {
+                    lines.Add(new(position, position + length));
+                }
+
+                if (index < 0)
+                {
+                    break;
+                }
+
+                int consumed = index + 1;
+
+                if (remaining[index] is '\r' && consumed < remaining.Length && remaining[consumed] is '\n')
+                {
+                    consumed++;
+                }
+
+                remaining = remaining[consumed..];
+                position += consumed;
+            }
+
+            int start = IndexOf(commitMessage, lines, "---");
+            int end = IndexOf(commitMessage, lines, "...");
+
+            if (start > -1 && ((end - start) > 1))
+            {
+                yaml = Join(commitMessage, CollectionsMarshal.AsSpan(lines)[(start + 1)..(end - 1)]);
+                return true;
+            }
+
+            yaml = null;
+            return false;
+
+            static int IndexOf(string text, List<System.Range> lines, string value)
+            {
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    if (text.AsSpan(lines[i]).SequenceEqual(value))
+                    {
+                        return i;
+                    }
+                }
+
+                return -1;
+            }
+
+            static string Join(string text, ReadOnlySpan<System.Range> lines)
+            {
+                if (lines.IsEmpty)
+                {
+                    return string.Empty;
+                }
+
+                int length = lines.Length - 1;
+
+                foreach (var line in lines)
+                {
+                    length += text.AsSpan(line).Length;
+                }
+
+                var builder = new StringBuilder(length);
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    if (i > 0)
+                    {
+                        builder.Append('\n');
+                    }
+
+                    builder.Append(text.AsSpan(lines[i]));
+                }
+
+                return builder.ToString();
+            }
+        }
+
         static void ParseDependabotYaml(string yaml, HashSet<DependencyUpdate> updates)
         {
             using var reader = new StringReader(yaml);
 
             var metadata = YamlDeserializer.Deserialize<DependabotMetadata>(reader);
 
-            if (metadata.Dependencies is { Count: > 0 } dependencies)
+            if (metadata?.Dependencies is { Count: > 0 } dependencies)
             {
                 foreach (var dependency in dependencies)
                 {
@@ -237,11 +308,7 @@ public sealed partial class GitCommitAnalyzer(
 
         static void ParseRenovateMarkdown(string markdown, HashSet<DependencyUpdate> updates)
         {
-            var pipeline = new MarkdownPipelineBuilder()
-                .UsePipeTables()
-                .Build();
-
-            var document = Markdown.Parse(markdown, pipeline);
+            var document = Markdown.Parse(markdown, MarkdownPipeline);
 
             // Find the first table in the document
             if (document.Descendants<Table>().FirstOrDefault() is { } table)
@@ -277,6 +344,30 @@ public sealed partial class GitCommitAnalyzer(
 
             return markdown[range].Trim();
         }
+    }
+
+    private static string? GetUpdateType(string from, string to)
+    {
+        string? updateType = null;
+
+        if (NuGetVersion.TryParse(from, out var versionFrom) &&
+            NuGetVersion.TryParse(to, out var versionTo))
+        {
+            if (versionFrom.Major < versionTo.Major)
+            {
+                updateType = "version-update:semver-major";
+            }
+            else if (versionFrom.Minor < versionTo.Minor)
+            {
+                updateType = "version-update:semver-minor";
+            }
+            else
+            {
+                updateType = "version-update:semver-patch";
+            }
+        }
+
+        return updateType;
     }
 
     private static DependencyEcosystem ParseEcosystem(string? reference)
