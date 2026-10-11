@@ -208,13 +208,7 @@ public static partial class GitDiffParser
         out DiffLineType lineType,
         [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
     {
-        lineType = DiffLineType.None;
         package = null;
-
-        if (line.IsWhiteSpace())
-        {
-            return false;
-        }
 
         lineType = line[0] switch
         {

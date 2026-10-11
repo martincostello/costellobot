@@ -954,8 +954,10 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         trust.Count.ShouldBe(2);
     }
 
-    [Fact]
-    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Single_Package_Update()
+    [Theory]
+    [InlineData("\n")]
+    [InlineData("\r\n")]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Single_Package_Update(string lineEnding)
     {
         // Arrange
         var ecosystem = DependencyEcosystem.NuGet;
@@ -1002,7 +1004,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                               update-type: version-update:semver-patch
                             ...
                             Signed-off-by: dependabot[bot] <support@github.com>
-                            """;
+                            """.ReplaceLineEndings(lineEnding);
 
         // Act
         var actual = await target.IsTrustedDependencyUpdateAsync(
@@ -3705,6 +3707,55 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         // Assert
         actual.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Empty_Dependabot_Metadata()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.NuGet;
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/nuget/Microsoft.TypeScript.MSBuild-4.9.5";
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider);
+
+        var diff = string.Empty;
+        var sha = "552aae859c24f0ed63bcc1f82ef96dd83040762f";
+        var commitMessage = """
+                            Bump Microsoft.TypeScript.MSBuild from 4.9.4 to 4.9.5
+                            ---
+                            updated-dependencies:
+                            ...
+                            Signed-off-by: dependabot[bot] <support@github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeFalse();
+
+        // Act
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actualEcosystem.ShouldBe(ecosystem);
+        trust.ShouldBeEmpty();
     }
 
     private static GitCommitAnalyzer CreateTarget(

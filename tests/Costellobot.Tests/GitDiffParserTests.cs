@@ -178,6 +178,41 @@ public static class GitDiffParserTests
         packages.ShouldBeNull();
     }
 
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_Go_Module_With_Require_Block()
+    {
+        // Arrange
+        string diff = GetDiff("Go.Block");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("github.com/google/go-cmp", ("0.6.0", "0.7.0"));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData("\n")]
+    [InlineData("\r\n")]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_For_Line_Endings(string lineEnding)
+    {
+        // Arrange
+        string diff = GetDiff("NuGet.OneFile").ReplaceLineEndings(lineEnding);
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("AWSSDK.SecurityToken", ("3.7.400.10", "3.7.400.11"));
+        packages.ShouldContainKeyAndValue("AWSSDK.SimpleSystemsManagement", ("3.7.401.8", "3.7.401.9"));
+        packages.Count.ShouldBe(2);
+    }
+
     private static string GetDiff(string name)
     {
         var type = typeof(GitDiffParserTests);

@@ -294,7 +294,7 @@ public sealed partial class GitCommitAnalyzer(
 
             var metadata = YamlDeserializer.Deserialize<DependabotMetadata>(reader);
 
-            if (metadata.Dependencies is { Count: > 0 } dependencies)
+            if (metadata?.Dependencies is { Count: > 0 } dependencies)
             {
                 foreach (var dependency in dependencies)
                 {
