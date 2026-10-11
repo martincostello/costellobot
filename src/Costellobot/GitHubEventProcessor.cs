@@ -57,7 +57,7 @@ public sealed partial class GitHubEventProcessor(
             {
                 Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
 
-                var payload = new GitHubEvent(webhookHeaders, webhookEvent, rawHeaders, rawPayload);
+                var payload = new GitHubEvent(webhookHeaders, webhookEvent, rawHeaders, body, rawPayload);
 
                 await handler.HandleAsync(payload, cancellationToken);
 

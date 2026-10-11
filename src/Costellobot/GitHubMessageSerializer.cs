@@ -104,31 +104,26 @@ public sealed partial class GitHubMessageSerializer
 
     private static (BinaryData? Body, string? ContentEncoding) Encode(GitHubMessage payload)
     {
-        using var utf8Json = new MemoryStream();
-
-        JsonSerializer.Serialize(utf8Json, payload, MessagingJsonSerializerContext.Default.GitHubMessage);
+        var utf8Json = JsonSerializer.SerializeToUtf8Bytes(payload, MessagingJsonSerializerContext.Default.GitHubMessage);
 
         if (utf8Json.Length <= MaxLength)
         {
-            return (BinaryData.FromBytes(utf8Json.ToArray()), null);
+            return (BinaryData.FromBytes(utf8Json), null);
         }
-
-        utf8Json.Seek(0, SeekOrigin.Begin);
 
         using var compressed = new MemoryStream();
+
         using (var compressor = new BrotliStream(compressed, CompressionMode.Compress, leaveOpen: true))
         {
-            utf8Json.CopyTo(compressor);
+            compressor.Write(utf8Json);
         }
-
-        compressed.Seek(0, SeekOrigin.Begin);
 
         if (compressed.Length > MaxLength)
         {
             return (null, null);
         }
 
-        return (BinaryData.FromStream(compressed), Brotli);
+        return (BinaryData.FromBytes(compressed.ToArray()), Brotli);
     }
 
     private static string? GetEncoding(ServiceBusReceivedMessage message)

@@ -128,19 +128,21 @@ public static partial class GitDiffParser
     private static List<(string Path, DiffLineType Type, string Package, NuGetVersion Version)> GetEdits(string diff)
     {
         // See https://stackoverflow.com/a/2530012/1064169
-        using var reader = new StringReader(diff);
-        string? line;
-
         bool inHunk = false;
 
         var edits = new List<(string Path, DiffLineType Type, string Package, NuGetVersion Version)>();
-        string path = string.Empty;
 
-        while ((line = reader.ReadLine()) is not null)
+        string path = string.Empty;
+        ReadOnlySpan<char> fileName = [];
+
+        var remaining = diff.AsSpan();
+
+        while (TryReadLine(ref remaining, out var line))
         {
             if (line.StartsWith(TargetPrefix, StringComparison.Ordinal))
             {
-                path = line[TargetPrefix.Length..];
+                path = line[TargetPrefix.Length..].ToString();
+                fileName = Path.GetFileName(path.AsSpan());
             }
             else if (line.StartsWith(HunkPrefix, StringComparison.Ordinal))
             {
@@ -152,7 +154,7 @@ public static partial class GitDiffParser
 
                 if (prefix is Added or Removed)
                 {
-                    if (TryParseLine(path, line, out var type, out var package))
+                    if (TryParseLine(fileName, line, out var type, out var package))
                     {
                         edits.Add((path, type, package.Value.Package, package.Value.Version));
                     }
@@ -167,16 +169,49 @@ public static partial class GitDiffParser
         return edits;
     }
 
+    /// <summary>
+    /// Reads the next line from the specified text using the same semantics as <see cref="TextReader.ReadLine()"/>.
+    /// </summary>
+    private static bool TryReadLine(ref ReadOnlySpan<char> remaining, out ReadOnlySpan<char> line)
+    {
+        if (remaining.IsEmpty)
+        {
+            line = default;
+            return false;
+        }
+
+        int index = remaining.IndexOfAny('\r', '\n');
+
+        if (index < 0)
+        {
+            line = remaining;
+            remaining = default;
+            return true;
+        }
+
+        line = remaining[..index];
+
+        int length = 1;
+
+        if (remaining[index] is '\r' && index + 1 < remaining.Length && remaining[index + 1] is '\n')
+        {
+            length = 2;
+        }
+
+        remaining = remaining[(index + length)..];
+        return true;
+    }
+
     private static bool TryParseLine(
-        string path,
-        string line,
+        ReadOnlySpan<char> fileName,
+        ReadOnlySpan<char> line,
         out DiffLineType lineType,
         [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
     {
         lineType = DiffLineType.None;
         package = null;
 
-        if (string.IsNullOrWhiteSpace(line))
+        if (line.IsWhiteSpace())
         {
             return false;
         }
@@ -193,15 +228,15 @@ public static partial class GitDiffParser
             return false;
         }
 
-        var fragmentText = line[1..];
-        var fragmentTrimmed = fragmentText.Trim();
-        var fileName = Path.GetFileName(path);
+        var fragmentTrimmed = line[1..].Trim();
 
-        if (fragmentTrimmed.StartsWith('<', StringComparison.Ordinal))
+        if (fragmentTrimmed.StartsWith('<'))
         {
-            return TryParseXml(fragmentTrimmed, out package);
+            // Only attempt to parse the XML if the fragment is for an element
+            // with a name that is of interest, as parsing XML is expensive.
+            return IsPackageElement(fragmentTrimmed) && TryParseXml(fragmentTrimmed, out package);
         }
-        else if (fragmentTrimmed.StartsWith('"', StringComparison.Ordinal) && fileName is "package.json")
+        else if (fragmentTrimmed.StartsWith('"') && fileName.SequenceEqual("package.json"))
         {
             return TryParseJson(fragmentTrimmed, out package);
         }
@@ -209,20 +244,23 @@ public static partial class GitDiffParser
         {
             return TryParseDockerImage(fragmentTrimmed, out package);
         }
-        else if (fileName is "go.mod")
+        else if (fileName.SequenceEqual("go.mod"))
         {
             return TryParseGoModule(fragmentTrimmed, out package);
         }
 
         return false;
 
-        static bool IsDockerImage(string fragment, string? fileName)
+        static bool IsPackageElement(ReadOnlySpan<char> fragment)
         {
-            if (fileName is null)
-            {
-                return false;
-            }
+            return
+                fragment.StartsWith("<PackageReference", StringComparison.Ordinal) ||
+                fragment.StartsWith("<PackageVersion", StringComparison.Ordinal) ||
+                fragment.StartsWith("<GlobalPackageReference", StringComparison.Ordinal);
+        }
 
+        static bool IsDockerImage(ReadOnlySpan<char> fragment, ReadOnlySpan<char> fileName)
+        {
             if (fragment.StartsWith("FROM", StringComparison.OrdinalIgnoreCase) &&
                 fileName.Contains("dockerfile", StringComparison.OrdinalIgnoreCase))
             {
@@ -230,7 +268,7 @@ public static partial class GitDiffParser
             }
 
             if (fragment.StartsWith("image:", StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(Path.GetFileNameWithoutExtension(fileName), "docker-compose", StringComparison.OrdinalIgnoreCase))
+                Path.GetFileNameWithoutExtension(fileName).Equals("docker-compose", StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -240,12 +278,12 @@ public static partial class GitDiffParser
     }
 
     private static bool TryParseDockerImage(
-        string text,
+        ReadOnlySpan<char> text,
         [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
     {
         package = null;
 
-        var match = DockerImage().Match(text);
+        var match = DockerImage().Match(text.ToString());
 
         if (match.Success)
         {
@@ -281,42 +319,54 @@ public static partial class GitDiffParser
     }
 
     private static bool TryParseGoModule(
-        string text,
+        ReadOnlySpan<char> text,
         [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
     {
         package = null;
 
-        if (text.Split(' ') is { Length: >= 2 } parts)
+        // Only the first three parts are ever inspected, so any further
+        // parts can be left unsplit in the final range of the buffer.
+        Span<Range> parts = stackalloc Range[4];
+        int count = text.Split(parts, ' ');
+
+        if (count < 2)
         {
-            if (parts[0] is "go" or "module" or "toolchain")
+            return false;
+        }
+
+        var first = text[parts[0]];
+
+        if (first is "go" or "module" or "toolchain")
+        {
+            return false;
+        }
+
+        int index = 0;
+
+        if (first is "require")
+        {
+            if (count < 3)
             {
                 return false;
             }
-            else if (parts[0] is "require")
-            {
-                if (parts.Length < 3)
-                {
-                    return false;
-                }
 
-                parts = [.. parts.Skip(1)];
-            }
+            index = 1;
+        }
 
-            var name = parts[0];
-            var versionString = parts[1];
+        var name = text[parts[index]];
+        var versionString = text[parts[index + 1]];
 
-            if (NuGetVersion.TryParse(versionString.TrimStart('v'), out var version))
-            {
-                package = (name, version);
-                return true;
-            }
+        if (NuGetVersion.TryParse(versionString.TrimStart('v').ToString(), out var version))
+        {
+            package = (name.ToString(), version);
+            return true;
         }
 
         return false;
     }
 
     private static bool TryParseJson(
-        string text,
+        ReadOnlySpan<char> text,
         [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
     {
         package = null;
@@ -327,7 +377,7 @@ public static partial class GitDiffParser
             // This will return false positives if a non-version property is changed
             // if it happens to parse to a NuGet version string, but within the bounds
             // of what is actually being used in the application, this is fine.
-            using var element = JsonDocument.Parse('{' + text + '}');
+            using var element = JsonDocument.Parse(string.Concat("{", text, "}"));
             using var enumerator = element.RootElement.EnumerateObject();
 
             if (enumerator.MoveNext())
@@ -356,7 +406,7 @@ public static partial class GitDiffParser
     }
 
     private static bool TryParseXml(
-        string text,
+        ReadOnlySpan<char> text,
         [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
     {
         package = null;
@@ -365,7 +415,7 @@ public static partial class GitDiffParser
 
         try
         {
-            fragment = XElement.Parse(text);
+            fragment = XElement.Parse(text.ToString());
 
             if ((fragment.Name == PackageReference ||
                  fragment.Name == PackageVersion ||
