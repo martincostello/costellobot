@@ -23,7 +23,7 @@ public sealed partial class GitCommitAnalyzer(
     ITrustStore trustStore,
     ILogger<GitCommitAnalyzer> logger)
 {
-    private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(2);
     private static readonly SearchValues<char> NewLineCharacters = SearchValues.Create("\r\n\f\u0085\u2028\u2029");
     private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder().UsePipeTables().Build();
     private static readonly IDeserializer YamlDeserializer = new StaticDeserializerBuilder(new AppYamlSerializerContext())

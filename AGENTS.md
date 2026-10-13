@@ -198,7 +198,7 @@ All tests in `tests/Costellobot.Tests/` are integration tests using `WebApplicat
 - `Drivers/` — Scenario-level test setup helpers (e.g., `PullRequestDriver.ForDependabot()`)
 - `Shouldly` — Assertion library; `NSubstitute` for mocking where needed
 
-Tests verify async side-effects (e.g., whether a PR was approved) using `TaskCompletionSource` with a `ResultTimeout` of 1 second.
+Tests verify async side-effects (e.g., whether a PR was approved) using `TaskCompletionSource` with a `ResultTimeout` of 2 seconds.
 
 ### Request Flow
 
