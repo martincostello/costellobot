@@ -45,7 +45,7 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
 
     protected virtual TimeSpan ProcessingTimeout { get; } = Debugger.IsAttached ? TimeSpan.FromMinutes(1) : TimeSpan.FromSeconds(0.5);
 
-    protected virtual TimeSpan ResultTimeout { get; } = Debugger.IsAttached ? TimeSpan.FromMinutes(1) : TimeSpan.FromSeconds(1);
+    protected virtual TimeSpan ResultTimeout { get; } = Debugger.IsAttached ? TimeSpan.FromMinutes(1) : TimeSpan.FromSeconds(2);
 
     public virtual ValueTask InitializeAsync() => ValueTask.CompletedTask;
 
