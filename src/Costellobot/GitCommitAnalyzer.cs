@@ -33,9 +33,9 @@ public sealed partial class GitCommitAnalyzer(
     private static readonly (string Prefix, string Suffix)[] VersionPatterns =
     [
         (@"(Bumps|Updates) ", @" from (?<from>\d[^ ]*) to (?<to>\d[^ \n]*)\."), // Normal version updates
-        (@"(Bumps|Updates) `", @"` from (?<from>\d[^ ]*) to (?<to>\d[^ \n]*)\.?$"), // Normal version updates with escaped name
-        (@"(Bumps|Updates) \[", @"\]\(.*\) from (?<from>\d[^ ]*) to (?<to>\d[^ \n]*)\.?$"), // Normal version updates with link to repo
-        (@"(Bumps|Updates) `?", @"`? from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ \n]*)\`\.?$"), // Git submodule updates
+        (@"(Bumps|Updates) `", @"` from (?<from>\d[^ ]*) to (?<to>\d[^ \n]*)\.?\r?$"), // Normal version updates with escaped name
+        (@"(Bumps|Updates) \[", @"\]\(.*\) from (?<from>\d[^ ]*) to (?<to>\d[^ \n]*)\.?\r?$"), // Normal version updates with link to repo
+        (@"(Bumps|Updates) `?", @"`? from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ \n]*)\`\.?\r?$"), // Git submodule updates
         (@"(Bumps|Updates) \[", @"\]\(.*\) from \`(?<from>[\da-f][^ ]*)\` to \`(?<to>[\da-f][^ \n]*)\`\.?"), // Git submodule updates with link to repo
         (@"\[", @"\]\(.*\)\.\s+\- \[Commits\]\(.*\/(?<from>\d[^ ]*)\.\.\.(?<to>\d[^ \n]*)\)"), // Grouped version update that updates one package
     ];
@@ -290,9 +290,17 @@ public sealed partial class GitCommitAnalyzer(
 
         static void ParseDependabotYaml(string yaml, HashSet<DependencyUpdate> updates)
         {
-            using var reader = new StringReader(yaml);
+            DependabotMetadata? metadata;
 
-            var metadata = YamlDeserializer.Deserialize<DependabotMetadata>(reader);
+            try
+            {
+                using var reader = new StringReader(yaml);
+                metadata = YamlDeserializer.Deserialize<DependabotMetadata>(reader);
+            }
+            catch (Exception)
+            {
+                return;
+            }
 
             if (metadata?.Dependencies is { Count: > 0 } dependencies)
             {
@@ -339,10 +347,8 @@ public sealed partial class GitCommitAnalyzer(
 
         static string GetCellValue(TableCell[] cells, int index, string markdown)
         {
-            var cell = cells[index];
-            var range = new System.Range(cell.Span.Start, cell.Span.End);
-
-            return markdown[range].Trim();
+            var span = cells[index].Span;
+            return span.IsEmpty ? string.Empty : markdown.AsSpan(span.Start, span.Length).Trim().ToString();
         }
     }
 
