@@ -2703,7 +2703,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.Npm] =
                     [
                         "^@typescript-eslint/eslint-plugin$",
-                        "^@typescript-eslint/parser$"
+                        "^@typescript-eslint/parser$",
                     ],
                 },
             },
@@ -2780,7 +2780,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.Npm] =
                     [
                         "^@typescript-eslint/eslint-plugin$",
-                        "^@typescript-eslint/parser$"
+                        "^@typescript-eslint/parser$",
                     ],
                 },
             },

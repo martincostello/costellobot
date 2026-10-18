@@ -117,9 +117,9 @@ public sealed partial class DeploymentStatusHandler(
         // HACK Use OAuth token for user that has permissions to review instead of the app.
         // This can be removed in the future if GitHub Apps can be allowed review deployments.
         IGitHubClient client =
-            deployment.CurrentUserCanApprove ?
-            context.InstallationClient :
-            context.UserClient;
+            deployment.CurrentUserCanApprove
+                ? context.InstallationClient
+                : context.UserClient;
 
         try
         {

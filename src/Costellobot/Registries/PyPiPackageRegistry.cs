@@ -60,7 +60,7 @@ public sealed partial class PyPiPackageRegistry(
                 owners = [.. roles
                     .Where((p) => string.Equals(p.Role, "Owner", StringComparison.OrdinalIgnoreCase))
                     .Select((p) => p.User)
-                    .Where((p) => !string.IsNullOrWhiteSpace(p))];
+                    .Where((p) => !string.IsNullOrWhiteSpace(p)),];
             }
 
             if (!string.IsNullOrEmpty(ownership.Organization))

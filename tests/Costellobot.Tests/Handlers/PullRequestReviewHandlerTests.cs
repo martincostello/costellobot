@@ -219,6 +219,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
                 return (pull.Repository, tcs);
             }
 
+#pragma warning disable SA1143 // Conditional expressions must be formatted consistently
             object[] reviews =
                 alreadyReviewed ?
                 [
@@ -235,6 +236,7 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
                 ]
                 :
                 [];
+#pragma warning restore SA1143 // Conditional expressions must be formatted consistently
 
             RegisterCommitAndDiff(pull);
             RegisterDependabotConfiguration(pull.Repository, pull.PullRequest.RefHead);
