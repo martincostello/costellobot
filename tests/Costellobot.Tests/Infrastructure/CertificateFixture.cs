@@ -124,7 +124,7 @@ public static class CertificateFixture
             new("repository", repository),
             new("repository_owner", repositoryOwner),
             new("workflow", workflow),
-            new("workflow_ref", workflowReference ?? $"{repository}/.github/workflows/{workflow}@{reference}")
+            new("workflow_ref", workflowReference ?? $"{repository}/.github/workflows/{workflow}@{reference}"),
         ];
 
         configureClaims?.Invoke(claims);

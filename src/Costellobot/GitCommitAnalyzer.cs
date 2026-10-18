@@ -835,7 +835,7 @@ public sealed partial class GitCommitAnalyzer(
                 dependencies = [.. config.Updates
                     .Where((p) => string.Equals(p.PackageEcosystem, normalized, StringComparison.OrdinalIgnoreCase))
                     .SelectMany((p) => p.Ignore)
-                    .Select((p) => (p.DependencyName, p.UpdateTypes?.FirstOrDefault()))];
+                    .Select((p) => (p.DependencyName, p.UpdateTypes?.FirstOrDefault())),];
             }
         }
         catch (NotFoundException)

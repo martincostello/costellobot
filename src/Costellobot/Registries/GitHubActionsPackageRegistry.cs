@@ -32,9 +32,9 @@ public sealed class GitHubActionsPackageRegistry(
             // for a tag prefixed with 'v' before looking for the verbatim tag.
             bool hasVersionPrefix = version.StartsWith('v', StringComparison.Ordinal);
 
-            string[] refs = hasVersionPrefix ?
-                [version, version[1..]] :
-                [$"v{version}", version];
+            string[] refs = hasVersionPrefix
+                ? [version, version[1..]]
+                : [$"v{version}", version];
 
             foreach (var reference in refs)
             {

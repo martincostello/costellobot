@@ -19,7 +19,7 @@ public sealed class HealthCheckTests(HttpServerFixture fixture, ITestOutputHelpe
     [
         "/health/liveness",
         "/health/readiness",
-        "/health/startup"
+        "/health/startup",
     ];
 
     public static TheoryData<string, string> HealthCheckUrlsWithHeaders()

@@ -52,7 +52,7 @@ public sealed partial class RubyGemsPackageRegistry(
                 .Where((p) => !string.IsNullOrWhiteSpace(p.Handle))
                 .OrderBy((p) => p.Id)
                 .Select((p) => p.Handle)
-                .Distinct(StringComparer.OrdinalIgnoreCase)];
+                .Distinct(StringComparer.OrdinalIgnoreCase),];
         }
 
         return [];
