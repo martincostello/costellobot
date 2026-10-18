@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Costellobot.Benchmarks" />
+    <InternalsVisibleTo Include="Costellobot.Tests" />
   </ItemGroup>
   <ItemGroup>
     <ContainerPort Include="8080" Type="tcp" />

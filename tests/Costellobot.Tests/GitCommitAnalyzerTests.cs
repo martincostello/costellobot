@@ -84,6 +84,79 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     }
 
     [Theory]
+    [InlineData("\n")]
+    [InlineData("\r\n")]
+    public static void Version_Is_Extracted_From_Submodule_Update_Commit_Message_Without_Link(string newLine)
+    {
+        string dependencyName = "src/submodules/dependabot-helper";
+        string commitMessage = string.Join(
+            newLine,
+            "Bump src/submodules/dependabot-helper from 697aaa7 to aca93c2",
+            "Bumps src/submodules/dependabot-helper from `697aaa7` to `aca93c2`.",
+            string.Empty,
+            "Signed-off-by: dependabot[bot] <support@github.com>");
+
+        // Act
+        bool result = GitCommitAnalyzer.TryParseVersionNumber(commitMessage, dependencyName, out var actual);
+
+        // Assert
+        result.ShouldBeTrue();
+        actual.ShouldBe("aca93c2");
+    }
+
+    [Theory]
+    [InlineData("not: [valid")]
+    [InlineData("just a string")]
+    [InlineData("updated-dependencies: 42")]
+    [InlineData("updated-dependencies:\n- 42")]
+    public static void ParseDependencies_Ignores_Invalid_Dependabot_Metadata(string yaml)
+    {
+        // Arrange
+        string commitMessage = $"""
+            Bump the all group with 1 update
+
+            ---
+            {yaml}
+            ...
+
+            Signed-off-by: dependabot[bot] <support@github.com>
+            """;
+
+        // Act
+        var actual = GitCommitAnalyzer.ParseDependencies(commitMessage);
+
+        // Assert
+        actual.ShouldNotBeNull();
+        actual.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public static void ParseDependencies_Parses_Unpadded_Renovate_Table()
+    {
+        // Arrange
+        string commitMessage = """
+            Update dependencies
+            |datasource|package|from|to|
+            |-|-|-|-|
+            |nuget|xunit.v3|2.0.2|2.0.3|
+            |nuget|xunit.runner.visualstudio||3.1.1|
+
+            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+            """;
+
+        // Act
+        var actual = GitCommitAnalyzer.ParseDependencies(commitMessage);
+
+        // Assert
+        actual.ShouldBe(
+            [
+                ("xunit.v3", "2.0.3", "version-update:semver-patch", "2.0.2"),
+                ("xunit.runner.visualstudio", "3.1.1", null, string.Empty),
+            ],
+            ignoreOrder: true);
+    }
+
+    [Theory]
     [InlineData("@actions/github", "dependabot/npm_and_yarn/actions/github-5.0.3", true)]
     [InlineData("actions/checkout", "dependabot/github_actions/actions/checkout-3", true)]
     [InlineData("bootstrap/css/bootstrap.min.css", "renovate/html/bootstrap-5.x", true)]
