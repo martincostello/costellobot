@@ -63,9 +63,9 @@ public static class CostellobotBuilder
 
         builder.Services.AddResponseCompression((options) =>
         {
+            options.Providers.Add<ZstandardCompressionProvider>();
             options.Providers.Add<BrotliCompressionProvider>();
             options.Providers.Add<GzipCompressionProvider>();
-            options.Providers.Add<ZstandardCompressionProvider>();
         });
 
         builder.Services.AddMetrics();
@@ -121,6 +121,7 @@ public static class CostellobotBuilder
 
         builder.Services.Configure<BrotliCompressionProviderOptions>((p) => p.Level = CompressionLevel.Fastest);
         builder.Services.Configure<GzipCompressionProviderOptions>((p) => p.Level = CompressionLevel.Fastest);
+        builder.Services.Configure<ZstandardCompressionOptions>((p) => p.Quality = 1);
 
         if (string.Equals(builder.Configuration["CODESPACES"], bool.TrueString, StringComparison.OrdinalIgnoreCase))
         {
