@@ -6,18 +6,38 @@ using Microsoft.AspNetCore.SignalR;
 namespace MartinCostello.Costellobot;
 
 [Authorization.CostellobotAdmin]
-public class GitHubWebhookHub(ClientLogQueue logs, GitHubWebhookQueue webhooks) : Hub
+public class GitHubWebhookHub(
+    ClientLogQueue logs,
+    GitHubWebhookQueue webhooks,
+    GitHubWebhookHubConnections connections) : Hub
 {
     public override async Task OnConnectedAsync()
     {
-        foreach (var logEntry in logs.History())
-        {
-            await Clients.Caller.SendAsync(WebhookClientMethods.Log, logEntry, Context.ConnectionAborted);
-        }
+        connections.Connected();
 
-        foreach (var @event in webhooks.History())
+        try
         {
-            await Clients.Caller.SendAsync(WebhookClientMethods.Webhook, @event.RawHeaders, @event.RawPayload, Context.ConnectionAborted);
+            foreach (var logEntry in logs.History())
+            {
+                await Clients.Caller.SendAsync(WebhookClientMethods.Log, logEntry, Context.ConnectionAborted);
+            }
+
+            foreach (var @event in webhooks.History())
+            {
+                await Clients.Caller.SendAsync(WebhookClientMethods.Webhook, @event.RawHeaders, @event.RawPayload, Context.ConnectionAborted);
+            }
         }
+        catch (Exception)
+        {
+            // OnDisconnectedAsync() is not invoked if OnConnectedAsync() throws
+            connections.Disconnected();
+            throw;
+        }
+    }
+
+    public override Task OnDisconnectedAsync(Exception? exception)
+    {
+        connections.Disconnected();
+        return base.OnDisconnectedAsync(exception);
     }
 }
