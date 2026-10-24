@@ -48,7 +48,7 @@ public sealed partial class GitHubEventHandler(
         {
             if (WellKnownGitHubEvents.IsKnown(payload))
             {
-                var message = GitHubMessageSerializer.Serialize(payload.Headers.Delivery, payload.RawHeaders, payload.Body);
+                var message = GitHubMessageSerializer.Serialize(payload.Headers.Delivery, payload.RawHeaders, payload.Body, config.QueueCompression);
 
                 if (message is null)
                 {

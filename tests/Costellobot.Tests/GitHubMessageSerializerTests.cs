@@ -7,8 +7,11 @@ namespace MartinCostello.Costellobot;
 
 public static class GitHubMessageSerializerTests
 {
-    [Fact]
-    public static void GitHub_Payload_Can_Be_Roundtripped()
+    [Theory]
+    [InlineData("")]
+    [InlineData("br")]
+    [InlineData("zstd")]
+    public static void GitHub_Payload_Can_Be_Roundtripped(string compression)
     {
         // Arrange
         var deliveryId = "9b5c943d-187a-4988-b3ca-9993d5268f85";
@@ -53,7 +56,7 @@ public static class GitHubMessageSerializerTests
             """;
 
         // Act
-        var serialized = GitHubMessageSerializer.Serialize(deliveryId, headers, body);
+        var serialized = GitHubMessageSerializer.Serialize(deliveryId, headers, body, compression);
 
         // Assert
         serialized.ShouldNotBeNull();
@@ -85,9 +88,13 @@ public static class GitHubMessageSerializerTests
     [InlineData(512 * 1024, "br")]
     [InlineData(1024 * 1024, "br")]
     [InlineData(2048 * 1024, "br")]
+    [InlineData(256 * 1024, "zstd")]
+    [InlineData(512 * 1024, "zstd")]
+    [InlineData(1024 * 1024, "zstd")]
+    [InlineData(2048 * 1024, "zstd")]
     public static void GitHub_Payload_Can_Be_Roundtripped_For_Large_Paylods(
         int length,
-        string? expectedContentEncoding)
+        string? compression)
     {
         // Arrange
         var deliveryId = "1d6e86da-0a1f-46c7-99c8-f0d488cd0cd1";
@@ -114,7 +121,7 @@ public static class GitHubMessageSerializerTests
               """;
 
         // Act
-        var serialized = GitHubMessageSerializer.Serialize(deliveryId, headers, body);
+        var serialized = GitHubMessageSerializer.Serialize(deliveryId, headers, body, compression ?? string.Empty);
 
         // Assert
         serialized.ShouldNotBeNull();
@@ -127,7 +134,7 @@ public static class GitHubMessageSerializerTests
         serialized.ApplicationProperties.ShouldContainKey("publisher");
 
         var amqp = serialized.GetRawAmqpMessage();
-        amqp.Properties.ContentEncoding.ShouldBe(expectedContentEncoding);
+        amqp.Properties.ContentEncoding.ShouldBe(compression);
 
         var message = ServiceBusReceivedMessage.FromAmqpMessage(amqp, BinaryData.FromBytes([]));
 
