@@ -29,6 +29,8 @@ public sealed class WebhookOptions
 
     public TimeSpan PublishTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
+    public string QueueCompression { get; set; } = string.Empty;
+
     public string QueueName { get; set; } = string.Empty;
 
     public IDictionary<string, RegistryOptions> Registries { get; set; } = new Dictionary<string, RegistryOptions>();

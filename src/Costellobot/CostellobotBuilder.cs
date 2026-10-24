@@ -65,6 +65,7 @@ public static class CostellobotBuilder
         {
             options.Providers.Add<BrotliCompressionProvider>();
             options.Providers.Add<GzipCompressionProvider>();
+            options.Providers.Add<ZstandardCompressionProvider>();
         });
 
         builder.Services.AddMetrics();
