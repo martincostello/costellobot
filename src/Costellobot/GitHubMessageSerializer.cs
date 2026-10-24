@@ -43,14 +43,7 @@ public sealed partial class GitHubMessageSerializer
             payload = JsonSerializer.Deserialize(message.Body, MessagingJsonSerializerContext.Default.GitHubMessage)!;
         }
 
-        var headers = new Dictionary<string, StringValues>(payload.Headers.Count, StringComparer.OrdinalIgnoreCase);
-
-        foreach ((var key, var values) in payload.Headers)
-        {
-            headers[key] = new(values);
-        }
-
-        return (headers, payload.Body);
+        return (payload.Headers, payload.Body);
 
         static Stream DecompressBrotli(Stream input)
         {
@@ -83,11 +76,11 @@ public sealed partial class GitHubMessageSerializer
 
     public static ServiceBusMessage? Serialize(string? deliveryId, IDictionary<string, string> headers, string body, string compression)
     {
-        var messageHeaders = new Dictionary<string, string?[]?>(headers.Count);
+        var messageHeaders = new Dictionary<string, StringValues>(headers.Count);
 
         foreach ((var key, var value) in headers)
         {
-            messageHeaders[key] = [value];
+            messageHeaders[key] = new(value);
         }
 
         var payload = new GitHubMessage()

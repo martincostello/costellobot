@@ -73,6 +73,7 @@ public static class CostellobotBuilder
 
         builder.Services.AddSignalR();
         builder.Services.AddSingleton<ClientLogQueue>();
+        builder.Services.AddSingleton<GitHubWebhookHubConnections>();
         builder.Services.AddHostedService<ClientLogBroadcastService>();
 
         builder.Services.Configure<Microsoft.AspNetCore.SignalR.JsonHubProtocolOptions>((options) =>

@@ -12,6 +12,7 @@ namespace MartinCostello.Costellobot;
 public sealed partial class GitHubEventProcessor(
     GitHubEventHandler handler,
     IHubContext<GitHubWebhookHub> hub,
+    GitHubWebhookHubConnections connections,
     CostellobotMetrics metrics,
     IOptionsMonitor<WebhookOptions> options,
     ILogger<GitHubEventProcessor> logger) : WebhookEventProcessor
@@ -43,7 +44,14 @@ public sealed partial class GitHubEventProcessor(
             return;
         }
 
-        (var rawHeaders, var rawPayload) = await BroadcastLogAsync(headers, body, cancellationToken);
+        var rawHeaders = GetHeadersToLog(headers);
+
+        JsonElement? rawPayload = null;
+
+        if (connections.HasConnections)
+        {
+            rawPayload = await BroadcastLogAsync(rawHeaders, body, cancellationToken);
+        }
 
         var webhookHeaders = WebhookHeaders.Parse(headers);
 
@@ -57,7 +65,9 @@ public sealed partial class GitHubEventProcessor(
             {
                 Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
 
-                var payload = new GitHubEvent(webhookHeaders, webhookEvent, rawHeaders, body, rawPayload);
+                GitHubEvent payload = rawPayload is { } parsed
+                    ? new(webhookHeaders, webhookEvent, rawHeaders, body, parsed)
+                    : new(webhookHeaders, webhookEvent, rawHeaders, body);
 
                 await handler.HandleAsync(payload, cancellationToken);
 
@@ -79,8 +89,23 @@ public sealed partial class GitHubEventProcessor(
         }
     }
 
-    private async Task<(IDictionary<string, string> Headers, JsonElement Payload)> BroadcastLogAsync(
-        IDictionary<string, StringValues> headers,
+    private static Dictionary<string, string> GetHeadersToLog(IDictionary<string, StringValues> headers)
+    {
+        var webhookHeaders = new Dictionary<string, string>(HeadersToLog.Length);
+
+        foreach (string header in HeadersToLog)
+        {
+            if (headers.TryGetValue(header, out var value))
+            {
+                webhookHeaders[header] = value!;
+            }
+        }
+
+        return webhookHeaders;
+    }
+
+    private async Task<JsonElement?> BroadcastLogAsync(
+        IDictionary<string, string> headers,
         string body,
         CancellationToken cancellationToken)
     {
@@ -91,24 +116,14 @@ public sealed partial class GitHubEventProcessor(
             // See https://github.com/octokit/webhooks.net/blob/1a6ce29f8312c555227703057ba45723e3c78574/src/Octokit.Webhooks/Converter/DateTimeOffsetConverter.cs#L14.
             var document = JsonElement.Parse(body);
 
-            var webhookHeaders = new Dictionary<string, string>(HeadersToLog.Length);
+            await hub.Clients.All.SendAsync(WebhookClientMethods.Webhook, headers, document, cancellationToken);
 
-            foreach (string header in HeadersToLog)
-            {
-                if (headers.TryGetValue(header, out var value))
-                {
-                    webhookHeaders[header] = value!;
-                }
-            }
-
-            await hub.Clients.All.SendAsync(WebhookClientMethods.Webhook, webhookHeaders, document, cancellationToken);
-
-            return (webhookHeaders, document);
+            return document;
         }
         catch (Exception)
         {
             // Swallow exception
-            return default;
+            return null;
         }
     }
 

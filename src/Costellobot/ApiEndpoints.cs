@@ -17,6 +17,8 @@ namespace MartinCostello.Costellobot;
 public static partial class ApiEndpoints
 {
     private static readonly long StartedAt = Stopwatch.GetTimestamp();
+    private static readonly string RuntimeVersion = GetVersion<object>();
+    private static readonly string AspNetCoreVersion = GetVersion<HttpContext>();
 
     public static IEndpointRouteBuilder MapApiRoutes(this IEndpointRouteBuilder builder)
     {
@@ -83,8 +85,8 @@ public static partial class ApiEndpoints
             },
             ["dotnetVersions"] = new JsonObject()
             {
-                ["runtime"] = GetVersion<object>(),
-                ["aspNetCore"] = GetVersion<HttpContext>(),
+                ["runtime"] = RuntimeVersion,
+                ["aspNetCore"] = AspNetCoreVersion,
             },
             ["_links"] = new JsonObject()
             {
@@ -97,10 +99,10 @@ public static partial class ApiEndpoints
         }).AllowAnonymous();
 
         return builder;
-
-        static string GetVersion<T>()
-            => typeof(T).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
     }
+
+    private static string GetVersion<T>()
+        => typeof(T).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
 
     [ExcludeFromCodeCoverage]
     [JsonSerializable(typeof(Badge))]
