@@ -5,14 +5,14 @@
     <GlobalPackageReference Include="StyleCop.Analyzers" Version="1.3.151-beta" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <PackageVersion Include="Aspire.Azure.Data.Tables" Version="13.6.3" />
-    <PackageVersion Include="Aspire.Azure.Messaging.ServiceBus" Version="13.6.3" />
-    <PackageVersion Include="Aspire.Azure.Security.KeyVault" Version="13.6.3" />
-    <PackageVersion Include="Aspire.Azure.Storage.Blobs" Version="13.6.3" />
-    <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.6.3" />
-    <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="13.6.3" />
-    <PackageVersion Include="Aspire.Hosting.Azure.ServiceBus" Version="13.6.3" />
-    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="13.6.3" />
+    <PackageVersion Include="Aspire.Azure.Data.Tables" Version="13.6.4" />
+    <PackageVersion Include="Aspire.Azure.Messaging.ServiceBus" Version="13.6.4" />
+    <PackageVersion Include="Aspire.Azure.Security.KeyVault" Version="13.6.4" />
+    <PackageVersion Include="Aspire.Azure.Storage.Blobs" Version="13.6.4" />
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.6.4" />
+    <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="13.6.4" />
+    <PackageVersion Include="Aspire.Hosting.Azure.ServiceBus" Version="13.6.4" />
+    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="13.6.4" />
     <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="10.0.0" />
     <PackageVersion Include="Azure.Data.Tables" Version="12.13.0" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.2" />
@@ -30,12 +30,12 @@
     <PackageVersion Include="JustEat.HttpClientInterception" Version="5.1.4" />
     <PackageVersion Include="Markdig" Version="1.4.2" />
     <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.7.1" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0-rc.2.26504.105" />
-    <PackageVersion Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="11.0.0-rc.2.26504.105" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0-rc.2.26504.105" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0-rc.3.26522.148" />
+    <PackageVersion Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="11.0.0-rc.3.26522.148" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0-rc.3.26522.148" />
     <PackageVersion Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="8.6.1" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="10.11.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="11.0.0-rc.2.26504.105" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="11.0.0-rc.3.26522.148" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.ResourceMonitoring" Version="10.11.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="10.11.0" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.11.0" />
