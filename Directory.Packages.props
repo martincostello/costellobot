@@ -28,7 +28,7 @@
     <PackageVersion Include="Google.Apis.Calendar.v3" Version="1.77.0.4285" />
     <PackageVersion Include="Humanizer" Version="3.0.10" />
     <PackageVersion Include="JustEat.HttpClientInterception" Version="5.1.4" />
-    <PackageVersion Include="Markdig" Version="1.4.2" />
+    <PackageVersion Include="Markdig" Version="1.5.0" />
     <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.7.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0-rc.3.26522.148" />
     <PackageVersion Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="11.0.0-rc.3.26522.148" />
