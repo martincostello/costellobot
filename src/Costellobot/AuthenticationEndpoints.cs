@@ -166,7 +166,7 @@ public static class AuthenticationEndpoints
                 var environment = provider.GetRequiredService<IHostEnvironment>();
 
                 string containerName = "data-protection";
-                string blobName = $"{environment.EnvironmentName.ToLowerInvariant()}/keys.xml";
+                string blobName = $"{environment.EnvironmentName.ToLowerOrdinal()}/keys.xml";
 
                 if (environment.IsDevelopment() && !client.GetBlobContainers().Any((p) => p.Name == containerName))
                 {

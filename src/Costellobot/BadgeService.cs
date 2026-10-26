@@ -29,7 +29,7 @@ public sealed partial class BadgeService(
 
         try
         {
-            return type.ToUpperInvariant() switch
+            return type.ToUpperOrdinal() switch
             {
                 "RELEASE" => await LatestReleaseBadgeJsonAsync(repository),
                 "SECURITY" => await SecurityAlertsBadgeJsonAsync(repository),
@@ -52,7 +52,7 @@ public sealed partial class BadgeService(
 
         try
         {
-            return type.ToUpperInvariant() switch
+            return type.ToUpperOrdinal() switch
             {
                 "RELEASE" => await LatestReleaseBadgeUrlAsync(repository),
                 "SECURITY" => await SecurityAlertsBadgeUrlAsync(repository),

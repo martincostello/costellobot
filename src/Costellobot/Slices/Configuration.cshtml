@@ -759,12 +759,12 @@
 
         foreach (var character in value)
         {
-            builder.Append(char.IsLetterOrDigit(character) ? char.ToLowerInvariant(character) : '-');
+            builder.Append(char.IsLetterOrDigit(character) ? char.ToLowerOrdinal(character) : '-');
         }
 
         var prefix = builder.ToString().Trim('-');
         var bytes = System.Text.Encoding.UTF8.GetBytes(value);
-        var hash = Convert.ToHexString(SHA256.HashData(bytes))[..8].ToLowerInvariant();
+        var hash = Convert.ToHexString(SHA256.HashData(bytes))[..8].ToLowerOrdinal();
 
         return string.IsNullOrEmpty(prefix) ? $"id-{hash}" : $"{prefix}-{hash}";
     }
