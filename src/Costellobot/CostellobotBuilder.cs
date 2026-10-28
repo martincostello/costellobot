@@ -10,6 +10,7 @@ using Azure.Identity;
 using Microsoft.AspNetCore.HostFiltering;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Diagnostics.Tracing;
 using Microsoft.Extensions.Options;
 
 namespace MartinCostello.Costellobot;
@@ -69,6 +70,7 @@ public static class CostellobotBuilder
         });
 
         builder.Services.AddMetrics();
+        builder.Services.AddTracing((p) => p.AddConfiguration(builder.Configuration.GetSection("Tracing")));
         builder.Services.AddSingleton<CostellobotMetrics>();
 
         builder.Services.AddSignalR();
