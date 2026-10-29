@@ -27,6 +27,67 @@ public class GitHubWebhookDispatcherTests(ITestOutputHelper outputHelper)
         await Should.NotThrowAsync(() => target.DispatchAsync(message, TestContext.Current.CancellationToken));
     }
 
+    [Fact]
+    public async Task Events_Without_Installation_And_With_Incorrect_Installation_Target_Id_Are_Ignored()
+    {
+        // Arrange
+        var handlerFactory = Substitute.For<IHandlerFactory>();
+        var target = CreateTarget(handlerFactory, installationId: 37);
+
+        var driver = PullRequestDriver.ForDependabot();
+
+        var payload = new
+        {
+            action = "opened",
+            number = driver.PullRequest.Number,
+            pull_request = driver.PullRequest.Build(),
+            repository = driver.PullRequest.Repository.Build(),
+            sender = driver.Sender.Build(),
+        };
+
+        var message = Builders.GitHubFixtures.CreateEvent("pull_request", payload, installationId: 99);
+
+        // Act
+        await target.DispatchAsync(message, TestContext.Current.CancellationToken);
+
+        // Assert
+        handlerFactory.DidNotReceiveWithAnyArgs().Create(default!);
+    }
+
+    [Fact]
+    public async Task Installation_Organization_Is_Set_On_Context_If_Configured()
+    {
+        // Arrange
+        var installationId = 42;
+        var eventName = "pull_request";
+        var organization = "my-organization";
+
+        var handler = Substitute.For<IHandler>();
+        var handlerFactory = Substitute.For<IHandlerFactory>();
+
+        handler.HandleAsync(Arg.Any<WebhookEvent>(), TestContext.Current.CancellationToken)
+               .Returns(Task.CompletedTask);
+
+        handlerFactory.Create(eventName)
+                      .Returns(handler);
+
+        var driver = PullRequestDriver.ForDependabot();
+        var payload = driver.CreateWebhook("opened", installationId);
+
+        var message = Builders.GitHubFixtures.CreateEvent(eventName, payload, installationId: installationId);
+
+        var target = CreateTarget(handlerFactory, installationId, out var context, organization);
+
+        // Act
+        await target.DispatchAsync(message, TestContext.Current.CancellationToken);
+
+        // Assert
+        context.InstallationId.ShouldBe("42");
+        context.InstallationOrganization.ShouldBe(organization);
+
+        await handler.Received(1).HandleAsync(Arg.Is<WebhookEvent>((p) => p != null), TestContext.Current.CancellationToken);
+    }
+
     [Theory]
     [InlineData("installation")]
     [InlineData("installation_repositories")]
@@ -62,6 +123,13 @@ public class GitHubWebhookDispatcherTests(ITestOutputHelper outputHelper)
     private GitHubWebhookDispatcher CreateTarget(
         IHandlerFactory handlerFactory,
         long installationId)
+        => CreateTarget(handlerFactory, installationId, out _);
+
+    private GitHubWebhookDispatcher CreateTarget(
+        IHandlerFactory handlerFactory,
+        long installationId,
+        out GitHubWebhookContext context,
+        string? organization = null)
     {
         var app = new GitHubAppOptions()
         {
@@ -75,6 +143,7 @@ public class GitHubWebhookDispatcherTests(ITestOutputHelper outputHelper)
         var installation = new GitHubInstallationOptions()
         {
             AppId = app.AppId,
+            Organization = organization,
         };
 
         var options = new GitHubOptions();
@@ -86,7 +155,7 @@ public class GitHubWebhookDispatcherTests(ITestOutputHelper outputHelper)
         var logger = outputHelper.ToLogger<GitHubWebhookDispatcher>();
         var monitor = options.ToMonitor();
 
-        var context = new GitHubWebhookContext(
+        context = new GitHubWebhookContext(
             clientFactory,
             monitor,
             new WebhookOptions().ToMonitor())

@@ -66,22 +66,36 @@ public static class ApplicationTelemetry
         }
     }
 
+    internal static bool HasK6Baggage()
+    {
+        var baggage = Baggage.Current;
+
+        if (baggage.Count is 0)
+        {
+            return false;
+        }
+
+        foreach ((string key, _) in baggage)
+        {
+            if (key.StartsWith("k6.", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static LabelSet.Builder GetProfilerLabels()
     {
-        var builder = LabelSet.Empty.BuildUpon()
-            .Add("namespace", ServiceNamespace)
-            .Add("service_git_ref", GitMetadata.Commit)
-            .Add("service_repository", GitMetadata.RepositoryUrl);
+        var builder = LabelSet.Empty.BuildUpon();
 
         // Based on https://github.com/grafana/pyroscope-go/blob/8fff2bccb5ed5611fdb09fdbd9a727367ab35f39/x/k6/baggage.go
-        if (Baggage.GetBaggage() is { Count: > 0 } baggage)
+        foreach ((string key, string? value) in Baggage.Current)
         {
-            foreach ((string key, string? value) in baggage.Where((p) => p.Key.StartsWith("k6.", StringComparison.Ordinal)))
+            if (value is { Length: > 0 } && key.StartsWith("k6.", StringComparison.Ordinal))
             {
-                if (value is { Length: > 0 })
-                {
-                    builder.Add(key.Replace('.', '_'), value);
-                }
+                builder.Add(key.Replace('.', '_'), value);
             }
         }
 

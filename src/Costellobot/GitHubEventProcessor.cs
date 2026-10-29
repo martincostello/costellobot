@@ -55,24 +55,21 @@ public sealed partial class GitHubEventProcessor(
 
         var webhookHeaders = WebhookHeaders.Parse(headers);
 
-        using (logger.BeginWebhookScope(webhookHeaders))
+        metrics.WebhookDelivery(webhookHeaders.Event, webhookHeaders.HookInstallationTargetId);
+
+        var webhookEvent = DeserializeWebhookEvent(webhookHeaders, body);
+
+        using (logger.BeginWebhookScope(webhookHeaders, webhookEvent))
         {
-            metrics.WebhookDelivery(webhookHeaders.Event, webhookHeaders.HookInstallationTargetId);
+            Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
 
-            var webhookEvent = DeserializeWebhookEvent(webhookHeaders, body);
+            GitHubEvent payload = rawPayload is { } parsed
+                ? new(webhookHeaders, webhookEvent, rawHeaders, body, parsed)
+                : new(webhookHeaders, webhookEvent, rawHeaders, body);
 
-            using (logger.BeginWebhookScope(webhookEvent))
-            {
-                Log.ReceivedWebhook(logger, webhookHeaders.Delivery);
+            await handler.HandleAsync(payload, cancellationToken);
 
-                GitHubEvent payload = rawPayload is { } parsed
-                    ? new(webhookHeaders, webhookEvent, rawHeaders, body, parsed)
-                    : new(webhookHeaders, webhookEvent, rawHeaders, body);
-
-                await handler.HandleAsync(payload, cancellationToken);
-
-                Log.ProcessedWebhook(logger, webhookHeaders.Delivery);
-            }
+            Log.ProcessedWebhook(logger, webhookHeaders.Delivery);
         }
     }
 
@@ -84,7 +81,11 @@ public sealed partial class GitHubEventProcessor(
         }
         catch (JsonException ex)
         {
-            Log.WebhookDeserializationFailed(logger, headers.Delivery, ex);
+            using (logger.BeginWebhookScope(headers))
+            {
+                Log.WebhookDeserializationFailed(logger, headers.Delivery, ex);
+            }
+
             throw;
         }
     }
