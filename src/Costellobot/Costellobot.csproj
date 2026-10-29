@@ -69,6 +69,9 @@
     <EmbeddedResource Include="bank-holidays.json" />
     <None Remove="scripts\ts\**\*.ts" />
     <PyroscopeLabels Include="costellobot" />
+    <PyroscopeLabels Include="namespace=Costellobot" />
+    <PyroscopeLabels Include="service_git_ref=$(GITHUB_SHA)" Condition=" '$(IsGitHubActions)' == 'true' " />
+    <PyroscopeLabels Include="service_repository:$(GitHubRepositoryUrl)" Condition=" '$(IsGitHubActions)' == 'true' " />
   </ItemGroup>
   <Target Name="BundleAssets" BeforeTargets="BeforeBuild" DependsOnTargets="RestoreNpmPackages">
     <Exec Command="npm run build" Condition=" !Exists('$(MSBuildThisFileDirectory)\wwwroot\static\js\main.js') " />

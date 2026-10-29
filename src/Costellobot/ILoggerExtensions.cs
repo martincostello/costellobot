@@ -10,8 +10,38 @@ public static class ILoggerExtensions
 {
     public static IDisposable? BeginWebhookScope(this ILogger logger, WebhookHeaders headers)
     {
+        if (!ShouldCreateScope(logger))
+        {
+            return null;
+        }
+
         var items = new Dictionary<string, object>(2);
 
+        AddHeaders(items, headers);
+
+        return logger.BeginScope(items);
+    }
+
+    public static IDisposable? BeginWebhookScope(this ILogger logger, WebhookHeaders headers, WebhookEvent payload)
+    {
+        if (!ShouldCreateScope(logger))
+        {
+            return null;
+        }
+
+        var items = new Dictionary<string, object>(10);
+
+        AddHeaders(items, headers);
+        AddEvent(items, payload);
+
+        return logger.BeginScope(items);
+    }
+
+    private static bool ShouldCreateScope(ILogger logger)
+        => logger.IsEnabled(LogLevel.Critical);
+
+    private static void AddHeaders(Dictionary<string, object> items, WebhookHeaders headers)
+    {
         if (headers.Delivery is { Length: > 0 } delivery)
         {
             items["GitHub.Delivery"] = delivery;
@@ -21,14 +51,10 @@ public static class ILoggerExtensions
         {
             items["GitHub.Event"] = @event;
         }
-
-        return logger.BeginScope(items);
     }
 
-    public static IDisposable? BeginWebhookScope(this ILogger logger, WebhookEvent payload)
+    private static void AddEvent(Dictionary<string, object> items, WebhookEvent payload)
     {
-        var items = new Dictionary<string, object>(3);
-
         if (payload.Action is { Length: > 0 } action)
         {
             items["GitHub.Action"] = action;
@@ -86,7 +112,5 @@ public static class ILoggerExtensions
         {
             items["GitHub.PullRequest.HtmlUrl"] = pullUrl;
         }
-
-        return logger.BeginScope(items);
     }
 }

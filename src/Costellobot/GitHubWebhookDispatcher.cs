@@ -14,51 +14,47 @@ public sealed partial class GitHubWebhookDispatcher(
 {
     public async Task DispatchAsync(GitHubEvent message, CancellationToken cancellationToken)
     {
-        using (logger.BeginWebhookScope(message.Headers))
-        using (logger.BeginWebhookScope(message.Event))
+        Log.ProcessingWebhook(logger, message.Headers.Delivery, message);
+
+        if (!IsValidInstallation(message) && message.Headers.Event is not Octokit.Webhooks.WebhookEventType.Ping)
         {
-            Log.ProcessingWebhook(logger, message.Headers.Delivery, message);
+            Log.IncorrectInstallationWebhookIgnored(logger, message.Headers.Delivery, message, message.Event.Installation?.Id);
+            return;
+        }
 
-            if (!IsValidInstallation(message) && message.Headers.Event is not Octokit.Webhooks.WebhookEventType.Ping)
+        try
+        {
+            if (message.Headers.HookInstallationTargetId is { Length: > 0 } appId)
             {
-                Log.IncorrectInstallationWebhookIgnored(logger, message.Headers.Delivery, message, message.Event.Installation?.Id);
-                return;
-            }
-
-            try
-            {
-                if (message.Headers.HookInstallationTargetId is { Length: > 0 } appId)
+                if (options.CurrentValue.Apps.TryGetValue(appId, out var app))
                 {
-                    if (options.CurrentValue.Apps.TryGetValue(appId, out var app))
-                    {
-                        context.AppSlug = $"{app.Name}[bot]";
-                        context.AppName = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(app.Name);
-                    }
-
-                    context.AppId = appId;
+                    context.AppSlug = $"{app.Name}[bot]";
+                    context.AppName = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(app.Name);
                 }
 
-                if (message.Event.Installation?.Id is { } installationId)
-                {
-                    context.InstallationId = Convert.ToString(installationId, CultureInfo.InvariantCulture);
-
-                    if (options.CurrentValue.Installations.TryGetValue(context.InstallationId, out var installation) &&
-                        installation.Organization is { Length: > 0 } organization)
-                    {
-                        context.InstallationOrganization = organization;
-                    }
-                }
-
-                var handler = handlerFactory.Create(message.Headers.Event);
-                await handler.HandleAsync(message.Event, cancellationToken);
-
-                Log.ProcessedWebhook(logger, message.Headers.Delivery, message);
+                context.AppId = appId;
             }
-            catch (Exception ex)
+
+            if (message.Event.Installation?.Id is { } installationId)
             {
-                Log.WebhookProcessingFailed(logger, ex, message.Headers.Delivery, message);
-                throw;
+                context.InstallationId = Convert.ToString(installationId, CultureInfo.InvariantCulture);
+
+                if (options.CurrentValue.Installations.TryGetValue(context.InstallationId, out var installation) &&
+                    installation.Organization is { Length: > 0 } organization)
+                {
+                    context.InstallationOrganization = organization;
+                }
             }
+
+            var handler = handlerFactory.Create(message.Headers.Event);
+            await handler.HandleAsync(message.Event, cancellationToken);
+
+            Log.ProcessedWebhook(logger, message.Headers.Delivery, message);
+        }
+        catch (Exception ex)
+        {
+            Log.WebhookProcessingFailed(logger, ex, message.Headers.Delivery, message);
+            throw;
         }
     }
 
