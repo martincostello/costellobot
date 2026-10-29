@@ -70,7 +70,6 @@ public static class ApplicationTelemetryTests
         Baggage.Current = default;
 
         var operations = 0;
-        var labels = 0;
 
         // Act
         await ApplicationTelemetry.ProfileAsync(
@@ -80,16 +79,10 @@ public static class ApplicationTelemetryTests
                 state.ShouldBe("state");
                 operations++;
                 return Task.CompletedTask;
-            },
-            (_, state) =>
-            {
-                state.ShouldBe("state");
-                labels++;
             });
 
         // Assert
         operations.ShouldBe(1);
-        labels.ShouldBe(1);
     }
 
     [Fact]

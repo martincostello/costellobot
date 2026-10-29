@@ -46,15 +46,12 @@ public static class ApplicationTelemetry
     [StackTraceHidden]
     internal static async Task ProfileAsync<T>(
         T state,
-        Func<T, Task> operation,
-        Action<LabelSet.Builder, T>? addLabels = null)
+        Func<T, Task> operation)
     {
         var labelBuilder = GetProfilerLabels();
 
         try
         {
-            addLabels?.Invoke(labelBuilder, state);
-
             labelBuilder.Build()
                         .Activate();
 
