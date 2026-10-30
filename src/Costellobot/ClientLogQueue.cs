@@ -3,6 +3,7 @@
 
 namespace MartinCostello.Costellobot;
 
-public sealed partial class ClientLogQueue : ChannelQueue<ClientLogMessage>
+public sealed partial class ClientLogQueue(GitHubWebhookHubConnections connections) : ChannelQueue<ClientLogMessage>
 {
+    protected override bool HasConsumers => connections.HasConnections;
 }
