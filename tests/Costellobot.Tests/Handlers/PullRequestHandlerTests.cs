@@ -41,6 +41,48 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     }
 
     [Fact]
+    public async Task Commit_And_Diff_Are_Requested_At_The_Same_Time()
+    {
+        // Arrange
+        Fixture.ApprovePullRequests();
+
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(TrustedCommitMessage());
+
+        var commitRequested = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var diffRequested = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        // Each request only completes once the other one has started, so if
+        // they are made one after the other then neither will ever get there.
+        var timeout = TimeSpan.FromSeconds(1);
+
+        RegisterGetAccessToken();
+        RegisterCommitAndDiff(
+            driver,
+            async (_) =>
+            {
+                commitRequested.TrySetResult();
+                await diffRequested.Task.WaitAsync(timeout, CancellationToken);
+            },
+            async (_) =>
+            {
+                diffRequested.TrySetResult();
+                await commitRequested.Task.WaitAsync(timeout, CancellationToken);
+            });
+        RegisterDependabotConfiguration(driver);
+
+        var pullRequestApproved = RegisterReview(driver);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
+    }
+
+    [Fact]
     public async Task Pull_Request_Is_Approved_For_Trusted_User_And_Dependency_Owner()
     {
         // Arrange

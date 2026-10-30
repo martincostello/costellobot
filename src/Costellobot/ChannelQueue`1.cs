@@ -26,6 +26,11 @@ public abstract class ChannelQueue<T>
         _history = new ConcurrentQueue<T>();
     }
 
+    /// <summary>
+    /// Gets a value indicating whether there is anything that will consume items from the queue.
+    /// </summary>
+    protected virtual bool HasConsumers => true;
+
     public virtual async Task<T?> DequeueAsync(CancellationToken cancellationToken)
     {
         T? item = default;
@@ -47,7 +52,7 @@ public abstract class ChannelQueue<T>
 
     public virtual bool Enqueue(T item)
     {
-        bool written = _queue.Writer.TryWrite(item);
+        bool written = !HasConsumers || _queue.Writer.TryWrite(item);
 
         if (written)
         {

@@ -19,12 +19,11 @@ public sealed partial class PullRequestAnalyzer(
         string pullRequestUrl,
         CancellationToken cancellationToken)
     {
-        var commit = await context.InstallationClient.Repository.Commit.Get(
-            repository.Owner,
-            repository.Name,
-            pullRequestHeadSha);
-
-        var diff = await GetDiffAsync(pullRequestUrl, cancellationToken);
+        (var commit, var diff) = await GetCommitAndDiffAsync(
+            repository,
+            pullRequestHeadSha,
+            pullRequestUrl,
+            cancellationToken);
 
         return await commitAnalyzer.GetDependencyTrustAsync(
             repository,
@@ -87,12 +86,11 @@ public sealed partial class PullRequestAnalyzer(
         string pullRequestUrl,
         CancellationToken cancellationToken)
     {
-        var commit = await context.InstallationClient.Repository.Commit.Get(
-            repository.Owner,
-            repository.Name,
-            pullRequestHeadSha);
-
-        var diff = await GetDiffAsync(pullRequestUrl, cancellationToken);
+        (var commit, var diff) = await GetCommitAndDiffAsync(
+            repository,
+            pullRequestHeadSha,
+            pullRequestUrl,
+            cancellationToken);
 
         return await commitAnalyzer.IsTrustedDependencyUpdateAsync(
             repository,
@@ -100,6 +98,24 @@ public sealed partial class PullRequestAnalyzer(
             commit,
             diff,
             cancellationToken);
+    }
+
+    private async Task<(GitHubCommit Commit, string? Diff)> GetCommitAndDiffAsync(
+        RepositoryId repository,
+        string commitSha,
+        string diffUrl,
+        CancellationToken cancellationToken)
+    {
+        var commitTask = context.InstallationClient.Repository.Commit.Get(
+            repository.Owner,
+            repository.Name,
+            commitSha);
+
+        var diffTask = GetDiffAsync(diffUrl, cancellationToken);
+
+        await Task.WhenAll(commitTask, diffTask);
+
+        return (await commitTask, await diffTask);
     }
 
     private async Task<string?> GetDiffAsync(

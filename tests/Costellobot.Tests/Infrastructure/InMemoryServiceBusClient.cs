@@ -29,6 +29,9 @@ internal sealed class InMemoryServiceBusClient : ServiceBusClient
     public override ServiceBusProcessor CreateProcessor(string queueName)
         => new InMemoryServiceBusProcessor(_channel.Reader, _connectionString, _queueName);
 
+    public override ServiceBusProcessor CreateProcessor(string queueName, ServiceBusProcessorOptions options)
+        => CreateProcessor(queueName);
+
     public override ServiceBusSender CreateSender(string queueOrTopicName)
         => new InMemoryServiceBusSender(_channel.Writer);
 

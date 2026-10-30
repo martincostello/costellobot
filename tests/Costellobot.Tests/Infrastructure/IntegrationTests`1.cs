@@ -170,19 +170,32 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .RegisterWith(Fixture.Interceptor);
     }
 
-    protected void RegisterCommitAndDiff(PullRequestDriver driver)
-        => RegisterCommitAndDiff(driver.PullRequest, driver.Commit);
+    protected void RegisterCommitAndDiff(
+        PullRequestDriver driver,
+        Func<HttpRequestMessage, Task>? onCommitRequest = null,
+        Func<HttpRequestMessage, Task>? onDiffRequest = null)
+        => RegisterCommitAndDiff(driver.PullRequest, driver.Commit, onCommitRequest, onDiffRequest);
 
-    protected void RegisterCommitAndDiff(PullRequestBuilder builder, GitHubCommitBuilder? commit = null)
+    protected void RegisterCommitAndDiff(
+        PullRequestBuilder builder,
+        GitHubCommitBuilder? commit = null,
+        Func<HttpRequestMessage, Task>? onCommitRequest = null,
+        Func<HttpRequestMessage, Task>? onDiffRequest = null)
     {
         commit ??= builder.CreateCommit();
 
-        CreateDefaultBuilder()
+        var commitBuilder = CreateDefaultBuilder()
             .Requests()
             .ForPath($"/repos/{builder.Repository.FullName}/commits/{commit.Sha}")
             .Responds()
-            .WithJsonContent(commit)
-            .RegisterWith(Fixture.Interceptor);
+            .WithJsonContent(commit);
+
+        if (onCommitRequest is not null)
+        {
+            commitBuilder.WithInterceptionCallback(onCommitRequest);
+        }
+
+        commitBuilder.RegisterWith(Fixture.Interceptor);
 
         CreateDefaultBuilder()
             .Requests()
@@ -191,14 +204,20 @@ public abstract class IntegrationTests<T> : IAsyncLifetime, IDisposable
             .WithJsonContent(builder)
             .RegisterWith(Fixture.Interceptor);
 
-        CreateDefaultBuilder()
+        var diffBuilder = CreateDefaultBuilder()
             .Requests()
             .ForPath($"/repos/{builder.Repository.FullName}/pulls/{builder.Number}")
             .ForRequestHeader("Accept", "application/vnd.github.v3.diff")
             .Responds()
             .WithContentHeader("Content-Type", "application/vnd.github.diff; charset=utf-8")
-            .WithContent(() => Encoding.UTF8.GetBytes(builder.Diff))
-            .RegisterWith(Fixture.Interceptor);
+            .WithContent(() => Encoding.UTF8.GetBytes(builder.Diff));
+
+        if (onDiffRequest is not null)
+        {
+            diffBuilder.WithInterceptionCallback(onDiffRequest);
+        }
+
+        diffBuilder.RegisterWith(Fixture.Interceptor);
 
         RegisterGetPullRequest(builder);
     }

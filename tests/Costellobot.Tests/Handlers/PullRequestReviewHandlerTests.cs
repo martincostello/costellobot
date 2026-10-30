@@ -260,6 +260,89 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
         }
     }
 
+    [Fact]
+    public async Task Installation_Repositories_Are_Searched_Concurrently_Up_To_The_Limit()
+    {
+        // Arrange
+        Fixture.ApprovePullRequests();
+
+        var dependency = ("foo", "1.2.3");
+        var driver = await ConfigureAsync(dependency);
+
+        var trustStoreUpdated = RegisterTrusted(DependencyEcosystem.NuGet, dependency);
+
+        int limit = PullRequestReviewHandler.MaxConcurrentRepositories;
+
+        var repositories = Enumerable.Range(0, limit * 3)
+            .Select((_) => driver.Owner.CreateRepository())
+            .ToArray();
+
+        int expectedSearches = repositories.Length * 2;
+        int searches = 0;
+        int inFlight = 0;
+        int maxInFlight = 0;
+
+        var limitReached = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var allSearched = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        foreach (var repository in repositories)
+        {
+            RegisterIssues(repository, "app/dependabot", [], OnSearchAsync);
+            RegisterIssues(repository, "app/renovate", [], OnSearchAsync);
+        }
+
+        RegisterInstallationRepositories([driver.Repository, .. repositories]);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await trustStoreUpdated.Task.WaitAsync(ResultTimeout, CancellationToken);
+        await allSearched.Task.WaitAsync(ResultTimeout, CancellationToken);
+
+        maxInFlight.ShouldBe(limit);
+
+        async Task OnSearchAsync(HttpRequestMessage request)
+        {
+            int current = Interlocked.Increment(ref inFlight);
+            int previous;
+
+            while (current > (previous = Volatile.Read(ref maxInFlight)) &&
+                   Interlocked.CompareExchange(ref maxInFlight, current, previous) != previous)
+            {
+                // Try again
+            }
+
+            if (current >= limit)
+            {
+                limitReached.TrySetResult();
+            }
+
+            try
+            {
+                // Hold the requests until the limit is reached, so that the maximum observed
+                // does not depend on the timing of the requests (a lower limit never gets there).
+                await limitReached.Task.WaitAsync(TimeSpan.FromSeconds(1), CancellationToken);
+            }
+            catch (TimeoutException)
+            {
+                limitReached.TrySetResult();
+            }
+
+            // Give any requests above the limit a chance to start
+            await Task.Delay(TimeSpan.FromMilliseconds(50), CancellationToken);
+
+            Interlocked.Decrement(ref inFlight);
+
+            if (Interlocked.Increment(ref searches) == expectedSearches)
+            {
+                allSearched.TrySetResult();
+            }
+        }
+    }
+
     [Theory]
     [InlineData("changes_requested")]
     [InlineData("commented")]
@@ -581,15 +664,25 @@ public class PullRequestReviewHandlerTests(AppFixture fixture, ITestOutputHelper
         return await PostWebhookAsync("pull_request_review", value);
     }
 
-    private void RegisterIssues(RepositoryBuilder repository, string creator, IEnumerable<IssueBuilder> issues)
+    private void RegisterIssues(
+        RepositoryBuilder repository,
+        string creator,
+        IEnumerable<IssueBuilder> issues,
+        Func<HttpRequestMessage, Task>? onRequest = null)
     {
-        CreateDefaultBuilder()
+        var builder = CreateDefaultBuilder()
             .Requests()
             .ForPath($"/repositories/{repository.Id}/issues")
             .ForQuery($"creator={Uri.EscapeDataString(creator)}&filter=created&state=open&sort=created&direction=desc&per_page=100")
             .Responds()
-            .WithJsonContent(issues)
-            .RegisterWith(Fixture.Interceptor);
+            .WithJsonContent(issues);
+
+        if (onRequest is not null)
+        {
+            builder.WithInterceptionCallback(onRequest);
+        }
+
+        builder.RegisterWith(Fixture.Interceptor);
     }
 
     private void RegisterGitHubApp(UserBuilder owner)
