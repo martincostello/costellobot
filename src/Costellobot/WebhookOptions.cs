@@ -27,6 +27,8 @@ public sealed class WebhookOptions
 
     public bool ImplicitTrust { get; set; }
 
+    public int MaxConcurrentCalls { get; set; } = 1;
+
     public TimeSpan PublishTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
     public string QueueCompression { get; set; } = string.Empty;

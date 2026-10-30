@@ -71,7 +71,14 @@ public sealed partial class GitHubWebhookService(
         {
             try
             {
-                _processor = client.CreateProcessor(options.CurrentValue.QueueName);
+                var webhookOptions = options.CurrentValue;
+
+                var processorOptions = new ServiceBusProcessorOptions()
+                {
+                    MaxConcurrentCalls = Math.Max(1, webhookOptions.MaxConcurrentCalls),
+                };
+
+                _processor = client.CreateProcessor(webhookOptions.QueueName, processorOptions);
 
                 _processor.ProcessErrorAsync += ProcessErrorAsync;
                 _processor.ProcessMessageAsync += ProcessAsync;
