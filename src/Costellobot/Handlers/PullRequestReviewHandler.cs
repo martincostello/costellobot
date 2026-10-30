@@ -18,6 +18,8 @@ public sealed partial class PullRequestReviewHandler(
     ITrustStore trustStore,
     ILogger<PullRequestReviewHandler> logger) : IHandler
 {
+    internal const int MaxConcurrentRepositories = 8;
+
     private const int PageSize = 100;
 
     private static readonly HybridCacheEntryOptions CacheEntryOptions = new() { Expiration = TimeSpan.FromDays(1) };
@@ -166,19 +168,34 @@ public sealed partial class PullRequestReviewHandler(
     {
         var repositories = await GetInstallationRepositoriesAsync(cancellationToken);
 
+        var options = new ApiOptions() { PageSize = PageSize };
+        var requests = new List<(string Creator, RepositoryIssueRequest Request)>(PullRequestCreators.Length);
+
         foreach (var creator in PullRequestCreators)
         {
             Log.SearchingInstallationRepositories(logger, repositories.Count, creator);
 
-            var options = new ApiOptions() { PageSize = PageSize };
-            var request = new RepositoryIssueRequest()
-            {
-                Creator = creator,
-                Filter = IssueFilter.Created,
-                State = ItemStateFilter.Open,
-            };
+            requests.Add((
+                creator,
+                new RepositoryIssueRequest()
+                {
+                    Creator = creator,
+                    Filter = IssueFilter.Created,
+                    State = ItemStateFilter.Open,
+                }));
+        }
 
-            await Parallel.ForEachAsync(repositories, cancellationToken, async (repo, token) =>
+        var parallelOptions = new ParallelOptions()
+        {
+            CancellationToken = cancellationToken,
+            MaxDegreeOfParallelism = MaxConcurrentRepositories,
+        };
+
+        await Parallel.ForEachAsync(repositories, parallelOptions, async (repo, token) =>
+        {
+            var repositoryId = new RepositoryId(repo.Owner, repo.Name);
+
+            foreach ((var creator, var request) in requests)
             {
                 var issues = await context.InstallationClient.Issue.GetAllForRepository(repo.Id, request, options);
 
@@ -186,13 +203,11 @@ public sealed partial class PullRequestReviewHandler(
                     .Where((p) => p.PullRequest is { })
                     .ToArray();
 
-                var repositoryId = new RepositoryId(repo.Owner, repo.Name);
-
                 Log.FoundPullRequests(logger, issuesWithPulls.Length, creator, repositoryId);
 
                 if (issuesWithPulls.Length < 1)
                 {
-                    return;
+                    continue;
                 }
 
                 PullRequestMergeMethod? mergeMethod = default;
@@ -237,8 +252,8 @@ public sealed partial class PullRequestReviewHandler(
                         }
                     }
                 }
-            });
-        }
+            }
+        });
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
