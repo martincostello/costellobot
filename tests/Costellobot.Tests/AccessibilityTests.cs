@@ -18,6 +18,8 @@ namespace MartinCostello.Costellobot;
 [Collection<HttpServerCollection>]
 public sealed class AccessibilityTests(HttpServerFixture fixture, ITestOutputHelper outputHelper) : UITests(fixture, outputHelper)
 {
+    private const string TabSelector = ":scope > button[role='tab'], :scope > li > button[role='tab']";
+
     private static readonly string[] Tags =
     [
         "best-practice",
@@ -272,31 +274,16 @@ public sealed class AccessibilityTests(HttpServerFixture fixture, ITestOutputHel
             var configuration = await app.ConfigurationAsync();
             await configuration.WaitForContentAsync();
 
-            // Act and Assert - Hidden tab panes are not scanned, so check each one in turn
-            var tabs = page.Locator("#tab-content-configuration > .tab-pane");
-            int count = await tabs.CountAsync();
+            // Act and Assert - Hidden tab panes are not scanned, so activate and check each one in turn
+            var topLevel = page.Locator("ul[role='tablist']");
+            int topLevelCount = await topLevel.Locator(TabSelector).CountAsync();
 
-            count.ShouldBeGreaterThan(0);
+            topLevelCount.ShouldBeGreaterThan(0);
 
-            var buttons = page.Locator("ul[role='tablist'] button[role='tab']");
-            (await buttons.CountAsync()).ShouldBe(count);
+            int scanned = await AssertTabsHaveNoViolationsAsync(page, topLevel, "/configuration");
 
-            for (int i = 0; i < count; i++)
-            {
-                var button = buttons.Nth(i);
-                string name = (await button.InnerTextAsync()).Trim();
-
-                await button.ClickAsync();
-                await Assertions.Expect(button).ToHaveAttributeAsync("aria-selected", "true");
-                await Assertions.Expect(tabs.Nth(i)).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("show"));
-
-                // Allow the fade transition to complete
-                await page.WaitForFunctionAsync(
-                    "(index) => getComputedStyle(document.querySelectorAll('#tab-content-configuration > .tab-pane')[index]).opacity === '1'",
-                    i);
-
-                await AssertNoViolationsAsync(page, $"/configuration ({name})");
-            }
+            // Nested tabs (e.g. trusted entities and token broker repositories) must have been checked too
+            scanned.ShouldBeGreaterThan(topLevelCount);
         });
     }
 
@@ -371,6 +358,65 @@ public sealed class AccessibilityTests(HttpServerFixture fixture, ITestOutputHel
         }
 
         await base.DisposeAsync(disposing);
+    }
+
+    private static async Task<int> AssertTabsHaveNoViolationsAsync(IPage page, ILocator tabList, string description)
+    {
+        var buttons = tabList.Locator(TabSelector);
+        int count = await buttons.CountAsync();
+        int scanned = 0;
+
+        for (int i = 0; i < count; i++)
+        {
+            var button = buttons.Nth(i);
+
+            string name = string.Join(' ', (await button.InnerTextAsync()).Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+            string paneId = (await button.GetAttributeAsync("aria-controls"))!;
+
+            paneId.ShouldNotBeNullOrEmpty();
+
+            await button.ClickAsync();
+            await Assertions.Expect(button).ToHaveAttributeAsync("aria-selected", "true");
+
+            // Allow the fade and colour transitions to complete so the final state of the page is scanned
+            await page.WaitForFunctionAsync(
+                """
+                (id) => {
+                    const pane = document.getElementById(id);
+                    return pane.classList.contains('active') &&
+                           pane.classList.contains('show') &&
+                           getComputedStyle(pane).opacity === '1' &&
+                           document.getAnimations().length === 0;
+                }
+                """,
+                paneId);
+
+            string path = $"{description} > {name}";
+
+            await AssertNoViolationsAsync(page, path);
+            scanned++;
+
+            // Check any tabs nested directly within the pane that was just shown
+            var pane = page.Locator($"[id='{paneId}']");
+            var nested = pane.Locator("[role='tablist']");
+            int nestedCount = await nested.CountAsync();
+
+            for (int j = 0; j < nestedCount; j++)
+            {
+                var tabs = nested.Nth(j);
+
+                bool isDirectChild = await tabs.EvaluateAsync<bool>(
+                    "(element, id) => element.closest('[role=tabpanel]')?.id === id",
+                    paneId);
+
+                if (isDirectChild)
+                {
+                    scanned += await AssertTabsHaveNoViolationsAsync(page, tabs, path);
+                }
+            }
+        }
+
+        return scanned;
     }
 
     private static async Task AssertNoViolationsAsync(IPage page, string description)

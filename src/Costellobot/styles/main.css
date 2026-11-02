@@ -17,11 +17,12 @@ a {
     text-decoration: none;
 }
 
-a:hover {
+footer a,
+.form-text a {
     text-decoration: underline;
 }
 
-.form-text a {
+a:hover {
     text-decoration: underline;
 }
 
