@@ -32,8 +32,12 @@
 # Build without tests (faster for development)
 ./build.ps1 -SkipTests
 
-# Run with filter for specific tests
-./build.ps1 -TestFilter "ClassName*"
+# Run specific tests by matching part of their fully-qualified name (class and/or method)
+./build.ps1 -TestFilter "ClassName"
+./build.ps1 -TestFilter "ClassName.MethodName"
+
+# Run specific tests using an xUnit query filter (starts with "/")
+./build.ps1 -TestFilter "/*/*/ClassName/*"
 ```
 
 **ALWAYS use PowerShell Core (pwsh)** to run PowerShell (`.ps1`) scripts - it works on macOS, Linux and Windows.

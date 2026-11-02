@@ -4,6 +4,7 @@
 */
 
 :root {
+    --bs-code-color: #ab296a;
     --link-color-dark: #b0b0b0;
 }
 
@@ -17,6 +18,10 @@ a {
 }
 
 a:hover {
+    text-decoration: underline;
+}
+
+.form-text a {
     text-decoration: underline;
 }
 

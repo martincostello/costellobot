@@ -69,7 +69,7 @@
                                         <input type="hidden" name="id" value="@(dependency.Id)">
                                         <input type="hidden" name="version" value="@(dependency.Version)">
                                         <div class="d-grid">
-                                            <button class="btn btn-danger btn-sm distrust-dependency" title="Distrust @(dependency.Id) @(dependency.Version)" type="submit">
+                                            <button class="btn btn-danger btn-sm distrust-dependency" title="Distrust @(dependency.Id) @(dependency.Version)" aria-label="Distrust @(dependency.Id) @(dependency.Version)" type="submit">
                                                 <span class="fa-solid fa-ban" aria-hidden="true"></span>
                                             </button>
                                         </div>
@@ -79,7 +79,7 @@
                         }
                     }
                     <tr>
-                        <td colspan="4">
+                        <td colspan="4"></td>
                         <td class="text-end">
                             <form action="dependencies/distrust-all" method="post">
                                 <input type="hidden" name="@(tokens.FormFieldName)" value="@(tokens.RequestToken)">
@@ -155,7 +155,7 @@
                                         <input type="hidden" name="id" value="@(dependency.Id)">
                                         <input type="hidden" name="version" value="@(dependency.Version)">
                                         <div class="d-grid">
-                                            <button class="btn btn-danger btn-sm allow-dependency" title="Allow @(dependency.Id) @(dependency.Version)" type="submit">
+                                            <button class="btn btn-danger btn-sm allow-dependency" title="Allow @(dependency.Id) @(dependency.Version)" aria-label="Allow @(dependency.Id) @(dependency.Version)" type="submit">
                                                 <span class="fa-solid fa-trash-can" aria-hidden="true"></span>
                                             </button>
                                         </div>

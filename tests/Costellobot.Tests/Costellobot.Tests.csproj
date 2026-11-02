@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Deque.AxeCore.Playwright" />
     <PackageReference Include="FsCheck.Xunit.v3" />
     <PackageReference Include="GitHubActionsTestLogger" />
     <PackageReference Include="JustEat.HttpClientInterception" />
