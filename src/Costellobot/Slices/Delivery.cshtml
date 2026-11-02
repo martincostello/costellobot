@@ -127,9 +127,9 @@
   </ul>
   <div class="tab-content" id="tab-content">
     <div class="tab-pane fade show active" id="request" role="tabpanel" aria-labelledby="request-tab">
-      <h3>Headers</h3>
-      <pre id="request-headers" class="hook-delivery-container">@foreach ((var key, var value) in Model.RequestHeaders){<strong>@(key):</strong> @(value)<br/>}</pre>
-      <h3>Payload</h3>
+      <h2 class="h3">Headers</h2>
+      <pre id="request-headers" class="hook-delivery-container" tabindex="0">@foreach ((var key, var value) in Model.RequestHeaders){<strong>@(key):</strong> @(value)<br/>}</pre>
+      <h2 class="h3">Payload</h2>
       <div class="btn-toolbar mb-3" role="toolbar">
         <div class="btn-group me-2" role="group">
           <button id="copy-payload" class="btn btn-primary copy-button" data-clipboard-target="#request-payload" title="Copy the webhook payload to the clipboard">
@@ -151,18 +151,18 @@
           </form>
         </div>
       </div>
-      <pre id="request-payload" class="hook-delivery-container">@(Model.RequestPayload)</pre>
+      <pre id="request-payload" class="hook-delivery-container" tabindex="0">@(Model.RequestPayload)</pre>
     </div>
     <div class="tab-pane fade" id="response" role="tabpanel" aria-labelledby="response-tab">
       @if (Model.ResponseHeaders.Count > 0)
       {
-        <h3>Headers</h3>
-        <pre class="hook-delivery-container">@foreach ((var key, var value) in Model.ResponseHeaders){<strong>@(key):</strong> @(value)<br/>}</pre>
+        <h2 class="h3">Headers</h2>
+        <pre class="hook-delivery-container" tabindex="0">@foreach ((var key, var value) in Model.ResponseHeaders){<strong>@(key):</strong> @(value)<br/>}</pre>
       }
       @if (!string.IsNullOrWhiteSpace(Model.ResponseBody))
       {
-        <h3>Body</h3>
-        <pre class="hook-delivery-container">@(Model.ResponseBody)</pre>
+        <h2 class="h3">Body</h2>
+        <pre class="hook-delivery-container" tabindex="0">@(Model.ResponseBody)</pre>
       }
     </div>
   </div>

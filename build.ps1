@@ -81,8 +81,14 @@ function DotNetTest {
     $coverageOutputPath = Join-Path $solutionPath "artifacts" "coverage" $projectName
 
     if (-Not [string]::IsNullOrEmpty($TestFilter)) {
-        $additionalArgs += "--filter"
-        $additionalArgs += $TestFilter
+        if ($TestFilter.StartsWith("/")) {
+            $additionalArgs += "--filter-query"
+            $additionalArgs += $TestFilter
+        }
+        else {
+            $additionalArgs += "--filter-display-name"
+            $additionalArgs += "*" + $TestFilter.Trim("*") + "*"
+        }
     }
 
     & $dotnet test --project $Project --configuration "Release" $additionalArgs

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Martin Costello, 2022. All rights reserved.
 // Licensed under the Apache 2.0 license. See the LICENSE file in the project root for full license information.
 
+using JustEat.HttpClientInterception;
+using MartinCostello.Costellobot.Builders;
 using MartinCostello.Costellobot.Infrastructure;
 using MartinCostello.Costellobot.Pages;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -64,6 +66,52 @@ public abstract class UITests(HttpServerFixture fixture, ITestOutputHelper outpu
         }
 
         return app;
+    }
+
+    protected void RegisterWebhookDeliveriesForApp(params WebhookDeliveryBuilder[] deliveries)
+        => RegisterWebhookDeliveriesForApp(deliveries, null, null);
+
+    protected void RegisterWebhookDeliveriesForApp(
+        IList<WebhookDeliveryBuilder> deliveries,
+        string? cursor = null,
+        string? nextCursor = null)
+    {
+        var builder = CreateDefaultBuilder()
+            .Requests()
+            .ForPath("/app/hook/deliveries")
+            .ForQuery($"per_page=100{(cursor is null ? string.Empty : $"&cursor={cursor}")}")
+            .ForRequestHeader("Accept", "application/vnd.github+json")
+            .Responds()
+            .WithJsonContent(deliveries.Build());
+
+        if (nextCursor is not null)
+        {
+            builder.WithResponseHeader("Link", $"<https://api.github.com/app/hook/deliveries?per_page=100&cursor={nextCursor}>; rel=\"next\"");
+        }
+
+        builder.RegisterWith(Fixture.Interceptor);
+    }
+
+    protected void RegisterWebhookDeliveryForApp(WebhookPayloadBuilder payload)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPath($"/app/hook/deliveries/{payload.Id}")
+            .ForRequestHeader("Accept", "application/vnd.github.v3.raw")
+            .Responds()
+            .WithJsonContent(payload)
+            .RegisterWith(Fixture.Interceptor);
+    }
+
+    protected void RegisterRedeliverWebhookForApp(WebhookDeliveryBuilder payload)
+    {
+        CreateDefaultBuilder()
+            .Requests()
+            .ForPost()
+            .ForPath($"/app/hook/deliveries/{payload.Id}/attempts")
+            .Responds()
+            .WithJsonContent(payload)
+            .RegisterWith(Fixture.Interceptor);
     }
 
     private static void InstallPlaywright()

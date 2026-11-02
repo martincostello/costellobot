@@ -11,37 +11,37 @@
     </h1>
     <ul class="nav nav-fill nav-pills mb-3" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="settings-tab-github" href="#tab-github" role="tab" type="button" aria-controls="tab-github" aria-current="page" aria-selected="true" data-bs-target="#tab-github" data-bs-toggle="pill">
+            <button class="nav-link active" id="settings-tab-github" role="tab" type="button" aria-controls="tab-github" aria-selected="true" data-bs-target="#tab-github" data-bs-toggle="pill">
                 GitHub
                 <span class="fa-brands fa-github" aria-hidden="true"></span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="settings-tab-github-apps" href="#tab-github-apps" role="tab" type="button" aria-controls="tab-github-apps" aria-current="page" data-bs-target="#tab-github-apps" data-bs-toggle="pill">
+            <button class="nav-link" id="settings-tab-github-apps" role="tab" type="button" aria-controls="tab-github-apps" aria-selected="false" data-bs-target="#tab-github-apps" data-bs-toggle="pill">
                 GitHub Apps
                 <span class="fa-brands fa-github" aria-hidden="true"></span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="settings-tab-webhook" href="#tab-webhook" role="tab" type="button" aria-controls="tab-webhook" aria-current="page" data-bs-target="#tab-webhook" data-bs-toggle="pill">
+            <button class="nav-link" id="settings-tab-webhook" role="tab" type="button" aria-controls="tab-webhook" aria-selected="false" data-bs-target="#tab-webhook" data-bs-toggle="pill">
                 Webhook
                 <span class="fa-solid fa-bolt" aria-hidden="true"></span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="settings-tab-trusted-entities" href="#tab-trusted-entities" role="tab" type="button" aria-controls="tab-trusted-entities" aria-current="page" data-bs-target="#tab-trusted-entities" data-bs-toggle="pill">
+            <button class="nav-link" id="settings-tab-trusted-entities" role="tab" type="button" aria-controls="tab-trusted-entities" aria-selected="false" data-bs-target="#tab-trusted-entities" data-bs-toggle="pill">
                 Trusted Entities
                 <span class="fa-solid fa-certificate" aria-hidden="true"></span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="settings-tab-github-token-broker" href="#tab-github-token-broker" role="tab" type="button" aria-controls="tab-github-token-broker" aria-current="page" data-bs-target="#tab-github-token-broker" data-bs-toggle="pill">
+            <button class="nav-link" id="settings-tab-github-token-broker" role="tab" type="button" aria-controls="tab-github-token-broker" aria-selected="false" data-bs-target="#tab-github-token-broker" data-bs-toggle="pill">
                 GitHub Token Broker
                 <span class="fa-solid fa-key" aria-hidden="true"></span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="settings-tab-rate-limits" href="#tab-rate-limits" role="tab" type="button" aria-controls="tab-rate-limits" aria-current="page" data-bs-target="#tab-rate-limits" data-bs-toggle="pill">
+            <button class="nav-link" id="settings-tab-rate-limits" role="tab" type="button" aria-controls="tab-rate-limits" aria-selected="false" data-bs-target="#tab-rate-limits" data-bs-toggle="pill">
                 Rate Limits
                 <span class="fa-solid fa-gauge-high" aria-hidden="true"></span>
             </button>
@@ -145,7 +145,7 @@
                         <div class="flex-column me-3 nav nav-fill nav-pills" role="tablist" aria-orientation="vertical">
                             @foreach ((var index, var app) in Model.GitHub.Apps.Values.Index())
                             {
-                                <button class="nav-link text-start @(index is 0 ? "active" : null)" id="settings-tab-github-apps-@(app.AppId)" role="tab" type="button" aria-controls="tab-github-apps-@(app.AppId)" aria-selected="@(index is 0)" data-bs-target="#tab-github-apps-@(app.AppId)" data-bs-toggle="pill">
+                                <button class="nav-link text-start @(index is 0 ? "active" : null)" id="settings-tab-github-apps-@(app.AppId)" role="tab" type="button" aria-controls="tab-github-apps-@(app.AppId)" aria-selected="@(index is 0 ? "true" : "false")" data-bs-target="#tab-github-apps-@(app.AppId)" data-bs-toggle="pill">
                                     @(app.Name)
                                 </button>
                             }
@@ -225,7 +225,7 @@
                                 <td>Disabled?</td>
                                 <td>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" id="approve" type="checkbox" checked="@(Model.Webhook.Disable ? "checked" : null)" disabled>
+                                        <input class="form-check-input" id="disable" aria-label="Webhook processing disabled" type="checkbox" checked="@(Model.Webhook.Disable ? "checked" : null)" disabled>
                                     </div>
                                 </td>
                             </tr>
@@ -233,7 +233,7 @@
                                 <td>Approve pull requests?</td>
                                 <td>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" id="approve" type="checkbox" checked="@(Model.Webhook.Approve ? "checked" : null)" disabled>
+                                        <input class="form-check-input" id="approve" aria-label="Approve pull requests" type="checkbox" checked="@(Model.Webhook.Approve ? "checked" : null)" disabled>
                                     </div>
                                 </td>
                             </tr>
@@ -241,7 +241,7 @@
                                 <td>Auto-merge pull requests?</td>
                                 <td>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" id="automerge" type="checkbox" checked="@(Model.Webhook.Automerge ? "checked" : null)" disabled>
+                                        <input class="form-check-input" id="automerge" aria-label="Auto-merge pull requests" type="checkbox" checked="@(Model.Webhook.Automerge ? "checked" : null)" disabled>
                                     </div>
                                 </td>
                             </tr>
@@ -249,7 +249,7 @@
                                 <td>Approve deployments?</td>
                                 <td>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" id="deploy" type="checkbox" checked="@(Model.Webhook.Deploy ? "checked" : null)" disabled>
+                                        <input class="form-check-input" id="deploy" aria-label="Approve deployments" type="checkbox" checked="@(Model.Webhook.Deploy ? "checked" : null)" disabled>
                                     </div>
                                 </td>
                             </tr>
@@ -257,7 +257,7 @@
                                 <td>Implicitly trust owner approvals?</td>
                                 <td>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" id="implicit-trust" type="checkbox" checked="@(Model.Webhook.ImplicitTrust ? "checked" : null)" disabled>
+                                        <input class="form-check-input" id="implicit-trust" aria-label="Implicitly trust owner approvals" type="checkbox" checked="@(Model.Webhook.ImplicitTrust ? "checked" : null)" disabled>
                                     </div>
                                 </td>
                             </tr>
@@ -284,13 +284,13 @@
                             <button class="nav-link text-start active" id="settings-tab-trusted-entities-dependencies" role="tab" type="button" aria-controls="tab-trusted-entities-dependencies" aria-selected="true" data-bs-target="#tab-trusted-entities-dependencies" data-bs-toggle="pill">
                                 Dependencies
                             </button>
-                            <button class="nav-link text-start" id="settings-tab-trusted-entities-publishers" role="tab" type="button" aria-controls="tab-trusted-entities-publishers" aria-selected="true" data-bs-target="#tab-trusted-entities-publishers" data-bs-toggle="pill">
+                            <button class="nav-link text-start" id="settings-tab-trusted-entities-publishers" role="tab" type="button" aria-controls="tab-trusted-entities-publishers" aria-selected="false" data-bs-target="#tab-trusted-entities-publishers" data-bs-toggle="pill">
                                 Publishers
                             </button>
-                            <button class="nav-link text-start" id="settings-tab-trusted-entities-reviewers" role="tab" type="button" aria-controls="tab-trusted-entities-reviewers" aria-selected="true" data-bs-target="#tab-trusted-entities-reviewers" data-bs-toggle="pill">
+                            <button class="nav-link text-start" id="settings-tab-trusted-entities-reviewers" role="tab" type="button" aria-controls="tab-trusted-entities-reviewers" aria-selected="false" data-bs-target="#tab-trusted-entities-reviewers" data-bs-toggle="pill">
                                 Reviewers
                             </button>
-                            <button class="nav-link text-start" id="settings-tab-trusted-entities-users" role="tab" type="button" aria-controls="tab-trusted-entities-users" aria-selected="true" data-bs-target="#tab-trusted-entities-users" data-bs-toggle="pill">
+                            <button class="nav-link text-start" id="settings-tab-trusted-entities-users" role="tab" type="button" aria-controls="tab-trusted-entities-users" aria-selected="false" data-bs-target="#tab-trusted-entities-users" data-bs-toggle="pill">
                                 Users
                             </button>
                         </div>
@@ -413,7 +413,7 @@
                                 <td>Enabled?</td>
                                 <td>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" id="token-broker-enabled" type="checkbox" checked="@(Model.GitHub.TokenBroker.IsEnabled ? "checked" : null)" disabled>
+                                        <input class="form-check-input" id="token-broker-enabled" aria-label="GitHub token broker enabled" type="checkbox" checked="@(Model.GitHub.TokenBroker.IsEnabled ? "checked" : null)" disabled>
                                     </div>
                                 </td>
                             </tr>
@@ -460,7 +460,7 @@
                                 {
                                     var first = index is 0;
                                     var repositoryId = ToElementId(repository.Key);
-                                    <button class="nav-link text-start token-broker-repository-tab @(first ? "active" : null)" id="settings-tab-github-token-broker-@(repositoryId)" role="tab" type="button" aria-controls="tab-github-token-broker-@(repositoryId)" aria-selected="@(first)" data-bs-target="#tab-github-token-broker-@(repositoryId)" data-bs-toggle="pill" data-repository="@(repository.Key)">
+                                    <button class="nav-link text-start token-broker-repository-tab @(first ? "active" : null)" id="settings-tab-github-token-broker-@(repositoryId)" role="tab" type="button" aria-controls="tab-github-token-broker-@(repositoryId)" aria-selected="@(first ? "true" : "false")" data-bs-target="#tab-github-token-broker-@(repositoryId)" data-bs-toggle="pill" data-repository="@(repository.Key)">
                                         @(repository.Key)
                                     </button>
                                 }
@@ -640,12 +640,12 @@
                             @foreach ((var index, var rateLimits) in Model.InstallationRateLimits.Index())
                             {
                                 var first = index is 0;
-                                <button class="nav-link text-start @(first ? "active" : null)" id="settings-tab-rate-limits-installation-@(rateLimits.Key)" role="tab" type="button" aria-controls="tab-rate-limits-installation-@(rateLimits.Key)" aria-selected="@(first)" data-bs-target="#tab-rate-limits-installation-@(rateLimits.Key)" data-bs-toggle="pill">
+                                <button class="nav-link text-start @(first ? "active" : null)" id="settings-tab-rate-limits-installation-@(rateLimits.Key)" role="tab" type="button" aria-controls="tab-rate-limits-installation-@(rateLimits.Key)" aria-selected="@(first ? "true" : "false")" data-bs-target="#tab-rate-limits-installation-@(rateLimits.Key)" data-bs-toggle="pill">
                                     <span class="fa-solid fa-robot" aria-hidden="true"></span>
                                     @(rateLimits.Key) Installation
                                 </button>
                             }
-                            <button class="nav-link text-start" id="settings-tab-rate-limits-user" role="tab" type="button" aria-controls="tab-rate-limits-user" aria-selected="true" data-bs-target="#tab-rate-limits-user" data-bs-toggle="pill">
+                            <button class="nav-link text-start" id="settings-tab-rate-limits-user" role="tab" type="button" aria-controls="tab-rate-limits-user" aria-selected="false" data-bs-target="#tab-rate-limits-user" data-bs-toggle="pill">
                                 <span class="fa-solid fa-user" aria-hidden="true"></span>
                                 User
                             </button>

@@ -4,6 +4,7 @@
 */
 
 :root {
+    --bs-code-color: #ab296a;
     --link-color-dark: #b0b0b0;
 }
 
@@ -14,6 +15,11 @@ html {
 a {
     color: #0060c7;
     text-decoration: none;
+}
+
+footer a,
+.form-text a {
+    text-decoration: underline;
 }
 
 a:hover {

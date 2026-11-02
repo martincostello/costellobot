@@ -196,6 +196,7 @@ export class App {
         contentItem.setAttribute('aria-labelledby', indexId);
 
         const pre = document.createElement('pre');
+        pre.setAttribute('tabindex', '0');
 
         const code = document.createElement('code');
         code.classList.add('webhook-content');
