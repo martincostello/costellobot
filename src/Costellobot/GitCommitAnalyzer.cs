@@ -832,10 +832,13 @@ public sealed partial class GitCommitAnalyzer(
                 var ecosystemName = ecosystem.ToString();
                 var normalized = ecosystemName.Replace("-", string.Empty, comparison);
 
-                dependencies = [.. config.Updates
-                    .Where((p) => string.Equals(p.PackageEcosystem, normalized, StringComparison.OrdinalIgnoreCase))
-                    .SelectMany((p) => p.Ignore)
-                    .Select((p) => (p.DependencyName, p.UpdateTypes?.FirstOrDefault())),];
+                dependencies =
+                [
+                    .. config.Updates
+                        .Where((p) => string.Equals(p.PackageEcosystem, normalized, StringComparison.OrdinalIgnoreCase))
+                        .SelectMany((p) => p.Ignore)
+                        .Select((p) => (p.DependencyName, p.UpdateTypes?.FirstOrDefault())),
+                ];
             }
         }
         catch (NotFoundException)
