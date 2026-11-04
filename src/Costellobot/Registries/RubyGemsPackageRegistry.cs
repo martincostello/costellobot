@@ -48,11 +48,14 @@ public sealed partial class RubyGemsPackageRegistry(
 
         if (owners?.Length > 0)
         {
-            return [.. owners
-                .Where((p) => !string.IsNullOrWhiteSpace(p.Handle))
-                .OrderBy((p) => p.Id)
-                .Select((p) => p.Handle)
-                .Distinct(StringComparer.OrdinalIgnoreCase),];
+            return
+            [
+                .. owners
+                    .Where((p) => !string.IsNullOrWhiteSpace(p.Handle))
+                    .OrderBy((p) => p.Id)
+                    .Select((p) => p.Handle)
+                    .Distinct(StringComparer.OrdinalIgnoreCase),
+            ];
         }
 
         return [];
