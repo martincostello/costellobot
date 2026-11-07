@@ -46,32 +46,10 @@ public sealed partial class GitHubMessageSerializer
         return (payload.Headers, payload.Body);
 
         static Stream DecompressBrotli(Stream input)
-        {
-            var output = new MemoryStream((int)input.Length);
-
-            using (var decompressor = new BrotliStream(input, CompressionMode.Decompress, leaveOpen: true))
-            {
-                decompressor.CopyTo(output);
-            }
-
-            output.Seek(0, SeekOrigin.Begin);
-
-            return output;
-        }
+            => new BrotliStream(input, CompressionMode.Decompress, leaveOpen: true);
 
         static Stream DecompressZstandard(Stream input)
-        {
-            var output = new MemoryStream((int)input.Length);
-
-            using (var decompressor = new ZstandardStream(input, CompressionMode.Decompress, leaveOpen: true))
-            {
-                decompressor.CopyTo(output);
-            }
-
-            output.Seek(0, SeekOrigin.Begin);
-
-            return output;
-        }
+            => new ZstandardStream(input, CompressionMode.Decompress, leaveOpen: true);
     }
 
     public static ServiceBusMessage? Serialize(string? deliveryId, IDictionary<string, string> headers, string body, string compression)
