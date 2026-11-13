@@ -3,7 +3,6 @@
 
 using System.Diagnostics;
 using OpenTelemetry;
-using OpenTelemetry.Instrumentation.AspNetCore;
 using OpenTelemetry.Instrumentation.Http;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -27,7 +26,6 @@ public static class TelemetryExtensions
             .WithMetrics((metrics) =>
             {
                 metrics.SetResourceBuilder(ApplicationTelemetry.ResourceBuilder)
-                       .AddAspNetCoreInstrumentation()
                        .AddHttpClientInstrumentation()
                        .AddProcessInstrumentation()
                        .SetExemplarFilter(ExemplarFilterType.TraceBased);

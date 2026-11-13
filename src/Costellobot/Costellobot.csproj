@@ -41,7 +41,6 @@
     <PackageReference Include="Octokit.Webhooks.AspNetCore" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Process" />
     <PackageReference Include="OpenTelemetry.Resources.Azure" />
@@ -79,9 +78,5 @@
   <!-- See https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/Diagnostics.md -->
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="Azure.Experimental.EnableActivitySource" Value="true" />
-  </ItemGroup>
-  <!-- See https://learn.microsoft.com/aspnet/core/release-notes/aspnetcore-11#native-opentelemetry-tracing-for-aspnet-core -->
-  <ItemGroup>
-    <RuntimeHostConfigurationOption Include="Microsoft.AspNetCore.Hosting.SuppressActivityOpenTelemetryData" Value="false" />
   </ItemGroup>
 </Project>
