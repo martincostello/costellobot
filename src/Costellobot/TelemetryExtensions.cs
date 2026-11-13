@@ -54,19 +54,6 @@ public static class TelemetryExtensions
                 options.RecordException = true;
             });
 
-        builder.Services
-            .AddOptions<AspNetCoreTraceInstrumentationOptions>()
-            .Configure((options) =>
-            {
-                options.EnrichWithHttpResponse = static (activity, response) =>
-                {
-                    if (response.StatusCode is StatusCodes.Status404NotFound)
-                    {
-                        activity.SetStatus(ActivityStatusCode.Ok);
-                    }
-                };
-            });
-
         builder.Logging.AddTelemetry();
     }
 
