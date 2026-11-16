@@ -91,7 +91,7 @@ function DotNetTest {
         }
     }
 
-    & $dotnet test --project $Project --configuration "Release" $additionalArgs
+    & $dotnet test --project $Project --configuration "Release" -mt $additionalArgs
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet test failed with exit code $LASTEXITCODE"
@@ -171,7 +171,7 @@ function DotNetTest {
 function DotNetPublish {
     param([string]$Project)
 
-    & $dotnet publish $Project
+    & $dotnet publish $Project -mt
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet publish failed with exit code $LASTEXITCODE"
