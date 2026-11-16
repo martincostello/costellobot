@@ -92,7 +92,7 @@ jobs:
           chmod +x (Join-Path $targetPath "Pyroscope.Linux.ApiWrapper.x64.so")
           chmod +x (Join-Path $targetPath "Pyroscope.Profiler.Native.so")
 
-          dotnet publish ./src/Costellobot --arch x64 --os linux -p:PublishProfile=DefaultContainer -p:SetGitHubContainerPublishingOutputs=true
+          dotnet publish ./src/Costellobot --arch x64 --os linux -mt -p:PublishProfile=DefaultContainer -p:SetGitHubContainerPublishingOutputs=true
 
       - name: Tag container
         env:
