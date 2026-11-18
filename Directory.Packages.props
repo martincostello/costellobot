@@ -11,6 +11,7 @@
     <PackageVersion Include="Aspire.Azure.Storage.Blobs" Version="17.0.0" />
     <PackageVersion Include="Aspire.Hosting" Version="17.0.0" />
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="17.0.0" />
+    <PackageVersion Include="Aspire.Hosting.Dotnet" Version="17.0.0" />
     <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="17.0.0" />
     <PackageVersion Include="Aspire.Hosting.Azure.ServiceBus" Version="17.0.0" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="17.0.0" />

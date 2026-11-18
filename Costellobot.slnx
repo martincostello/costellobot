@@ -6,6 +6,7 @@
     <File Path=".editorconfig" />
     <File Path=".gitattributes" />
     <File Path=".gitignore" />
+    <File Path=".mcp.json" />
     <File Path=".npmrc" />
     <File Path=".vsconfig" />
     <File Path="build.ps1" />
