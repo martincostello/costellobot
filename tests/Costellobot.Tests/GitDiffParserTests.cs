@@ -352,6 +352,62 @@ public static class GitDiffParserTests
     }
 
     [Fact]
+    public static void TryParseUpdatedPackages_Ignores_Python_Packages_Updated_To_Multiple_Versions()
+    {
+        // Arrange
+        string diff = """
+            diff --git a/requirements.txt b/requirements.txt
+            --- a/requirements.txt
+            +++ b/requirements.txt
+            @@ -1,3 +1,3 @@
+            -foo==1.0.0 ; python_version < "3.9"
+            -foo==2.0.0 ; python_version >= "3.9"
+            -bar==1.0.0
+            +foo==1.0.1 ; python_version < "3.9"
+            +foo==2.0.1 ; python_version >= "3.9"
+            +bar==1.0.1
+            """;
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, DependencyEcosystem.PyPI, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("bar", ("1.0.0", "1.0.1"));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Python_Package_Updated_To_The_Same_Version_In_Multiple_Files()
+    {
+        // Arrange
+        string diff = """
+            diff --git a/requirements.txt b/requirements.txt
+            --- a/requirements.txt
+            +++ b/requirements.txt
+            @@ -1,1 +1,1 @@
+            -foo==1.0.0
+            +foo==1.0.1
+            diff --git a/requirements-dev.txt b/requirements-dev.txt
+            --- a/requirements-dev.txt
+            +++ b/requirements-dev.txt
+            @@ -1,1 +1,1 @@
+            -foo==0.9.0
+            +foo==1.0.1
+            """;
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, DependencyEcosystem.PyPI, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("foo", ("0.9.0", "1.0.1"));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public static void TryParseUpdatedPackages_Returns_Empty_For_Ecosystem_Without_Updates()
     {
         // Arrange

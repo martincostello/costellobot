@@ -124,7 +124,7 @@ public static partial class GitDiffParser
     {
         if (ecosystem is { } value)
         {
-            return GetPackages(edits.Where((p) => p.Ecosystem == value));
+            return GetPackages(edits.Where((p) => p.Ecosystem == value), value);
         }
 
         // Aggregate each ecosystem separately so that the versions of packages
@@ -134,7 +134,7 @@ public static partial class GitDiffParser
 
         foreach (var group in edits.GroupBy((p) => p.Ecosystem))
         {
-            foreach ((var package, var update) in GetPackages(group))
+            foreach ((var package, var update) in GetPackages(group, group.Key))
             {
                 packages.TryAdd(package, update);
             }
@@ -144,7 +144,8 @@ public static partial class GitDiffParser
     }
 
     private static Dictionary<string, (string From, string To)> GetPackages(
-        IEnumerable<(string Path, DependencyEcosystem Ecosystem, DiffLineType Type, string Package, NuGetVersion Version)> edits)
+        IEnumerable<(string Path, DependencyEcosystem Ecosystem, DiffLineType Type, string Package, NuGetVersion Version)> edits,
+        DependencyEcosystem ecosystem)
     {
         var comparer = StringComparer.OrdinalIgnoreCase;
         var added = new Dictionary<string, IList<NuGetVersion>>(comparer);
@@ -179,6 +180,15 @@ public static partial class GitDiffParser
             if (previous.Count < 1 ||
                 !added.TryGetValue(package, out var updated) ||
                 updated.Count < 1)
+            {
+                continue;
+            }
+
+            // A Python package can be pinned to different versions for different environments
+            // (e.g. using environment markers). The result can only hold one version, so skip
+            // packages that were updated to more than one version instead of only reporting
+            // (and thereby only allowing the caller to check) the highest of them.
+            if (ecosystem is DependencyEcosystem.PyPI && updated.Distinct().Count() > 1)
             {
                 continue;
             }
@@ -245,9 +255,10 @@ public static partial class GitDiffParser
 
                 if (prefix is Added or Removed)
                 {
-                    if (TryParseLine(fileName, isPythonRequirements, line, out var type, out var ecosystem, out var package))
+                    if (TryParseLine(fileName, isPythonRequirements, line, out var type, out var ecosystem, out var package) &&
+                        package is { } parsed)
                     {
-                        edits.Add((path, ecosystem, type, package.Value.Package, package.Value.Version));
+                        edits.Add((path, ecosystem, type, parsed.Package, parsed.Version));
                     }
                 }
                 else if (prefix is not (' ' or NoNewLineMarker))
