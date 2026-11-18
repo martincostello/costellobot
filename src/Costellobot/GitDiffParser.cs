@@ -75,7 +75,7 @@ public static partial class GitDiffParser
     /// The normalized name, such as <c>flask-cors</c> for <c>Flask_Cors</c>.
     /// </returns>
     /// <remarks>
-    /// See https://packaging.python.org/latest/specifications/name-normalization/.
+    /// See https://packaging.python.org/en/latest/specifications/name-normalization/.
     /// </remarks>
     internal static string NormalizePythonPackageName(string name)
     {
