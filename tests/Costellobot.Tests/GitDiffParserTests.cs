@@ -194,6 +194,280 @@ public static class GitDiffParserTests
         packages.Count.ShouldBe(1);
     }
 
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_Python_Requirements_Dev()
+    {
+        // Arrange
+        string diff = GetDiff("Python.OneFile");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("ruff", ("0.17.3", "0.17.5"));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_Python_Requirements()
+    {
+        // Arrange
+        string diff = GetDiff("Python.Requirements");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("fastapi", ("0.162.0", "0.163.1"));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_Python_Requirements_With_Extras_Markers_And_Hashes()
+    {
+        // Arrange
+        string diff = GetDiff("Python.Multiple");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("fastapi", ("0.162.0", "0.163.1"));
+        packages.ShouldContainKeyAndValue("uvicorn", ("0.54.0", "0.54.1"));
+        packages.ShouldContainKeyAndValue("pytest", ("9.2.0", "9.2.1"));
+        packages.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_Python_Requirements_With_No_Newline_At_End_Of_File()
+    {
+        // Arrange
+        string diff = GetDiff("Python.NoNewLine");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("ruff", ("0.17.3", "0.17.5"));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData("package.json", "    \"webpack-cli\": \"^6.0.0\"", "    \"webpack-cli\": \"^6.0.1\"", "webpack-cli", "6.0.0", "6.0.1")]
+    [InlineData("go.mod", "require github.com/google/go-cmp v0.6.0", "require github.com/google/go-cmp v0.7.0", "github.com/google/go-cmp", "0.6.0", "0.7.0")]
+    [InlineData("Directory.Packages.props", "<PackageVersion Include=\"Foo\" Version=\"1.0.0\" />", "<PackageVersion Include=\"Foo\" Version=\"1.0.1\" />", "Foo", "1.0.0", "1.0.1")]
+    [InlineData("Dockerfile", "FROM mcr.microsoft.com/dotnet/sdk:9.0.301", "FROM mcr.microsoft.com/dotnet/sdk:9.0.302", "mcr.microsoft.com/dotnet/sdk", "9.0.301", "9.0.302")]
+    public static void TryParseUpdatedPackages_Parses_Updates_Followed_By_No_Newline_At_End_Of_File_Marker(
+        string path,
+        string removed,
+        string added,
+        string name,
+        string from,
+        string to)
+    {
+        // Arrange
+        string diff = string.Join(
+            '\n',
+            $"diff --git a/{path} b/{path}",
+            "index 7ee474b..628532e 100644",
+            $"--- a/{path}",
+            $"+++ b/{path}",
+            "@@ -1,1 +1,1 @@",
+            $"-{removed}",
+            "\\ No newline at end of file",
+            $"+{added}",
+            "\\ No newline at end of file");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue(name, (from, to));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Does_Not_Attribute_Lines_From_Deleted_Files_To_Previous_File()
+    {
+        // Arrange
+        string diff = """
+            diff --git a/requirements.txt b/requirements.txt
+            index 7ee474b..628532e 100644
+            --- a/requirements.txt
+            +++ b/requirements.txt
+            @@ -1,1 +1,2 @@
+             httpx==0.28.1
+            +foo==2.0.0
+            diff --git a/docs/legacy.txt b/docs/legacy.txt
+            deleted file mode 100644
+            index 7ee474b..0000000
+            --- a/docs/legacy.txt
+            +++ /dev/null
+            @@ -1,1 +0,0 @@
+            -foo==1.0.0
+            """;
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeFalse();
+        packages.ShouldBeNull();
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Parses_Diff_Correctly_Python_Requirements_No_Package_Updates()
+    {
+        // Arrange
+        string diff = GetDiff("Python.None");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeFalse();
+        packages.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("requirements.txt", true)]
+    [InlineData("requirements-dev.txt", true)]
+    [InlineData("requirements_test.txt", true)]
+    [InlineData("dev-requirements.txt", true)]
+    [InlineData("Requirements.TXT", true)]
+    [InlineData("requirements.in", true)]
+    [InlineData("services/app/requirements.txt", true)]
+    [InlineData("requirements/base.txt", true)]
+    [InlineData("services/app/requirements/prod.in", true)]
+    [InlineData("Requirements/dev.txt", true)]
+    [InlineData("constraints.txt", true)]
+    [InlineData("requirements-constraints.txt", true)]
+    [InlineData("requirements/constraints.txt", true)]
+    [InlineData("constraints/base.txt", true)]
+    [InlineData("requirements/base.md", false)]
+    [InlineData("docs/base.txt", false)]
+    [InlineData("requirements.txt/base.txt", false)]
+    [InlineData("requirements.md", false)]
+    [InlineData("requirements", false)]
+    [InlineData("notes.txt", false)]
+    public static void TryParseUpdatedPackages_Only_Parses_Python_Requirements_Files(string path, bool expected)
+    {
+        // Arrange
+        string diff = $"""
+            diff --git a/{path} b/{path}
+            index 93f9a10..4b3c3b3 100644
+            --- a/{path}
+            +++ b/{path}
+            @@ -1,2 +1,2 @@
+             httpx==0.28.1
+            -ruff==0.17.3
+            +ruff==0.17.5
+            """;
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBe(expected);
+
+        if (expected)
+        {
+            packages.ShouldNotBeNull();
+            packages.ShouldContainKeyAndValue("ruff", ("0.17.3", "0.17.5"));
+            packages.Count.ShouldBe(1);
+        }
+        else
+        {
+            packages.ShouldBeNull();
+        }
+    }
+
+    [Theory]
+    [InlineData("ruff==0.17.3", "ruff==0.17.5", "ruff", "0.17.3", "0.17.5")]
+    [InlineData("ruff == 0.17.3", "ruff == 0.17.5", "ruff", "0.17.3", "0.17.5")]
+    [InlineData("ruff===0.17.3", "ruff===0.17.5", "ruff", "0.17.3", "0.17.5")]
+    [InlineData("Flask_Cors==5.0.0", "Flask_Cors==5.0.1", "flask-cors", "5.0.0", "5.0.1")]
+    [InlineData("Flask_Cors==5.0.0", "flask-cors==5.0.1", "flask-cors", "5.0.0", "5.0.1")]
+    [InlineData("zope.interface==7.0", "zope.interface==7.1", "zope-interface", "7.0", "7.1")]
+    [InlineData("Foo__Bar..Baz==1.0.0", "foo-bar-baz==1.0.1", "foo-bar-baz", "1.0.0", "1.0.1")]
+    [InlineData("uvicorn[standard]==0.54.0", "uvicorn[standard]==0.54.1", "uvicorn", "0.54.0", "0.54.1")]
+    [InlineData("ruff==0.17.3 # lint", "ruff==0.17.5 # lint", "ruff", "0.17.3", "0.17.5")]
+    [InlineData("ruff==0.17.3;python_version>'3.9'", "ruff==0.17.5;python_version>'3.9'", "ruff", "0.17.3", "0.17.5")]
+    [InlineData("ruff==0.17.3 \\", "ruff==0.17.5 \\", "ruff", "0.17.3", "0.17.5")]
+    [InlineData("ruff==0.17.3 --hash=sha256:aaa", "ruff==0.17.5 --hash=sha256:bbb", "ruff", "0.17.3", "0.17.5")]
+    public static void TryParseUpdatedPackages_Parses_Python_Requirement_Lines(
+        string removed,
+        string added,
+        string name,
+        string from,
+        string to)
+    {
+        // Arrange
+        string diff = $"""
+            diff --git a/requirements.txt b/requirements.txt
+            --- a/requirements.txt
+            +++ b/requirements.txt
+            @@ -1,1 +1,1 @@
+            -{removed}
+            +{added}
+            """;
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue(name, (from, to));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData("ruff>=0.17.3", "ruff>=0.17.5")]
+    [InlineData("ruff~=0.17.3", "ruff~=0.17.5")]
+    [InlineData("ruff<0.17.3", "ruff<0.17.5")]
+    [InlineData("ruff==0.17.*", "ruff==0.18.*")]
+    [InlineData("ruff==0.17.3,<1.0", "ruff==0.17.5,<1.0")]
+    [InlineData("ruff", "ruff")]
+    [InlineData("-r requirements-a.txt", "-r requirements-b.txt")]
+    [InlineData("--index-url https://a.example/simple", "--index-url https://b.example/simple")]
+    [InlineData("# ruff==0.17.3", "# ruff==0.17.5")]
+    [InlineData("git+https://github.com/astral-sh/ruff.git@0.17.3#egg=ruff", "git+https://github.com/astral-sh/ruff.git@0.17.5#egg=ruff")]
+    [InlineData("ruff==0.17.3rc1", "ruff==0.17.5rc1")]
+    [InlineData("ruff-==0.17.3", "ruff-==0.17.5")]
+    [InlineData("ruff==0.17.3#comment", "ruff==0.17.5#comment")]
+    [InlineData("ruff==", "ruff==")]
+    [InlineData("==0.17.3", "==0.17.5")]
+    public static void TryParseUpdatedPackages_Ignores_Unsupported_Python_Requirement_Lines(string removed, string added)
+    {
+        // Arrange
+        string diff = $"""
+            diff --git a/requirements.txt b/requirements.txt
+            --- a/requirements.txt
+            +++ b/requirements.txt
+            @@ -1,1 +1,1 @@
+            -{removed}
+            +{added}
+            """;
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeFalse();
+        packages.ShouldBeNull();
+    }
+
     [Theory]
     [InlineData("\n")]
     [InlineData("\r\n")]

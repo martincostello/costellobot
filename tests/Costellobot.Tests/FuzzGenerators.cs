@@ -43,6 +43,15 @@ internal static class FuzzGenerators
         select scoped ? $"@{scope}/{name}" : name;
 
     /// <summary>
+    /// Gets a generator for a Python package name, such as <c>fastapi</c> or <c>python-dotenv</c>.
+    /// </summary>
+    public static Gen<string> PythonPackageName { get; } =
+        from count in Gen.Choose(1, 3)
+        from separator in Gen.Elements('-', '_', '.')
+        from segments in Segment(Alpha, Alpha + Digits, 8).ArrayOf(count)
+        select string.Join(separator, segments);
+
+    /// <summary>
     /// Gets a generator for a Docker image name, such as <c>mcr.microsoft.com/dotnet/sdk</c>.
     /// </summary>
     public static Gen<string> DockerImageName { get; } =

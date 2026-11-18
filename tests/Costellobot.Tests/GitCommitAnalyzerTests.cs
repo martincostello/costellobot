@@ -1304,6 +1304,97 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         trust.Count.ShouldBe(2);
     }
 
+    [Theory]
+    [InlineData("boto3", "boto3")]
+    [InlineData("python-dotenv", "Python_Dotenv")]
+    [InlineData("zope.interface", "zope-interface")]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Python_Requirements_With_Only_Yaml_Frontmatter(
+        string dependency,
+        string nameInRequirements)
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.PyPI;
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = $"dependabot/pip/{dependency}-1.42.51";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(ecosystem);
+
+        registry.GetPackageOwnersAsync(repository, dependency, "1.42.51", CancellationToken)
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["aws"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [ecosystem] = ["aws"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var sha = "bd2804732332a86c336d1c9308b9dba36f0c2e03";
+        var commitMessage = $"""
+                             Bump the pip group with 1 update
+                             ---
+                             updated-dependencies:
+                             - dependency-name: {dependency}
+                               dependency-type: direct:production
+                               update-type: version-update:semver-patch
+                               dependency-group: pip
+                             ...
+
+                             Signed-off-by: dependabot[bot] <support@github.com>
+                             """;
+
+        var diff =
+            $"""
+            diff --git a/services/api/requirements.txt b/services/api/requirements.txt
+            index 5efad590..bd28047 100644
+            --- a/services/api/requirements.txt
+            +++ b/services/api/requirements.txt
+            @@ -1,3 +1,3 @@
+             httpx==0.28.1
+            -{nameInRequirements}==1.42.50
+            +{nameInRequirements}==1.42.51
+             pytest==9.2.0
+            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actualEcosystem.ShouldBe(ecosystem);
+
+        trust.ShouldContainKeyAndValue(dependency, (true, "1.42.51"));
+        trust.Count.ShouldBe(1);
+    }
+
     [Fact]
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Grouped_Package_Update_With_Only_Yaml_Frontmatter_With_Versions()
     {

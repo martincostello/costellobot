@@ -14,6 +14,8 @@ public static partial class GitDiffParser
 {
     private const char Added = '+';
     private const char Removed = '-';
+    private const char NoNewLineMarker = '\\';
+    private const string FilePrefix = "diff --git ";
     private const string HunkPrefix = "@@ ";
     private const string TargetPrefix = "+++ b/";
 
@@ -62,6 +64,24 @@ public static partial class GitDiffParser
 
         packages = packageUpdates;
         return true;
+    }
+
+    /// <summary>
+    /// Normalizes the name of a Python package so that names that differ only by case
+    /// or by the use of runs of "-", "_" and "." compare as equal.
+    /// </summary>
+    /// <param name="name">The name of the package.</param>
+    /// <returns>
+    /// The normalized name, such as <c>flask-cors</c> for <c>Flask_Cors</c>.
+    /// </returns>
+    /// <remarks>
+    /// See https://packaging.python.org/latest/specifications/name-normalization/.
+    /// </remarks>
+    internal static string NormalizePythonPackageName(string name)
+    {
+#pragma warning disable CA1308 // The normalized form of a Python package name is defined to be lowercase
+        return PythonNameSeparators().Replace(name, "-").ToLowerInvariant();
+#pragma warning restore CA1308
     }
 
     private static Dictionary<string, (string From, string To)> GetPackages(
@@ -134,15 +154,27 @@ public static partial class GitDiffParser
 
         string path = string.Empty;
         ReadOnlySpan<char> fileName = [];
+        bool isPythonRequirements = false;
 
         var remaining = diff.AsSpan();
 
         while (TryReadLine(ref remaining, out var line))
         {
-            if (line.StartsWith(TargetPrefix, StringComparison.Ordinal))
+            if (line.StartsWith(FilePrefix, StringComparison.Ordinal))
+            {
+                // A new file starts, so discard the state of the previous one. This ensures that
+                // lines from a file with no "+++ b/" target (such as a deleted file) are not
+                // attributed to the file that came before it.
+                inHunk = false;
+                path = string.Empty;
+                fileName = [];
+                isPythonRequirements = false;
+            }
+            else if (line.StartsWith(TargetPrefix, StringComparison.Ordinal))
             {
                 path = line[TargetPrefix.Length..].ToString();
                 fileName = Path.GetFileName(path.AsSpan());
+                isPythonRequirements = IsPythonRequirementsFile(path);
             }
             else if (line.StartsWith(HunkPrefix, StringComparison.Ordinal))
             {
@@ -154,13 +186,15 @@ public static partial class GitDiffParser
 
                 if (prefix is Added or Removed)
                 {
-                    if (TryParseLine(fileName, line, out var type, out var package))
+                    if (TryParseLine(fileName, isPythonRequirements, line, out var type, out var package))
                     {
                         edits.Add((path, type, package.Value.Package, package.Value.Version));
                     }
                 }
-                else if (prefix is not ' ')
+                else if (prefix is not (' ' or NoNewLineMarker))
                 {
+                    // Anything other than context or a "\ No newline at end of file" marker
+                    // ends the hunk. The marker must not, as the lines that follow it still need parsing.
                     inHunk = false;
                 }
             }
@@ -204,6 +238,7 @@ public static partial class GitDiffParser
 
     private static bool TryParseLine(
         ReadOnlySpan<char> fileName,
+        bool isPythonRequirements,
         ReadOnlySpan<char> line,
         out DiffLineType lineType,
         [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
@@ -242,6 +277,10 @@ public static partial class GitDiffParser
         {
             return TryParseGoModule(fragmentTrimmed, out package);
         }
+        else if (isPythonRequirements)
+        {
+            return TryParsePythonRequirement(fragmentTrimmed, out package);
+        }
 
         return false;
 
@@ -269,6 +308,74 @@ public static partial class GitDiffParser
 
             return false;
         }
+    }
+
+    private static bool IsPythonRequirementsFile(ReadOnlySpan<char> path)
+    {
+        // Matches pip requirements and constraints files such as requirements.txt, requirements-dev.txt,
+        // dev-requirements.txt, constraints.txt and requirements.in (pip-tools), as well as any
+        // .txt or .in file in a directory with one of those names (e.g. requirements/base.txt).
+        var fileName = Path.GetFileName(path);
+        var extension = Path.GetExtension(fileName);
+
+        if (!extension.Equals(".txt", StringComparison.OrdinalIgnoreCase) &&
+            !extension.Equals(".in", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (fileName.Contains("requirements", StringComparison.OrdinalIgnoreCase) ||
+            fileName.Contains("constraints", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var directory = Path.GetDirectoryName(path);
+
+        foreach (var range in directory.Split('/'))
+        {
+            var segment = directory[range];
+
+            if (segment.Equals("requirements", StringComparison.OrdinalIgnoreCase) ||
+                segment.Equals("constraints", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryParsePythonRequirement(
+        ReadOnlySpan<char> text,
+        [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
+    {
+        package = null;
+
+        // Skip blank lines, comments and options (e.g. "-r other.txt", "--hash=...", "--index-url ...")
+        if (text.IsEmpty || text[0] is '#' or '-')
+        {
+            return false;
+        }
+
+        // Only exact version pins are handled, as ranges (">=", "~=", etc.) do not
+        // identify the version that is actually installed. See PEP 440 and PEP 508.
+        // Avoid allocating or evaluating the regular expression for lines that cannot be a pin.
+        if (!text.Contains("==", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var match = PythonRequirement().Match(text.ToString());
+
+        if (match.Success &&
+            NuGetVersion.TryParse(match.Groups["version"].Value, out var version))
+        {
+            package = (NormalizePythonPackageName(match.Groups["name"].Value), version);
+            return true;
+        }
+
+        return false;
     }
 
     private static bool TryParseDockerImage(
@@ -454,4 +561,11 @@ public static partial class GitDiffParser
 
     [GeneratedRegex(@"^(?i)(FROM|IMAGE:)(?-i) ((?<platform>--platform=[\$\w]+)\s)?(?<image>[\w\.\/\-]+)(:(?<tag>[\w\-\.]+)(@sha256:(?<digest>[0-9a-f{64}]+))?)?(\s(?<name>(?i)AS(?-i) [\S]+))?$")]
     private static partial Regex DockerImage();
+
+    // Examples: "ruff==0.17.5", "uvicorn[standard]==0.54.0 ; python_version >= '3.9'", "httpx==0.28.1 # comment", "pytest==9.2.0 \"
+    [GeneratedRegex(@"^(?<name>[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?)\s*(\[[^\]]*\]\s*)?===?\s*(?<version>[A-Za-z0-9][A-Za-z0-9._+!-]*)(?=\s*(;|\\|$)|\s+(#|--))")]
+    private static partial Regex PythonRequirement();
+
+    [GeneratedRegex(@"[-_.]+")]
+    private static partial Regex PythonNameSeparators();
 }
