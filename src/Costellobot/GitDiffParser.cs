@@ -37,34 +37,38 @@ public static partial class GitDiffParser
         Removed,
     }
 
+    /// <summary>
+    /// Tries to parse the packages that were updated in the specified Git diff for any supported ecosystem.
+    /// </summary>
+    /// <param name="diff">The Git diff to parse.</param>
+    /// <param name="packages">When the method returns, contains the packages that were updated.</param>
+    /// <returns>
+    /// <see langword="true"/> if any updated packages were found; otherwise <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// Updates are aggregated separately for each ecosystem. If packages in different ecosystems
+    /// share the same name, only the first one found is returned. Use the overload that accepts a
+    /// <see cref="DependencyEcosystem"/> to get the updates for a specific ecosystem.
+    /// </remarks>
     public static bool TryParseUpdatedPackages(
         string diff,
         [NotNullWhen(true)] out IDictionary<string, (string From, string To)>? packages)
-    {
-        packages = null;
+        => TryParseUpdatedPackages(diff, null, out packages);
 
-        if (string.IsNullOrEmpty(diff))
-        {
-            return false;
-        }
-
-        var edits = GetEdits(diff);
-
-        if (edits.Count < 1)
-        {
-            return false;
-        }
-
-        var packageUpdates = GetPackages(edits);
-
-        if (packageUpdates.Count < 1)
-        {
-            return false;
-        }
-
-        packages = packageUpdates;
-        return true;
-    }
+    /// <summary>
+    /// Tries to parse the packages that were updated in the specified Git diff for the specified ecosystem.
+    /// </summary>
+    /// <param name="diff">The Git diff to parse.</param>
+    /// <param name="ecosystem">The ecosystem to get the updated packages for.</param>
+    /// <param name="packages">When the method returns, contains the packages that were updated.</param>
+    /// <returns>
+    /// <see langword="true"/> if any updated packages were found for the ecosystem; otherwise <see langword="false"/>.
+    /// </returns>
+    public static bool TryParseUpdatedPackages(
+        string diff,
+        DependencyEcosystem ecosystem,
+        [NotNullWhen(true)] out IDictionary<string, (string From, string To)>? packages)
+        => TryParseUpdatedPackages(diff, (DependencyEcosystem?)ecosystem, out packages);
 
     /// <summary>
     /// Normalizes the name of a Python package so that names that differ only by case
@@ -84,8 +88,63 @@ public static partial class GitDiffParser
 #pragma warning restore CA1308
     }
 
+    private static bool TryParseUpdatedPackages(
+        string diff,
+        DependencyEcosystem? ecosystem,
+        [NotNullWhen(true)] out IDictionary<string, (string From, string To)>? packages)
+    {
+        packages = null;
+
+        if (string.IsNullOrEmpty(diff))
+        {
+            return false;
+        }
+
+        var edits = GetEdits(diff);
+
+        if (edits.Count < 1)
+        {
+            return false;
+        }
+
+        var packageUpdates = GetPackages(edits, ecosystem);
+
+        if (packageUpdates.Count < 1)
+        {
+            return false;
+        }
+
+        packages = packageUpdates;
+        return true;
+    }
+
     private static Dictionary<string, (string From, string To)> GetPackages(
-        List<(string Path, DiffLineType Type, string Package, NuGetVersion Version)> edits)
+        List<(string Path, DependencyEcosystem Ecosystem, DiffLineType Type, string Package, NuGetVersion Version)> edits,
+        DependencyEcosystem? ecosystem)
+    {
+        if (ecosystem is { } value)
+        {
+            return GetPackages(edits.Where((p) => p.Ecosystem == value));
+        }
+
+        // Aggregate each ecosystem separately so that the versions of packages
+        // that happen to have the same name in different ecosystems are not mixed.
+        var comparer = StringComparer.OrdinalIgnoreCase;
+        var packages = new Dictionary<string, (string From, string To)>(comparer);
+
+        foreach (var group in edits.GroupBy((p) => p.Ecosystem))
+        {
+            foreach ((var package, var update) in GetPackages(group))
+            {
+                packages.TryAdd(package, update);
+            }
+        }
+
+        return packages;
+    }
+
+    private static Dictionary<string, (string From, string To)> GetPackages(
+        IEnumerable<(string Path, DependencyEcosystem Ecosystem, DiffLineType Type, string Package, NuGetVersion Version)> edits)
     {
         var comparer = StringComparer.OrdinalIgnoreCase;
         var added = new Dictionary<string, IList<NuGetVersion>>(comparer);
@@ -145,12 +204,12 @@ public static partial class GitDiffParser
         return packages;
     }
 
-    private static List<(string Path, DiffLineType Type, string Package, NuGetVersion Version)> GetEdits(string diff)
+    private static List<(string Path, DependencyEcosystem Ecosystem, DiffLineType Type, string Package, NuGetVersion Version)> GetEdits(string diff)
     {
         // See https://stackoverflow.com/a/2530012/1064169
         bool inHunk = false;
 
-        var edits = new List<(string Path, DiffLineType Type, string Package, NuGetVersion Version)>();
+        var edits = new List<(string Path, DependencyEcosystem Ecosystem, DiffLineType Type, string Package, NuGetVersion Version)>();
 
         string path = string.Empty;
         ReadOnlySpan<char> fileName = [];
@@ -186,9 +245,9 @@ public static partial class GitDiffParser
 
                 if (prefix is Added or Removed)
                 {
-                    if (TryParseLine(fileName, isPythonRequirements, line, out var type, out var package))
+                    if (TryParseLine(fileName, isPythonRequirements, line, out var type, out var ecosystem, out var package))
                     {
-                        edits.Add((path, type, package.Value.Package, package.Value.Version));
+                        edits.Add((path, ecosystem, type, package.Value.Package, package.Value.Version));
                     }
                 }
                 else if (prefix is not (' ' or NoNewLineMarker))
@@ -241,9 +300,11 @@ public static partial class GitDiffParser
         bool isPythonRequirements,
         ReadOnlySpan<char> line,
         out DiffLineType lineType,
+        out DependencyEcosystem ecosystem,
         [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
     {
         package = null;
+        ecosystem = DependencyEcosystem.Unknown;
 
         lineType = line[0] switch
         {
@@ -263,22 +324,27 @@ public static partial class GitDiffParser
         {
             // Only attempt to parse the XML if the fragment is for an element
             // with a name that is of interest, as parsing XML is expensive.
+            ecosystem = DependencyEcosystem.NuGet;
             return IsPackageElement(fragmentTrimmed) && TryParseXml(fragmentTrimmed, out package);
         }
         else if (fragmentTrimmed.StartsWith('"') && fileName.SequenceEqual("package.json"))
         {
+            ecosystem = DependencyEcosystem.Npm;
             return TryParseJson(fragmentTrimmed, out package);
         }
         else if (IsDockerImage(fragmentTrimmed, fileName))
         {
+            ecosystem = DependencyEcosystem.Docker;
             return TryParseDockerImage(fragmentTrimmed, out package);
         }
         else if (fileName.SequenceEqual("go.mod"))
         {
+            ecosystem = DependencyEcosystem.GoModules;
             return TryParseGoModule(fragmentTrimmed, out package);
         }
         else if (isPythonRequirements)
         {
+            ecosystem = DependencyEcosystem.PyPI;
             return TryParsePythonRequirement(fragmentTrimmed, out package);
         }
 
@@ -332,15 +398,23 @@ public static partial class GitDiffParser
 
         var directory = Path.GetDirectoryName(path);
 
-        foreach (var range in directory.Split('/'))
+        while (!directory.IsEmpty)
         {
-            var segment = directory[range];
+            int index = directory.IndexOf('/');
+            var segment = index < 0 ? directory : directory[..index];
 
             if (segment.Equals("requirements", StringComparison.OrdinalIgnoreCase) ||
                 segment.Equals("constraints", StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
+
+            if (index < 0)
+            {
+                break;
+            }
+
+            directory = directory[(index + 1)..];
         }
 
         return false;

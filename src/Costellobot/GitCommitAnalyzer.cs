@@ -438,7 +438,7 @@ public sealed partial class GitCommitAnalyzer(
         if (!TryParseVersionNumber(commitMessage, dependency, out var version) &&
             ecosystem is DependencyEcosystem.NuGet or DependencyEcosystem.Npm or DependencyEcosystem.PyPI &&
             !string.IsNullOrEmpty(diff) &&
-            GitDiffParser.TryParseUpdatedPackages(diff, out var updates))
+            GitDiffParser.TryParseUpdatedPackages(diff, ecosystem, out var updates))
         {
             var name = ecosystem is DependencyEcosystem.PyPI ? GitDiffParser.NormalizePythonPackageName(dependency) : dependency;
 
@@ -467,7 +467,7 @@ public sealed partial class GitCommitAnalyzer(
         if (dependencies.Count < 1 &&
             diff is not null &&
             ecosystem is DependencyEcosystem.Docker &&
-            GitDiffParser.TryParseUpdatedPackages(diff, out var updates))
+            GitDiffParser.TryParseUpdatedPackages(diff, ecosystem, out var updates))
         {
             dependencies = [.. updates.Select((p) => new DependencyUpdate(p.Key, p.Value.To, GetUpdateType(p.Value.From, p.Value.To), p.Value.From))];
         }

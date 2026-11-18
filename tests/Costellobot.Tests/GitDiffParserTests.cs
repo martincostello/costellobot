@@ -296,6 +296,104 @@ public static class GitDiffParserTests
         packages.Count.ShouldBe(1);
     }
 
+    [Theory]
+    [InlineData(DependencyEcosystem.PyPI, "1.0.0", "1.0.1")]
+    [InlineData(DependencyEcosystem.Npm, "2.0.0", "2.0.1")]
+    [InlineData(DependencyEcosystem.NuGet, "3.0.0", "3.0.1")]
+    [InlineData(DependencyEcosystem.Docker, "4.0.0", "4.0.1")]
+    [InlineData(DependencyEcosystem.GoModules, "5.0.0", "5.0.1")]
+    public static void TryParseUpdatedPackages_Does_Not_Mix_Versions_Of_Packages_With_The_Same_Name_In_Different_Ecosystems(
+        DependencyEcosystem ecosystem,
+        string from,
+        string to)
+    {
+        // Arrange
+        string diff = """
+            diff --git a/requirements.txt b/requirements.txt
+            --- a/requirements.txt
+            +++ b/requirements.txt
+            @@ -1,1 +1,1 @@
+            -foo==1.0.0
+            +foo==1.0.1
+            diff --git a/package.json b/package.json
+            --- a/package.json
+            +++ b/package.json
+            @@ -1,1 +1,1 @@
+            -    "foo": "^2.0.0",
+            +    "foo": "^2.0.1",
+            diff --git a/Directory.Packages.props b/Directory.Packages.props
+            --- a/Directory.Packages.props
+            +++ b/Directory.Packages.props
+            @@ -1,1 +1,1 @@
+            -    <PackageVersion Include="foo" Version="3.0.0" />
+            +    <PackageVersion Include="foo" Version="3.0.1" />
+            diff --git a/Dockerfile b/Dockerfile
+            --- a/Dockerfile
+            +++ b/Dockerfile
+            @@ -1,1 +1,1 @@
+            -FROM foo:4.0.0
+            +FROM foo:4.0.1
+            diff --git a/go.mod b/go.mod
+            --- a/go.mod
+            +++ b/go.mod
+            @@ -1,1 +1,1 @@
+            -require foo v5.0.0
+            +require foo v5.0.1
+            """;
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, ecosystem, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("foo", (from, to));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Returns_Empty_For_Ecosystem_Without_Updates()
+    {
+        // Arrange
+        string diff = GetDiff("Python.OneFile");
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, DependencyEcosystem.Npm, out var packages);
+
+        // Assert
+        actual.ShouldBeFalse();
+        packages.ShouldBeNull();
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Does_Not_Mix_Versions_When_No_Ecosystem_Is_Specified()
+    {
+        // Arrange
+        string diff = """
+            diff --git a/requirements.txt b/requirements.txt
+            --- a/requirements.txt
+            +++ b/requirements.txt
+            @@ -1,1 +1,1 @@
+            -foo==1.0.0
+            +foo==1.0.1
+            diff --git a/package.json b/package.json
+            --- a/package.json
+            +++ b/package.json
+            @@ -1,1 +1,1 @@
+            -    "foo": "^2.0.0",
+            +    "foo": "^2.0.1",
+            """;
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("foo", ("1.0.0", "1.0.1"));
+        packages.Count.ShouldBe(1);
+    }
+
     [Fact]
     public static void TryParseUpdatedPackages_Does_Not_Attribute_Lines_From_Deleted_Files_To_Previous_File()
     {

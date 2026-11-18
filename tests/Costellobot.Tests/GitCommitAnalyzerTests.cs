@@ -1396,6 +1396,86 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     }
 
     [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_For_Python_Requirements_When_Another_Ecosystem_Has_A_Package_With_The_Same_Name()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.PyPI;
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "dependabot/pip/boto3-1.42.51";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(ecosystem);
+
+        // Only the Python release is published by a trusted owner
+        registry.GetPackageOwnersAsync(repository, "boto3", "1.42.51", CancellationToken)
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["aws"]));
+
+        registry.GetPackageOwnersAsync(repository, "boto3", "9.0.1", CancellationToken)
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["someone-else"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [ecosystem] = ["aws"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var sha = "bd2804732332a86c336d1c9308b9dba36f0c2e03";
+        var commitMessage = """
+                            Bump the pip group with 1 update
+                            ---
+                            updated-dependencies:
+                            - dependency-name: boto3
+                              dependency-type: direct:production
+                              update-type: version-update:semver-patch
+                              dependency-group: pip
+                            ...
+
+                            Signed-off-by: dependabot[bot] <support@github.com>
+                            """;
+
+        var diff =
+            """
+            diff --git a/requirements.txt b/requirements.txt
+            --- a/requirements.txt
+            +++ b/requirements.txt
+            @@ -1,1 +1,1 @@
+            -boto3==1.42.50
+            +boto3==1.42.51
+            diff --git a/package.json b/package.json
+            --- a/package.json
+            +++ b/package.json
+            @@ -1,1 +1,1 @@
+            -    "boto3": "^9.0.0",
+            +    "boto3": "^9.0.1",
+            """;
+
+        // Act
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actualEcosystem.ShouldBe(ecosystem);
+        trust.ShouldContainKeyAndValue("boto3", (true, "1.42.51"));
+        trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publisher_For_Grouped_Package_Update_With_Only_Yaml_Frontmatter_With_Versions()
     {
         // Arrange
