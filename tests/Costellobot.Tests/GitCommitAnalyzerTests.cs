@@ -280,6 +280,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     [InlineData("actions/checkout", "dependabot/github_actions/actions/checkout-3", "3", DependencyEcosystem.GitHubActions, new[] { "actions" }, true)]
     [InlineData("github.com/onsi/gomega", "dependabot/go_modules/github.com/onsi/gomega-1.38.0", "1.38.0", DependencyEcosystem.GoModules, new[] { "github.com/onsi" }, true)]
     [InlineData("boto3", "dependabot/pip/boto3-1.26.0", "1.26.0", DependencyEcosystem.PyPI, new[] { "aws" }, true)]
+    [InlineData("boto3", "renovate/pip_requirements/boto3-1.x", "1.26.0", DependencyEcosystem.PyPI, new[] { "aws" }, true)]
     [InlineData("JustEat.HttpClientInterception", "dependabot/nuget/JustEat.HttpClientInterception-3.1.1", "3.1.1", DependencyEcosystem.NuGet, new[] { "JUSTEAT_OSS" }, false)]
     [InlineData("Microsoft.EntityFrameworkCore.SqlServer", "dependabot/nuget/Microsoft.EntityFrameworkCore.SqlServer-7.0.0-preview.6.22329.4", "7.0.0-preview.6.22329.4", DependencyEcosystem.NuGet, new[] { "aspnet", "EntityFramework", "Microsoft" }, true)]
     [InlineData("Microsoft.NET.Sdk", "update-dotnet-sdk-6.0.302", "6.0.302", DependencyEcosystem.Unknown, new string[0], false)]
@@ -3769,6 +3770,77 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         actualEcosystem.ShouldBe(ecosystem);
 
         trust.ShouldContainKeyAndValue("github.com/spf13/pflag", (true, "1.0.10"));
+        trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Publishers_For_Renovate_Pip_Requirements_Dependency()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.PyPI;
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/pip_requirements/fastapi-0.x";
+
+        var registry = Substitute.For<IPackageRegistry>();
+
+        registry.Ecosystem.Returns(ecosystem);
+
+        registry.GetPackageOwnersAsync(repository, "fastapi", "0.164.0", CancellationToken)
+                .Returns(Task.FromResult<IReadOnlyList<string>>(["tiangolo"]));
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Publishers = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [ecosystem] = ["tiangolo"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, [registry]);
+
+        var diff = string.Empty;
+        var sha = "9d360e4b00ae9eedc57813d269b3502da167cc6d";
+        var commitMessage = """
+                            Bump dependency fastapi to v0.164.0
+                            | datasource | package | from    | to      |
+                            | ---------- | ------- | ------- | ------- |
+                            | pypi       | fastapi | 0.163.2 | 0.164.0 |
+
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actualEcosystem.ShouldBe(ecosystem);
+
+        trust.ShouldContainKeyAndValue("fastapi", (true, "0.164.0"));
         trust.Count.ShouldBe(1);
     }
 
