@@ -378,6 +378,133 @@ public static class GitDiffParserTests
         packages.Count.ShouldBe(1);
     }
 
+    [Theory]
+    [InlineData("foo==2.0.1rc1")]
+    [InlineData("foo==2.0.1.post1")]
+    [InlineData("foo==1!2.0.1")]
+    [InlineData("foo>=2.0.1")]
+    [InlineData("foo~=2.0")]
+    [InlineData("foo<3")]
+    [InlineData("foo==2.*")]
+    [InlineData("foo==2.0.1,<3")]
+    [InlineData("foo")]
+    [InlineData("foo ; python_version >= \"3.9\"")]
+    [InlineData("foo[extra]>=2.0.1")]
+    [InlineData("foo @ https://example.org/foo-2.0.1.tar.gz")]
+    [InlineData("Foo>=2.0.1")]
+    [InlineData("FOO==2.0.1rc1")]
+    public static void TryParseUpdatedPackages_Ignores_Python_Packages_With_Added_Requirements_That_Cannot_Be_Resolved(string unresolved)
+    {
+        // Arrange
+        string diff = $"""
+            diff --git a/requirements.txt b/requirements.txt
+            --- a/requirements.txt
+            +++ b/requirements.txt
+            @@ -1,3 +1,3 @@
+            -foo==1.0.0 ; python_version < "3.9"
+            -foo==2.0.0 ; python_version >= "3.9"
+            -bar==1.0.0
+            +foo==1.0.1 ; python_version < "3.9"
+            +{unresolved}
+            +bar==1.0.1
+            """;
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, DependencyEcosystem.PyPI, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("bar", ("1.0.0", "1.0.1"));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Ignores_Python_Packages_With_Added_Requirements_That_Cannot_Be_Resolved_In_Other_Files()
+    {
+        // Arrange
+        string diff = """
+            diff --git a/requirements.txt b/requirements.txt
+            --- a/requirements.txt
+            +++ b/requirements.txt
+            @@ -1,1 +1,1 @@
+            -foo==1.0.0
+            +foo==1.0.1
+            diff --git a/requirements-dev.txt b/requirements-dev.txt
+            --- a/requirements-dev.txt
+            +++ b/requirements-dev.txt
+            @@ -1,1 +1,1 @@
+            -foo==1.0.0
+            +foo>=1.0.1
+            """;
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeFalse();
+        packages.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("# foo>=2.0.1")]
+    [InlineData("-r other.txt")]
+    [InlineData("--hash=sha256:aaaaaaaa")]
+    [InlineData("")]
+    [InlineData("baz>=2.0.1")]
+    [InlineData("git+https://github.com/example/foo.git@v2.0.1#egg=foo")]
+    public static void TryParseUpdatedPackages_Does_Not_Ignore_Python_Packages_For_Other_Added_Lines(string added)
+    {
+        // Arrange
+        string diff = $"""
+            diff --git a/requirements.txt b/requirements.txt
+            --- a/requirements.txt
+            +++ b/requirements.txt
+            @@ -1,1 +1,2 @@
+            -foo==1.0.0
+            +foo==1.0.1
+            +{added}
+            """;
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, DependencyEcosystem.PyPI, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("foo", ("1.0.0", "1.0.1"));
+        packages.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public static void TryParseUpdatedPackages_Does_Not_Ignore_Packages_In_Other_Ecosystems_For_Unresolved_Python_Requirements()
+    {
+        // Arrange
+        string diff = """
+            diff --git a/requirements.txt b/requirements.txt
+            --- a/requirements.txt
+            +++ b/requirements.txt
+            @@ -1,1 +1,1 @@
+            -foo==1.0.0
+            +foo>=1.0.1
+            diff --git a/package.json b/package.json
+            --- a/package.json
+            +++ b/package.json
+            @@ -1,1 +1,1 @@
+            -    "foo": "^2.0.0",
+            +    "foo": "^2.0.1",
+            """;
+
+        // Act
+        bool actual = GitDiffParser.TryParseUpdatedPackages(diff, out var packages);
+
+        // Assert
+        actual.ShouldBeTrue();
+        packages.ShouldNotBeNull();
+        packages.ShouldContainKeyAndValue("foo", ("2.0.0", "2.0.1"));
+        packages.Count.ShouldBe(1);
+    }
+
     [Fact]
     public static void TryParseUpdatedPackages_Parses_Python_Package_Updated_To_The_Same_Version_In_Multiple_Files()
     {

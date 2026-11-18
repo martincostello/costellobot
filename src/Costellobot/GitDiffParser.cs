@@ -35,6 +35,7 @@ public static partial class GitDiffParser
         None = 0,
         Added,
         Removed,
+        Unresolved,
     }
 
     /// <summary>
@@ -119,7 +120,7 @@ public static partial class GitDiffParser
     }
 
     private static Dictionary<string, (string From, string To)> GetPackages(
-        List<(string Path, DependencyEcosystem Ecosystem, DiffLineType Type, string Package, NuGetVersion Version)> edits,
+        List<Edit> edits,
         DependencyEcosystem? ecosystem)
     {
         if (ecosystem is { } value)
@@ -144,15 +145,22 @@ public static partial class GitDiffParser
     }
 
     private static Dictionary<string, (string From, string To)> GetPackages(
-        IEnumerable<(string Path, DependencyEcosystem Ecosystem, DiffLineType Type, string Package, NuGetVersion Version)> edits,
+        IEnumerable<Edit> edits,
         DependencyEcosystem ecosystem)
     {
         var comparer = StringComparer.OrdinalIgnoreCase;
         var added = new Dictionary<string, IList<NuGetVersion>>(comparer);
         var removed = new Dictionary<string, IList<NuGetVersion>>(comparer);
+        var unresolved = new HashSet<string>(comparer);
 
         foreach (var edit in edits)
         {
+            if (edit.Type is DiffLineType.Unresolved)
+            {
+                unresolved.Add(edit.Package);
+                continue;
+            }
+
             Dictionary<string, IList<NuGetVersion>> target;
 
             if (edit.Type == DiffLineType.Added)
@@ -170,7 +178,7 @@ public static partial class GitDiffParser
                 target[edit.Package] = versions = [];
             }
 
-            versions.Add(edit.Version);
+            versions.Add(edit.Version!);
         }
 
         var packages = new Dictionary<string, (string From, string To)>(comparer);
@@ -187,8 +195,11 @@ public static partial class GitDiffParser
             // A Python package can be pinned to different versions for different environments
             // (e.g. using environment markers). The result can only hold one version, so skip
             // packages that were updated to more than one version instead of only reporting
-            // (and thereby only allowing the caller to check) the highest of them.
-            if (ecosystem is DependencyEcosystem.PyPI && updated.Distinct().Count() > 1)
+            // (and thereby only allowing the caller to check) the highest of them. Packages that
+            // also had a requirement added that has no supported version (such as a range or a
+            // version that cannot be parsed) are skipped too, as the version they resolve to is unknown.
+            if (ecosystem is DependencyEcosystem.PyPI &&
+                (updated.Distinct().Count() > 1 || unresolved.Contains(package)))
             {
                 continue;
             }
@@ -214,12 +225,12 @@ public static partial class GitDiffParser
         return packages;
     }
 
-    private static List<(string Path, DependencyEcosystem Ecosystem, DiffLineType Type, string Package, NuGetVersion Version)> GetEdits(string diff)
+    private static List<Edit> GetEdits(string diff)
     {
         // See https://stackoverflow.com/a/2530012/1064169
         bool inHunk = false;
 
-        var edits = new List<(string Path, DependencyEcosystem Ecosystem, DiffLineType Type, string Package, NuGetVersion Version)>();
+        var edits = new List<Edit>();
 
         string path = string.Empty;
         ReadOnlySpan<char> fileName = [];
@@ -258,7 +269,13 @@ public static partial class GitDiffParser
                     if (TryParseLine(fileName, isPythonRequirements, line, out var type, out var ecosystem, out var package) &&
                         package is { } parsed)
                     {
-                        edits.Add((path, ecosystem, type, parsed.Package, parsed.Version));
+                        edits.Add(new(path, ecosystem, type, parsed.Package, parsed.Version));
+                    }
+                    else if (isPythonRequirements &&
+                             type is DiffLineType.Added &&
+                             TryGetUnresolvedPythonPackage(line[1..].Trim(), out var name))
+                    {
+                        edits.Add(new(path, DependencyEcosystem.PyPI, DiffLineType.Unresolved, name, null));
                     }
                 }
                 else if (prefix is not (' ' or NoNewLineMarker))
@@ -426,6 +443,33 @@ public static partial class GitDiffParser
             }
 
             directory = directory[(index + 1)..];
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to get the normalized name of the package a requirement is for, without
+    /// needing to be able to determine the version of the package that is required.
+    /// </summary>
+    private static bool TryGetUnresolvedPythonPackage(
+        ReadOnlySpan<char> text,
+        [NotNullWhen(true)] out string? name)
+    {
+        name = null;
+
+        // Skip blank lines, comments and options (e.g. "-r other.txt", "--hash=...", "--index-url ...")
+        if (text.IsEmpty || text[0] is '#' or '-')
+        {
+            return false;
+        }
+
+        var match = PythonRequirementName().Match(text.ToString());
+
+        if (match.Success)
+        {
+            name = NormalizePythonPackageName(match.Groups["name"].Value);
+            return true;
         }
 
         return false;
@@ -651,6 +695,25 @@ public static partial class GitDiffParser
     [GeneratedRegex(@"^(?<name>[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?)\s*(\[[^\]]*\]\s*)?===?\s*(?<version>[A-Za-z0-9][A-Za-z0-9._+!-]*)(?=\s*(;|\\|$)|\s+(#|--))")]
     private static partial Regex PythonRequirement();
 
+    // Examples: "ruff", "ruff>=0.17.5", "ruff~=0.17", "ruff==0.17.5rc1", "uvicorn[standard]<1", "ruff @ https://example.org/ruff.zip"
+    [GeneratedRegex(@"^(?<name>[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?)(?=\s|\[|[=<>!~;@(#\\]|$)")]
+    private static partial Regex PythonRequirementName();
+
     [GeneratedRegex(@"[-_.]+")]
     private static partial Regex PythonNameSeparators();
+
+    /// <summary>
+    /// Represents an edit to a package in a diff.
+    /// </summary>
+    /// <param name="Path">The path of the file that was edited.</param>
+    /// <param name="Ecosystem">The ecosystem the package is from.</param>
+    /// <param name="Type">The type of the edit.</param>
+    /// <param name="Package">The name of the package.</param>
+    /// <param name="Version">The version of the package, which is <see langword="null"/> for <see cref="DiffLineType.Unresolved"/> edits.</param>
+    private readonly record struct Edit(
+        string Path,
+        DependencyEcosystem Ecosystem,
+        DiffLineType Type,
+        string Package,
+        NuGetVersion? Version);
 }
