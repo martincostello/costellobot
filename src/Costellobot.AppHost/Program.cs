@@ -32,7 +32,7 @@ var webhooks = serviceBus.AddServiceBusQueue("webhooks");
 
 var dashboardUrl = DashboardUrl(builder.Configuration["DASHBOARD_URL"]);
 
-builder.AddProject<Projects.Costellobot>(Project)
+builder.AddDotnetProject(Project, "../Costellobot")
        .WithEnvironment("Site:LogsUrl", dashboardUrl)
        .WithHttpHealthCheck("/health/liveness")
        .WithHttpHealthCheck("/health/readiness")
