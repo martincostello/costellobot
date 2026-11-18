@@ -1,0 +1,18 @@
+diff --git a/requirements.txt b/requirements.txt
+index 7ee474b..628532e 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -1,9 +1,10 @@
+ # Web framework
+ -r base.txt
+-fastapi[standard]==0.162.0 ; python_version >= "3.9"
+-uvicorn==0.54.0 # ASGI server
++fastapi[standard]==0.163.1 ; python_version >= "3.9"
++uvicorn==0.54.1 # ASGI server
+ httpx>=0.28.1
+-pytest==9.2.0 \
+-    --hash=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
++pytest==9.2.1 \
++    --hash=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
++--index-url https://example.org/simple
+ attrs~=25.0

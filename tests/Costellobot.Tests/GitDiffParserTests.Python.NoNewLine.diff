@@ -1,0 +1,10 @@
+diff --git a/requirements.txt b/requirements.txt
+index 7ee474b..628532e 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -1,2 +1,2 @@
+ httpx==0.28.1
+-ruff==0.17.3
+\ No newline at end of file
++ruff==0.17.5
+\ No newline at end of file

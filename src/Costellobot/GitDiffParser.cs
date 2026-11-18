@@ -14,6 +14,8 @@ public static partial class GitDiffParser
 {
     private const char Added = '+';
     private const char Removed = '-';
+    private const char NoNewLineMarker = '\\';
+    private const string FilePrefix = "diff --git ";
     private const string HunkPrefix = "@@ ";
     private const string TargetPrefix = "+++ b/";
 
@@ -33,10 +35,63 @@ public static partial class GitDiffParser
         None = 0,
         Added,
         Removed,
+        Unresolved,
     }
 
+    /// <summary>
+    /// Tries to parse the packages that were updated in the specified Git diff for any supported ecosystem.
+    /// </summary>
+    /// <param name="diff">The Git diff to parse.</param>
+    /// <param name="packages">When the method returns, contains the packages that were updated.</param>
+    /// <returns>
+    /// <see langword="true"/> if any updated packages were found; otherwise <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// Updates are aggregated separately for each ecosystem. If packages in different ecosystems
+    /// share the same name, only the first one found is returned. Use the overload that accepts a
+    /// <see cref="DependencyEcosystem"/> to get the updates for a specific ecosystem.
+    /// </remarks>
     public static bool TryParseUpdatedPackages(
         string diff,
+        [NotNullWhen(true)] out IDictionary<string, (string From, string To)>? packages)
+        => TryParseUpdatedPackages(diff, null, out packages);
+
+    /// <summary>
+    /// Tries to parse the packages that were updated in the specified Git diff for the specified ecosystem.
+    /// </summary>
+    /// <param name="diff">The Git diff to parse.</param>
+    /// <param name="ecosystem">The ecosystem to get the updated packages for.</param>
+    /// <param name="packages">When the method returns, contains the packages that were updated.</param>
+    /// <returns>
+    /// <see langword="true"/> if any updated packages were found for the ecosystem; otherwise <see langword="false"/>.
+    /// </returns>
+    public static bool TryParseUpdatedPackages(
+        string diff,
+        DependencyEcosystem ecosystem,
+        [NotNullWhen(true)] out IDictionary<string, (string From, string To)>? packages)
+        => TryParseUpdatedPackages(diff, (DependencyEcosystem?)ecosystem, out packages);
+
+    /// <summary>
+    /// Normalizes the name of a Python package so that names that differ only by case
+    /// or by the use of runs of "-", "_" and "." compare as equal.
+    /// </summary>
+    /// <param name="name">The name of the package.</param>
+    /// <returns>
+    /// The normalized name, such as <c>flask-cors</c> for <c>Flask_Cors</c>.
+    /// </returns>
+    /// <remarks>
+    /// See https://packaging.python.org/en/latest/specifications/name-normalization/.
+    /// </remarks>
+    internal static string NormalizePythonPackageName(string name)
+    {
+#pragma warning disable CA1308 // The normalized form of a Python package name is defined to be lowercase
+        return PythonNameSeparators().Replace(name, "-").ToLowerInvariant();
+#pragma warning restore CA1308
+    }
+
+    private static bool TryParseUpdatedPackages(
+        string diff,
+        DependencyEcosystem? ecosystem,
         [NotNullWhen(true)] out IDictionary<string, (string From, string To)>? packages)
     {
         packages = null;
@@ -53,7 +108,7 @@ public static partial class GitDiffParser
             return false;
         }
 
-        var packageUpdates = GetPackages(edits);
+        var packageUpdates = GetPackages(edits, ecosystem);
 
         if (packageUpdates.Count < 1)
         {
@@ -65,14 +120,47 @@ public static partial class GitDiffParser
     }
 
     private static Dictionary<string, (string From, string To)> GetPackages(
-        List<(string Path, DiffLineType Type, string Package, NuGetVersion Version)> edits)
+        List<Edit> edits,
+        DependencyEcosystem? ecosystem)
+    {
+        if (ecosystem is { } value)
+        {
+            return GetPackages(edits.Where((p) => p.Ecosystem == value), value);
+        }
+
+        // Aggregate each ecosystem separately so that the versions of packages
+        // that happen to have the same name in different ecosystems are not mixed.
+        var comparer = StringComparer.OrdinalIgnoreCase;
+        var packages = new Dictionary<string, (string From, string To)>(comparer);
+
+        foreach (var group in edits.GroupBy((p) => p.Ecosystem))
+        {
+            foreach ((var package, var update) in GetPackages(group, group.Key))
+            {
+                packages.TryAdd(package, update);
+            }
+        }
+
+        return packages;
+    }
+
+    private static Dictionary<string, (string From, string To)> GetPackages(
+        IEnumerable<Edit> edits,
+        DependencyEcosystem ecosystem)
     {
         var comparer = StringComparer.OrdinalIgnoreCase;
         var added = new Dictionary<string, IList<NuGetVersion>>(comparer);
         var removed = new Dictionary<string, IList<NuGetVersion>>(comparer);
+        var unresolved = new HashSet<string>(comparer);
 
         foreach (var edit in edits)
         {
+            if (edit.Type is DiffLineType.Unresolved)
+            {
+                unresolved.Add(edit.Package);
+                continue;
+            }
+
             Dictionary<string, IList<NuGetVersion>> target;
 
             if (edit.Type == DiffLineType.Added)
@@ -90,7 +178,7 @@ public static partial class GitDiffParser
                 target[edit.Package] = versions = [];
             }
 
-            versions.Add(edit.Version);
+            versions.Add(edit.Version!);
         }
 
         var packages = new Dictionary<string, (string From, string To)>(comparer);
@@ -100,6 +188,18 @@ public static partial class GitDiffParser
             if (previous.Count < 1 ||
                 !added.TryGetValue(package, out var updated) ||
                 updated.Count < 1)
+            {
+                continue;
+            }
+
+            // A Python package can be pinned to different versions for different environments
+            // (e.g. using environment markers). The result can only hold one version, so skip
+            // packages that were updated to more than one version instead of only reporting
+            // (and thereby only allowing the caller to check) the highest of them. Packages that
+            // also had a requirement added that has no supported version (such as a range or a
+            // version that cannot be parsed) are skipped too, as the version they resolve to is unknown.
+            if (ecosystem is DependencyEcosystem.PyPI &&
+                (updated.Distinct().Count() > 1 || unresolved.Contains(package)))
             {
                 continue;
             }
@@ -125,24 +225,36 @@ public static partial class GitDiffParser
         return packages;
     }
 
-    private static List<(string Path, DiffLineType Type, string Package, NuGetVersion Version)> GetEdits(string diff)
+    private static List<Edit> GetEdits(string diff)
     {
         // See https://stackoverflow.com/a/2530012/1064169
         bool inHunk = false;
 
-        var edits = new List<(string Path, DiffLineType Type, string Package, NuGetVersion Version)>();
+        var edits = new List<Edit>();
 
         string path = string.Empty;
         ReadOnlySpan<char> fileName = [];
+        bool isPythonRequirements = false;
 
         var remaining = diff.AsSpan();
 
         while (TryReadLine(ref remaining, out var line))
         {
-            if (line.StartsWith(TargetPrefix, StringComparison.Ordinal))
+            if (line.StartsWith(FilePrefix, StringComparison.Ordinal))
+            {
+                // A new file starts, so discard the state of the previous one. This ensures that
+                // lines from a file with no "+++ b/" target (such as a deleted file) are not
+                // attributed to the file that came before it.
+                inHunk = false;
+                path = string.Empty;
+                fileName = [];
+                isPythonRequirements = false;
+            }
+            else if (line.StartsWith(TargetPrefix, StringComparison.Ordinal))
             {
                 path = line[TargetPrefix.Length..].ToString();
                 fileName = Path.GetFileName(path.AsSpan());
+                isPythonRequirements = IsPythonRequirementsFile(path);
             }
             else if (line.StartsWith(HunkPrefix, StringComparison.Ordinal))
             {
@@ -154,13 +266,22 @@ public static partial class GitDiffParser
 
                 if (prefix is Added or Removed)
                 {
-                    if (TryParseLine(fileName, line, out var type, out var package))
+                    if (TryParseLine(fileName, isPythonRequirements, line, out var type, out var ecosystem, out var package) &&
+                        package is { } parsed)
                     {
-                        edits.Add((path, type, package.Value.Package, package.Value.Version));
+                        edits.Add(new(path, ecosystem, type, parsed.Package, parsed.Version));
+                    }
+                    else if (isPythonRequirements &&
+                             type is DiffLineType.Added &&
+                             TryGetUnresolvedPythonPackage(line[1..].Trim(), out var name))
+                    {
+                        edits.Add(new(path, DependencyEcosystem.PyPI, DiffLineType.Unresolved, name, null));
                     }
                 }
-                else if (prefix is not ' ')
+                else if (prefix is not (' ' or NoNewLineMarker))
                 {
+                    // Anything other than context or a "\ No newline at end of file" marker
+                    // ends the hunk. The marker must not, as the lines that follow it still need parsing.
                     inHunk = false;
                 }
             }
@@ -204,11 +325,14 @@ public static partial class GitDiffParser
 
     private static bool TryParseLine(
         ReadOnlySpan<char> fileName,
+        bool isPythonRequirements,
         ReadOnlySpan<char> line,
         out DiffLineType lineType,
+        out DependencyEcosystem ecosystem,
         [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
     {
         package = null;
+        ecosystem = DependencyEcosystem.Unknown;
 
         lineType = line[0] switch
         {
@@ -228,19 +352,28 @@ public static partial class GitDiffParser
         {
             // Only attempt to parse the XML if the fragment is for an element
             // with a name that is of interest, as parsing XML is expensive.
+            ecosystem = DependencyEcosystem.NuGet;
             return IsPackageElement(fragmentTrimmed) && TryParseXml(fragmentTrimmed, out package);
         }
         else if (fragmentTrimmed.StartsWith('"') && fileName.SequenceEqual("package.json"))
         {
+            ecosystem = DependencyEcosystem.Npm;
             return TryParseJson(fragmentTrimmed, out package);
         }
         else if (IsDockerImage(fragmentTrimmed, fileName))
         {
+            ecosystem = DependencyEcosystem.Docker;
             return TryParseDockerImage(fragmentTrimmed, out package);
         }
         else if (fileName.SequenceEqual("go.mod"))
         {
+            ecosystem = DependencyEcosystem.GoModules;
             return TryParseGoModule(fragmentTrimmed, out package);
+        }
+        else if (isPythonRequirements)
+        {
+            ecosystem = DependencyEcosystem.PyPI;
+            return TryParsePythonRequirement(fragmentTrimmed, out package);
         }
 
         return false;
@@ -269,6 +402,109 @@ public static partial class GitDiffParser
 
             return false;
         }
+    }
+
+    private static bool IsPythonRequirementsFile(ReadOnlySpan<char> path)
+    {
+        // Matches pip requirements and constraints files such as requirements.txt, requirements-dev.txt,
+        // dev-requirements.txt, constraints.txt and requirements.in (pip-tools), as well as any
+        // .txt or .in file in a directory with one of those names (e.g. requirements/base.txt).
+        var fileName = Path.GetFileName(path);
+        var extension = Path.GetExtension(fileName);
+
+        if (!extension.Equals(".txt", StringComparison.OrdinalIgnoreCase) &&
+            !extension.Equals(".in", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (fileName.Contains("requirements", StringComparison.OrdinalIgnoreCase) ||
+            fileName.Contains("constraints", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var directory = Path.GetDirectoryName(path);
+
+        while (!directory.IsEmpty)
+        {
+            int index = directory.IndexOf('/');
+            var segment = index < 0 ? directory : directory[..index];
+
+            if (segment.Equals("requirements", StringComparison.OrdinalIgnoreCase) ||
+                segment.Equals("constraints", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (index < 0)
+            {
+                break;
+            }
+
+            directory = directory[(index + 1)..];
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to get the normalized name of the package a requirement is for, without
+    /// needing to be able to determine the version of the package that is required.
+    /// </summary>
+    private static bool TryGetUnresolvedPythonPackage(
+        ReadOnlySpan<char> text,
+        [NotNullWhen(true)] out string? name)
+    {
+        name = null;
+
+        // Skip blank lines, comments and options (e.g. "-r other.txt", "--hash=...", "--index-url ...")
+        if (text.IsEmpty || text[0] is '#' or '-')
+        {
+            return false;
+        }
+
+        var match = PythonRequirementName().Match(text.ToString());
+
+        if (match.Success)
+        {
+            name = NormalizePythonPackageName(match.Groups["name"].Value);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryParsePythonRequirement(
+        ReadOnlySpan<char> text,
+        [NotNullWhen(true)] out (string Package, NuGetVersion Version)? package)
+    {
+        package = null;
+
+        // Skip blank lines, comments and options (e.g. "-r other.txt", "--hash=...", "--index-url ...")
+        if (text.IsEmpty || text[0] is '#' or '-')
+        {
+            return false;
+        }
+
+        // Only exact version pins are handled, as ranges (">=", "~=", etc.) do not
+        // identify the version that is actually installed. See PEP 440 and PEP 508.
+        // Avoid allocating or evaluating the regular expression for lines that cannot be a pin.
+        if (!text.Contains("==", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var match = PythonRequirement().Match(text.ToString());
+
+        if (match.Success &&
+            NuGetVersion.TryParse(match.Groups["version"].Value, out var version))
+        {
+            package = (NormalizePythonPackageName(match.Groups["name"].Value), version);
+            return true;
+        }
+
+        return false;
     }
 
     private static bool TryParseDockerImage(
@@ -454,4 +690,30 @@ public static partial class GitDiffParser
 
     [GeneratedRegex(@"^(?i)(FROM|IMAGE:)(?-i) ((?<platform>--platform=[\$\w]+)\s)?(?<image>[\w\.\/\-]+)(:(?<tag>[\w\-\.]+)(@sha256:(?<digest>[0-9a-f{64}]+))?)?(\s(?<name>(?i)AS(?-i) [\S]+))?$")]
     private static partial Regex DockerImage();
+
+    // Examples: "ruff==0.17.5", "uvicorn[standard]==0.54.0 ; python_version >= '3.9'", "httpx==0.28.1 # comment", "pytest==9.2.0 \"
+    [GeneratedRegex(@"^(?<name>[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?)\s*(\[[^\]]*\]\s*)?===?\s*(?<version>[A-Za-z0-9][A-Za-z0-9._+!-]*)(?=\s*(;|\\|$)|\s+(#|--))")]
+    private static partial Regex PythonRequirement();
+
+    // Examples: "ruff", "ruff>=0.17.5", "ruff~=0.17", "ruff==0.17.5rc1", "uvicorn[standard]<1", "ruff @ https://example.org/ruff.zip"
+    [GeneratedRegex(@"^(?<name>[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?)(?=\s|\[|[=<>!~;@(#\\]|$)")]
+    private static partial Regex PythonRequirementName();
+
+    [GeneratedRegex(@"[-_.]+")]
+    private static partial Regex PythonNameSeparators();
+
+    /// <summary>
+    /// Represents an edit to a package in a diff.
+    /// </summary>
+    /// <param name="Path">The path of the file that was edited.</param>
+    /// <param name="Ecosystem">The ecosystem the package is from.</param>
+    /// <param name="Type">The type of the edit.</param>
+    /// <param name="Package">The name of the package.</param>
+    /// <param name="Version">The version of the package, which is <see langword="null"/> for <see cref="DiffLineType.Unresolved"/> edits.</param>
+    private readonly record struct Edit(
+        string Path,
+        DependencyEcosystem Ecosystem,
+        DiffLineType Type,
+        string Package,
+        NuGetVersion? Version);
 }

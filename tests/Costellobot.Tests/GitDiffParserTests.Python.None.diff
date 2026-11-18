@@ -1,0 +1,13 @@
+diff --git a/requirements.txt b/requirements.txt
+index 7ee474b..628532e 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -1,5 +1,5 @@
+-# Web framework
++# Web frameworks
+-httpx>=0.28.0
++httpx>=0.28.1
+-attrs~=24.0
++attrs~=25.0
+-pytest
++pytest==9.2.1

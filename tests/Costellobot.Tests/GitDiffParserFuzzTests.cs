@@ -32,6 +32,7 @@ public static class GitDiffParserFuzzTests
         Dockerfile,
         DockerCompose,
         GoModule,
+        Python,
     }
 
     [Property]
@@ -52,7 +53,7 @@ public static class GitDiffParserFuzzTests
              from path in ManifestPath(manifest)
              from removed in ArbMap.Default.GeneratorFor<string>()
              from added in ArbMap.Default.GeneratorFor<string>()
-             from prefix in Gen.Elements(string.Empty, "<PackageReference ", "<PackageVersion ", "\"", "FROM ", "image: ", "require ")
+             from prefix in Gen.Elements(string.Empty, "<PackageReference ", "<PackageVersion ", "\"", "FROM ", "image: ", "require ", "requests==")
              select (Path: path, Removed: prefix + removed, Added: prefix + added)).ToArbitrary();
 
         return Prop.ForAll(arbitrary, (input) =>
@@ -83,7 +84,7 @@ public static class GitDiffParserFuzzTests
 
             foreach (var update in diff.Updates)
             {
-                packages.ShouldContainKeyAndValue(update.Name, (update.ExpectedFrom, update.ExpectedTo));
+                packages.ShouldContainKeyAndValue(update.ExpectedName, (update.ExpectedFrom, update.ExpectedTo));
             }
         });
     }
@@ -212,6 +213,7 @@ public static class GitDiffParserFuzzTests
         Manifest.Dockerfile => Gen.Elements("Dockerfile", "src/App/Dockerfile", "docker/app.Dockerfile"),
         Manifest.DockerCompose => Gen.Elements("docker-compose.yml", "docker-compose.yaml", "src/docker-compose.yml"),
         Manifest.GoModule => Gen.Constant("go.mod"),
+        Manifest.Python => Gen.Elements("requirements.txt", "requirements-dev.txt", "services/app/requirements.txt", "requirements.in", "requirements/base.txt"),
         _ => throw new ArgumentOutOfRangeException(nameof(manifest)),
     };
 
@@ -221,6 +223,7 @@ public static class GitDiffParserFuzzTests
         Manifest.Npm => NpmPackageName,
         Manifest.Dockerfile or Manifest.DockerCompose => DockerImageName,
         Manifest.GoModule => GoModulePath,
+        Manifest.Python => PythonPackageName,
         _ => throw new ArgumentOutOfRangeException(nameof(manifest)),
     };
 
@@ -252,8 +255,10 @@ public static class GitDiffParserFuzzTests
 
         public static IEqualityComparer<PackageUpdate> NameComparer { get; } =
             EqualityComparer<PackageUpdate>.Create(
-                (x, y) => string.Equals(x?.Name, y?.Name, StringComparison.OrdinalIgnoreCase),
-                (p) => StringComparer.OrdinalIgnoreCase.GetHashCode(p.Name));
+                (x, y) => string.Equals(x?.ExpectedName, y?.ExpectedName, StringComparison.OrdinalIgnoreCase),
+                (p) => StringComparer.OrdinalIgnoreCase.GetHashCode(p.ExpectedName));
+
+        public string ExpectedName => Manifest is Manifest.Python ? GitDiffParser.NormalizePythonPackageName(Name) : Name;
 
         public string ExpectedFrom => HasDigest ? $"{Update.From}-{DigestFrom}" : Update.From.ToString();
 
@@ -269,6 +274,7 @@ public static class GitDiffParserFuzzTests
             Manifest.Dockerfile => $"FROM --platform=$BUILDPLATFORM {Name}:{version}{(digest is null ? string.Empty : $"@sha256:{digest}")} AS build",
             Manifest.DockerCompose => $"    image: {Name}:{version}{(digest is null ? string.Empty : $"@sha256:{digest}")}",
             Manifest.GoModule => $"require {Name} v{version}",
+            Manifest.Python => $"{Name}=={version}",
             _ => throw new InvalidOperationException($"Unknown manifest {Manifest}."),
         };
     }
