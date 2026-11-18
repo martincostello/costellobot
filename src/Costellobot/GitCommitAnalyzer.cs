@@ -412,7 +412,7 @@ public sealed partial class GitCommitAnalyzer(
             "html" => DependencyEcosystem.Html,
             "npm" or "npm_and_yarn" => DependencyEcosystem.Npm,
             "nuget" => DependencyEcosystem.NuGet,
-            "pip" or "pypi" => DependencyEcosystem.PyPI,
+            "pip" or "pip_requirements" or "pypi" => DependencyEcosystem.PyPI,
             _ => DependencyEcosystem.Unsupported,
         };
 
