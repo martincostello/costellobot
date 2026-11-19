@@ -42,8 +42,6 @@ public class ConfigurationTests(HttpServerFixture fixture, ITestOutputHelper out
             },
         };
 
-        Fixture.OverrideConfiguration("Webhook:TrustedEntities:Publishers:Maven:0", "io.opentelemetry");
-
         CreateDefaultBuilder()
             .Requests()
             .ForPath("/rate_limit")
@@ -85,7 +83,8 @@ public class ConfigurationTests(HttpServerFixture fixture, ITestOutputHelper out
 
             var publishers = await configuration.GetTrustedPublishersAsync();
 
-            publishers.ShouldContain(("Maven", "io.opentelemetry", "https://central.sonatype.com/namespace/io.opentelemetry"));
+            publishers.ShouldContain(("Maven", "io.opentelemetry.instrumentation", "https://central.sonatype.com/namespace/io.opentelemetry.instrumentation"));
+            publishers.ShouldContain(("Maven", "io.opentelemetry.javaagent", "https://central.sonatype.com/namespace/io.opentelemetry.javaagent"));
             publishers.ShouldContain(("NuGet", "Microsoft", "https://www.nuget.org/profiles/Microsoft"));
         });
     }
