@@ -140,7 +140,7 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     {
         // Arrange
         Fixture.ApprovePullRequests();
-        Fixture.OverrideConfiguration("Webhook:TrustedEntities:Publishers:Maven:0", "io.opentelemetry");
+        Fixture.OverrideConfiguration("Webhook:TrustedEntities:Publishers:Maven:0", "io.opentelemetry.instrumentation");
 
         await Fixture.Interceptor.RegisterBundleFromResourceStreamAsync("maven", cancellationToken: CancellationToken);
 

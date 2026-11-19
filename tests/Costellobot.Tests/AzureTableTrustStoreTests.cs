@@ -273,6 +273,88 @@ public class AzureTableTrustStoreTests
         actual.ShouldBe(expected);
     }
 
+    [Theory]
+    [InlineData("io.opentelemetry:opentelemetry-bom", "1.52.0", "io.opentelemetry:opentelemetry-bom", "1.52.0", true)]
+    [InlineData("org.webjars.npm:jQuery", "3.7.1", "org.webjars.npm:jQuery", "3.7.1", true)]
+    [InlineData("org.webjars.npm:jQuery", "3.7.1", "org.webjars.npm:jquery", "3.7.1", false)]
+    [InlineData("org.webjars.npm:jquery", "3.7.1", "org.webjars.npm:jQuery", "3.7.1", false)]
+    [InlineData("com.github.Microsoft:Foo", "1.0.0", "com.github.microsoft:Foo", "1.0.0", false)]
+    [InlineData("com.example:library", "1.0.0-RC1", "com.example:library", "1.0.0-rc1", false)]
+    public async Task IsTrustedAsync_Is_Case_Sensitive_For_Maven(
+        string storedId,
+        string storedVersion,
+        string id,
+        string version,
+        bool expected)
+    {
+        // Arrange
+        var table = Substitute.For<TableClient>();
+        var client = Substitute.For<TableServiceClient>();
+
+        client.GetTableClient("TrustStore")
+              .Returns(table);
+
+        var entity = new TrustEntity()
+        {
+            DependencyEcosystem = nameof(DependencyEcosystem.Maven),
+            DependencyId = storedId,
+            DependencyVersion = storedVersion,
+        };
+
+        var response = Substitute.For<NullableResponse<TrustEntity>>();
+        response.HasValue.Returns(true);
+        response.Value.Returns(entity);
+
+        // The keys are case-insensitive, so the differently-cased coordinates resolve to the same entity
+        table.GetEntityIfExistsAsync<TrustEntity>(
+            "MAVEN",
+            $"{id.ToUpperInvariant()}@{version.ToUpperInvariant()}",
+            cancellationToken: TestContext.Current.CancellationToken).Returns(response);
+
+        var target = new AzureTableTrustStore(client);
+
+        // Act
+        var actual = await target.IsTrustedAsync(DependencyEcosystem.Maven, id, version, TestContext.Current.CancellationToken);
+
+        // Assert
+        actual.ShouldBe(expected);
+    }
+
+    [Fact]
+    public async Task IsDeniedAsync_Is_Case_Insensitive_For_Maven()
+    {
+        // Arrange
+        var table = Substitute.For<TableClient>();
+        var client = Substitute.For<TableServiceClient>();
+
+        client.GetTableClient("DenyStore")
+              .Returns(table);
+
+        var entity = new TrustEntity()
+        {
+            DependencyEcosystem = nameof(DependencyEcosystem.Maven),
+            DependencyId = "org.webjars.npm:jQuery",
+            DependencyVersion = "3.7.1",
+        };
+
+        var response = Substitute.For<NullableResponse<TrustEntity>>();
+        response.HasValue.Returns(true);
+        response.Value.Returns(entity);
+
+        table.GetEntityIfExistsAsync<TrustEntity>(
+            "MAVEN",
+            "ORG.WEBJARS.NPM:JQUERY@3.7.1",
+            cancellationToken: TestContext.Current.CancellationToken).Returns(response);
+
+        var target = new AzureTableTrustStore(client);
+
+        // Act
+        var actual = await target.IsDeniedAsync(DependencyEcosystem.Maven, "org.webjars.npm:jquery", "3.7.1", TestContext.Current.CancellationToken);
+
+        // Assert
+        actual.ShouldBeTrue();
+    }
+
     [Fact]
     public async Task TrustAsync_Does_Not_Throw()
     {

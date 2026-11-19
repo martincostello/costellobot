@@ -39,4 +39,30 @@ public static class PyPiPackageRegistryTests
         actual.ShouldNotBeNull();
         actual.ShouldBe(expected);
     }
+
+    [Fact]
+    public static async Task Can_Get_Package_Owners_For_Multiple_Versions_Of_The_Same_Package()
+    {
+        // Arrange
+        var repository = new RepositoryId("some-org", "some-repo");
+
+        var options = await new HttpClientInterceptorOptions()
+            .ThrowsOnMissingRegistration()
+            .RegisterBundleFromResourceStreamAsync("pypi", cancellationToken: TestContext.Current.CancellationToken);
+
+        using var client = options.CreateHttpClient();
+        client.BaseAddress = new Uri("https://pypi.org");
+
+        using var cache = new ApplicationCache();
+
+        var target = new PyPiPackageRegistry(client, cache);
+
+        // Act
+        var first = await target.GetPackageOwnersAsync(repository, "some-package", "1.2.3", TestContext.Current.CancellationToken);
+        var second = await target.GetPackageOwnersAsync(repository, "some-package", "1.2.4", TestContext.Current.CancellationToken);
+
+        // Assert
+        first.ShouldBe(["weyland-yutani"]);
+        second.ShouldBe(["weyland-yutani"]);
+    }
 }

@@ -40,8 +40,10 @@ public sealed partial class MavenPackageRegistry(
 
         var uri = new Uri($"{path}/{escapedArtifactId}/{escapedVersion}/{escapedArtifactId}-{escapedVersion}.pom", UriKind.Relative);
 
-        // Only consider the namespaces to be the owners if the version of
-        // the artifact was actually published to the registry under them.
+        // Only consider the group to be the owner if the version of the artifact was
+        // actually published to the registry. Parent namespaces are deliberately not
+        // treated as owners, as a shared prefix (such as "com.google" or "io.github")
+        // does not imply that two groups are published by the same party.
         bool exists = await cache.GetOrCreateAsync(
             $"maven:{groupId}:{artifactId}@{version}",
             (Client, uri),
@@ -62,28 +64,7 @@ public sealed partial class MavenPackageRegistry(
             CacheTags,
             cancellationToken);
 
-        return exists ? GetNamespaces(groupId) : [];
-    }
-
-    /// <summary>
-    /// Gets the namespaces that own a group ID, from most to least specific.
-    /// </summary>
-    /// <param name="groupId">The group ID.</param>
-    /// <returns>
-    /// The group ID and each of its parent namespaces that has at least two segments.
-    /// Single-segment namespaces, such as <c>org</c>, cannot be owned by a publisher.
-    /// </returns>
-    private static string[] GetNamespaces(string groupId)
-    {
-        var segments = groupId.Split('.');
-        var namespaces = new List<string>(segments.Length);
-
-        for (int count = segments.Length; count >= 2; count--)
-        {
-            namespaces.Add(string.Join('.', segments.Take(count)));
-        }
-
-        return [.. namespaces];
+        return exists ? [groupId] : [];
     }
 
     private static bool TryParseCoordinates(

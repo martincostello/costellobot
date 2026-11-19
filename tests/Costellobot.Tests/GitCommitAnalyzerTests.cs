@@ -280,7 +280,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     [InlineData("actions/checkout", "dependabot/github_actions/actions/checkout-3", "3", DependencyEcosystem.GitHubActions, new[] { "actions" }, true)]
     [InlineData("github.com/onsi/gomega", "dependabot/go_modules/github.com/onsi/gomega-1.38.0", "1.38.0", DependencyEcosystem.GoModules, new[] { "github.com/onsi" }, true)]
     [InlineData("io.opentelemetry:opentelemetry-bom", "dependabot/maven/io.opentelemetry/opentelemetry-bom-1.52.0", "1.52.0", DependencyEcosystem.Maven, new[] { "io.opentelemetry" }, true)]
-    [InlineData("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom", "renovate/maven/opentelemetry-instrumentation.version", "2.34.0", DependencyEcosystem.Maven, new[] { "io.opentelemetry.instrumentation", "io.opentelemetry" }, true)]
+    [InlineData("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom", "renovate/maven/opentelemetry-instrumentation.version", "2.34.0", DependencyEcosystem.Maven, new[] { "io.opentelemetry.instrumentation" }, true)]
     [InlineData("com.example:some-library", "dependabot/maven/com.example/some-library-1.2.3", "1.2.3", DependencyEcosystem.Maven, new[] { "com.example" }, false)]
     [InlineData("boto3", "dependabot/pip/boto3-1.26.0", "1.26.0", DependencyEcosystem.PyPI, new[] { "aws" }, true)]
     [InlineData("boto3", "renovate/pip_requirements/boto3-1.x", "1.26.0", DependencyEcosystem.PyPI, new[] { "aws" }, true)]
@@ -322,7 +322,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.GitHubActions] = ["actions"],
                     [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.GoModules] = ["github.com/onsi"],
-                    [DependencyEcosystem.Maven] = ["io.opentelemetry"],
+                    [DependencyEcosystem.Maven] = ["io.opentelemetry", "io.opentelemetry.instrumentation"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
                     [DependencyEcosystem.PyPI] = ["aws"],

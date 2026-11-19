@@ -102,7 +102,7 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
         string id,
         string version,
         CancellationToken cancellationToken = default) =>
-        await ExistsAsync(DenyTableName, ecosystem, id, version, cancellationToken);
+        await ExistsAsync(DenyTableName, ecosystem, id, version, exactMatch: false, cancellationToken);
 
     /// <inheritdoc/>
     public async Task<bool> IsTrustedAsync(
@@ -110,7 +110,7 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
         string id,
         string version,
         CancellationToken cancellationToken = default) =>
-        await ExistsAsync(TrustTableName, ecosystem, id, version, cancellationToken);
+        await ExistsAsync(TrustTableName, ecosystem, id, version, exactMatch: IsCaseSensitive(ecosystem), cancellationToken);
 
     /// <inheritdoc/>
     public async Task TrustAsync(
@@ -132,6 +132,19 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
         static string Normalize(string value) => value.ToUpperOrdinal().Replace('/', '~').Trim();
     }
 
+    /// <summary>
+    /// Gets whether coordinates in the specified ecosystem can differ only by case (for example
+    /// <c>org.webjars.npm:jQuery</c> and <c>org.webjars.npm:jquery</c> in Maven Central are different artifacts).
+    /// </summary>
+    /// <remarks>
+    /// The keys of the store are case-insensitive, so such coordinates share a single record. To avoid
+    /// trusting one coordinate because a differently-cased one was trusted, trust is only granted for these
+    /// ecosystems if the casing of the stored record matches exactly. Denying and distrusting remain
+    /// case-insensitive, as that is the safe direction for them to fail.
+    /// </remarks>
+    private static bool IsCaseSensitive(DependencyEcosystem ecosystem)
+        => ecosystem is DependencyEcosystem.Maven;
+
     private TableClient GetClient(string tableName) => client.GetTableClient(tableName);
 
     private async Task DeleteAsync(
@@ -152,14 +165,29 @@ public sealed class AzureTableTrustStore(TableServiceClient client) : ITrustStor
         DependencyEcosystem ecosystem,
         string id,
         string version,
+        bool exactMatch,
         CancellationToken cancellationToken)
     {
         (string partition, string row) = GetKeys(ecosystem, id, version);
 
         var table = GetClient(tableName);
-        var deny = await table.GetEntityIfExistsAsync<TrustEntity>(partition, row, cancellationToken: cancellationToken);
+        var response = await table.GetEntityIfExistsAsync<TrustEntity>(partition, row, cancellationToken: cancellationToken);
 
-        return deny.HasValue;
+        if (!response.HasValue)
+        {
+            return false;
+        }
+
+        if (!exactMatch)
+        {
+            return true;
+        }
+
+        var entity = response.Value;
+
+        return
+            string.Equals(entity?.DependencyId?.Trim(), id.Trim(), StringComparison.Ordinal) &&
+            string.Equals(entity?.DependencyVersion?.Trim(), version.Trim(), StringComparison.Ordinal);
     }
 
     private async Task<IReadOnlyList<T>> GetAsync<T>(

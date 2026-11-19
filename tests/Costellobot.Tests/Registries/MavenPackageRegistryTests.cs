@@ -9,7 +9,8 @@ namespace MartinCostello.Costellobot.Registries;
 public static class MavenPackageRegistryTests
 {
     [Theory]
-    [InlineData("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom", "2.34.0", new[] { "io.opentelemetry.instrumentation", "io.opentelemetry" })]
+    [InlineData("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom", "2.34.0", new[] { "io.opentelemetry.instrumentation" })]
+    [InlineData("junit:junit", "4.13.2", new[] { "junit" })]
     [InlineData("io.opentelemetry:opentelemetry-bom", "1.52.0", new[] { "io.opentelemetry" })]
     [InlineData("io.opentelemetry:opentelemetry-bom", "0.0.0", new string[0])]
     public static async Task Can_Get_Package_Owners(string id, string version, string[] expected)
