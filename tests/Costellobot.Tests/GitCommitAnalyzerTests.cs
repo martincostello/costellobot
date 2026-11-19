@@ -279,6 +279,9 @@ Signed-off-by: dependabot[bot] <support@github.com>";
     [InlineData("@actions/github", "dependabot/npm_and_yarn/actions/github-5.0.3", "5.0.3", DependencyEcosystem.Npm, new[] { "thboop" }, false)]
     [InlineData("actions/checkout", "dependabot/github_actions/actions/checkout-3", "3", DependencyEcosystem.GitHubActions, new[] { "actions" }, true)]
     [InlineData("github.com/onsi/gomega", "dependabot/go_modules/github.com/onsi/gomega-1.38.0", "1.38.0", DependencyEcosystem.GoModules, new[] { "github.com/onsi" }, true)]
+    [InlineData("io.opentelemetry:opentelemetry-bom", "dependabot/maven/io.opentelemetry/opentelemetry-bom-1.52.0", "1.52.0", DependencyEcosystem.Maven, new[] { "io.opentelemetry" }, true)]
+    [InlineData("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom", "renovate/maven/opentelemetry-instrumentation.version", "2.34.0", DependencyEcosystem.Maven, new[] { "io.opentelemetry.instrumentation" }, true)]
+    [InlineData("com.example:some-library", "dependabot/maven/com.example/some-library-1.2.3", "1.2.3", DependencyEcosystem.Maven, new[] { "com.example" }, false)]
     [InlineData("boto3", "dependabot/pip/boto3-1.26.0", "1.26.0", DependencyEcosystem.PyPI, new[] { "aws" }, true)]
     [InlineData("boto3", "renovate/pip_requirements/boto3-1.x", "1.26.0", DependencyEcosystem.PyPI, new[] { "aws" }, true)]
     [InlineData("JustEat.HttpClientInterception", "dependabot/nuget/JustEat.HttpClientInterception-3.1.1", "3.1.1", DependencyEcosystem.NuGet, new[] { "JUSTEAT_OSS" }, false)]
@@ -319,6 +322,7 @@ Signed-off-by: dependabot[bot] <support@github.com>";
                     [DependencyEcosystem.GitHubActions] = ["actions"],
                     [DependencyEcosystem.GitSubmodule] = ["https://github.com/martincostello"],
                     [DependencyEcosystem.GoModules] = ["github.com/onsi"],
+                    [DependencyEcosystem.Maven] = ["io.opentelemetry", "io.opentelemetry.instrumentation"],
                     [DependencyEcosystem.Npm] = ["types", "typescript-bot"],
                     [DependencyEcosystem.NuGet] = ["aspnet", "Microsoft"],
                     [DependencyEcosystem.PyPI] = ["aws"],
@@ -3842,6 +3846,136 @@ Signed-off-by: dependabot[bot] <support@github.com>";
 
         trust.ShouldContainKeyAndValue("fastapi", (true, "0.164.0"));
         trust.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Trusted_Dependencies_For_Renovate_Maven_Properties()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.Maven;
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/maven/opentelemetry-instrumentation.version";
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [ecosystem] = ["^io\\.opentelemetry\\..*$"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, []);
+
+        var diff = string.Empty;
+        var sha = "9d360e4b00ae9eedc57813d269b3502da167cc6d";
+        var commitMessage = """
+                            Bump opentelemetry-instrumentation.version to v2.34.0
+                            | datasource | package                                                            | from   | to     |
+                            | ---------- | ------------------------------------------------------------------ | ------ | ------ |
+                            | maven      | io.opentelemetry.javaagent:opentelemetry-javaagent                 | 2.33.1 | 2.34.0 |
+                            | maven      | io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom | 2.33.1 | 2.34.0 |
+
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeTrue();
+
+        // Act
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actualEcosystem.ShouldBe(ecosystem);
+
+        trust.ShouldContainKeyAndValue("io.opentelemetry.javaagent:opentelemetry-javaagent", (true, "2.34.0"));
+        trust.ShouldContainKeyAndValue("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom", (true, "2.34.0"));
+        trust.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Commit_Is_Analyzed_Correctly_With_Untrusted_Dependency_For_Renovate_Maven_Properties()
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.Maven;
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/maven/opentelemetry-instrumentation.version";
+
+        var options = new WebhookOptions()
+        {
+            TrustedEntities = new()
+            {
+                Dependencies = new Dictionary<DependencyEcosystem, IList<string>>()
+                {
+                    [ecosystem] = ["^io\\.opentelemetry\\.javaagent:.*$"],
+                },
+            },
+        };
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, []);
+
+        var diff = string.Empty;
+        var sha = "9d360e4b00ae9eedc57813d269b3502da167cc6d";
+        var commitMessage = """
+                            Bump opentelemetry-instrumentation.version to v2.34.0
+                            | datasource | package                                                            | from   | to     |
+                            | ---------- | ------------------------------------------------------------------ | ------ | ------ |
+                            | maven      | io.opentelemetry.javaagent:opentelemetry-javaagent                 | 2.33.1 | 2.34.0 |
+                            | maven      | io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom | 2.33.1 | 2.34.0 |
+
+
+                            Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                            """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBeFalse();
+
+        // Act
+        (_, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            diff,
+            CancellationToken);
+
+        // Assert
+        trust.ShouldContainKeyAndValue("io.opentelemetry.javaagent:opentelemetry-javaagent", (true, "2.34.0"));
+        trust.ShouldContainKeyAndValue("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom", (false, "2.34.0"));
+        trust.Count.ShouldBe(2);
     }
 
     [Fact]

@@ -30,7 +30,7 @@ public sealed partial class PyPiPackageRegistry(
         var uri = new Uri($"/pypi/{escapedId}/{escapedVersion}/json", UriKind.Relative);
 
         Project? project = await cache.GetOrCreateAsync(
-            $"pypi:{id}",
+            $"pypi:{id}@{version}",
             (Client, uri),
             static async (context, token) =>
             {

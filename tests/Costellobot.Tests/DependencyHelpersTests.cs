@@ -7,6 +7,9 @@ public static class DependencyHelpersTests
 {
     [Theory]
     [InlineData(DependencyEcosystem.GitHubActions, "martincostello/github-automation/actions/get-github-token", "4.3.3", "GitHub Actions", "https://github.com/martincostello/github-automation/tree/HEAD/actions/get-github-token", "fa-brands fa-square-github text-dark")]
+    [InlineData(DependencyEcosystem.Maven, "io.opentelemetry.javaagent:opentelemetry-javaagent", "2.34.0", "Maven", "https://central.sonatype.com/artifact/io.opentelemetry.javaagent/opentelemetry-javaagent/2.34.0", "fa-brands fa-java text-java")]
+    [InlineData(DependencyEcosystem.Maven, "io.opentelemetry.javaagent:opentelemetry-javaagent", "", "Maven", "https://central.sonatype.com/artifact/io.opentelemetry.javaagent/opentelemetry-javaagent", "fa-brands fa-java text-java")]
+    [InlineData(DependencyEcosystem.Maven, "^io\\.opentelemetry\\..*$", "", "Maven", "https://central.sonatype.com/search", "fa-brands fa-java text-java")]
     public static void GetPackageMetadata_Returns_Expected_Values(
         DependencyEcosystem ecosystem,
         string id,

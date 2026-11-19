@@ -21,6 +21,24 @@ public sealed class ConfigurationPage(IPage page) : AppPage(page)
         return [.. elements.Select((p) => new TokenBrokerProfileItem(p, Page))];
     }
 
+    public async Task<IReadOnlyList<(string Ecosystem, string Publisher, string? Url)>> GetTrustedPublishersAsync()
+    {
+        var items = await Page.QuerySelectorAllAsync(Selectors.TrustedPublisherItem);
+        var publishers = new List<(string Ecosystem, string Publisher, string? Url)>(items.Count);
+
+        foreach (var item in items)
+        {
+            var ecosystem = await (await item.QuerySelectorAsync(Selectors.TrustedPublisherEcosystem))!.GetAttributeAsync("title");
+            var publisher = await (await item.QuerySelectorAsync(Selectors.TrustedPublisher))!.InnerTextAsync();
+            var link = await item.QuerySelectorAsync(Selectors.TrustedPublisherLink);
+            var url = link is null ? null : await link.GetAttributeAsync("href");
+
+            publishers.Add((ecosystem!, publisher.Trim(), url));
+        }
+
+        return publishers;
+    }
+
     public async Task<bool> GitHubTokenBrokerEnabledAsync()
         => await Page.IsCheckedAsync(Selectors.GitHubTokenBrokerEnabled);
 
@@ -31,6 +49,17 @@ public sealed class ConfigurationPage(IPage page) : AppPage(page)
     {
         await Page.ClickAsync(Selectors.GitHubTokenBrokerTab);
         await Assertions.Expect(Page.Locator(Selectors.GitHubTokenBrokerPane))
+                        .ToBeVisibleAsync();
+    }
+
+    public async Task OpenTrustedPublishersAsync()
+    {
+        await Page.ClickAsync(Selectors.TrustedEntitiesTab);
+        await Assertions.Expect(Page.Locator(Selectors.TrustedEntitiesPane))
+                        .ToBeVisibleAsync();
+
+        await Page.ClickAsync(Selectors.TrustedPublishersTab);
+        await Assertions.Expect(Page.Locator(Selectors.TrustedPublishersPane))
                         .ToBeVisibleAsync();
     }
 
@@ -67,5 +96,13 @@ public sealed class ConfigurationPage(IPage page) : AppPage(page)
         internal const string TokenBrokerProfileTokenId = ".token-broker-profile-token-id";
         internal const string TokenBrokerProfileType = ".token-broker-profile-type";
         internal const string TokenBrokerRepositoryPane = ".token-broker-repository-pane";
+        internal const string TrustedEntitiesPane = "id=tab-trusted-entities";
+        internal const string TrustedEntitiesTab = "id=settings-tab-trusted-entities";
+        internal const string TrustedPublisher = ".trusted-publisher";
+        internal const string TrustedPublisherEcosystem = ".dependency-ecosystem";
+        internal const string TrustedPublisherItem = ".trusted-publisher-item";
+        internal const string TrustedPublisherLink = ".trusted-publisher-link";
+        internal const string TrustedPublishersPane = "id=tab-trusted-entities-publishers";
+        internal const string TrustedPublishersTab = "id=settings-tab-trusted-entities-publishers";
     }
 }

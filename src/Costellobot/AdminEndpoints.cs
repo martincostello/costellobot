@@ -354,6 +354,7 @@ public static class AdminEndpoints
                     DependencyEcosystem.GitHubRelease,
                     DependencyEcosystem.GoModules,
                     DependencyEcosystem.Html,
+                    DependencyEcosystem.Maven,
                     DependencyEcosystem.Npm,
                     DependencyEcosystem.NuGet,
                     DependencyEcosystem.PyPI,

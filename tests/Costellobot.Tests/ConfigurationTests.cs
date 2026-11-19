@@ -42,6 +42,8 @@ public class ConfigurationTests(HttpServerFixture fixture, ITestOutputHelper out
             },
         };
 
+        Fixture.OverrideConfiguration("Webhook:TrustedEntities:Publishers:Maven:0", "io.opentelemetry");
+
         CreateDefaultBuilder()
             .Requests()
             .ForPath("/rate_limit")
@@ -78,6 +80,13 @@ public class ConfigurationTests(HttpServerFixture fixture, ITestOutputHelper out
 
             await profile.NameAsync().ShouldBe("benchmarks");
             await profile.TypeAsync().ShouldBe("GitHub App");
+
+            await configuration.OpenTrustedPublishersAsync();
+
+            var publishers = await configuration.GetTrustedPublishersAsync();
+
+            publishers.ShouldContain(("Maven", "io.opentelemetry", "https://central.sonatype.com/namespace/io.opentelemetry"));
+            publishers.ShouldContain(("NuGet", "Microsoft", "https://www.nuget.org/profiles/Microsoft"));
         });
     }
 }

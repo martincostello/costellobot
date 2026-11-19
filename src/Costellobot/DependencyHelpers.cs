@@ -10,6 +10,7 @@ public static class DependencyHelpers
     private const string GitHubStyles = "fa-brands fa-square-github text-dark";
     private const string GoStyles = "fa-brands fa-golang text-info";
     private const string HtmlStyles = "fa-brands fa-html5 text-danger";
+    private const string MavenStyles = "fa-brands fa-java text-java";
     private const string MicrosoftStyles = "fa-brands fa-microsoft text-primary";
     private const string NpmStyles = "fa-brands fa-npm text-danger";
     private const string NuGetStyles = "fa-solid fa-cube text-dotnet"; // Maybe one day... https://bsky.app/profile/martincostello.com/post/3lrkz62rwvs2a
@@ -26,6 +27,7 @@ public static class DependencyHelpers
             DependencyEcosystem.GitHubRelease => ("GitHub", GitHubUrl(id), GitHubStyles),
             DependencyEcosystem.GoModules => ("Go Modules", GoPackageUrl($"/{id}@v{version.TrimStart('v')}"), GoStyles),
             DependencyEcosystem.Html => ("cdnjs", CdnjsUrl($"/libraries/{CdnjsLibraryName(id)}"), HtmlStyles),
+            DependencyEcosystem.Maven => ("Maven", MavenPackageUrl(id, version), MavenStyles),
             DependencyEcosystem.Npm => ("npm", NpmUrl($"/package/{id}/v/{version}"), NpmStyles),
             DependencyEcosystem.NuGet => ("NuGet", NuGetUrl($"/packages/{id}/{version}"), NuGetStyles),
             DependencyEcosystem.PyPI => ("PyPI", PyPIUrl($"/project/{id}/"), PyPIStyles),
@@ -45,6 +47,7 @@ public static class DependencyHelpers
             DependencyEcosystem.GitSubmodule => ("Git Submodule", id, GitHubStyles),
             DependencyEcosystem.GoModules => ("Go Modules", string.Empty, GoStyles),
             DependencyEcosystem.Html => ("cdnjs", CdnjsUrl($"/libraries/{CdnjsLibraryName(id)}"), HtmlStyles),
+            DependencyEcosystem.Maven => ("Maven", MavenCentralUrl($"/namespace/{id}"), MavenStyles),
             DependencyEcosystem.Npm => ("npm", NpmUrl($"~{id}"), NpmStyles),
             DependencyEcosystem.NuGet => ("NuGet", NuGetUrl($"/profiles/{id}"), NuGetStyles),
             DependencyEcosystem.PyPI => ("PyPI", PyPIUrl($"/user/{id}/"), PyPIStyles),
@@ -82,6 +85,28 @@ public static class DependencyHelpers
 
     private static string GoPackageUrl(string path)
         => BuildUrl("pkg.go.dev", path);
+
+    private static string MavenCentralUrl(string path)
+        => BuildUrl("central.sonatype.com", path);
+
+    private static string MavenPackageUrl(string id, string version)
+    {
+        var parts = id.Split(':');
+
+        if (parts.Length is 2 && parts[0] is { Length: > 0 } owner && parts[1] is { Length: > 0 } artifact)
+        {
+            var path = $"/artifact/{owner}/{artifact}";
+
+            if (version.Length > 0)
+            {
+                path = $"{path}/{version}";
+            }
+
+            return MavenCentralUrl(path);
+        }
+
+        return MavenCentralUrl("/search");
+    }
 
     private static string MicrosoftArtifactRegistryUrl(string path)
         => BuildUrl("mcr.microsoft.com", path);

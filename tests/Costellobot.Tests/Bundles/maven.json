@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/justeat/httpclient-interception/main/src/HttpClientInterception/Bundles/http-request-bundle-schema.json",
+  "id": "maven",
+  "version": 1,
+  "comment": "HTTP bundle for Maven Central.",
+  "items": [
+    {
+      "comment": "The POM for a version of an artifact in a namespace with multiple parts.",
+      "uri": "https://repo.maven.apache.org/maven2/io/opentelemetry/instrumentation/opentelemetry-instrumentation-bom/2.34.0/opentelemetry-instrumentation-bom-2.34.0.pom",
+      "method": "HEAD",
+      "contentFormat": "string",
+      "contentString": ""
+    },
+    {
+      "comment": "The POM for a version of an artifact with a single-segment group ID.",
+      "uri": "https://repo.maven.apache.org/maven2/junit/junit/4.13.2/junit-4.13.2.pom",
+      "method": "HEAD",
+      "contentFormat": "string",
+      "contentString": ""
+    },
+    {
+      "comment": "The POM for a version of an artifact in a top-level namespace.",
+      "uri": "https://repo.maven.apache.org/maven2/io/opentelemetry/opentelemetry-bom/1.52.0/opentelemetry-bom-1.52.0.pom",
+      "method": "HEAD",
+      "contentFormat": "string",
+      "contentString": ""
+    },
+    {
+      "comment": "A version of an artifact that does not exist.",
+      "uri": "https://repo.maven.apache.org/maven2/io/opentelemetry/opentelemetry-bom/0.0.0/opentelemetry-bom-0.0.0.pom",
+      "method": "HEAD",
+      "status": "404",
+      "contentFormat": "string",
+      "contentString": ""
+    }
+  ]
+}

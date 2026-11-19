@@ -17,4 +17,5 @@ public enum DependencyEcosystem
     PyPI,
     GoModules,
     Html,
+    Maven,
 }

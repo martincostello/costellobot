@@ -129,6 +129,21 @@
           "organization": "weyland-yutani"
         }
       }
+    },
+    {
+      "comment": "A different version of a package with an organization",
+      "uri": "https://pypi.org/pypi/some-package/1.2.4/json",
+      "method": "GET",
+      "contentFormat": "json",
+      "contentJson": {
+        "info": {
+          "name": "some-package",
+          "version": "1.2.4"
+        },
+        "ownership": {
+          "organization": "weyland-yutani"
+        }
+      }
     }
   ]
 }

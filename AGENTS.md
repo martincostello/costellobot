@@ -152,7 +152,7 @@ costellobot/
 ### Key Directories
 
 - `src/Costellobot/Handlers/` — One handler per GitHub webhook event type; all implement `IHandler`
-- `src/Costellobot/Registries/` — Package registry integrations (NuGet, npm, Docker, PyPI, RubyGems, GitHub Actions, etc.) implementing `IPackageRegistry`
+- `src/Costellobot/Registries/` — Package registry integrations (NuGet, npm, Docker, PyPI, RubyGems, Maven, GitHub Actions, etc.) implementing `IPackageRegistry`
 - `src/Costellobot/DeploymentRules/` — Pluggable deployment approval rules implementing `IDeploymentRule`
 - `src/Costellobot/Octokit/` — GitHub API client wrappers and credential stores
 - `src/Costellobot/Authorization/` — ASP.NET Core auth handlers for admin and health probe access
