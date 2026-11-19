@@ -135,6 +135,37 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         await pullRequestApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
+    [Fact]
+    public async Task Pull_Request_Is_Approved_For_Trusted_User_And_Maven_Dependency_Owner()
+    {
+        // Arrange
+        Fixture.ApprovePullRequests();
+        Fixture.OverrideConfiguration("Webhook:TrustedEntities:Publishers:Maven:0", "io.opentelemetry");
+
+        await Fixture.Interceptor.RegisterBundleFromResourceStreamAsync("maven", cancellationToken: CancellationToken);
+
+        const string Dependency = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom";
+
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(TrustedCommitMessage(Dependency, "2.34.0", "2.33.1"));
+
+        driver.PullRequest.RefHead = "dependabot/maven/io.opentelemetry.instrumentation/opentelemetry-instrumentation-bom-2.34.0";
+
+        RegisterGetAccessToken();
+        RegisterCommitAndDiff(driver);
+        RegisterDependabotConfiguration(driver);
+
+        var pullRequestApproved = RegisterReview(driver);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
+    }
+
     [Theory]
     [InlineData(null, null, null, "MERGE")]
     [InlineData(false, false, false, "MERGE")]

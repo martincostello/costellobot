@@ -189,6 +189,7 @@ public static class GitHubExtensions
         services.AddPackageRegistry<GitHubReleasePackageRegistry>();
         services.AddPackageRegistry<GitSubmodulePackageRegistry>();
         services.AddPackageRegistry<GoPackageRegistry>("GoPackages");
+        services.AddPackageRegistry<MavenPackageRegistry>("Maven");
         services.AddPackageRegistry<NpmPackageRegistry>("Npm");
         services.AddPackageRegistry<NuGetPackageRegistry>("NuGet");
         services.AddPackageRegistry<NuGetPackageRegistry>("MyGet-OpenTelemetry");

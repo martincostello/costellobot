@@ -137,6 +137,10 @@ textarea.form-payload {
     color: rgb(81 43 212)
 }
 
+.text-java {
+    color: rgb(231 111 0)
+}
+
 .text-webhook {
     font-family: var(--bs-font-monospace);
 }
