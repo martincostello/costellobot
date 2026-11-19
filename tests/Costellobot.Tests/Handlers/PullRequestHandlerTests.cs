@@ -136,20 +136,27 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
     }
 
     [Fact]
-    public async Task Pull_Request_Is_Approved_For_Trusted_User_And_Maven_Dependency_Owner()
+    public async Task Pull_Request_Is_Approved_For_Trusted_User_And_Maven_Dependency_Owners_From_Renovate()
     {
         // Arrange
         Fixture.ApprovePullRequests();
-        Fixture.OverrideConfiguration("Webhook:TrustedEntities:Publishers:Maven:0", "io.opentelemetry.instrumentation");
 
         await Fixture.Interceptor.RegisterBundleFromResourceStreamAsync("maven", cancellationToken: CancellationToken);
 
-        const string Dependency = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom";
+        var driver = PullRequestDriver.ForRenovate()
+            .WithCommitMessage(
+                """
+                Bump opentelemetry-instrumentation.version to v2.34.0
+                | datasource | package                                                            | from   | to     |
+                | ---------- | ------------------------------------------------------------------ | ------ | ------ |
+                | maven      | io.opentelemetry.javaagent:opentelemetry-javaagent                 | 2.33.1 | 2.34.0 |
+                | maven      | io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom | 2.33.1 | 2.34.0 |
 
-        var driver = PullRequestDriver.ForDependabot()
-            .WithCommitMessage(TrustedCommitMessage(Dependency, "2.34.0", "2.33.1"));
 
-        driver.PullRequest.RefHead = "dependabot/maven/io.opentelemetry.instrumentation/opentelemetry-instrumentation-bom-2.34.0";
+                Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                """);
+
+        driver.PullRequest.RefHead = "renovate/maven/opentelemetry-instrumentation.version";
 
         RegisterGetAccessToken();
         RegisterCommitAndDiff(driver);

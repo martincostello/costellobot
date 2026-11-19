@@ -12,6 +12,13 @@
       "contentString": ""
     },
     {
+      "comment": "The POM for a version of an artifact in the OpenTelemetry Java agent namespace.",
+      "uri": "https://repo.maven.apache.org/maven2/io/opentelemetry/javaagent/opentelemetry-javaagent/2.34.0/opentelemetry-javaagent-2.34.0.pom",
+      "method": "HEAD",
+      "contentFormat": "string",
+      "contentString": ""
+    },
+    {
       "comment": "The POM for a version of an artifact with a single-segment group ID.",
       "uri": "https://repo.maven.apache.org/maven2/junit/junit/4.13.2/junit-4.13.2.pom",
       "method": "HEAD",
