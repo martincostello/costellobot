@@ -107,6 +107,34 @@ public class PullRequestHandlerTests(AppFixture fixture, ITestOutputHelper outpu
         await pullRequestApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
     }
 
+    [Fact]
+    public async Task Pull_Request_Is_Approved_For_Trusted_User_And_PyPI_Dependency_Owner()
+    {
+        // Arrange
+        Fixture.ApprovePullRequests();
+
+        await Fixture.Interceptor.RegisterBundleFromResourceStreamAsync("pypi", cancellationToken: CancellationToken);
+
+        var driver = PullRequestDriver.ForDependabot()
+            .WithCommitMessage(TrustedCommitMessage("boto3", "1.26.0", "1.25.0"));
+
+        driver.PullRequest.RefHead = "dependabot/pip/boto3-1.26.0";
+
+        RegisterGetAccessToken();
+        RegisterCommitAndDiff(driver);
+        RegisterDependabotConfiguration(driver);
+
+        var pullRequestApproved = RegisterReview(driver);
+
+        // Act
+        using var response = await PostWebhookAsync(driver);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await pullRequestApproved.Task.WaitAsync(ResultTimeout, CancellationToken);
+    }
+
     [Theory]
     [InlineData(null, null, null, "MERGE")]
     [InlineData(false, false, false, "MERGE")]
