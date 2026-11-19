@@ -4185,6 +4185,71 @@ Signed-off-by: dependabot[bot] <support@github.com>";
         trust.Count.ShouldBe(2);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Commit_Is_Analyzed_Correctly_For_Renovate_Html_Dependency_Trusted_Through_Trust_Store(bool isTrusted)
+    {
+        // Arrange
+        var ecosystem = DependencyEcosystem.Html;
+        var dependency = "swagger-ui/swagger-ui-bundle.min.js";
+        var version = "5.35.1";
+        var owner = CreateUser();
+        var repo = owner.CreateRepository();
+        var repository = new RepositoryId(repo.Owner.Login, repo.Name);
+        var reference = "renovate/html/swagger-ui-5.x";
+
+        // There are no trusted dependency patterns, publishers or package registry for HTML
+        var options = new WebhookOptions();
+
+        var trustStore = Substitute.For<ITrustStore>();
+
+        trustStore.IsTrustedAsync(ecosystem, dependency, version, Arg.Any<CancellationToken>())
+                  .Returns(isTrusted);
+
+        using var scope = Fixture.Services.CreateScope();
+        var target = CreateTarget(scope.ServiceProvider, options, trustStore: trustStore);
+
+        var sha = "a2a1ed6b8bbd1ad3ba05d43e5cb81b2e3a1b9a4b";
+        var commitMessage = $"""
+                             Bump dependency swagger-ui to v{version}
+
+                             | datasource | package                          | from   | to       |
+                             | ---------- | -------------------------------- | ------ | -------- |
+                             | cdnjs      | {dependency} | 5.35.0 | {version} |
+
+
+                             Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+                             """;
+
+        // Act
+        var actual = await target.IsTrustedDependencyUpdateAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            string.Empty,
+            CancellationToken);
+
+        // Assert
+        actual.ShouldBe(isTrusted);
+
+        // Act
+        (var actualEcosystem, var trust) = await target.GetDependencyTrustAsync(
+            repository,
+            reference,
+            sha,
+            commitMessage,
+            string.Empty,
+            CancellationToken);
+
+        // Assert
+        actualEcosystem.ShouldBe(ecosystem);
+
+        trust.ShouldContainKeyAndValue(dependency, (isTrusted, version));
+        trust.Count.ShouldBe(1);
+    }
+
     [Fact]
     public async Task Commit_Is_Not_Trusted_If_Dependency_Version_Is_Denied()
     {

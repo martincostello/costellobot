@@ -686,39 +686,43 @@ public sealed partial class GitCommitAnalyzer(
                 return (false, version);
             }
 
-            if (!context.WebhookOptions.TrustedEntities.Publishers.TryGetValue(ecosystem, out var publishers) ||
-                publishers.Count < 1)
+            // Ownership can only be checked for ecosystems that have both trusted publishers
+            // configured and a package registry. Ecosystems without them (such as HTML, where
+            // there is no registry to query) must still be able to be trusted implicitly
+            // through the trust store, so do not skip that check if ownership cannot be evaluated.
+            bool canCheckOwners =
+                context.WebhookOptions.TrustedEntities.Publishers.TryGetValue(ecosystem, out var publishers) &&
+                publishers.Count > 0 &&
+                registriesForEcosystem.Count > 0;
+
+            string? resolvedVersion = version ?? TryGetDependencyVersion(ecosystem, dependency, commitMessage, diff);
+
+            if (string.IsNullOrWhiteSpace(resolvedVersion))
             {
-                return (false, version);
+                return (false, canCheckOwners ? resolvedVersion : version);
             }
 
-            if (registriesForEcosystem.Count == 0)
+            if (canCheckOwners)
             {
-                return (false, version);
-            }
-
-            version ??= TryGetDependencyVersion(ecosystem, dependency, commitMessage, diff);
-
-            if (string.IsNullOrWhiteSpace(version))
-            {
-                return (false, version);
-            }
-
-            foreach (var registry in registriesForEcosystem)
-            {
-                if (await IsTrustedDependencyOwnerAsync(
-                        repository,
-                        dependency,
-                        version,
-                        publishers,
-                        registry,
-                        cancellationToken))
+                foreach (var registry in registriesForEcosystem)
                 {
-                    return (true, version);
+                    if (await IsTrustedDependencyOwnerAsync(
+                            repository,
+                            dependency,
+                            resolvedVersion,
+                            publishers!,
+                            registry,
+                            cancellationToken))
+                    {
+                        return (true, resolvedVersion);
+                    }
                 }
             }
 
-            return (await IsTrustedDependencyVersionAsync(repository, ecosystem, dependency, version, cancellationToken), version);
+            bool trusted = await IsTrustedDependencyVersionAsync(repository, ecosystem, dependency, resolvedVersion, cancellationToken);
+
+            // Only report a version that was resolved for an untrusted dependency if ownership was evaluated
+            return (trusted, trusted || canCheckOwners ? resolvedVersion : version);
         }
 
         async Task<bool> IsTrustedDependencyOwnerAsync(
