@@ -6,7 +6,7 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/src/Costellobot/bin/Debug/net11.0/Costellobot.dll",
+      "program": "${workspaceFolder}/artifacts/bin/Costellobot/debug/Costellobot.dll",
       "args": [],
       "cwd": "${workspaceFolder}/src/Costellobot",
       "stopAtEntry": false,
